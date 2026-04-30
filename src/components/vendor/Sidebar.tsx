@@ -107,25 +107,6 @@ export function Sidebar({ vendors, filters, onChange }: SidebarProps) {
         </div>
       </div>
 
-      {/* Source */}
-      <div className="mb-6">
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Source</div>
-        <div className="flex flex-wrap gap-1">
-          {SOURCE_OPTIONS.map((s) => {
-            const active = filters.sources.includes(s);
-            return (
-              <button
-                key={s}
-                onClick={() => onChange({ ...filters, sources: toggle(filters.sources, s) })}
-                className={chip(active)}
-              >
-                {s}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Tags */}
       {allTags.length > 0 && (
         <div>

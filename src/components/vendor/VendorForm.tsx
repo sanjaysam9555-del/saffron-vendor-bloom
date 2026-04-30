@@ -112,12 +112,6 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
             <input className={inputCls} value={form.location ?? ""} onChange={(e) => set("location", e.target.value || null)} placeholder="e.g. Gurugram" />
           </Field>
 
-          <Field label="Source">
-            <select className={inputCls} value={form.source ?? "Manual Entry"} onChange={(e) => set("source", e.target.value)}>
-              {SOURCE_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </Field>
-
           <Field label="Contact Number">
             <input className={inputCls} value={form.contact_number ?? ""} onChange={(e) => set("contact_number", e.target.value || null)} />
           </Field>
