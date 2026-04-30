@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Vendor, VendorInput } from "@/lib/vendor-types";
-import { CATEGORIES, HOTEL_CATEGORIES, SOURCE_OPTIONS } from "@/lib/categories";
+import { CATEGORIES, HOTEL_CATEGORIES } from "@/lib/categories";
 import { X } from "lucide-react";
 
 interface VendorFormProps {

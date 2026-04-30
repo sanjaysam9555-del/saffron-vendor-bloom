@@ -31,7 +31,7 @@ function DashboardPage() {
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"cards" | "table">("cards");
   const [filters, setFilters] = useState<FilterState>({
-    category: null, locations: [], sources: [], tags: [],
+    category: null, locations: [], tags: [],
   });
   const [seeding, setSeeding] = useState(false);
 
@@ -40,7 +40,7 @@ function DashboardPage() {
     return vendors.filter((v) => {
       if (filters.category && v.category !== filters.category) return false;
       if (filters.locations.length && !filters.locations.some((l) => v.location?.toLowerCase().includes(l.toLowerCase()))) return false;
-      if (filters.sources.length && !filters.sources.includes(v.source ?? "")) return false;
+      
       if (filters.tags.length && !filters.tags.every((t) => v.tags?.includes(t))) return false;
       if (q) {
         const hay = [v.vendor_name, v.location, v.instagram_handle, v.remarks].filter(Boolean).join(" ").toLowerCase();
