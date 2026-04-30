@@ -374,7 +374,7 @@ export const getMyProject = createServerFn({ method: "GET" })
 
     const { data: vrows, error: ve } = await supabaseAdmin
       .from("vendors")
-      .select("id, category, subcategory, vendor_name, instagram_handle, price_text, portfolio_link")
+      .select("id, category, subcategory, vendor_name, location, instagram_handle, price_text, portfolio_link")
       .in("id", vendorIds);
     if (ve) throw new Error(ve.message);
 
