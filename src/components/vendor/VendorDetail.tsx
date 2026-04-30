@@ -1,0 +1,172 @@
+import type { Vendor } from "@/lib/vendor-types";
+import { CATEGORY_COLORS, formatPriceRange } from "@/lib/categories";
+import {
+  X, MapPin, Phone, Mail, Instagram, Globe, Star, Pencil, Trash2, Copy, Check, Link as LinkIcon,
+} from "lucide-react";
+import { useState } from "react";
+
+interface VendorDetailProps {
+  vendor: Vendor | null;
+  onClose: () => void;
+  onEdit: () => void;
+  onDelete: () => Promise<void>;
+}
+
+export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetailProps) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [copiedCard, setCopiedCard] = useState(false);
+
+  if (!vendor) return null;
+  const colors = CATEGORY_COLORS[vendor.category] ?? { bg: "bg-white/10", text: "text-white" };
+
+  const copyContactCard = () => {
+    const lines = [
+      vendor.vendor_name,
+      vendor.category,
+      vendor.contact_number ?? "",
+      vendor.instagram_handle ? `@${vendor.instagram_handle}` : "",
+      vendor.website ?? "",
+      formatPriceRange(vendor.price_range_low, vendor.price_range_high),
+    ].filter(Boolean);
+    navigator.clipboard.writeText(lines.join(" | "));
+    setCopiedCard(true);
+    setTimeout(() => setCopiedCard(false), 1800);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-[var(--cream)] text-[oklch(0.18_0.01_60)] shadow-2xl"
+      >
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-black/10 bg-[var(--cream)] px-6 py-4">
+          <div>
+            <div className="mb-1 flex flex-wrap gap-1">
+              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text}`}>
+                {vendor.category}
+              </span>
+              {vendor.subcategory && (
+                <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] text-black/60">{vendor.subcategory}</span>
+              )}
+            </div>
+            <h2 className="font-display text-3xl leading-tight">{vendor.vendor_name}</h2>
+            {vendor.google_rating != null && (
+              <div className="mt-1 flex items-center gap-1 text-sm text-amber-700">
+                <Star className="h-4 w-4 fill-current" /> {Number(vendor.google_rating).toFixed(1)} Google rating
+              </div>
+            )}
+          </div>
+          <button onClick={onClose} className="rounded-md p-1 hover:bg-black/5"><X className="h-5 w-5" /></button>
+        </div>
+
+        <div className="grid gap-3 p-6 sm:grid-cols-2">
+          <Row icon={<MapPin />} label="Location" value={vendor.location} />
+          <Row icon={<Phone />} label="Phone" value={vendor.contact_number} copy />
+          <Row icon={<Mail />} label="Email" value={vendor.email} copy />
+          <Row icon={<Instagram />} label="Instagram" value={vendor.instagram_handle ? `@${vendor.instagram_handle}` : null} link={vendor.instagram_handle ? `https://instagram.com/${vendor.instagram_handle}` : undefined} />
+          <Row icon={<Globe />} label="Website" value={vendor.website} link={vendor.website ? (vendor.website.startsWith("http") ? vendor.website : `https://${vendor.website}`) : undefined} />
+          <Row icon={<LinkIcon />} label="Portfolio" value={vendor.portfolio_link} link={vendor.portfolio_link ?? undefined} />
+
+          <Row label="Price Range" value={formatPriceRange(vendor.price_range_low, vendor.price_range_high) || null} />
+          <Row label="Commission" value={vendor.commission_model} />
+          <Row label="Source" value={vendor.source} />
+          <Row label="Date Added" value={new Date(vendor.date_added).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} />
+
+          {vendor.category === "Hotels & Venues" && (
+            <>
+              <Row label="Rooms" value={vendor.number_of_rooms?.toString() ?? null} />
+              <Row label="Distance from Delhi" value={vendor.distance_from_delhi} />
+              <Row label="Hotel Category" value={vendor.hotel_category} />
+            </>
+          )}
+
+          {vendor.category === "Photography & Videography" && (vendor.quote_breakdown || vendor.team_size || vendor.deliverables) && (
+            <>
+              <Row label="Quote Breakdown" value={vendor.quote_breakdown} className="sm:col-span-2" />
+              <Row label="Team Size" value={vendor.team_size} />
+              <Row label="Deliverables" value={vendor.deliverables} />
+            </>
+          )}
+
+          {vendor.remarks && (
+            <div className="sm:col-span-2 rounded-lg bg-white/60 p-3">
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-black/50">Remarks</div>
+              <div className="text-sm text-black/80 whitespace-pre-wrap">{vendor.remarks}</div>
+            </div>
+          )}
+
+          {vendor.tags && vendor.tags.length > 0 && (
+            <div className="sm:col-span-2 flex flex-wrap gap-1">
+              {vendor.tags.map((t) => (
+                <span key={t} className="rounded-full bg-black/5 px-2 py-0.5 text-xs text-black/60">#{t}</span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-2 border-t border-black/10 bg-[var(--cream)] px-6 py-3">
+          <button
+            onClick={copyContactCard}
+            className="inline-flex items-center gap-1.5 rounded-md border border-black/15 px-3 py-2 text-sm hover:border-[var(--gold)]"
+          >
+            {copiedCard ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+            {copiedCard ? "Copied!" : "Copy Contact Card"}
+          </button>
+          <div className="flex gap-2">
+            {confirmDelete ? (
+              <>
+                <span className="self-center text-sm text-red-700">Delete this vendor?</span>
+                <button onClick={() => setConfirmDelete(false)} className="rounded-md px-3 py-2 text-sm hover:bg-black/5">Cancel</button>
+                <button
+                  onClick={async () => { await onDelete(); }}
+                  className="rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+                >
+                  Confirm Delete
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => setConfirmDelete(true)} className="inline-flex items-center gap-1.5 rounded-md border border-red-300 px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                  <Trash2 className="h-4 w-4" /> Delete
+                </button>
+                <button onClick={onEdit} className="inline-flex items-center gap-1.5 rounded-md bg-[var(--gold)] px-3 py-2 text-sm font-medium text-[var(--charcoal)] hover:bg-[oklch(0.78_0.115_85)]">
+                  <Pencil className="h-4 w-4" /> Edit
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Row({ icon, label, value, link, copy, className }: { icon?: React.ReactNode; label: string; value: string | null | undefined; link?: string; copy?: boolean; className?: string }) {
+  const [copied, setCopied] = useState(false);
+  if (!value) return null;
+  const handleCopy = () => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <div className={`rounded-lg bg-white/60 p-3 ${className ?? ""}`}>
+      <div className="mb-0.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-black/50">
+        {icon && <span className="[&>svg]:h-3 [&>svg]:w-3">{icon}</span>}
+        {label}
+      </div>
+      <div className="flex items-center justify-between gap-2 text-sm text-black/80">
+        {link ? (
+          <a href={link} target="_blank" rel="noreferrer" className="truncate hover:text-[var(--gold)] hover:underline">{value}</a>
+        ) : (
+          <span className="truncate">{value}</span>
+        )}
+        {copy && (
+          <button onClick={handleCopy} className="shrink-0 rounded p-1 hover:bg-black/5">
+            {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5 opacity-50" />}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
