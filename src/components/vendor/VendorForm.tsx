@@ -50,6 +50,11 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
   const [existing, setExisting] = useState<VendorAttachment[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const allCategories = useAllCategories();
+  const [showNewCategory, setShowNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryError, setNewCategoryError] = useState<string | null>(null);
+  const prevCategoryRef = useRef<string>("");
 
   const editingId = (initial as Vendor | null | undefined)?.id ?? null;
 
@@ -160,10 +165,73 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
           </Field>
 
           <Field label="Category *">
-            <select className={inputCls} value={form.category} onChange={(e) => set("category", e.target.value)} required>
+            <select
+              className={inputCls}
+              value={form.category}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "__add_new__") {
+                  prevCategoryRef.current = form.category;
+                  setShowNewCategory(true);
+                  setNewCategoryName("");
+                  setNewCategoryError(null);
+                } else {
+                  setShowNewCategory(false);
+                  set("category", v);
+                }
+              }}
+              required
+            >
               <option value="">Select category…</option>
-              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {allCategories.map((c) => <option key={c} value={c}>{c}</option>)}
+              <option value="__add_new__">+ Add New Category…</option>
             </select>
+            {showNewCategory && (
+              <div className="mt-2 space-y-1">
+                <div className="flex gap-2">
+                  <input
+                    autoFocus
+                    className={inputCls}
+                    value={newCategoryName}
+                    onChange={(e) => { setNewCategoryName(e.target.value); setNewCategoryError(null); }}
+                    placeholder="New category name"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const res = addCustomCategory(newCategoryName);
+                        if (!res.ok) { setNewCategoryError(res.error ?? "Invalid"); return; }
+                        set("category", res.value!);
+                        setShowNewCategory(false);
+                      } else if (e.key === "Escape") {
+                        e.preventDefault();
+                        set("category", prevCategoryRef.current);
+                        setShowNewCategory(false);
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const res = addCustomCategory(newCategoryName);
+                      if (!res.ok) { setNewCategoryError(res.error ?? "Invalid"); return; }
+                      set("category", res.value!);
+                      setShowNewCategory(false);
+                    }}
+                    className="rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
+                  >
+                    Add
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { set("category", prevCategoryRef.current); setShowNewCategory(false); }}
+                    className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--charcoal)]/70 hover:bg-white"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                {newCategoryError && <p className="text-xs text-red-600">{newCategoryError}</p>}
+              </div>
+            )}
           </Field>
 
           <Field label="Subcategory">
