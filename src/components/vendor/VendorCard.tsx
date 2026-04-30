@@ -2,6 +2,7 @@ import type { Vendor } from "@/lib/vendor-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import { MapPin, Phone, Star, Instagram, Copy, Check } from "lucide-react";
 import { useState } from "react";
+import { VendorProjectAssigner } from "./VendorProjectAssigner";
 
 interface VendorCardProps {
   vendor: Vendor;
@@ -81,8 +82,11 @@ export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
         )}
       </div>
 
-      <div className="mt-auto flex gap-2 border-t border-[var(--border)] pt-3 mt-3" style={{ marginTop: 'auto' }}>
+      <div className="mt-3 border-t border-[var(--border)] pt-3" style={{ marginTop: 'auto' }}>
+        <VendorProjectAssigner vendorId={vendor.id} compact />
+      </div>
 
+      <div className="mt-2 flex gap-2">
         <button
           onClick={(e) => { e.stopPropagation(); onView(); }}
           className="flex-1 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"

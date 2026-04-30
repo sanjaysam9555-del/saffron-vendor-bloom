@@ -13,6 +13,7 @@ import {
 } from "@/lib/vendor-files-api";
 import { DocumentViewer } from "./DocumentViewer";
 import { useIsAdmin } from "@/lib/auth";
+import { VendorProjectAssigner } from "./VendorProjectAssigner";
 
 interface VendorDetailProps {
   vendor: Vendor | null;
@@ -112,6 +113,13 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
             </div>
           )}
 
+        </div>
+
+        <div className="border-t border-[var(--border)] px-6 py-4">
+          <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+            Assigned to Projects
+          </div>
+          <VendorProjectAssigner vendorId={vendor.id} />
         </div>
 
         {attachments.length > 0 && (
