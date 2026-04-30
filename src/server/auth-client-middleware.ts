@@ -7,10 +7,20 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const attachAuthToken = createMiddleware({ type: "function" }).client(
   async ({ next }) => {
-    const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
+    const { data, error } = await supabase.auth.getSession();
+    let token = data.session?.access_token;
+
+    if (!token && !error) {
+      const refreshed = await supabase.auth.refreshSession();
+      token = refreshed.data.session?.access_token;
+    }
+
+    if (!token) {
+      throw new Error("Your session is still loading. Please try again in a moment.");
+    }
+
     return next({
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: { Authorization: `Bearer ${token}` },
     });
   },
 );
