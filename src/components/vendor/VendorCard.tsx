@@ -81,8 +81,7 @@ export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
         )}
       </div>
 
-      <div className="mt-auto flex gap-2 border-t border-[var(--border)] pt-3">
-        <div className="-mt-3" />
+      <div className="mt-auto flex gap-2 border-t border-[var(--border)] pt-3 [margin-top:auto]" style={{ marginTop: 'auto' }}>
 
         <button
           onClick={(e) => { e.stopPropagation(); onView(); }}
