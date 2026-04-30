@@ -39,17 +39,27 @@ export function ClientVendorCard({ vendor, onView }: Props) {
             <MapPin className="h-3.5 w-3.5" /> {vendor.location}
           </div>
         )}
-        {vendor.instagram_handle && (
-          <a
-            href={`https://instagram.com/${vendor.instagram_handle}`}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 hover:text-[var(--terracotta)]"
-          >
-            <Instagram className="h-3.5 w-3.5" /> @{vendor.instagram_handle}
-          </a>
-        )}
+        {vendor.instagram_handle && (() => {
+          const raw = vendor.instagram_handle.trim();
+          const handle = raw
+            .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
+            .replace(/^@/, "")
+            .replace(/\/.*$/, "")
+            .replace(/\?.*$/, "");
+          const href = /^https?:\/\//i.test(raw) ? raw : `https://instagram.com/${handle}`;
+          return (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex min-w-0 items-center gap-1.5 hover:text-[var(--terracotta)]"
+            >
+              <Instagram className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">@{handle}</span>
+            </a>
+          );
+        })()}
         {vendor.portfolio_link && (
           <a
             href={vendor.portfolio_link.startsWith("http") ? vendor.portfolio_link : `https://${vendor.portfolio_link}`}
