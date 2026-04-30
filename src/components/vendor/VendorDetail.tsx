@@ -12,6 +12,7 @@ import {
   type VendorAttachment,
 } from "@/lib/vendor-files-api";
 import { DocumentViewer } from "./DocumentViewer";
+import { useIsAdmin } from "@/lib/auth";
 
 interface VendorDetailProps {
   vendor: Vendor | null;
