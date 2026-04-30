@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const BASE_CATEGORIES = [
   "Photography & Videography",
@@ -22,34 +23,73 @@ export const CATEGORIES = BASE_CATEGORIES;
 
 export type Category = (typeof BASE_CATEGORIES)[number];
 
-// ---------- Custom-category store (localStorage + pub/sub) ----------
-const STORAGE_KEY = "saffron.customCategories";
-const listeners = new Set<() => void>();
+// ---------- Storage keys ----------
+const CUSTOM_KEY = "saffron.customCategories";
+const RENAMES_KEY = "saffron.categoryRenames"; // { [oldName]: newName }
+const DELETED_KEY = "saffron.deletedCategories"; // string[] of names hidden from UI
 
-function readCustom(): string[] {
-  if (typeof window === "undefined") return [];
+const listeners = new Set<() => void>();
+const notify = () => listeners.forEach((cb) => cb());
+
+// ---------- Low-level storage helpers ----------
+function readJSON<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string") : [];
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw) as T;
   } catch {
-    return [];
+    return fallback;
   }
 }
-
-function writeCustom(list: string[]): void {
+function writeJSON(key: string, value: unknown): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  window.localStorage.setItem(key, JSON.stringify(value));
 }
 
+function readCustom(): string[] {
+  const v = readJSON<unknown>(CUSTOM_KEY, []);
+  return Array.isArray(v) ? v.filter((x) => typeof x === "string") : [];
+}
+function readRenames(): Record<string, string> {
+  const v = readJSON<unknown>(RENAMES_KEY, {});
+  return v && typeof v === "object" ? (v as Record<string, string>) : {};
+}
+function readDeleted(): string[] {
+  const v = readJSON<unknown>(DELETED_KEY, []);
+  return Array.isArray(v) ? v.filter((x) => typeof x === "string") : [];
+}
+
+// ---------- Public read API ----------
 export function getCustomCategories(): string[] {
   return readCustom();
 }
 
+/** Map a stored vendor.category to its current display name (after renames). */
+export function getDisplayCategory(name: string | null | undefined): string {
+  if (!name) return "";
+  const renames = readRenames();
+  // follow rename chain (with cycle guard)
+  let current = name;
+  const seen = new Set<string>();
+  while (renames[current] && !seen.has(current)) {
+    seen.add(current);
+    current = renames[current];
+  }
+  return current;
+}
+
 export function getAllCategories(): string[] {
-  const merged = [...BASE_CATEGORIES, ...readCustom()];
-  // de-dupe (case-insensitive) preserving first occurrence
+  const renames = readRenames();
+  const deleted = new Set(readDeleted());
+
+  // Apply renames to base + custom, then filter deleted
+  const applyRename = (n: string) => getDisplayCategory(n);
+  const merged = [
+    ...BASE_CATEGORIES.map(applyRename),
+    ...readCustom().map(applyRename),
+  ].filter((c) => !deleted.has(c));
+
   const seen = new Set<string>();
   const unique = merged.filter((c) => {
     const k = c.toLowerCase();
@@ -60,19 +100,122 @@ export function getAllCategories(): string[] {
   return unique.sort((a, b) => a.localeCompare(b));
 }
 
+// ---------- Mutations ----------
 export function addCustomCategory(name: string): { ok: boolean; value?: string; error?: string } {
   const trimmed = name.trim();
   if (!trimmed) return { ok: false, error: "Category name is required" };
-  const all = [...BASE_CATEGORIES, ...readCustom()].map((c) => c.toLowerCase());
-  if (all.includes(trimmed.toLowerCase())) {
+  const existing = getAllCategories().map((c) => c.toLowerCase());
+  if (existing.includes(trimmed.toLowerCase())) {
     return { ok: false, error: "Category already exists" };
   }
+  // If this name was previously deleted, un-delete it
+  const deleted = readDeleted().filter((n) => n.toLowerCase() !== trimmed.toLowerCase());
+  writeJSON(DELETED_KEY, deleted);
+
   const next = [...readCustom(), trimmed];
-  writeCustom(next);
-  listeners.forEach((cb) => cb());
+  writeJSON(CUSTOM_KEY, next);
+  notify();
   return { ok: true, value: trimmed };
 }
 
+/**
+ * Rename a category. Updates local mapping AND bulk-updates every vendor row
+ * whose category equals the old name in the database.
+ */
+export async function renameCategory(
+  oldName: string,
+  newName: string,
+): Promise<{ ok: boolean; value?: string; error?: string }> {
+  const from = oldName.trim();
+  const to = newName.trim();
+  if (!from || !to) return { ok: false, error: "Names are required" };
+  if (from === to) return { ok: true, value: to };
+
+  const all = getAllCategories().map((c) => c.toLowerCase());
+  if (all.includes(to.toLowerCase()) && to.toLowerCase() !== from.toLowerCase()) {
+    return { ok: false, error: "A category with that name already exists" };
+  }
+
+  // 1) DB: update all vendors using the old name
+  const { error } = await supabase
+    .from("vendors")
+    .update({ category: to })
+    .eq("category", from);
+  if (error) return { ok: false, error: error.message };
+
+  // 2) Local: record rename mapping (so future stored "from" values still resolve)
+  const renames = readRenames();
+
+  // If renaming a custom category that has no vendors, also update the custom list directly
+  const custom = readCustom();
+  const customIdx = custom.findIndex((c) => c === from);
+  if (customIdx >= 0) {
+    custom[customIdx] = to;
+    writeJSON(CUSTOM_KEY, custom);
+  } else {
+    // Base or already-renamed name: store mapping
+    renames[from] = to;
+    // Also collapse any chains pointing to "from"
+    for (const k of Object.keys(renames)) {
+      if (renames[k] === from) renames[k] = to;
+    }
+    writeJSON(RENAMES_KEY, renames);
+  }
+
+  // If "to" was previously hidden via delete, un-hide it
+  const deleted = readDeleted().filter((n) => n.toLowerCase() !== to.toLowerCase());
+  writeJSON(DELETED_KEY, deleted);
+
+  notify();
+  return { ok: true, value: to };
+}
+
+/**
+ * Delete a category. If vendors still use it, they're reassigned to "Miscellaneous".
+ * For base categories, hides them from the UI via the deleted-set; for custom
+ * categories, removes them outright.
+ */
+export async function deleteCategory(
+  name: string,
+  fallback: string = "Miscellaneous",
+): Promise<{ ok: boolean; error?: string }> {
+  const target = name.trim();
+  if (!target) return { ok: false, error: "Name required" };
+
+  // 1) DB: reassign vendors to fallback
+  const { error } = await supabase
+    .from("vendors")
+    .update({ category: fallback })
+    .eq("category", target);
+  if (error) return { ok: false, error: error.message };
+
+  // 2) Local: remove from custom list if present
+  const custom = readCustom().filter((c) => c !== target);
+  writeJSON(CUSTOM_KEY, custom);
+
+  // 3) Local: clear any rename pointing TO this name
+  const renames = readRenames();
+  let changed = false;
+  for (const [k, v] of Object.entries(renames)) {
+    if (v === target) {
+      delete renames[k];
+      changed = true;
+    }
+  }
+  if (changed) writeJSON(RENAMES_KEY, renames);
+
+  // 4) Local: hide from UI (covers base categories and any that survive via rename chain)
+  const deleted = readDeleted();
+  if (!deleted.includes(target)) {
+    deleted.push(target);
+    writeJSON(DELETED_KEY, deleted);
+  }
+
+  notify();
+  return { ok: true };
+}
+
+// ---------- Subscriptions / hook ----------
 export function subscribeCategories(cb: () => void): () => void {
   listeners.add(cb);
   return () => listeners.delete(cb);
@@ -88,6 +231,7 @@ export function useAllCategories(): string[] {
   return list;
 }
 
+// ---------- Colors ----------
 export function getCategoryColor(name: string): { bg: string; text: string } {
   return CATEGORY_COLORS[name] ?? CATEGORY_COLORS["Miscellaneous"];
 }
