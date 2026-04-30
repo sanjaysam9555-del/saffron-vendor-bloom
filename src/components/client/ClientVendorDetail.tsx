@@ -4,6 +4,8 @@ import { CATEGORY_COLORS } from "@/lib/categories";
 import { X, MapPin, Instagram, Link as LinkIcon, Paperclip, FileText, Globe, Star } from "lucide-react";
 import { DocumentViewer } from "@/components/vendor/DocumentViewer";
 import { formatFileSize, getAttachmentUrl } from "@/lib/vendor-files-api";
+import { ClientStatusSelect } from "./ClientStatusSelect";
+import { useQuery } from "@tanstack/react-query";
 
 interface Props {
   vendor: ClientVendor | null;
@@ -12,6 +14,14 @@ interface Props {
 
 export function ClientVendorDetail({ vendor, onClose }: Props) {
   const [viewing, setViewing] = useState<ClientVendor["attachments"][number] | null>(null);
+
+  // Subscribe to the my-project cache so the status stays in sync with the card.
+  const { data: project } = useQuery<{ vendors: ClientVendor[] }>({
+    queryKey: ["my-project"],
+    enabled: false,
+  });
+  const liveVendor = project?.vendors.find((v) => v.id === vendor?.id);
+  const liveStatus = liveVendor?.client_status ?? vendor?.client_status ?? null;
 
   if (!vendor) return null;
   const colors = CATEGORY_COLORS[vendor.category] ?? {
@@ -45,6 +55,13 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
           <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]">
             <X className="h-5 w-5" />
           </button>
+        </div>
+
+        <div className="border-b border-[var(--border)] bg-[var(--cream-deep)]/40 px-6 py-3">
+          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+            Your status
+          </div>
+          <ClientStatusSelect vendorId={vendor.id} status={liveStatus} />
         </div>
 
         <div className="grid gap-3 p-6 sm:grid-cols-2">

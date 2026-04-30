@@ -36,6 +36,13 @@ export interface ClientVendor {
   portfolio_link: string | null;
   website: string | null;
   google_rating: number | null;
+  client_status:
+    | "like"
+    | "shortlisted"
+    | "finalised"
+    | "rejected"
+    | "thinking"
+    | null;
   attachments: {
     id: string;
     file_name: string;
