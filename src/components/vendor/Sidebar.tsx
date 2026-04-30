@@ -1,4 +1,4 @@
-import { CATEGORIES, LOCATION_OPTIONS } from "@/lib/categories";
+import { LOCATION_OPTIONS, useAllCategories } from "@/lib/categories";
 import type { Vendor } from "@/lib/vendor-types";
 import { Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -16,6 +16,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ vendors, filters, onChange, collapsed, onToggle }: SidebarProps) {
+  const allCategories = useAllCategories();
   const counts = vendors.reduce<Record<string, number>>((acc, v) => {
     acc[v.category] = (acc[v.category] ?? 0) + 1;
     return acc;
@@ -101,7 +102,7 @@ export function Sidebar({ vendors, filters, onChange, collapsed, onToggle }: Sid
               <span className="text-xs text-[var(--charcoal)]/50">{vendors.length}</span>
             </button>
           </li>
-          {CATEGORIES.map((c) => (
+          {allCategories.map((c) => (
             <li key={c}>
               <button
                 onClick={() => onChange({ ...filters, category: c })}

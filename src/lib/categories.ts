@@ -1,4 +1,6 @@
-export const CATEGORIES = [
+import { useEffect, useState } from "react";
+
+export const BASE_CATEGORIES = [
   "Photography & Videography",
   "Decor",
   "Catering",
@@ -15,7 +17,80 @@ export const CATEGORIES = [
   "Miscellaneous",
 ] as const;
 
-export type Category = (typeof CATEGORIES)[number];
+/** @deprecated Use useAllCategories() or getAllCategories() for the merged sorted list. */
+export const CATEGORIES = BASE_CATEGORIES;
+
+export type Category = (typeof BASE_CATEGORIES)[number];
+
+// ---------- Custom-category store (localStorage + pub/sub) ----------
+const STORAGE_KEY = "saffron.customCategories";
+const listeners = new Set<() => void>();
+
+function readCustom(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeCustom(list: string[]): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+}
+
+export function getCustomCategories(): string[] {
+  return readCustom();
+}
+
+export function getAllCategories(): string[] {
+  const merged = [...BASE_CATEGORIES, ...readCustom()];
+  // de-dupe (case-insensitive) preserving first occurrence
+  const seen = new Set<string>();
+  const unique = merged.filter((c) => {
+    const k = c.toLowerCase();
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  return unique.sort((a, b) => a.localeCompare(b));
+}
+
+export function addCustomCategory(name: string): { ok: boolean; value?: string; error?: string } {
+  const trimmed = name.trim();
+  if (!trimmed) return { ok: false, error: "Category name is required" };
+  const all = [...BASE_CATEGORIES, ...readCustom()].map((c) => c.toLowerCase());
+  if (all.includes(trimmed.toLowerCase())) {
+    return { ok: false, error: "Category already exists" };
+  }
+  const next = [...readCustom(), trimmed];
+  writeCustom(next);
+  listeners.forEach((cb) => cb());
+  return { ok: true, value: trimmed };
+}
+
+export function subscribeCategories(cb: () => void): () => void {
+  listeners.add(cb);
+  return () => listeners.delete(cb);
+}
+
+export function useAllCategories(): string[] {
+  const [list, setList] = useState<string[]>(() => getAllCategories());
+  useEffect(() => {
+    const update = () => setList(getAllCategories());
+    update();
+    return subscribeCategories(update);
+  }, []);
+  return list;
+}
+
+export function getCategoryColor(name: string): { bg: string; text: string } {
+  return CATEGORY_COLORS[name] ?? CATEGORY_COLORS["Miscellaneous"];
+}
 
 // Warm, brand-aligned muted hues for category chips (light backgrounds, charcoal text).
 export const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
