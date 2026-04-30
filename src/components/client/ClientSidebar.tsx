@@ -41,7 +41,7 @@ export function ClientSidebar({ vendors, filters, onChange, collapsed, onToggle 
 
   if (collapsed) {
     return (
-      <aside className="w-12 shrink-0 border-r border-[var(--border)] bg-[var(--cream-deep)] py-4 transition-all duration-200">
+      <aside className="w-12 shrink-0 self-stretch border-r border-[var(--border)] bg-[var(--cream-deep)] py-4 transition-all duration-200">
         <button
           onClick={onToggle}
           title="Expand filters"
