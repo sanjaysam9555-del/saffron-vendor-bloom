@@ -14,6 +14,7 @@ export function ClientVendorCard({ vendor, onView }: Props) {
     bg: "bg-[var(--cream-deep)]",
     text: "text-[var(--charcoal)]",
   };
+  const statusOpt = getClientStatusOption(vendor.client_status);
 
   return (
     <div
