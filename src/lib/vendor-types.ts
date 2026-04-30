@@ -28,15 +28,3 @@ export interface Vendor {
 
 export type VendorInput = Omit<Vendor, "id" | "date_added" | "updated_at">;
 
-export interface InboundLead {
-  id: string;
-  submitted_at: string;
-  name: string;
-  services: string | null;
-  location: string | null;
-  contact: string | null;
-  instagram: string | null;
-  email: string | null;
-  portfolio: string | null;
-  status: string;
-}
