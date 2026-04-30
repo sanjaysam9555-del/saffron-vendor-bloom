@@ -29,7 +29,7 @@ type Row = {
 };
 
 function AdminUsersPage() {
-  const { user } = useAuth();
+  const { user, session, role } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -54,8 +54,10 @@ function AdminUsersPage() {
   };
 
   useEffect(() => {
-    refresh();
-  }, []);
+    if (session?.access_token && role === "admin") {
+      refresh();
+    }
+  }, [session?.access_token, role]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
