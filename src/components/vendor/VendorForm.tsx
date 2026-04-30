@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Vendor, VendorInput } from "@/lib/vendor-types";
-import { CATEGORIES, HOTEL_CATEGORIES, SOURCE_OPTIONS } from "@/lib/categories";
+import { CATEGORIES, HOTEL_CATEGORIES } from "@/lib/categories";
 import { X } from "lucide-react";
 
 interface VendorFormProps {
@@ -110,12 +110,6 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
 
           <Field label="Location">
             <input className={inputCls} value={form.location ?? ""} onChange={(e) => set("location", e.target.value || null)} placeholder="e.g. Gurugram" />
-          </Field>
-
-          <Field label="Source">
-            <select className={inputCls} value={form.source ?? "Manual Entry"} onChange={(e) => set("source", e.target.value)}>
-              {SOURCE_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
           </Field>
 
           <Field label="Contact Number">

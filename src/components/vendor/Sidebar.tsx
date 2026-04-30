@@ -1,11 +1,10 @@
-import { CATEGORIES, LOCATION_OPTIONS, SOURCE_OPTIONS } from "@/lib/categories";
+import { CATEGORIES, LOCATION_OPTIONS } from "@/lib/categories";
 import type { Vendor } from "@/lib/vendor-types";
 import { Filter, X } from "lucide-react";
 
 export interface FilterState {
   category: string | null;
   locations: string[];
-  sources: string[];
   tags: string[];
 }
 
@@ -29,7 +28,7 @@ export function Sidebar({ vendors, filters, onChange }: SidebarProps) {
     arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
 
   const hasActive =
-    filters.category || filters.locations.length || filters.sources.length || filters.tags.length;
+    filters.category || filters.locations.length || filters.tags.length;
 
   const chip = (active: boolean) =>
     `rounded-full border px-2.5 py-0.5 text-xs transition-colors ${
@@ -46,7 +45,7 @@ export function Sidebar({ vendors, filters, onChange }: SidebarProps) {
         </h2>
         {hasActive ? (
           <button
-            onClick={() => onChange({ category: null, locations: [], sources: [], tags: [] })}
+            onClick={() => onChange({ category: null, locations: [], tags: [] })}
             className="flex items-center gap-1 text-xs text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"
           >
             <X className="h-3 w-3" /> Clear
@@ -102,25 +101,6 @@ export function Sidebar({ vendors, filters, onChange }: SidebarProps) {
                 className={chip(active)}
               >
                 {loc}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Source */}
-      <div className="mb-6">
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Source</div>
-        <div className="flex flex-wrap gap-1">
-          {SOURCE_OPTIONS.map((s) => {
-            const active = filters.sources.includes(s);
-            return (
-              <button
-                key={s}
-                onClick={() => onChange({ ...filters, sources: toggle(filters.sources, s) })}
-                className={chip(active)}
-              >
-                {s}
               </button>
             );
           })}

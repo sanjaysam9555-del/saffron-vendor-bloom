@@ -69,7 +69,7 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
 
           <Row label="Price Range" value={formatPriceRange(vendor.price_range_low, vendor.price_range_high) || null} />
           <Row label="Commission" value={vendor.commission_model} />
-          <Row label="Source" value={vendor.source} />
+          
           <Row label="Date Added" value={new Date(vendor.date_added).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} />
 
           {vendor.category === "Hotels & Venues" && (
