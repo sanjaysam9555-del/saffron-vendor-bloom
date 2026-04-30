@@ -1,13 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Vendor, VendorInput } from "@/lib/vendor-types";
 import { CATEGORIES, HOTEL_CATEGORIES } from "@/lib/categories";
-import { X } from "lucide-react";
+import { X, Upload, Paperclip, Trash2 } from "lucide-react";
+import {
+  ACCEPTED_FILE_TYPES,
+  MAX_FILE_SIZE,
+  deleteVendorAttachment,
+  formatFileSize,
+  listVendorAttachments,
+  uploadVendorAttachment,
+  type VendorAttachment,
+} from "@/lib/vendor-files-api";
 
 interface VendorFormProps {
   open: boolean;
   initial?: Partial<VendorInput> | Vendor | null;
   onClose: () => void;
-  onSubmit: (input: VendorInput) => Promise<void>;
+  onSubmit: (input: VendorInput) => Promise<Vendor>;
 }
 
 const EMPTY: VendorInput = {
@@ -37,14 +46,25 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
   const [form, setForm] = useState<VendorInput>(EMPTY);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [existing, setExisting] = useState<VendorAttachment[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const editingId = (initial as Vendor | null | undefined)?.id ?? null;
 
   useEffect(() => {
     if (open) {
       const seed = { ...EMPTY, ...(initial ?? {}) } as VendorInput;
       setForm(seed);
       setError(null);
+      setPendingFiles([]);
+      setExisting([]);
+      if (editingId) {
+        listVendorAttachments(editingId).then(setExisting).catch(() => setExisting([]));
+      }
     }
-  }, [open, initial]);
+  }, [open, initial, editingId]);
 
   if (!open) return null;
 
@@ -52,6 +72,33 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
     setForm((f) => ({ ...f, [k]: v }));
 
   const numField = (v: string): number | null => (v.trim() === "" ? null : Number(v));
+
+  const addFiles = (files: FileList | File[]) => {
+    const incoming = Array.from(files);
+    const accepted: File[] = [];
+    for (const f of incoming) {
+      if (f.size > MAX_FILE_SIZE) {
+        setError(`"${f.name}" exceeds 20 MB limit`);
+        continue;
+      }
+      accepted.push(f);
+    }
+    if (accepted.length) setPendingFiles((cur) => [...cur, ...accepted]);
+  };
+
+  const removePending = (idx: number) =>
+    setPendingFiles((cur) => cur.filter((_, i) => i !== idx));
+
+  const removeExisting = async (att: VendorAttachment) => {
+    setExisting((cur) => cur.filter((a) => a.id !== att.id));
+    try {
+      await deleteVendorAttachment(att);
+    } catch {
+      // restore on failure
+      setExisting((cur) => [att, ...cur]);
+      setError("Failed to delete attachment");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +120,15 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
     }
     setSubmitting(true);
     try {
-      await onSubmit(form);
+      const saved = await onSubmit(form);
+      // Upload pending files
+      for (const file of pendingFiles) {
+        try {
+          await uploadVendorAttachment(saved.id, file);
+        } catch (e: any) {
+          setError(`Saved vendor, but failed to upload "${file.name}": ${e?.message ?? "error"}`);
+        }
+      }
       onClose();
     } catch (err: any) {
       setError(err?.message ?? "Failed to save vendor");
@@ -188,6 +243,101 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
                 <input className={inputCls} value={form.deliverables ?? ""} onChange={(e) => set("deliverables", e.target.value || null)} placeholder="e.g. 500 photos + 8 min film" />
               </Field>
             </>
+          )}
+        </div>
+
+        {/* Attachments */}
+        <div className="border-t border-[var(--border)] px-6 py-5">
+          <div className="mb-2 flex items-center gap-2 font-display text-lg text-[var(--terracotta)]">
+            <Paperclip className="h-4 w-4" /> Attachments
+          </div>
+          <p className="mb-3 text-xs text-[var(--charcoal)]/60">
+            PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, JPG, PNG, WEBP — max 20 MB each.
+          </p>
+
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files);
+            }}
+            onClick={() => fileInputRef.current?.click()}
+            className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors ${
+              dragOver
+                ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)]"
+                : "border-[var(--border)] bg-white hover:border-[var(--champagne)]"
+            }`}
+          >
+            <Upload className="mb-1.5 h-5 w-5 text-[var(--terracotta)]" />
+            <div className="text-sm font-medium text-[var(--charcoal)]">Drag & drop files here</div>
+            <div className="text-xs text-[var(--charcoal)]/55">or click to browse</div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept={ACCEPTED_FILE_TYPES}
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files?.length) addFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </div>
+
+          {(existing.length > 0 || pendingFiles.length > 0) && (
+            <ul className="mt-3 space-y-1.5">
+              {existing.map((att) => (
+                <li
+                  key={att.id}
+                  className="flex items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Paperclip className="h-3.5 w-3.5 shrink-0 text-[var(--charcoal)]/55" />
+                    <span className="truncate">{att.file_name}</span>
+                    <span className="shrink-0 text-xs text-[var(--charcoal)]/50">
+                      {formatFileSize(att.size_bytes)}
+                    </span>
+                    <span className="shrink-0 rounded-full bg-[var(--cream-deep)] px-1.5 py-0.5 text-[10px] text-[var(--charcoal)]/55">
+                      saved
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeExisting(att)}
+                    className="rounded p-1 text-[var(--charcoal)]/55 hover:bg-red-50 hover:text-red-600"
+                    title="Remove"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              ))}
+              {pendingFiles.map((f, i) => (
+                <li
+                  key={`${f.name}-${i}`}
+                  className="flex items-center justify-between gap-2 rounded-md border border-[var(--champagne)] bg-[var(--cream-deep)] px-3 py-2 text-sm"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Paperclip className="h-3.5 w-3.5 shrink-0 text-[var(--terracotta)]" />
+                    <span className="truncate">{f.name}</span>
+                    <span className="shrink-0 text-xs text-[var(--charcoal)]/50">
+                      {formatFileSize(f.size)}
+                    </span>
+                    <span className="shrink-0 rounded-full bg-[var(--terracotta-soft)] px-1.5 py-0.5 text-[10px] text-[var(--terracotta)]">
+                      pending
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removePending(i)}
+                    className="rounded p-1 text-[var(--charcoal)]/55 hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
 

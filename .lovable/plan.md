@@ -1,91 +1,81 @@
-## Saffron Events — Vendor Management Dashboard
+# Vendor File Attachments + Document Viewer
 
-A premium, brand-styled internal tool to replace the messy Google Sheet. Backed by Lovable Cloud (Postgres) so data persists across devices and the team can collaborate.
+Allow uploading files (PDF, DOC, DOCX, images) when adding/editing a vendor, and view them inside a built-in document viewer launched from the vendor detail modal.
 
-### Brand & design system
+## What the user will see
 
-- Palette: charcoal `#1A1A1A` background, gold `#C9A84C` primary accent, white text, soft cream `#F5F0E8` card surfaces
-- Type: Cormorant Garamond (headings) + Inter (body), loaded from Google Fonts
-- Cards: 12px radius, soft shadow, gold border on hover, smooth transitions
-- 14 distinct muted category badge colors (not all gold)
-- Lucide icons throughout
-- Responsive desktop + tablet (sidebar collapses on narrow widths)
+**In the Add/Edit Vendor form**
+- New "Attachments" section near the bottom.
+- Drag-and-drop zone + "Choose files" button. Multiple files allowed.
+- Each selected/uploaded file shows: filename, size, type icon, and a remove (×) button.
+- Existing attachments (when editing) are listed with the same controls.
+- Accepted: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, JPG, PNG, WEBP. Max 20 MB per file.
 
-### Data model (Postgres)
+**In the Vendor Detail modal**
+- New "Documents" section listing every attachment with file icon + name + size.
+- Clicking a file opens a full-screen document viewer overlay.
 
-`vendors` table with all fields from the spec:
-- id, vendor_name, category, subcategory, location, contact_number, email, instagram_handle, website, google_rating, price_range_low, price_range_high, commission_model, portfolio_link, source, remarks, tags (text[]), date_added
-- Hotel fields: number_of_rooms, distance_from_delhi, hotel_category
-- Photography RFP fields: quote_breakdown, team_size, deliverables
+**Document Viewer (new component)**
+- Full-screen modal with header (filename, page counter, download button, close).
+- PDFs: rendered page-by-page using a PDF.js canvas viewer with:
+  - Prev / Next page buttons + keyboard arrows
+  - Zoom in/out + fit-to-width
+  - Page number jump input
+- Images (jpg/png/webp): shown directly with zoom controls.
+- DOC/DOCX/PPT/XLS: browser cannot render these natively, so the viewer shows a clean "Preview not available — Download to view" panel with the download button (this is the standard, honest behavior).
+- Smooth fade-in, themed in the existing terracotta/cream palette.
 
-`inbound_leads` table: timestamp, name, services, location, contact, instagram, email, portfolio, status (new / converted / dismissed)
+## Technical plan
 
-Open access to start (no login). RLS enabled with permissive policies — easy to lock down later when team auth is added.
+**Backend (Lovable Cloud)**
+1. Create a `vendor-files` storage bucket (public read for simple signed-free access; upload restricted via RLS by being open like the rest of this project, which currently uses open policies on `vendors`).
+2. Create a `vendor_attachments` table:
+   - `id uuid pk`
+   - `vendor_id uuid` (references `vendors.id` on delete cascade)
+   - `file_path text` (path inside bucket)
+   - `file_name text`
+   - `mime_type text`
+   - `size_bytes bigint`
+   - `created_at timestamptz default now()`
+3. Open RLS policies (matching existing project convention) for select/insert/delete; storage policies allow public read + open insert/delete on the `vendor-files` bucket.
 
-### Routes
+**API layer (`src/lib/vendor-files-api.ts`)**
+- `uploadVendorFile(vendorId, file)` → uploads to `vendor-files/{vendorId}/{uuid}-{filename}` via `supabase.storage`, then inserts row.
+- `listVendorFiles(vendorId)` → returns rows.
+- `deleteVendorFile(attachment)` → removes storage object + row.
+- `getPublicUrl(file_path)` → returns CDN URL.
 
-```text
-/                  Dashboard (vendor grid + sidebar filters)
-/vendors/$id       Vendor detail page (also reachable via modal)
-/leads             Inbound Leads tab
-/import            Import / Export panel
-```
+**Form changes (`VendorForm.tsx`)**
+- Add `pendingFiles: File[]` and `existingAttachments` state.
+- After the vendor is created/updated successfully, upload each pending file and insert attachment rows. (Two-phase save so we have a `vendor_id` for new vendors.)
+- Show inline progress per file; surface errors without blocking the rest.
 
-Top nav (shared on all routes): Saffron Events wordmark (gold on charcoal), global search, "Add Vendor" CTA, stats strip (Total vendors · # categories · Last added).
+**Detail view (`VendorDetail.tsx`)**
+- Fetch attachments via React Query keyed by vendor id.
+- Render a "Documents" section; each item is a button that opens the viewer.
 
-### Dashboard layout (`/`)
+**New `DocumentViewer.tsx`**
+- Props: `file: { url, name, mime_type }`, `onClose`.
+- Uses `pdfjs-dist` (worker via `?url` import) to render PDFs.
+- Image branch uses `<img>` with zoom transform.
+- Fallback branch for office docs with download CTA.
+- Keyboard: Esc closes, ←/→ paginates, +/- zoom.
 
-**Left sidebar**
-- "All" + 14 categories with live count badges
-- Location multi-select chips: Delhi, Gurugram, Noida, Pan India, Rajasthan, Other
-- Source filter: Manual Entry / Inbound Form / RFP Response / Reference / Sample Data
-- Tags filter (chips, derived from existing tags)
-- Collapsible on tablet
+**Dependencies to add**
+- `pdfjs-dist` (PDF rendering)
+- `react-pdf` is intentionally avoided — using `pdfjs-dist` directly keeps bundle smaller and avoids version mismatch issues.
 
-**Main area**
-- View toggle: Card view (default) / Table view
-- Card: name, color-coded category badge, location, click-to-copy phone, IG handle linking to instagram.com/[handle], price range (₹X – ₹Y), star rating, tag chips, View Details + Edit
-- Table: sortable Name / Category / Location / Price Low / Price High / Rating / Date Added; inline edit pencil
-- Empty state per category: "No vendors in this category yet. Add one →"
+## Files touched
 
-### Vendor detail modal
+- `supabase/migrations/*.sql` (new) — bucket, table, policies
+- `src/lib/vendor-files-api.ts` (new)
+- `src/components/vendor/VendorForm.tsx` — attachments UI + upload on save
+- `src/components/vendor/VendorDetail.tsx` — Documents section
+- `src/components/vendor/DocumentViewer.tsx` (new)
+- `src/components/vendor/VendorCard.tsx` — small paperclip badge if attachments exist (optional polish)
+- `package.json` — add `pdfjs-dist`
 
-Full record + Commission, Portfolio, Remarks. Buttons: Edit, Delete (with confirm), **Copy Contact Card** (writes formatted text to clipboard: `Name | Category | Phone | Instagram | Website | Price Range`).
+## Notes / trade-offs
 
-### Add / Edit vendor modal
-
-Single form covering all fields. Category dropdown dynamically reveals:
-- Hotels & Venues → number of rooms, distance from Delhi, hotel category (Budget / Mid-Range / Upper Mid / Luxury / Ultra-Luxury)
-- Photography & Videography → quote breakdown, team size, deliverables (RFP block)
-
-Validation: vendor name + category required. Saves to Postgres, list refreshes instantly.
-
-### Inbound Leads tab (`/leads`)
-
-Table of submissions with timestamp, name, services, location, contact, IG, email, portfolio. Filters: date range + services keyword. Each row has **Convert to Vendor** → opens Add Vendor modal pre-filled, marks lead as converted on save.
-
-(Leads can be seeded with sample rows; a public submission endpoint can be added later if you want a real intake form.)
-
-### Import / Export panel (`/import`)
-
-- Export All to CSV
-- Export by Category (dropdown + button)
-- Import from CSV: drag-drop or paste area
-- Paste from Google Sheets: textarea for tab-separated rows
-- **Smart auto-mapping**: detects common header variants (Name/Vendor/Vendor Name, Phone/Contact/Mobile, IG/Instagram/Insta, Price/Budget, etc.) and shows a preview table with detected → target column mapping before commit
-- Duplicate check on `vendor_name + contact_number`; duplicates flagged and skipped (with count shown)
-
-### Seed data
-
-3–4 realistic Delhi-NCR vendors per category (~50 total) inserted on first run, all tagged `sample` with `source = "Sample Data"` so you can bulk-delete later via a "Clear sample data" button in the import panel.
-
-### Categories (final list)
-
-13 from spec + a 14th — please confirm which to add (suggestions: Mehendi Artists, Florists, Invitations & Stationery, Wedding Attire). I'll default to **Mehendi Artists** unless you say otherwise.
-
-### Technical notes
-
-- TanStack Start + Lovable Cloud (Postgres via Supabase). Reads/writes go through `createServerFn` using `requireSupabaseAuth`-free open client for now (RLS open policies).
-- React Query for caching + optimistic updates on add/edit/delete.
-- CSV parsing with PapaParse; clipboard via `navigator.clipboard`.
-- All filters/search are client-side over the loaded vendor list (fine for 500–2000 rows).
+- **DOCX/PPTX/XLSX cannot be reliably rendered in-browser** without heavy libraries (mammoth, sheetjs, etc.) and they still produce imperfect output. The viewer will offer a Download button for these and render perfectly for PDFs and images. If you'd prefer in-browser DOCX rendering too, say the word and I'll add `mammoth` for DOCX → HTML conversion.
+- Bucket will be **public-read** so the viewer can stream PDFs directly. If you want private files with signed URLs instead, I'll switch to a server function that mints short-lived URLs.
