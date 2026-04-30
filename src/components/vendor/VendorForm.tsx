@@ -246,6 +246,101 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
           )}
         </div>
 
+        {/* Attachments */}
+        <div className="border-t border-[var(--border)] px-6 py-5">
+          <div className="mb-2 flex items-center gap-2 font-display text-lg text-[var(--terracotta)]">
+            <Paperclip className="h-4 w-4" /> Attachments
+          </div>
+          <p className="mb-3 text-xs text-[var(--charcoal)]/60">
+            PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, JPG, PNG, WEBP — max 20 MB each.
+          </p>
+
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files);
+            }}
+            onClick={() => fileInputRef.current?.click()}
+            className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors ${
+              dragOver
+                ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)]"
+                : "border-[var(--border)] bg-white hover:border-[var(--champagne)]"
+            }`}
+          >
+            <Upload className="mb-1.5 h-5 w-5 text-[var(--terracotta)]" />
+            <div className="text-sm font-medium text-[var(--charcoal)]">Drag & drop files here</div>
+            <div className="text-xs text-[var(--charcoal)]/55">or click to browse</div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept={ACCEPTED_FILE_TYPES}
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files?.length) addFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </div>
+
+          {(existing.length > 0 || pendingFiles.length > 0) && (
+            <ul className="mt-3 space-y-1.5">
+              {existing.map((att) => (
+                <li
+                  key={att.id}
+                  className="flex items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Paperclip className="h-3.5 w-3.5 shrink-0 text-[var(--charcoal)]/55" />
+                    <span className="truncate">{att.file_name}</span>
+                    <span className="shrink-0 text-xs text-[var(--charcoal)]/50">
+                      {formatFileSize(att.size_bytes)}
+                    </span>
+                    <span className="shrink-0 rounded-full bg-[var(--cream-deep)] px-1.5 py-0.5 text-[10px] text-[var(--charcoal)]/55">
+                      saved
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeExisting(att)}
+                    className="rounded p-1 text-[var(--charcoal)]/55 hover:bg-red-50 hover:text-red-600"
+                    title="Remove"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              ))}
+              {pendingFiles.map((f, i) => (
+                <li
+                  key={`${f.name}-${i}`}
+                  className="flex items-center justify-between gap-2 rounded-md border border-[var(--champagne)] bg-[var(--cream-deep)] px-3 py-2 text-sm"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Paperclip className="h-3.5 w-3.5 shrink-0 text-[var(--terracotta)]" />
+                    <span className="truncate">{f.name}</span>
+                    <span className="shrink-0 text-xs text-[var(--charcoal)]/50">
+                      {formatFileSize(f.size)}
+                    </span>
+                    <span className="shrink-0 rounded-full bg-[var(--terracotta-soft)] px-1.5 py-0.5 text-[10px] text-[var(--terracotta)]">
+                      pending
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removePending(i)}
+                    className="rounded p-1 text-[var(--charcoal)]/55 hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         {error && <div className="px-6 pb-2 text-sm text-red-600">{error}</div>}
 
         <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-[var(--border)] bg-[var(--cream)] px-6 py-3">
