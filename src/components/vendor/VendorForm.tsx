@@ -199,7 +199,7 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-md bg-[var(--terracotta)] px-4 py-2 text-sm font-medium text-[var(--charcoal)] hover:bg-[var(--terracotta)]/90 disabled:opacity-50"
+            className="rounded-md bg-[var(--terracotta)] px-4 py-2 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 disabled:opacity-50"
           >
             {submitting ? "Saving…" : "Save Vendor"}
           </button>

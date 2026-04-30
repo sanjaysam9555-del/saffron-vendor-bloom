@@ -166,7 +166,7 @@ function LeadsPage() {
                             setConvertingLeadId(l.id);
                             modals.openCreate(leadToVendorPrefill(l));
                           }}
-                          className="inline-flex items-center gap-1 rounded-md bg-[var(--terracotta)] px-2 py-1 text-xs font-medium text-[var(--charcoal)] hover:bg-[var(--terracotta)]/90"
+                          className="inline-flex items-center gap-1 rounded-md bg-[var(--terracotta)] px-2 py-1 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
                         >
                           Convert <ArrowRight className="h-3 w-3" />
                         </button>

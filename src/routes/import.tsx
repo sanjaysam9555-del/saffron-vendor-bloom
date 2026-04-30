@@ -145,7 +145,7 @@ function ImportPage() {
           <div className="flex flex-wrap items-end gap-3">
             <button
               onClick={() => exportCsv(vendors, `saffron-vendors-${new Date().toISOString().slice(0, 10)}.csv`)}
-              className="rounded-md bg-[var(--terracotta)] px-4 py-2 text-sm font-medium text-[var(--charcoal)] hover:bg-[var(--terracotta)]/90"
+              className="rounded-md bg-[var(--terracotta)] px-4 py-2 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
             >
               Export All ({vendors.length})
             </button>
@@ -198,7 +198,7 @@ function ImportPage() {
             className="w-full rounded-md border border-[var(--border)] bg-white p-3 text-xs font-mono text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/40 focus:border-[var(--terracotta)] focus:outline-none"
           />
           <div className="mt-2 flex justify-end">
-            <button onClick={handleParseTSV} disabled={!pasteText.trim()} className="rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--charcoal)] hover:bg-[var(--terracotta)]/90 disabled:opacity-50">
+            <button onClick={handleParseTSV} disabled={!pasteText.trim()} className="rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 disabled:opacity-50">
               Parse rows
             </button>
           </div>
@@ -263,7 +263,7 @@ function ImportPage() {
 
             <div className="mt-3 flex justify-end gap-2">
               <button onClick={() => setParseResult(null)} className="rounded-md px-3 py-1.5 text-sm text-[var(--charcoal)]/65 hover:bg-white">Cancel</button>
-              <button onClick={commitImport} disabled={importing} className="rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--charcoal)] hover:bg-[var(--terracotta)]/90 disabled:opacity-50">
+              <button onClick={commitImport} disabled={importing} className="rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 disabled:opacity-50">
                 {importing ? "Importing…" : `Import ${parseResult.rows.filter(r => r.errors.length === 0).length} rows`}
               </button>
             </div>
@@ -284,7 +284,7 @@ function ImportPage() {
                 <span>Vendor book is empty.</span>
                 <button
                   onClick={async () => { await bulkInsertVendors(SAMPLE_VENDORS); refetch(); }}
-                  className="rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--charcoal)] hover:bg-[var(--terracotta)]/90"
+                  className="rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
                 >
                   Load {SAMPLE_VENDORS.length} sample vendors
                 </button>
