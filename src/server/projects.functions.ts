@@ -411,6 +411,15 @@ export const getMyProject = createServerFn({ method: "GET" })
       attMap.set(a.vendor_id, list);
     }
 
+    const { data: statuses } = await supabaseAdmin
+      .from("client_vendor_status")
+      .select("vendor_id, status")
+      .eq("user_id", userId)
+      .in("vendor_id", vendorIds);
+    const statusMap = new Map<string, string>(
+      (statuses ?? []).map((s) => [s.vendor_id, s.status]),
+    );
+
     const vendors = (vrows ?? []).map((v) => ({
       id: v.id,
       category: v.category,
@@ -422,8 +431,69 @@ export const getMyProject = createServerFn({ method: "GET" })
       portfolio_link: v.portfolio_link,
       website: v.website,
       google_rating: v.google_rating,
+      client_status: statusMap.get(v.id) ?? null,
       attachments: attMap.get(v.id) ?? [],
     }));
 
     return { project, vendors };
+  });
+
+export const setMyVendorStatus = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        vendor_id: z.string().uuid(),
+        status: z
+          .enum(["like", "shortlisted", "finalised", "rejected", "thinking"])
+          .nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const userId = context.userId;
+
+    // Confirm caller is a client.
+    const { data: role } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "client")
+      .maybeSingle();
+    if (!role) throw new Error("Not a client account");
+
+    // Confirm vendor is in one of this client's projects.
+    const { data: link } = await supabaseAdmin
+      .from("project_clients")
+      .select("project_id")
+      .eq("user_id", userId);
+    const projectIds = (link ?? []).map((l) => l.project_id);
+    if (projectIds.length === 0) throw new Error("No project assigned");
+
+    const { data: pv } = await supabaseAdmin
+      .from("project_vendors")
+      .select("vendor_id")
+      .in("project_id", projectIds)
+      .eq("vendor_id", data.vendor_id)
+      .maybeSingle();
+    if (!pv) throw new Error("Vendor not available to this client");
+
+    if (data.status === null) {
+      const { error } = await supabaseAdmin
+        .from("client_vendor_status")
+        .delete()
+        .eq("user_id", userId)
+        .eq("vendor_id", data.vendor_id);
+      if (error) throw new Error(error.message);
+      return { ok: true, status: null as null };
+    }
+
+    const { error } = await supabaseAdmin
+      .from("client_vendor_status")
+      .upsert(
+        { user_id: userId, vendor_id: data.vendor_id, status: data.status },
+        { onConflict: "user_id,vendor_id" },
+      );
+    if (error) throw new Error(error.message);
+    return { ok: true, status: data.status };
   });
