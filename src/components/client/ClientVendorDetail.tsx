@@ -57,6 +57,13 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
           </button>
         </div>
 
+        <div className="border-b border-[var(--border)] bg-[var(--cream-deep)]/40 px-6 py-3">
+          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+            Your status
+          </div>
+          <ClientStatusSelect vendorId={vendor.id} status={liveStatus} />
+        </div>
+
         <div className="grid gap-3 p-6 sm:grid-cols-2">
           <Row icon={<MapPin />} label="Location" value={vendor.location} />
           <Row label="Price" value={vendor.price_text} />
