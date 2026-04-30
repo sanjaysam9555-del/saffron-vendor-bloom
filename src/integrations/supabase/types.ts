@@ -77,6 +77,104 @@ export type Database = {
         }
         Relationships: []
       }
+      project_clients: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_clients_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_vendors: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_vendors_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_vendors_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          bride_name: string
+          created_at: string
+          created_by: string | null
+          groom_name: string
+          id: string
+          notes: string | null
+          updated_at: string
+          wedding_date: string
+        }
+        Insert: {
+          bride_name: string
+          created_at?: string
+          created_by?: string | null
+          groom_name: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          wedding_date: string
+        }
+        Update: {
+          bride_name?: string
+          created_at?: string
+          created_by?: string | null
+          groom_name?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          wedding_date?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -219,6 +317,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      client_can_view_vendor: {
+        Args: { _user_id: string; _vendor_id: string }
+        Returns: boolean
+      }
+      has_project_access: {
+        Args: { _project_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -228,7 +334,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "employee"
+      app_role: "admin" | "employee" | "client"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -356,7 +462,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "employee"],
+      app_role: ["admin", "employee", "client"],
     },
   },
 } as const
