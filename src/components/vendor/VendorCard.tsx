@@ -81,7 +81,9 @@ export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
         )}
       </div>
 
-      <div className="mt-3 flex gap-2 border-t border-[var(--border)] pt-3">
+      <div className="mt-auto flex gap-2 border-t border-[var(--border)] pt-3">
+        <div className="-mt-3" />
+
         <button
           onClick={(e) => { e.stopPropagation(); onView(); }}
           className="flex-1 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
