@@ -1,5 +1,7 @@
 import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
+import { getClientStatusOption } from "@/lib/client-status";
+import { ClientStatusSelect } from "./ClientStatusSelect";
 import { MapPin, Instagram, Link as LinkIcon, Paperclip, Globe, Star } from "lucide-react";
 
 interface Props {
