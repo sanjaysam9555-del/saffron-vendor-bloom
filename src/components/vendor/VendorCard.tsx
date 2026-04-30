@@ -1,0 +1,110 @@
+import type { Vendor } from "@/lib/vendor-types";
+import { CATEGORY_COLORS, formatPriceRange } from "@/lib/categories";
+import { MapPin, Phone, Star, Instagram, Copy, Check } from "lucide-react";
+import { useState } from "react";
+
+interface VendorCardProps {
+  vendor: Vendor;
+  onView: () => void;
+  onEdit: () => void;
+}
+
+export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
+  const [copied, setCopied] = useState(false);
+  const colors = CATEGORY_COLORS[vendor.category] ?? { bg: "bg-white/10", text: "text-white" };
+
+  const copyPhone = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!vendor.contact_number) return;
+    navigator.clipboard.writeText(vendor.contact_number);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  return (
+    <div
+      onClick={onView}
+      className="vendor-card group cursor-pointer rounded-xl bg-[var(--cream)] p-4 text-[oklch(0.18_0.01_60)] shadow-sm"
+    >
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <h3 className="font-display text-lg font-semibold leading-tight">{vendor.vendor_name}</h3>
+        {vendor.google_rating != null && (
+          <div className="flex shrink-0 items-center gap-0.5 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700">
+            <Star className="h-3 w-3 fill-current" />
+            {Number(vendor.google_rating).toFixed(1)}
+          </div>
+        )}
+      </div>
+
+      <div className="mb-2 flex flex-wrap gap-1">
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text}`}>
+          {vendor.category}
+        </span>
+        {vendor.subcategory && (
+          <span className="inline-flex items-center rounded-full bg-black/5 px-2 py-0.5 text-[10px] text-black/60">
+            {vendor.subcategory}
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-1.5 text-sm text-black/70">
+        {vendor.location && (
+          <div className="flex items-center gap-1.5">
+            <MapPin className="h-3.5 w-3.5" /> {vendor.location}
+          </div>
+        )}
+        {vendor.contact_number && (
+          <button
+            onClick={copyPhone}
+            className="flex items-center gap-1.5 hover:text-[var(--gold)]"
+            title="Click to copy"
+          >
+            <Phone className="h-3.5 w-3.5" /> {vendor.contact_number}
+            {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 opacity-40" />}
+          </button>
+        )}
+        {vendor.instagram_handle && (
+          <a
+            href={`https://instagram.com/${vendor.instagram_handle}`}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1.5 hover:text-[var(--gold)]"
+          >
+            <Instagram className="h-3.5 w-3.5" /> @{vendor.instagram_handle}
+          </a>
+        )}
+        {(vendor.price_range_low != null || vendor.price_range_high != null) && (
+          <div className="text-sm font-medium text-black/80">
+            {formatPriceRange(vendor.price_range_low, vendor.price_range_high)}
+          </div>
+        )}
+      </div>
+
+      {vendor.tags && vendor.tags.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1">
+          {vendor.tags.map((t) => (
+            <span key={t} className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] text-black/60">
+              #{t}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-3 flex gap-2 border-t border-black/10 pt-3">
+        <button
+          onClick={(e) => { e.stopPropagation(); onView(); }}
+          className="flex-1 rounded-md bg-[var(--charcoal)] px-3 py-1.5 text-xs font-medium text-white hover:bg-black"
+        >
+          View Details
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onEdit(); }}
+          className="rounded-md border border-black/15 px-3 py-1.5 text-xs font-medium text-black/70 hover:border-[var(--gold)] hover:text-[var(--gold)]"
+        >
+          Edit
+        </button>
+      </div>
+    </div>
+  );
+}
