@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { hasAnyAdmin } from "@/server/admin-users.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in — Saffron Events" }] }),
@@ -20,10 +20,9 @@ function LoginPage() {
   const [hasUsers, setHasUsers] = useState<boolean | null>(null);
 
   useEffect(() => {
-    supabase
-      .from("user_roles")
-      .select("id", { count: "exact", head: true })
-      .then(({ count }) => setHasUsers((count ?? 0) > 0));
+    hasAnyAdmin()
+      .then((res) => setHasUsers(res.hasAdmin))
+      .catch(() => setHasUsers(true));
   }, []);
 
   useEffect(() => {
