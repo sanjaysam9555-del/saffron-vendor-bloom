@@ -12,6 +12,7 @@ import { useVendors, useVendorMutations, useVendorModals } from "@/hooks/useVend
 import { CATEGORIES } from "@/lib/categories";
 import { bulkInsertVendors } from "@/lib/vendor-api";
 import { SAMPLE_VENDORS } from "@/lib/seed-data";
+import { AuthGate } from "@/components/AuthGate";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -20,7 +21,11 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Browse, filter, and manage 500+ wedding vendors across 14 categories." },
     ],
   }),
-  component: DashboardPage,
+  component: () => (
+    <AuthGate>
+      <DashboardPage />
+    </AuthGate>
+  ),
 });
 
 function DashboardPage() {
