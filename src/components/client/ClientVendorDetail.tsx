@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
-import { X, MapPin, Instagram, Link as LinkIcon, Paperclip, FileText } from "lucide-react";
+import { X, MapPin, Instagram, Link as LinkIcon, Paperclip, FileText, Globe, Star } from "lucide-react";
 import { DocumentViewer } from "@/components/vendor/DocumentViewer";
 import { formatFileSize, getAttachmentUrl } from "@/lib/vendor-files-api";
 
@@ -67,6 +67,23 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
                   : `https://${vendor.portfolio_link}`
                 : undefined
             }
+          />
+          <Row
+            icon={<Globe />}
+            label="Website"
+            value={vendor.website}
+            link={
+              vendor.website
+                ? vendor.website.startsWith("http")
+                  ? vendor.website
+                  : `https://${vendor.website}`
+                : undefined
+            }
+          />
+          <Row
+            icon={<Star />}
+            label="Google Rating"
+            value={vendor.google_rating != null ? `${Number(vendor.google_rating).toFixed(1)} ★` : null}
           />
         </div>
 

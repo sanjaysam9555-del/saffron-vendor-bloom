@@ -1,6 +1,6 @@
 import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
-import { MapPin, Instagram, Link as LinkIcon, Paperclip } from "lucide-react";
+import { MapPin, Instagram, Link as LinkIcon, Paperclip, Globe, Star } from "lucide-react";
 
 interface Props {
   vendor: ClientVendor;
@@ -60,6 +60,23 @@ export function ClientVendorCard({ vendor, onView }: Props) {
           >
             <LinkIcon className="h-3.5 w-3.5" /> Portfolio
           </a>
+        )}
+        {vendor.website && (
+          <a
+            href={vendor.website.startsWith("http") ? vendor.website : `https://${vendor.website}`}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1.5 hover:text-[var(--terracotta)]"
+          >
+            <Globe className="h-3.5 w-3.5" /> Website
+          </a>
+        )}
+        {vendor.google_rating != null && (
+          <div className="flex items-center gap-1.5">
+            <Star className="h-3.5 w-3.5 fill-[var(--terracotta)] text-[var(--terracotta)]" />
+            <span>{Number(vendor.google_rating).toFixed(1)}</span>
+          </div>
         )}
         {vendor.price_text && (
           <div className="text-sm font-medium text-[var(--terracotta)]">{vendor.price_text}</div>
