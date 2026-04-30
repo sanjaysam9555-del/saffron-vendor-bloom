@@ -100,19 +100,22 @@ export function ClientVendorCard({ vendor, onView }: Props) {
         )}
       </div>
 
-      <div className="mt-3 flex items-center justify-between border-t border-[var(--border)] pt-3" style={{ marginTop: "auto" }}>
-        <div className="flex items-center gap-1.5 text-xs text-[var(--charcoal)]/60">
-          <Paperclip className="h-3.5 w-3.5" />
-          {vendor.attachments.length === 0
-            ? "No documents"
-            : `${vendor.attachments.length} document${vendor.attachments.length === 1 ? "" : "s"}`}
+      <div className="mt-3 space-y-2 border-t border-[var(--border)] pt-3" style={{ marginTop: "auto" }}>
+        <ClientStatusSelect vendorId={vendor.id} status={vendor.client_status} />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-xs text-[var(--charcoal)]/60">
+            <Paperclip className="h-3.5 w-3.5" />
+            {vendor.attachments.length === 0
+              ? "No documents"
+              : `${vendor.attachments.length} document${vendor.attachments.length === 1 ? "" : "s"}`}
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); onView(); }}
+            className="rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
+          >
+            View Details
+          </button>
         </div>
-        <button
-          onClick={(e) => { e.stopPropagation(); onView(); }}
-          className="rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
-        >
-          View Details
-        </button>
       </div>
     </div>
   );
