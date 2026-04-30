@@ -24,7 +24,7 @@ export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
   return (
     <div
       onClick={onView}
-      className="vendor-card group cursor-pointer rounded-lg bg-white p-4 text-[var(--charcoal)]"
+      className="vendor-card group flex h-full cursor-pointer flex-col rounded-lg bg-white p-4 text-[var(--charcoal)]"
     >
       <div className="mb-2 flex items-start justify-between gap-2">
         <h3 className="font-display text-lg font-semibold leading-tight text-[var(--charcoal)]">{vendor.vendor_name}</h3>
@@ -81,7 +81,8 @@ export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
         )}
       </div>
 
-      <div className="mt-3 flex gap-2 border-t border-[var(--border)] pt-3">
+      <div className="mt-auto flex gap-2 border-t border-[var(--border)] pt-3 mt-3" style={{ marginTop: 'auto' }}>
+
         <button
           onClick={(e) => { e.stopPropagation(); onView(); }}
           className="flex-1 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
