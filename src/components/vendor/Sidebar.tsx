@@ -29,8 +29,9 @@ export function Sidebar({ vendors, filters, onChange, collapsed, onToggle }: Sid
   const toggle = (arr: string[], val: string): string[] =>
     arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
 
-  const hasActive =
-    filters.category || filters.locations.length || filters.tags.length;
+  const hasActive = Boolean(
+    filters.category || filters.locations.length || filters.tags.length,
+  );
 
   const chip = (active: boolean) =>
     `rounded-full border px-2.5 py-0.5 text-xs transition-colors ${
