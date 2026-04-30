@@ -172,6 +172,15 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
           </div>
         </div>
       </div>
+
+      {viewing && (
+        <DocumentViewer
+          url={getAttachmentUrl(viewing.file_path)}
+          fileName={viewing.file_name}
+          mimeType={viewing.mime_type}
+          onClose={() => setViewing(null)}
+        />
+      )}
     </div>
   );
 }
