@@ -34,6 +34,8 @@ export interface ClientVendor {
   instagram_handle: string | null;
   price_text: string | null;
   portfolio_link: string | null;
+  website: string | null;
+  google_rating: number | null;
   attachments: {
     id: string;
     file_name: string;
