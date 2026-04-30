@@ -86,7 +86,7 @@ function ClientPortalPage() {
   const { project } = data;
 
   return (
-    <div className="min-h-screen bg-[var(--cream)]">
+    <div className="flex min-h-screen flex-col bg-[var(--cream)]">
       <ClientTopNav
         search={search}
         onSearchChange={setSearch}
@@ -95,7 +95,7 @@ function ClientPortalPage() {
         weddingDate={project.wedding_date}
       />
 
-      <div className="mx-auto flex max-w-[1600px]">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-1">
         <ClientSidebar
           vendors={vendors}
           filters={filters}
