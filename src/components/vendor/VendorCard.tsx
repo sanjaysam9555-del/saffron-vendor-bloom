@@ -1,5 +1,5 @@
 import type { Vendor } from "@/lib/vendor-types";
-import { CATEGORY_COLORS, formatPriceRange } from "@/lib/categories";
+import { CATEGORY_COLORS } from "@/lib/categories";
 import { MapPin, Phone, Star, Instagram, Copy, Check } from "lucide-react";
 import { useState } from "react";
 
@@ -74,22 +74,12 @@ export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
             <Instagram className="h-3.5 w-3.5" /> @{vendor.instagram_handle}
           </a>
         )}
-        {(vendor.price_range_low != null || vendor.price_range_high != null) && (
+        {vendor.price_text && (
           <div className="text-sm font-medium text-[var(--terracotta)]">
-            {formatPriceRange(vendor.price_range_low, vendor.price_range_high)}
+            {vendor.price_text}
           </div>
         )}
       </div>
-
-      {vendor.tags && vendor.tags.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1">
-          {vendor.tags.map((t) => (
-            <span key={t} className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/65">
-              #{t}
-            </span>
-          ))}
-        </div>
-      )}
 
       <div className="mt-3 flex gap-2 border-t border-[var(--border)] pt-3">
         <button

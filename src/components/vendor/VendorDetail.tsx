@@ -1,5 +1,5 @@
 import type { Vendor } from "@/lib/vendor-types";
-import { CATEGORY_COLORS, formatPriceRange } from "@/lib/categories";
+import { CATEGORY_COLORS } from "@/lib/categories";
 import {
   X, MapPin, Phone, Mail, Instagram, Globe, Star, Pencil, Trash2, Copy, Check, Link as LinkIcon,
 } from "lucide-react";
@@ -26,7 +26,7 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
       vendor.contact_number ?? "",
       vendor.instagram_handle ? `@${vendor.instagram_handle}` : "",
       vendor.website ?? "",
-      formatPriceRange(vendor.price_range_low, vendor.price_range_high),
+      vendor.price_text ?? "",
     ].filter(Boolean);
     navigator.clipboard.writeText(lines.join(" | "));
     setCopiedCard(true);
@@ -67,7 +67,7 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
           <Row icon={<Globe />} label="Website" value={vendor.website} link={vendor.website ? (vendor.website.startsWith("http") ? vendor.website : `https://${vendor.website}`) : undefined} />
           <Row icon={<LinkIcon />} label="Portfolio" value={vendor.portfolio_link} link={vendor.portfolio_link ?? undefined} />
 
-          <Row label="Price Range" value={formatPriceRange(vendor.price_range_low, vendor.price_range_high) || null} />
+          <Row label="Price" value={vendor.price_text} />
           <Row label="Commission" value={vendor.commission_model} />
           
           <Row label="Date Added" value={new Date(vendor.date_added).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} />
@@ -95,13 +95,6 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
             </div>
           )}
 
-          {vendor.tags && vendor.tags.length > 0 && (
-            <div className="sm:col-span-2 flex flex-wrap gap-1">
-              {vendor.tags.map((t) => (
-                <span key={t} className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-xs text-[var(--charcoal)]/65">#{t}</span>
-              ))}
-            </div>
-          )}
         </div>
 
         <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)] bg-[var(--cream)] px-6 py-3">
