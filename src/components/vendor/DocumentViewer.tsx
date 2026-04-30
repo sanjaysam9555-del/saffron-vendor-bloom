@@ -92,7 +92,7 @@ export function DocumentViewer({ url, fileName, mimeType, onClose }: DocumentVie
 function PdfView({ url }: { url: string }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [doc, setDoc] = useState<pdfjs.PDFDocumentProxy | null>(null);
+  const [doc, setDoc] = useState<any>(null);
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(1);
   const [error, setError] = useState<string | null>(null);
@@ -103,13 +103,14 @@ function PdfView({ url }: { url: string }) {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    pdfjs.getDocument({ url }).promise
+    loadPdfjs()
+      .then((pdfjs) => pdfjs.getDocument({ url }).promise)
       .then((d) => {
         if (cancelled) return;
         setDoc(d);
         setPage(1);
       })
-      .catch((e) => {
+      .catch((e: any) => {
         if (cancelled) return;
         setError(e?.message ?? "Failed to load PDF");
       })
