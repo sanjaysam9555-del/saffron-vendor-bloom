@@ -232,6 +232,21 @@ export const resetProjectClientPassword = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const setProjectClientEmail = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ user_id: z.string().uuid(), email: z.string().email() }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await assertStaff(context.userId);
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, {
+      email: data.email,
+      email_confirm: true,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const removeProjectClient = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) =>
