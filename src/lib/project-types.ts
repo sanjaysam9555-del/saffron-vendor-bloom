@@ -30,6 +30,7 @@ export interface ClientVendor {
   category: string;
   subcategory: string | null;
   vendor_name: string;
+  location: string | null;
   instagram_handle: string | null;
   price_text: string | null;
   portfolio_link: string | null;
