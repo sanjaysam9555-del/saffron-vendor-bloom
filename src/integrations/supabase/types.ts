@@ -69,13 +69,11 @@ export type Database = {
           location: string | null
           number_of_rooms: number | null
           portfolio_link: string | null
-          price_range_high: number | null
-          price_range_low: number | null
+          price_text: string | null
           quote_breakdown: string | null
           remarks: string | null
           source: string | null
           subcategory: string | null
-          tags: string[] | null
           team_size: string | null
           updated_at: string
           vendor_name: string
@@ -96,13 +94,11 @@ export type Database = {
           location?: string | null
           number_of_rooms?: number | null
           portfolio_link?: string | null
-          price_range_high?: number | null
-          price_range_low?: number | null
+          price_text?: string | null
           quote_breakdown?: string | null
           remarks?: string | null
           source?: string | null
           subcategory?: string | null
-          tags?: string[] | null
           team_size?: string | null
           updated_at?: string
           vendor_name: string
@@ -123,13 +119,11 @@ export type Database = {
           location?: string | null
           number_of_rooms?: number | null
           portfolio_link?: string | null
-          price_range_high?: number | null
-          price_range_low?: number | null
+          price_text?: string | null
           quote_breakdown?: string | null
           remarks?: string | null
           source?: string | null
           subcategory?: string | null
-          tags?: string[] | null
           team_size?: string | null
           updated_at?: string
           vendor_name?: string
