@@ -64,7 +64,7 @@ export function ClientSidebar({ vendors, filters, onChange, collapsed, onToggle 
   }
 
   return (
-    <aside className="w-64 shrink-0 border-r border-[var(--border)] bg-[var(--cream-deep)] p-5 transition-all duration-200 lg:block">
+    <aside className="w-64 shrink-0 self-stretch border-r border-[var(--border)] bg-[var(--cream-deep)] p-5 transition-all duration-200 lg:block">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-[var(--terracotta)]">
           <Filter className="h-4 w-4" /> Filters
