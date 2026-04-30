@@ -18,44 +18,44 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
 
   return (
     <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--cream)]/95 backdrop-blur">
-      <div className="mx-auto flex max-w-[1600px] flex-col gap-3 px-6 py-3 lg:flex-row lg:items-center lg:gap-6">
+      <div className="mx-auto flex max-w-[1600px] items-center gap-4 px-4 py-2.5 sm:px-6">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 shrink-0">
-          <img src={logoLight} alt="Saffron Events" className="h-10 w-auto object-contain" />
-          <div className="leading-tight">
-            <div className="font-display text-xl font-semibold text-[var(--terracotta)]">Saffron Events</div>
-            <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--charcoal)]/55">Vendor Studio</div>
+        <Link to="/" className="flex items-center gap-2.5 shrink-0">
+          <img src={logoLight} alt="Saffron Events" className="h-9 w-auto object-contain" />
+          <div className="leading-tight hidden sm:block">
+            <div className="font-display text-lg font-semibold text-[var(--terracotta)]">Saffron Events</div>
+            <div className="text-[9px] uppercase tracking-[0.22em] text-[var(--charcoal)]/55">Vendor Studio</div>
           </div>
         </Link>
 
-        {/* Search */}
-        <div className="relative flex-1 max-w-xl">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--charcoal)]/40" />
+        {/* Compact search — same row as logo */}
+        <div className="relative w-full max-w-[280px]">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/40" />
           <input
             type="text"
-            placeholder="Search vendors, location, IG handle, remarks…"
+            placeholder="Search vendors…"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] bg-white py-2 pl-9 pr-3 text-sm text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/40 focus:border-[var(--terracotta)] focus:outline-none focus:ring-2 focus:ring-[var(--terracotta-soft)]"
+            className="w-full rounded-md border border-[var(--border)] bg-white py-1.5 pl-8 pr-2 text-sm text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/40 focus:border-[var(--terracotta)] focus:outline-none focus:ring-2 focus:ring-[var(--terracotta-soft)]"
           />
         </div>
 
-        {/* Stats + CTA */}
-        <div className="flex items-center gap-4">
+        {/* Spacer pushes stats + CTA right */}
+        <div className="ml-auto flex items-center gap-4">
           {mounted && (
             <div className="hidden items-center gap-4 text-xs text-[var(--charcoal)]/60 lg:flex">
               <div><span className="font-semibold text-[var(--terracotta)]">{totalVendors}</span> vendors</div>
               <div><span className="font-semibold text-[var(--terracotta)]">{totalCategories}</span> categories</div>
-              {lastAdded && <div className="truncate max-w-[180px]">Last: {lastAdded}</div>}
+              {lastAdded && <div className="truncate max-w-[160px]">Last: {lastAdded}</div>}
             </div>
           )}
 
           <button
             onClick={onAddVendor}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--terracotta)] px-4 py-2 text-sm font-medium text-[var(--cream)] shadow-sm transition-all hover:bg-[var(--terracotta)]/90 hover:-translate-y-0.5"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3.5 py-1.5 text-sm font-medium text-[var(--cream)] shadow-sm transition-all hover:bg-[var(--terracotta)]/90 hover:-translate-y-0.5"
           >
             <Plus className="h-4 w-4" />
-            Add Vendor
+            <span className="hidden sm:inline">Add Vendor</span>
           </button>
         </div>
       </div>
