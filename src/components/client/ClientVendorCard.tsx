@@ -34,6 +34,11 @@ export function ClientVendorCard({ vendor, onView }: Props) {
             {vendor.subcategory}
           </span>
         )}
+        {statusOpt && (
+          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${statusOpt.pill}`}>
+            {statusOpt.label}
+          </span>
+        )}
       </div>
 
       <div className="space-y-1.5 text-sm text-[var(--charcoal)]/75">
