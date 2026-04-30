@@ -170,13 +170,15 @@ export function CategoryManager({ vendors, onClose }: CategoryManagerProps) {
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
-                    <button
-                      onClick={() => setConfirmingDelete(c)}
-                      title="Delete"
-                      className="rounded-md p-1.5 text-[var(--charcoal)]/60 hover:bg-red-50 hover:text-red-600"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => setConfirmingDelete(c)}
+                        title="Delete"
+                        className="rounded-md p-1.5 text-[var(--charcoal)]/60 hover:bg-red-50 hover:text-red-600"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </>
                 )}
               </li>
