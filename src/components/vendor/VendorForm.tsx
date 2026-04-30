@@ -20,13 +20,11 @@ const EMPTY: VendorInput = {
   instagram_handle: null,
   website: null,
   google_rating: null,
-  price_range_low: null,
-  price_range_high: null,
+  price_text: null,
   commission_model: null,
   portfolio_link: null,
   source: "Manual Entry",
   remarks: null,
-  tags: [],
   number_of_rooms: null,
   distance_from_delhi: null,
   hotel_category: null,
@@ -37,7 +35,6 @@ const EMPTY: VendorInput = {
 
 export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps) {
   const [form, setForm] = useState<VendorInput>(EMPTY);
-  const [tagsInput, setTagsInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,7 +42,6 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
     if (open) {
       const seed = { ...EMPTY, ...(initial ?? {}) } as VendorInput;
       setForm(seed);
-      setTagsInput((seed.tags ?? []).join(", "));
       setError(null);
     }
   }, [open, initial]);
@@ -63,10 +59,21 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
       setError("Vendor name and category are required");
       return;
     }
+    if (!form.location?.trim()) {
+      setError("Location is required");
+      return;
+    }
+    if (!form.contact_number?.trim()) {
+      setError("Contact number is required");
+      return;
+    }
+    if (!form.instagram_handle?.trim()) {
+      setError("Instagram handle is required");
+      return;
+    }
     setSubmitting(true);
     try {
-      const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
-      await onSubmit({ ...form, tags });
+      await onSubmit(form);
       onClose();
     } catch (err: any) {
       setError(err?.message ?? "Failed to save vendor");
@@ -108,19 +115,19 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
             <input className={inputCls} value={form.subcategory ?? ""} onChange={(e) => set("subcategory", e.target.value || null)} placeholder="e.g. Candid Photography" />
           </Field>
 
-          <Field label="Location">
-            <input className={inputCls} value={form.location ?? ""} onChange={(e) => set("location", e.target.value || null)} placeholder="e.g. Gurugram" />
+          <Field label="Location *">
+            <input className={inputCls} required value={form.location ?? ""} onChange={(e) => set("location", e.target.value || null)} placeholder="e.g. Gurugram" />
           </Field>
 
-          <Field label="Contact Number">
-            <input className={inputCls} value={form.contact_number ?? ""} onChange={(e) => set("contact_number", e.target.value || null)} />
+          <Field label="Contact Number *">
+            <input className={inputCls} required value={form.contact_number ?? ""} onChange={(e) => set("contact_number", e.target.value || null)} />
           </Field>
           <Field label="Email">
             <input type="email" className={inputCls} value={form.email ?? ""} onChange={(e) => set("email", e.target.value || null)} />
           </Field>
 
-          <Field label="Instagram Handle">
-            <input className={inputCls} value={form.instagram_handle ?? ""} onChange={(e) => set("instagram_handle", e.target.value.replace(/^@/, "") || null)} placeholder="handle (no @)" />
+          <Field label="Instagram Handle *">
+            <input className={inputCls} required value={form.instagram_handle ?? ""} onChange={(e) => set("instagram_handle", e.target.value.replace(/^@/, "") || null)} placeholder="handle (no @)" />
           </Field>
           <Field label="Website">
             <input className={inputCls} value={form.website ?? ""} onChange={(e) => set("website", e.target.value || null)} />
@@ -133,19 +140,17 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
             <input className={inputCls} value={form.commission_model ?? ""} onChange={(e) => set("commission_model", e.target.value || null)} placeholder='e.g. "15%", "On discussion"' />
           </Field>
 
-          <Field label="Price Range Low (₹)">
-            <input type="number" className={inputCls} value={form.price_range_low ?? ""} onChange={(e) => set("price_range_low", numField(e.target.value))} />
-          </Field>
-          <Field label="Price Range High (₹)">
-            <input type="number" className={inputCls} value={form.price_range_high ?? ""} onChange={(e) => set("price_range_high", numField(e.target.value))} />
+          <Field label="Price" className="sm:col-span-2">
+            <input
+              className={inputCls}
+              value={form.price_text ?? ""}
+              onChange={(e) => set("price_text", e.target.value || null)}
+              placeholder="e.g. ₹3.5L – ₹12L, On discussion, ₹1500/plate"
+            />
           </Field>
 
           <Field label="Portfolio Link" className="sm:col-span-2">
             <input className={inputCls} value={form.portfolio_link ?? ""} onChange={(e) => set("portfolio_link", e.target.value || null)} />
-          </Field>
-
-          <Field label="Tags (comma-separated)" className="sm:col-span-2">
-            <input className={inputCls} value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} placeholder="premium, shortlisted, budget" />
           </Field>
 
           <Field label="Remarks" className="sm:col-span-2">
