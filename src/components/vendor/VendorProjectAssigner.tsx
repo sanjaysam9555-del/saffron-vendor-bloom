@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Briefcase, Check, Search, X } from "lucide-react";
 import {
   listProjects,
@@ -37,14 +37,46 @@ export function VendorProjectAssigner({ vendorId, compact = false }: Props) {
     return hay.includes(q.toLowerCase());
   });
 
-  const toggle = async (project_id: string, currentlyAssigned: boolean) => {
-    if (currentlyAssigned) {
-      await unassignVendorFromProject({ data: { project_id, vendor_id: vendorId } });
-    } else {
-      await assignVendorToProject({ data: { project_id, vendor_id: vendorId } });
+  const toggleMutation = useMutation({
+    mutationFn: async ({ project_id, currentlyAssigned }: { project_id: string; currentlyAssigned: boolean }) => {
+      if (currentlyAssigned) {
+        await unassignVendorFromProject({ data: { project_id, vendor_id: vendorId } });
+      } else {
+        await assignVendorToProject({ data: { project_id, vendor_id: vendorId } });
+      }
+      return { project_id, currentlyAssigned };
+    },
+    onMutate: async ({ project_id, currentlyAssigned }) => {
+      await qc.cancelQueries({ queryKey: ["vendor-project-assignments"] });
+      const previous = qc.getQueryData(["vendor-project-assignments"]);
+      const project = (projects as any[]).find((p) => p.id === project_id);
+      qc.setQueryData(["vendor-project-assignments"], (old: any) => {
+        const next: Record<string, any[]> = { ...(old ?? {}) };
+        const list = next[vendorId] ? [...next[vendorId]] : [];
+        if (currentlyAssigned) {
+          next[vendorId] = list.filter((p) => p.id !== project_id);
+        } else if (project) {
+          next[vendorId] = [...list, project];
+        }
+        return next;
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(["vendor-project-assignments"], ctx.previous);
+    },
+    onSettled: (_data, _err, vars) => {
+      qc.invalidateQueries({ queryKey: ["vendor-project-assignments"] });
+      if (vars) qc.invalidateQueries({ queryKey: ["project", vars.project_id] });
+    },
+  });
+
+  const toggle = (project_id: string, currentlyAssigned: boolean, closeAfter: boolean) => {
+    toggleMutation.mutate({ project_id, currentlyAssigned });
+    if (closeAfter) {
+      setOpen(false);
+      setQ("");
     }
-    await qc.invalidateQueries({ queryKey: ["vendor-project-assignments"] });
-    await qc.invalidateQueries({ queryKey: ["project", project_id] });
   };
 
   return (
@@ -60,7 +92,7 @@ export function VendorProjectAssigner({ vendorId, compact = false }: Props) {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                toggle(p.id, true);
+                toggle(p.id, true, false);
               }}
               className="rounded-full p-0.5 hover:bg-white/50"
               title="Remove from project"
@@ -107,7 +139,7 @@ export function VendorProjectAssigner({ vendorId, compact = false }: Props) {
                 return (
                   <button
                     key={p.id}
-                    onClick={() => toggle(p.id, isOn)}
+                    onClick={() => toggle(p.id, isOn, true)}
                     className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-xs hover:bg-[var(--cream)]"
                   >
                     <div>
