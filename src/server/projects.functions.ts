@@ -401,6 +401,7 @@ export const getMyProject = createServerFn({ method: "GET" })
       category: v.category,
       subcategory: v.subcategory,
       vendor_name: v.vendor_name,
+      location: v.location,
       instagram_handle: v.instagram_handle,
       price_text: v.price_text,
       portfolio_link: v.portfolio_link,
