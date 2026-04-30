@@ -39,6 +39,7 @@ function AdminUsersPage() {
   const [newEmail, setNewEmail] = useState("");
   const [newPwd, setNewPwd] = useState("");
   const [newName, setNewName] = useState("");
+  const [creating, setCreating] = useState(false);
 
   const refresh = async () => {
     setLoading(true);
@@ -62,8 +63,9 @@ function AdminUsersPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr(null);
+    setCreating(true);
     try {
-      await createEmployee({ data: { email: newEmail, password: newPwd, display_name: newName || newEmail.split("@")[0] } });
+      await createEmployee({ data: { email: newEmail.trim(), password: newPwd, display_name: (newName.trim() || newEmail.split("@")[0]) } });
       setNewEmail("");
       setNewPwd("");
       setNewName("");
@@ -71,6 +73,8 @@ function AdminUsersPage() {
       await refresh();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed to create employee");
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -101,7 +105,14 @@ function AdminUsersPage() {
             <p className="sm:col-span-3 text-xs text-[var(--charcoal)]/60">
               The employee will use this password to sign in. They cannot change it — only you can update it from this page.
             </p>
-            <button type="submit" className="sm:col-span-3 rounded-md bg-[var(--charcoal)] px-3 py-2 text-sm text-white hover:opacity-90">Create</button>
+            <div className="sm:col-span-3 flex gap-2">
+              <button type="submit" disabled={creating} className="flex-1 rounded-md bg-[var(--charcoal)] px-3 py-2 text-sm text-white hover:opacity-90 disabled:opacity-50">
+                {creating ? "Creating…" : "Create"}
+              </button>
+              <button type="button" onClick={() => setShowCreate(false)} className="rounded-md border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--cream)]">
+                Cancel
+              </button>
+            </div>
           </form>
         )}
 
