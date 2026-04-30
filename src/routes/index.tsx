@@ -146,10 +146,9 @@ function DashboardPage() {
         onClose={modals.closeForm}
         onSubmit={async (input) => {
           if (modals.state.editing) {
-            await update.mutateAsync({ id: modals.state.editing.id, input });
-          } else {
-            await create.mutateAsync(input);
+            return await update.mutateAsync({ id: modals.state.editing.id, input });
           }
+          return await create.mutateAsync(input);
         }}
       />
 
