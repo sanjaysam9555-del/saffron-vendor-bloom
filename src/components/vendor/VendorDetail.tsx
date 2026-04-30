@@ -22,6 +22,7 @@ interface VendorDetailProps {
 }
 
 export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetailProps) {
+  const isAdmin = useIsAdmin();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [copiedCard, setCopiedCard] = useState(false);
   const [viewing, setViewing] = useState<VendorAttachment | null>(null);
