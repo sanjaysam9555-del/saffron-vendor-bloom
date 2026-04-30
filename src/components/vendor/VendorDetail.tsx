@@ -12,6 +12,7 @@ import {
   type VendorAttachment,
 } from "@/lib/vendor-files-api";
 import { DocumentViewer } from "./DocumentViewer";
+import { useIsAdmin } from "@/lib/auth";
 
 interface VendorDetailProps {
   vendor: Vendor | null;
@@ -21,6 +22,7 @@ interface VendorDetailProps {
 }
 
 export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetailProps) {
+  const isAdmin = useIsAdmin();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [copiedCard, setCopiedCard] = useState(false);
   const [viewing, setViewing] = useState<VendorAttachment | null>(null);
@@ -161,9 +163,11 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
               </>
             ) : (
               <>
-                <button onClick={() => setConfirmDelete(true)} className="inline-flex items-center gap-1.5 rounded-md border border-red-300 px-3 py-2 text-sm text-red-600 hover:bg-red-50">
-                  <Trash2 className="h-4 w-4" /> Delete
-                </button>
+                {isAdmin && (
+                  <button onClick={() => setConfirmDelete(true)} className="inline-flex items-center gap-1.5 rounded-md border border-red-300 px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                    <Trash2 className="h-4 w-4" /> Delete
+                  </button>
+                )}
                 <button onClick={onEdit} className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3 py-2 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90">
                   <Pencil className="h-4 w-4" /> Edit
                 </button>

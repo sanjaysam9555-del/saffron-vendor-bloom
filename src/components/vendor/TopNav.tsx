@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Search, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import logoLight from "@/assets/saffron-logo-transparent.png";
+import { UserMenu } from "@/components/UserMenu";
 
 interface TopNavProps {
   search: string;
@@ -57,6 +58,8 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Add Vendor</span>
           </button>
+
+          <UserMenu />
         </div>
       </div>
     </header>

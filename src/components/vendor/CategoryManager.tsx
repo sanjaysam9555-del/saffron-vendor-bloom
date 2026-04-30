@@ -7,6 +7,7 @@ import {
   useAllCategories,
 } from "@/lib/categories";
 import type { Vendor } from "@/lib/vendor-types";
+import { useIsAdmin } from "@/lib/auth";
 
 interface CategoryManagerProps {
   vendors: Vendor[];
@@ -15,6 +16,7 @@ interface CategoryManagerProps {
 
 export function CategoryManager({ vendors, onClose }: CategoryManagerProps) {
   const categories = useAllCategories();
+  const isAdmin = useIsAdmin();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
@@ -168,13 +170,15 @@ export function CategoryManager({ vendors, onClose }: CategoryManagerProps) {
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
-                    <button
-                      onClick={() => setConfirmingDelete(c)}
-                      title="Delete"
-                      className="rounded-md p-1.5 text-[var(--charcoal)]/60 hover:bg-red-50 hover:text-red-600"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => setConfirmingDelete(c)}
+                        title="Delete"
+                        className="rounded-md p-1.5 text-[var(--charcoal)]/60 hover:bg-red-50 hover:text-red-600"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </>
                 )}
               </li>

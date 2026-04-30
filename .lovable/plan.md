@@ -1,45 +1,97 @@
 ## Goal
-Allow adding custom categories from the vendor form's category dropdown, persist them so they appear everywhere categories are listed, and sort all category lists alphabetically.
 
-## Approach
+Add authentication with two roles:
 
-Categories are currently a hardcoded constant in `src/lib/categories.ts`. We'll persist user-added categories in `localStorage` (no backend needed — they're just labels and the `vendors.category` column is free text). A small reactive store will make the dropdown and the sidebar update immediately when a new category is added.
+- **Admin** — full control: add, edit, delete vendors/categories/attachments + manage employees (create them, change their username/password)
+- **Employee** — can add and edit vendors/categories/attachments, but **cannot delete** anything and **cannot change their own password or username**
 
-### 1. Custom-category store (`src/lib/categories.ts`)
-- Keep the existing `CATEGORIES` as `BASE_CATEGORIES` (the built-in list).
-- Add helpers:
-  - `getCustomCategories()` — reads from `localStorage` key `saffron.customCategories`.
-  - `addCustomCategory(name)` — trims, de-dupes (case-insensitive against base + custom), appends, saves, notifies subscribers.
-  - `getAllCategories()` — returns base ∪ custom, **sorted alphabetically** (locale-aware).
-  - `subscribeCategories(cb)` — pub/sub so React components re-render.
-- Add `useAllCategories()` hook (in same file or `src/hooks/use-categories.ts`) that subscribes and returns the sorted merged list.
-- `CATEGORY_COLORS`: keep keyed by base names; provide a `getCategoryColor(name)` helper that falls back to the `Miscellaneous` palette for custom categories.
+Plus an **Admin → Users** page where the admin manages employees.
 
-### 2. Vendor form dropdown (`src/components/vendor/VendorForm.tsx`)
-- Replace `CATEGORIES` import with `useAllCategories()`.
-- Render options sorted alphabetically (already sorted from the hook).
-- Append a final option: `__add_new__` → label "+ Add New Category".
-- When that value is selected:
-  - Show an inline input + Add/Cancel buttons directly under the select.
-  - On Add: validate non-empty + not duplicate, call `addCustomCategory()`, then set `form.category` to the new name; hide the input.
-  - On Cancel: revert `form.category` to previous value.
+---
 
-### 3. Sidebar category list (`src/components/vendor/Sidebar.tsx`)
-- Replace `CATEGORIES` import with `useAllCategories()`.
-- The list will be alphabetically sorted automatically.
-- Counts (`countsByCat`) already key on actual vendor `category` strings, so custom categories with vendors will show correct counts; categories with zero vendors still render (consistent with current behavior).
+## What the user will see
 
-### 4. Anywhere else that references `CATEGORIES`
-Quick scan showed only `VendorForm.tsx` and `Sidebar.tsx`. `CATEGORY_COLORS` consumers (VendorCard/Table/Detail) will use the new `getCategoryColor()` fallback so custom categories render with a neutral chip color.
+1. **Login page** at `/login` — email + password.
+2. After login, app loads as today. Top-right shows the current user's name, role badge ("Admin" / "Employee"), and a Sign out button. Admin also sees an **"Admin"** link.
+3. **Vendor cards / detail / category manager** — Delete buttons are hidden for Employees. Edit and Add still work.
+4. **Admin page** at `/admin/users` (admin-only) — list of all users with role badges, plus:
+   - "Create Employee" button (email + temporary password)
+   - For each employee: rename (display name), reset password, delete user
+5. Anyone not signed in is redirected to `/login`.
 
-## Technical notes
-- Storage: `localStorage` (browser-only). Reads guarded with `typeof window !== "undefined"` for SSR safety.
-- Sorting: `[...all].sort((a, b) => a.localeCompare(b))`.
-- No DB migration needed — `vendors.category` is already free-text.
-- No new dependencies.
+---
 
-## Files to change
-- `src/lib/categories.ts` — add store, hook, sorted getter, color fallback.
-- `src/components/vendor/VendorForm.tsx` — dropdown + inline "Add New Category" UI.
-- `src/components/vendor/Sidebar.tsx` — use hook for alphabetized list.
-- `src/components/vendor/VendorCard.tsx`, `VendorTable.tsx`, `VendorDetail.tsx` — swap direct `CATEGORY_COLORS[x]` lookups for `getCategoryColor(x)` (only where they currently break for unknown names).
+## Data model
+
+New tables in Lovable Cloud:
+
+- `profiles` — `user_id` (FK to `auth.users`), `display_name`, `created_at`. Auto-created on signup via trigger.
+- `app_role` enum: `admin` | `employee`.
+- `user_roles` — `user_id`, `role`. Roles live in their own table (never on profiles) to avoid privilege-escalation. Unique on (user_id, role).
+- Security-definer function `has_role(_user_id, _role)` for safe RLS checks.
+
+The existing `vendors`, `vendor_attachments`, `inbound_leads` tables get **tightened RLS**:
+
+- SELECT / INSERT / UPDATE — any authenticated user.
+- DELETE — only `has_role(auth.uid(), 'admin')`.
+- Public anon access removed (no more open `USING (true)` for everyone).
+
+The first user to sign up is bootstrapped as **admin**; subsequent users default to **employee** (handled in the signup trigger).
+
+---
+
+## Auth & permissions wiring
+
+- Use Lovable Cloud's email + password auth (no email confirmation, so admin-created employees can log in immediately).
+- A small `useAuth()` hook subscribes to `supabase.auth.onAuthStateChange` and loads the current user's role + display name from `user_roles` + `profiles`.
+- A `useIsAdmin()` helper drives conditional rendering of Delete buttons and the Admin link.
+- Routes are guarded with TanStack `_authenticated` layout (`beforeLoad` redirect to `/login`) and `_authenticated/_admin` layout for the admin page.
+
+Admin user-management calls (create employee, reset password, delete user, rename) need the **service role** key, so they go through three small TanStack server functions in `src/server/admin-users.functions.ts`:
+
+- `listUsers()` — admin only, lists everyone with role + display_name.
+- `createEmployee({ email, password, display_name })`.
+- `setUserPassword({ user_id, password })`.
+- `deleteUser({ user_id })`.
+
+Each verifies the caller is admin server-side using the auth middleware before doing anything privileged.
+
+---
+
+## File changes
+
+**New**
+- `supabase/migrations/...` — profiles, user_roles, app_role enum, has_role function, signup trigger, tightened RLS on vendors/vendor_attachments/inbound_leads.
+- `src/lib/auth.tsx` — AuthProvider + `useAuth()` + `useIsAdmin()` hook.
+- `src/routes/login.tsx` — login form.
+- `src/routes/_authenticated.tsx` — auth guard layout.
+- `src/routes/_authenticated/index.tsx` — moves current home page here.
+- `src/routes/_authenticated/_admin.tsx` — admin guard.
+- `src/routes/_authenticated/_admin/users.tsx` — Admin → Users page.
+- `src/server/admin-users.server.ts` + `src/server/admin-users.functions.ts` — server functions for admin user CRUD.
+- `src/components/UserMenu.tsx` — top-right user badge + sign-out.
+
+**Modified**
+- `src/routes/__root.tsx` — wrap in `AuthProvider`.
+- `src/routes/index.tsx` — content moves under `_authenticated/index.tsx`; this file becomes a redirect or is deleted.
+- `src/components/vendor/TopNav.tsx` — adds `<UserMenu />` and (for admins) an "Admin" link.
+- `src/components/vendor/VendorDetail.tsx`, `VendorCard.tsx`, `CategoryManager.tsx` — hide Delete buttons for non-admins.
+- `src/lib/categories.ts` — `deleteCategory` already calls Supabase; protected by RLS now (employees will get a friendly error if they try).
+
+---
+
+## Initial setup the user does once
+
+1. After I deploy, the user opens the app and is redirected to `/login`.
+2. They click **"Create the first admin account"** on the login page (visible only when no users exist) and sign up with their email + a password — this becomes the admin.
+3. They open Admin → Users and create the employee account (email + temp password) and share the credentials.
+
+No emails or external services are required.
+
+---
+
+## Out of scope (for now)
+
+- Google / SSO sign-in (can be added later).
+- Password reset via email (admin reset is enough for a 2-user setup).
+- Per-vendor ownership / audit log of who edited what (can be added later).
