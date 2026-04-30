@@ -1,6 +1,8 @@
 import { LOCATION_OPTIONS, useAllCategories } from "@/lib/categories";
 import type { Vendor } from "@/lib/vendor-types";
-import { Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Filter, X, ChevronLeft, ChevronRight, Settings2 } from "lucide-react";
+import { useState } from "react";
+import { CategoryManager } from "./CategoryManager";
 
 export interface FilterState {
   category: string | null;
@@ -17,6 +19,7 @@ interface SidebarProps {
 
 export function Sidebar({ vendors, filters, onChange, collapsed, onToggle }: SidebarProps) {
   const allCategories = useAllCategories();
+  const [managerOpen, setManagerOpen] = useState(false);
   const counts = vendors.reduce<Record<string, number>>((acc, v) => {
     acc[v.category] = (acc[v.category] ?? 0) + 1;
     return acc;
@@ -87,7 +90,18 @@ export function Sidebar({ vendors, filters, onChange, collapsed, onToggle }: Sid
 
       {/* Categories */}
       <div className="mb-6">
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Category</div>
+        <div className="mb-2 flex items-center justify-between">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">
+            Category
+          </div>
+          <button
+            onClick={() => setManagerOpen(true)}
+            title="Manage categories"
+            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-[var(--charcoal)]/55 hover:bg-white hover:text-[var(--terracotta)]"
+          >
+            <Settings2 className="h-3 w-3" /> Manage
+          </button>
+        </div>
         <ul className="space-y-0.5">
           <li>
             <button
@@ -139,6 +153,9 @@ export function Sidebar({ vendors, filters, onChange, collapsed, onToggle }: Sid
         </div>
       </div>
 
+      {managerOpen && (
+        <CategoryManager vendors={vendors} onClose={() => setManagerOpen(false)} />
+      )}
     </aside>
   );
 }
