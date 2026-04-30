@@ -76,26 +76,26 @@ function DashboardPage() {
       <div className="mx-auto flex max-w-[1600px]">
         <Sidebar vendors={vendors} filters={filters} onChange={setFilters} />
 
-        <main className="min-w-0 flex-1 p-6 lg:p-8">
-          <div className="mb-6 flex items-end justify-between gap-4 animate-fade-up">
-            <div>
-              <h1 className="brand-line font-display text-3xl font-semibold text-[var(--charcoal)]">
+        <main className="min-w-0 flex-1 px-6 py-5 lg:px-8">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 animate-fade-up">
+            <div className="flex items-baseline gap-3">
+              <h1 className="brand-line font-display text-2xl font-semibold text-[var(--charcoal)]">
                 {filters.category ?? "All Vendors"}
               </h1>
-              <p className="mt-3 text-sm text-[var(--charcoal)]/60">
-                {filtered.length} of {vendors.length} vendors
-              </p>
+              <span className="text-xs text-[var(--charcoal)]/55">
+                {filtered.length} of {vendors.length}
+              </span>
             </div>
             <div className="flex items-center gap-1 rounded-lg border border-[var(--border)] bg-white p-1">
               <button
                 onClick={() => setView("cards")}
-                className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-xs transition-colors ${view === "cards" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
+                className={`flex items-center gap-1 rounded-md px-3 py-1 text-xs transition-colors ${view === "cards" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
               >
                 <LayoutGrid className="h-3.5 w-3.5" /> Cards
               </button>
               <button
                 onClick={() => setView("table")}
-                className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-xs transition-colors ${view === "table" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
+                className={`flex items-center gap-1 rounded-md px-3 py-1 text-xs transition-colors ${view === "table" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
               >
                 <TableIcon className="h-3.5 w-3.5" /> Table
               </button>
@@ -103,9 +103,9 @@ function DashboardPage() {
           </div>
 
           {isLoading ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-44 animate-pulse rounded-lg border border-[var(--border)] bg-white" />
+                <div key={i} className="h-40 animate-pulse rounded-lg border border-[var(--border)] bg-white" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
