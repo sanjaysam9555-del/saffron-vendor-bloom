@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Vendor, VendorInput } from "@/lib/vendor-types";
-import { CATEGORIES, HOTEL_CATEGORIES } from "@/lib/categories";
+import { HOTEL_CATEGORIES, addCustomCategory, useAllCategories } from "@/lib/categories";
 import { X, Upload, Paperclip, Trash2 } from "lucide-react";
 import {
   ACCEPTED_FILE_TYPES,
