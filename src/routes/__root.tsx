@@ -6,15 +6,15 @@ import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] px-4">
       <div className="max-w-md text-center">
-        <h1 className="font-display text-7xl text-[var(--gold)]">404</h1>
-        <h2 className="mt-4 font-display text-2xl text-white">Page not found</h2>
-        <p className="mt-2 text-sm text-white/60">
+        <h1 className="font-display text-7xl text-[var(--terracotta)]">404</h1>
+        <h2 className="mt-4 font-display text-2xl text-[var(--charcoal)]">Page not found</h2>
+        <p className="mt-2 text-sm text-[var(--charcoal)]/60">
           The page you're looking for doesn't exist or has been moved.
         </p>
         <div className="mt-6">
-          <Link to="/" className="inline-flex items-center justify-center rounded-md bg-[var(--gold)] px-4 py-2 text-sm font-medium text-[var(--charcoal)]">
+          <Link to="/" className="inline-flex items-center justify-center rounded-lg bg-[var(--terracotta)] px-5 py-2.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90">
             Go to Vendor Dashboard
           </Link>
         </div>
@@ -37,7 +37,7 @@ export const Route = createRootRoute({
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Jost:wght@300;400;500;600&display=swap",
       },
     ],
   }),

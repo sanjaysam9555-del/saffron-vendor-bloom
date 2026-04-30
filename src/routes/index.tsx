@@ -63,7 +63,7 @@ function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--charcoal)]">
+    <div className="min-h-screen bg-[var(--cream)]">
       <TopNav
         search={search}
         onSearchChange={setSearch}
@@ -76,24 +76,26 @@ function DashboardPage() {
       <div className="mx-auto flex max-w-[1600px]">
         <Sidebar vendors={vendors} filters={filters} onChange={setFilters} />
 
-        <main className="min-w-0 flex-1 p-6">
-          <div className="mb-4 flex items-center justify-between">
+        <main className="min-w-0 flex-1 p-6 lg:p-8">
+          <div className="mb-6 flex items-end justify-between gap-4 animate-fade-up">
             <div>
-              <h1 className="font-display text-2xl text-white">
+              <h1 className="brand-line font-display text-3xl font-semibold text-[var(--charcoal)]">
                 {filters.category ?? "All Vendors"}
               </h1>
-              <p className="text-sm text-white/50">{filtered.length} of {vendors.length} vendors</p>
+              <p className="mt-3 text-sm text-[var(--charcoal)]/60">
+                {filtered.length} of {vendors.length} vendors
+              </p>
             </div>
-            <div className="flex items-center gap-1 rounded-md border border-white/10 bg-white/5 p-1">
+            <div className="flex items-center gap-1 rounded-lg border border-[var(--border)] bg-white p-1">
               <button
                 onClick={() => setView("cards")}
-                className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs ${view === "cards" ? "bg-[var(--gold-soft)] text-[var(--gold)]" : "text-white/60"}`}
+                className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-xs transition-colors ${view === "cards" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
               >
                 <LayoutGrid className="h-3.5 w-3.5" /> Cards
               </button>
               <button
                 onClick={() => setView("table")}
-                className={`flex items-center gap-1 rounded px-2.5 py-1 text-xs ${view === "table" ? "bg-[var(--gold-soft)] text-[var(--gold)]" : "text-white/60"}`}
+                className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-xs transition-colors ${view === "table" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
               >
                 <TableIcon className="h-3.5 w-3.5" /> Table
               </button>
@@ -101,9 +103,9 @@ function DashboardPage() {
           </div>
 
           {isLoading ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-44 animate-pulse rounded-xl bg-white/5" />
+                <div key={i} className="h-44 animate-pulse rounded-lg border border-[var(--border)] bg-white" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
@@ -115,7 +117,7 @@ function DashboardPage() {
               seeding={seeding}
             />
           ) : view === "cards" ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-fade-in">
               {filtered.map((v) => (
                 <VendorCard
                   key={v.id}
@@ -169,22 +171,22 @@ function EmptyState({
   seeding: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/15 bg-white/[0.02] py-20 text-center">
-      <Sparkles className="mb-3 h-8 w-8 text-[var(--gold)]" />
-      <h3 className="font-display text-2xl text-white">
+    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--champagne)] bg-white py-20 text-center animate-fade-up">
+      <Sparkles className="mb-3 h-8 w-8 text-[var(--terracotta)] animate-pulse-subtle" />
+      <h3 className="font-display text-2xl font-semibold text-[var(--charcoal)]">
         {category ? `No vendors in ${category} yet` : vendorsExist ? "No matching vendors" : "Your vendor book is empty"}
       </h3>
-      <p className="mb-4 mt-1 max-w-md text-sm text-white/50">
+      <p className="mb-5 mt-2 max-w-md text-sm text-[var(--charcoal)]/60">
         {vendorsExist
           ? "Try adjusting filters or add a new vendor in this category."
           : "Add your first vendor manually or seed sample wedding vendors to get started."}
       </p>
       <div className="flex gap-2">
-        <button onClick={onAdd} className="rounded-md bg-[var(--gold)] px-4 py-2 text-sm font-medium text-[var(--charcoal)] hover:bg-[oklch(0.78_0.115_85)]">
+        <button onClick={onAdd} className="rounded-lg bg-[var(--terracotta)] px-5 py-2 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90">
           Add Vendor →
         </button>
         {!vendorsExist && (
-          <button onClick={onSeed} disabled={seeding} className="rounded-md border border-white/15 px-4 py-2 text-sm text-white/80 hover:border-[var(--gold)] hover:text-[var(--gold)] disabled:opacity-50">
+          <button onClick={onSeed} disabled={seeding} className="rounded-lg border border-[var(--border)] bg-white px-5 py-2 text-sm text-[var(--charcoal)]/80 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] disabled:opacity-50">
             {seeding ? "Seeding…" : "Load sample data"}
           </button>
         )}

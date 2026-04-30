@@ -11,7 +11,7 @@ interface VendorCardProps {
 
 export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
   const [copied, setCopied] = useState(false);
-  const colors = CATEGORY_COLORS[vendor.category] ?? { bg: "bg-white/10", text: "text-white" };
+  const colors = CATEGORY_COLORS[vendor.category] ?? { bg: "bg-[var(--cream-deep)]", text: "text-[var(--charcoal)]" };
 
   const copyPhone = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -24,12 +24,12 @@ export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
   return (
     <div
       onClick={onView}
-      className="vendor-card group cursor-pointer rounded-xl bg-[var(--cream)] p-4 text-[oklch(0.18_0.01_60)] shadow-sm"
+      className="vendor-card group cursor-pointer rounded-lg bg-white p-4 text-[var(--charcoal)]"
     >
       <div className="mb-2 flex items-start justify-between gap-2">
-        <h3 className="font-display text-lg font-semibold leading-tight">{vendor.vendor_name}</h3>
+        <h3 className="font-display text-lg font-semibold leading-tight text-[var(--charcoal)]">{vendor.vendor_name}</h3>
         {vendor.google_rating != null && (
-          <div className="flex shrink-0 items-center gap-0.5 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700">
+          <div className="flex shrink-0 items-center gap-0.5 rounded-full bg-[hsl(42_65%_55%/0.18)] px-2 py-0.5 text-xs font-medium text-[hsl(42_65%_30%)]">
             <Star className="h-3 w-3 fill-current" />
             {Number(vendor.google_rating).toFixed(1)}
           </div>
@@ -41,13 +41,13 @@ export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
           {vendor.category}
         </span>
         {vendor.subcategory && (
-          <span className="inline-flex items-center rounded-full bg-black/5 px-2 py-0.5 text-[10px] text-black/60">
+          <span className="inline-flex items-center rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/65">
             {vendor.subcategory}
           </span>
         )}
       </div>
 
-      <div className="space-y-1.5 text-sm text-black/70">
+      <div className="space-y-1.5 text-sm text-[var(--charcoal)]/75">
         {vendor.location && (
           <div className="flex items-center gap-1.5">
             <MapPin className="h-3.5 w-3.5" /> {vendor.location}
@@ -56,7 +56,7 @@ export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
         {vendor.contact_number && (
           <button
             onClick={copyPhone}
-            className="flex items-center gap-1.5 hover:text-[var(--gold)]"
+            className="flex items-center gap-1.5 hover:text-[var(--terracotta)]"
             title="Click to copy"
           >
             <Phone className="h-3.5 w-3.5" /> {vendor.contact_number}
@@ -69,13 +69,13 @@ export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 hover:text-[var(--gold)]"
+            className="flex items-center gap-1.5 hover:text-[var(--terracotta)]"
           >
             <Instagram className="h-3.5 w-3.5" /> @{vendor.instagram_handle}
           </a>
         )}
         {(vendor.price_range_low != null || vendor.price_range_high != null) && (
-          <div className="text-sm font-medium text-black/80">
+          <div className="text-sm font-medium text-[var(--terracotta)]">
             {formatPriceRange(vendor.price_range_low, vendor.price_range_high)}
           </div>
         )}
@@ -84,23 +84,23 @@ export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
       {vendor.tags && vendor.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1">
           {vendor.tags.map((t) => (
-            <span key={t} className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] text-black/60">
+            <span key={t} className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/65">
               #{t}
             </span>
           ))}
         </div>
       )}
 
-      <div className="mt-3 flex gap-2 border-t border-black/10 pt-3">
+      <div className="mt-3 flex gap-2 border-t border-[var(--border)] pt-3">
         <button
           onClick={(e) => { e.stopPropagation(); onView(); }}
-          className="flex-1 rounded-md bg-[var(--charcoal)] px-3 py-1.5 text-xs font-medium text-white hover:bg-black"
+          className="flex-1 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
         >
           View Details
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onEdit(); }}
-          className="rounded-md border border-black/15 px-3 py-1.5 text-xs font-medium text-black/70 hover:border-[var(--gold)] hover:text-[var(--gold)]"
+          className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
         >
           Edit
         </button>

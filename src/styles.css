@@ -29,56 +29,66 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-terracotta: var(--terracotta);
+  --color-terracotta-soft: var(--terracotta-soft);
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
+  --color-champagne: var(--champagne);
   --color-cream: var(--cream);
+  --color-cream-deep: var(--cream-deep);
   --color-charcoal: var(--charcoal);
+  --color-sage: var(--sage);
   --font-display: "Cormorant Garamond", serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-sans: "Jost", system-ui, sans-serif;
 }
 
 :root {
-  /* Brand: Saffron Events — charcoal + gold + cream */
-  --radius: 0.75rem;
+  /* Saffron Events brand palette */
+  --radius: 0.5rem;
 
-  --charcoal: oklch(0.18 0.005 60);          /* #1A1A1A-ish */
-  --gold: oklch(0.74 0.115 85);              /* #C9A84C */
-  --gold-soft: oklch(0.74 0.115 85 / 0.15);
-  --cream: oklch(0.96 0.012 80);             /* #F5F0E8 */
+  --terracotta: hsl(11 65% 38%);            /* #9F3822 — primary */
+  --terracotta-soft: hsl(11 65% 38% / 0.12);
+  --cream: hsl(40 30% 96%);                 /* #F5F0E8 — backgrounds */
+  --cream-deep: hsl(40 28% 92%);
+  --champagne: hsl(30 50% 70%);             /* #D9B88C — accents */
+  --charcoal: hsl(20 10% 20%);              /* #3A3530 — body text */
+  --gold: hsl(42 65% 55%);                  /* #D4A94E — premium */
+  --gold-soft: hsl(42 65% 55% / 0.18);
+  --sage: hsl(11 25% 85%);                  /* #DFC5BF — soft hover */
 
-  --background: var(--charcoal);
-  --foreground: oklch(0.98 0.005 80);
+  --background: var(--cream);
+  --foreground: var(--charcoal);
 
-  --card: var(--cream);
-  --card-foreground: oklch(0.18 0.01 60);
+  --card: hsl(0 0% 100%);
+  --card-foreground: var(--charcoal);
 
-  --popover: oklch(0.99 0.005 80);
-  --popover-foreground: oklch(0.18 0.01 60);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: var(--charcoal);
 
-  --primary: var(--gold);
-  --primary-foreground: oklch(0.18 0.005 60);
+  --primary: var(--terracotta);
+  --primary-foreground: var(--cream);
 
-  --secondary: oklch(0.25 0.005 60);
-  --secondary-foreground: oklch(0.98 0.005 80);
+  --secondary: var(--cream-deep);
+  --secondary-foreground: var(--charcoal);
 
-  --muted: oklch(0.25 0.005 60);
-  --muted-foreground: oklch(0.72 0.01 80);
+  --muted: var(--cream-deep);
+  --muted-foreground: hsl(20 8% 42%);
 
-  --accent: var(--gold-soft);
-  --accent-foreground: var(--gold);
+  --accent: var(--sage);
+  --accent-foreground: var(--terracotta);
 
-  --destructive: oklch(0.6 0.2 25);
-  --destructive-foreground: oklch(0.98 0.005 80);
+  --destructive: hsl(0 70% 45%);
+  --destructive-foreground: var(--cream);
 
-  --border: oklch(1 0 0 / 0.1);
-  --input: oklch(1 0 0 / 0.12);
-  --ring: var(--gold);
+  --border: hsl(20 12% 86%);
+  --input: hsl(20 12% 86%);
+  --ring: var(--terracotta);
 
-  --chart-1: oklch(0.74 0.115 85);
-  --chart-2: oklch(0.6 0.118 184);
-  --chart-3: oklch(0.55 0.15 30);
-  --chart-4: oklch(0.65 0.15 150);
-  --chart-5: oklch(0.6 0.18 300);
+  --chart-1: var(--terracotta);
+  --chart-2: var(--gold);
+  --chart-3: var(--champagne);
+  --chart-4: var(--sage);
+  --chart-5: var(--charcoal);
 }
 
 @layer base {
@@ -89,27 +99,59 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-feature-settings: "ss01", "ss02";
+    letter-spacing: 0.01em;
   }
   h1, h2, h3, h4, .font-display {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
+    color: var(--charcoal);
   }
 }
 
-/* Vendor card hover */
+/* Brand line accent — 48px terracotta line under section headings */
+.brand-line::after {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 2px;
+  background: var(--terracotta);
+  margin-top: 0.5rem;
+}
+
+/* Vendor card hover — translateY(-4px) lift, 300ms */
 .vendor-card {
-  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
-  border: 1px solid transparent;
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 300ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 300ms ease;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 6px hsl(20 10% 20% / 0.06);
 }
 .vendor-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--gold);
-  box-shadow: 0 12px 32px -12px oklch(0 0 0 / 0.5);
+  transform: translateY(-4px);
+  border-color: var(--terracotta);
+  box-shadow: 0 12px 24px -8px hsl(11 65% 38% / 0.18);
 }
+
+/* Animations from brand doc */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes pulse-subtle {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.03); }
+}
+.animate-fade-up { animation: fade-up 600ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in { animation: fade-in 500ms ease both; }
+.animate-pulse-subtle { animation: pulse-subtle 2s ease-in-out infinite; }
 
 /* Subtle scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 0.08); border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: oklch(1 0 0 / 0.18); }
+::-webkit-scrollbar-thumb { background: hsl(20 10% 20% / 0.12); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(20 10% 20% / 0.24); }
