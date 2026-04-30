@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Search, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import logoLight from "@/assets/saffron-logo-transparent.png";
+import { UserMenu } from "@/components/UserMenu";
 
 interface TopNavProps {
   search: string;
