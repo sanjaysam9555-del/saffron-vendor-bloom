@@ -1,13 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Vendor, VendorInput } from "@/lib/vendor-types";
 import { CATEGORIES, HOTEL_CATEGORIES } from "@/lib/categories";
-import { X } from "lucide-react";
+import { X, Upload, Paperclip, Trash2, Loader2 } from "lucide-react";
+import {
+  ACCEPTED_FILE_TYPES,
+  MAX_FILE_SIZE,
+  deleteVendorAttachment,
+  formatFileSize,
+  listVendorAttachments,
+  uploadVendorAttachment,
+  type VendorAttachment,
+} from "@/lib/vendor-files-api";
 
 interface VendorFormProps {
   open: boolean;
   initial?: Partial<VendorInput> | Vendor | null;
   onClose: () => void;
-  onSubmit: (input: VendorInput) => Promise<void>;
+  onSubmit: (input: VendorInput) => Promise<Vendor>;
 }
 
 const EMPTY: VendorInput = {
@@ -37,14 +46,25 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
   const [form, setForm] = useState<VendorInput>(EMPTY);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [existing, setExisting] = useState<VendorAttachment[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const editingId = (initial as Vendor | null | undefined)?.id ?? null;
 
   useEffect(() => {
     if (open) {
       const seed = { ...EMPTY, ...(initial ?? {}) } as VendorInput;
       setForm(seed);
       setError(null);
+      setPendingFiles([]);
+      setExisting([]);
+      if (editingId) {
+        listVendorAttachments(editingId).then(setExisting).catch(() => setExisting([]));
+      }
     }
-  }, [open, initial]);
+  }, [open, initial, editingId]);
 
   if (!open) return null;
 
@@ -52,6 +72,33 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
     setForm((f) => ({ ...f, [k]: v }));
 
   const numField = (v: string): number | null => (v.trim() === "" ? null : Number(v));
+
+  const addFiles = (files: FileList | File[]) => {
+    const incoming = Array.from(files);
+    const accepted: File[] = [];
+    for (const f of incoming) {
+      if (f.size > MAX_FILE_SIZE) {
+        setError(`"${f.name}" exceeds 20 MB limit`);
+        continue;
+      }
+      accepted.push(f);
+    }
+    if (accepted.length) setPendingFiles((cur) => [...cur, ...accepted]);
+  };
+
+  const removePending = (idx: number) =>
+    setPendingFiles((cur) => cur.filter((_, i) => i !== idx));
+
+  const removeExisting = async (att: VendorAttachment) => {
+    setExisting((cur) => cur.filter((a) => a.id !== att.id));
+    try {
+      await deleteVendorAttachment(att);
+    } catch {
+      // restore on failure
+      setExisting((cur) => [att, ...cur]);
+      setError("Failed to delete attachment");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +120,15 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
     }
     setSubmitting(true);
     try {
-      await onSubmit(form);
+      const saved = await onSubmit(form);
+      // Upload pending files
+      for (const file of pendingFiles) {
+        try {
+          await uploadVendorAttachment(saved.id, file);
+        } catch (e: any) {
+          setError(`Saved vendor, but failed to upload "${file.name}": ${e?.message ?? "error"}`);
+        }
+      }
       onClose();
     } catch (err: any) {
       setError(err?.message ?? "Failed to save vendor");
