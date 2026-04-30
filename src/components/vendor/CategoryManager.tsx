@@ -16,6 +16,7 @@ interface CategoryManagerProps {
 
 export function CategoryManager({ vendors, onClose }: CategoryManagerProps) {
   const categories = useAllCategories();
+  const isAdmin = useIsAdmin();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
