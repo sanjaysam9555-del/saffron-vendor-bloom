@@ -58,6 +58,8 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Add Vendor</span>
           </button>
+
+          <UserMenu />
         </div>
       </div>
     </header>
