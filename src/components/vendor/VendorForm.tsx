@@ -85,9 +85,9 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
         onClick={(e) => e.stopPropagation()}
         className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-[var(--cream)] text-[oklch(0.18_0.01_60)] shadow-2xl"
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-black/10 bg-[var(--cream)] px-6 py-4">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--border)] bg-[var(--cream)] px-6 py-4">
           <h2 className="font-display text-2xl">{(initial as Vendor)?.id ? "Edit Vendor" : "Add Vendor"}</h2>
-          <button type="button" onClick={onClose} className="rounded-md p-1 hover:bg-black/5">
+          <button type="button" onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -160,7 +160,7 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
 
           {isHotel && (
             <>
-              <div className="sm:col-span-2 mt-2 border-t border-black/10 pt-3 font-display text-lg text-[var(--gold)]">Hotel Details</div>
+              <div className="sm:col-span-2 mt-2 border-t border-[var(--border)] pt-3 font-display text-lg text-[var(--terracotta)]">Hotel Details</div>
               <Field label="Number of Rooms">
                 <input type="number" className={inputCls} value={form.number_of_rooms ?? ""} onChange={(e) => set("number_of_rooms", numField(e.target.value))} />
               </Field>
@@ -178,7 +178,7 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
 
           {isPhoto && (
             <>
-              <div className="sm:col-span-2 mt-2 border-t border-black/10 pt-3 font-display text-lg text-[var(--gold)]">Photography RFP</div>
+              <div className="sm:col-span-2 mt-2 border-t border-[var(--border)] pt-3 font-display text-lg text-[var(--terracotta)]">Photography RFP</div>
               <Field label="Quote Breakdown" className="sm:col-span-2">
                 <textarea rows={2} className={inputCls} value={form.quote_breakdown ?? ""} onChange={(e) => set("quote_breakdown", e.target.value || null)} />
               </Field>
@@ -194,12 +194,12 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
 
         {error && <div className="px-6 pb-2 text-sm text-red-600">{error}</div>}
 
-        <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-black/10 bg-[var(--cream)] px-6 py-3">
-          <button type="button" onClick={onClose} className="rounded-md px-4 py-2 text-sm text-black/60 hover:bg-black/5">Cancel</button>
+        <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-[var(--border)] bg-[var(--cream)] px-6 py-3">
+          <button type="button" onClick={onClose} className="rounded-md px-4 py-2 text-sm text-[var(--charcoal)]/65 hover:bg-[var(--cream-deep)]">Cancel</button>
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-md bg-[var(--gold)] px-4 py-2 text-sm font-medium text-[var(--charcoal)] hover:bg-[oklch(0.78_0.115_85)] disabled:opacity-50"
+            className="rounded-md bg-[var(--terracotta)] px-4 py-2 text-sm font-medium text-[var(--charcoal)] hover:bg-[var(--terracotta)]/90 disabled:opacity-50"
           >
             {submitting ? "Saving…" : "Save Vendor"}
           </button>
@@ -209,12 +209,12 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
   );
 }
 
-const inputCls = "w-full rounded-md border border-black/15 bg-white px-3 py-1.5 text-sm focus:border-[var(--gold)] focus:outline-none focus:ring-1 focus:ring-[var(--gold)]";
+const inputCls = "w-full rounded-md border border-[var(--border)] bg-white px-3 py-1.5 text-sm focus:border-[var(--terracotta)] focus:outline-none focus:ring-1 focus:ring-[var(--terracotta)]";
 
 function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (
     <label className={`block ${className ?? ""}`}>
-      <div className="mb-1 text-xs font-medium text-black/60">{label}</div>
+      <div className="mb-1 text-xs font-medium text-[var(--charcoal)]/65">{label}</div>
       {children}
     </label>
   );

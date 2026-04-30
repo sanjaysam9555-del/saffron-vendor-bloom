@@ -67,7 +67,7 @@ function LeadsPage() {
   const [convertingLeadId, setConvertingLeadId] = useState<string | null>(null);
 
   return (
-    <div className="min-h-screen bg-[var(--charcoal)]">
+    <div className="min-h-screen bg-[var(--cream)]">
       <TopNav
         search={search}
         onSearchChange={setSearch}
@@ -78,47 +78,47 @@ function LeadsPage() {
 
       <main className="mx-auto max-w-[1600px] p-6">
         <div className="mb-6 flex items-center gap-3">
-          <Inbox className="h-7 w-7 text-[var(--gold)]" />
+          <Inbox className="h-7 w-7 text-[var(--terracotta)]" />
           <div>
-            <h1 className="font-display text-3xl text-white">Inbound Leads</h1>
-            <p className="text-sm text-white/50">Form submissions waiting to be qualified.</p>
+            <h1 className="font-display text-3xl text-[var(--charcoal)]">Inbound Leads</h1>
+            <p className="text-sm text-[var(--charcoal)]/55">Form submissions waiting to be qualified.</p>
           </div>
         </div>
 
-        <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+        <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-[var(--border)] bg-white p-3">
           <div>
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-white/40">Search Services</div>
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/50">Search Services</div>
             <input
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               placeholder="e.g. photography, decor"
-              className="rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm text-white placeholder:text-white/40 focus:border-[var(--gold)] focus:outline-none"
+              className="rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-sm text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/50 focus:border-[var(--terracotta)] focus:outline-none"
             />
           </div>
           <div>
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-white/40">From</div>
-            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm text-white focus:border-[var(--gold)] focus:outline-none" />
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/50">From</div>
+            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-sm text-[var(--charcoal)] focus:border-[var(--terracotta)] focus:outline-none" />
           </div>
           <div>
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-white/40">To</div>
-            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm text-white focus:border-[var(--gold)] focus:outline-none" />
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/50">To</div>
+            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-sm text-[var(--charcoal)] focus:border-[var(--terracotta)] focus:outline-none" />
           </div>
           {(keyword || from || to) && (
-            <button onClick={() => { setKeyword(""); setFrom(""); setTo(""); }} className="text-xs text-white/50 hover:text-white">Clear</button>
+            <button onClick={() => { setKeyword(""); setFrom(""); setTo(""); }} className="text-xs text-[var(--charcoal)]/55 hover:text-[var(--charcoal)]">Clear</button>
           )}
         </div>
 
         {isLoading ? (
-          <div className="text-white/50">Loading…</div>
+          <div className="text-[var(--charcoal)]/55">Loading…</div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.02] py-16 text-center text-white/50">
+          <div className="rounded-xl border border-dashed border-[var(--border)] bg-white py-16 text-center text-[var(--charcoal)]/55">
             No inbound leads match your filters.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/[0.03]">
+          <div className="overflow-x-auto rounded-xl border border-[var(--border)] bg-white">
             <table className="w-full text-sm">
-              <thead className="border-b border-white/10 bg-white/[0.03]">
-                <tr className="text-left text-[10px] font-semibold uppercase tracking-widest text-white/50">
+              <thead className="border-b border-[var(--border)] bg-white">
+                <tr className="text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
                   <th className="px-3 py-2">Submitted</th>
                   <th className="px-3 py-2">Name</th>
                   <th className="px-3 py-2">Services</th>
@@ -131,12 +131,12 @@ function LeadsPage() {
               </thead>
               <tbody>
                 {filtered.map((l) => (
-                  <tr key={l.id} className="border-b border-white/5 align-top hover:bg-white/[0.04]">
-                    <td className="px-3 py-2 text-xs text-white/50">{new Date(l.submitted_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</td>
-                    <td className="px-3 py-2 font-medium text-white">{l.name}</td>
-                    <td className="px-3 py-2 text-white/70">{l.services ?? "—"}</td>
-                    <td className="px-3 py-2 text-white/70">{l.location ?? "—"}</td>
-                    <td className="px-3 py-2 text-white/70">
+                  <tr key={l.id} className="border-b border-[var(--border)] align-top hover:bg-white/[0.04]">
+                    <td className="px-3 py-2 text-xs text-[var(--charcoal)]/55">{new Date(l.submitted_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</td>
+                    <td className="px-3 py-2 font-medium text-[var(--charcoal)]">{l.name}</td>
+                    <td className="px-3 py-2 text-[var(--charcoal)]/75">{l.services ?? "—"}</td>
+                    <td className="px-3 py-2 text-[var(--charcoal)]/75">{l.location ?? "—"}</td>
+                    <td className="px-3 py-2 text-[var(--charcoal)]/75">
                       <div className="flex flex-col gap-0.5 text-xs">
                         {l.contact && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{l.contact}</span>}
                         {l.email && <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{l.email}</span>}
@@ -145,15 +145,15 @@ function LeadsPage() {
                     </td>
                     <td className="px-3 py-2">
                       {l.portfolio ? (
-                        <a href={l.portfolio} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-[var(--gold)] hover:underline">
+                        <a href={l.portfolio} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-[var(--terracotta)] hover:underline">
                           Open <ExternalLink className="h-3 w-3" />
                         </a>
-                      ) : <span className="text-white/40">—</span>}
+                      ) : <span className="text-[var(--charcoal)]/50">—</span>}
                     </td>
                     <td className="px-3 py-2">
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
                         l.status === "converted" ? "bg-green-500/15 text-green-400"
-                        : l.status === "dismissed" ? "bg-white/10 text-white/50"
+                        : l.status === "dismissed" ? "bg-[var(--cream-deep)] text-[var(--charcoal)]/55"
                         : "bg-amber-500/15 text-amber-400"
                       }`}>{l.status}</span>
                     </td>
@@ -166,7 +166,7 @@ function LeadsPage() {
                             setConvertingLeadId(l.id);
                             modals.openCreate(leadToVendorPrefill(l));
                           }}
-                          className="inline-flex items-center gap-1 rounded-md bg-[var(--gold)] px-2 py-1 text-xs font-medium text-[var(--charcoal)] hover:bg-[oklch(0.78_0.115_85)]"
+                          className="inline-flex items-center gap-1 rounded-md bg-[var(--terracotta)] px-2 py-1 text-xs font-medium text-[var(--charcoal)] hover:bg-[var(--terracotta)]/90"
                         >
                           Convert <ArrowRight className="h-3 w-3" />
                         </button>
