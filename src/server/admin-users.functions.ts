@@ -76,6 +76,9 @@ export const setUserPassword = createServerFn({ method: "POST" })
       password: data.password,
     });
     if (error) throw new Error(error.message);
+    // Force-logout the user from all active sessions so they must sign in with the new password.
+    const { error: signOutError } = await supabaseAdmin.auth.admin.signOut(data.user_id, "global");
+    if (signOutError) throw new Error(signOutError.message);
     return { ok: true };
   });
 

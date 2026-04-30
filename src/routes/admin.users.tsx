@@ -97,7 +97,10 @@ function AdminUsersPage() {
           <form onSubmit={handleCreate} className="mt-4 grid gap-2 rounded-lg border border-[var(--border)] bg-white p-4 sm:grid-cols-3">
             <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" placeholder="Display name" value={newName} onChange={(e) => setNewName(e.target.value)} />
             <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" type="email" required placeholder="Email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
-            <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" required minLength={6} placeholder="Temporary password (min 6)" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} />
+            <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" required minLength={6} placeholder="Password (min 6)" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} />
+            <p className="sm:col-span-3 text-xs text-[var(--charcoal)]/60">
+              The employee will use this password to sign in. They cannot change it — only you can update it from this page.
+            </p>
             <button type="submit" className="sm:col-span-3 rounded-md bg-[var(--charcoal)] px-3 py-2 text-sm text-white hover:opacity-90">Create</button>
           </form>
         )}
@@ -194,12 +197,12 @@ function UserRow({ row, isSelf, onChanged, onError }: { row: Row; isSelf: boolea
         {resetting ? (
           <div className="flex items-center justify-end gap-1">
             <input type="password" minLength={6} placeholder="New password" className="rounded border border-[var(--border)] px-2 py-1 text-sm" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} />
-            <button onClick={savePwd} disabled={newPwd.length < 6} className="rounded bg-[var(--terracotta)] px-2 py-1 text-xs text-white disabled:opacity-50">Set</button>
+            <button onClick={savePwd} disabled={newPwd.length < 6} title="Sets the new password and signs the user out of all sessions" className="rounded bg-[var(--terracotta)] px-2 py-1 text-xs text-white disabled:opacity-50">Set</button>
             <button onClick={() => { setResetting(false); setNewPwd(""); }} className="rounded p-1 text-[var(--charcoal)]/60 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
           </div>
         ) : (
           <div className="flex items-center justify-end gap-1">
-            <button onClick={() => setResetting(true)} title="Reset password" className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
+            <button onClick={() => setResetting(true)} title="Change password (signs user out)" className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
               <KeyRound className="h-4 w-4" />
             </button>
             {!isSelf && (
