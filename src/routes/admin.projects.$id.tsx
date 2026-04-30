@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar } from "lucide-react";
+import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import {
   getProject,
   createProjectClient,
   resetProjectClientPassword,
+  setProjectClientEmail,
   removeProjectClient,
   unassignVendorFromProject,
   deleteProject,
@@ -213,12 +214,30 @@ function ProjectDetailPage() {
 function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
   const [resetting, setResetting] = useState(false);
   const [pwd, setPwd] = useState("");
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [emailVal, setEmailVal] = useState<string>(c.email ?? "");
+  const [emailBusy, setEmailBusy] = useState(false);
+  const [emailErr, setEmailErr] = useState<string | null>(null);
 
   const savePwd = async () => {
     await resetProjectClientPassword({ data: { user_id: c.user_id, password: pwd } });
     setPwd("");
     setResetting(false);
     onChanged();
+  };
+
+  const saveEmail = async () => {
+    setEmailErr(null);
+    setEmailBusy(true);
+    try {
+      await setProjectClientEmail({ data: { user_id: c.user_id, email: emailVal.trim() } });
+      setEditingEmail(false);
+      onChanged();
+    } catch (e) {
+      setEmailErr(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setEmailBusy(false);
+    }
   };
 
   const handleRemove = async () => {
@@ -230,7 +249,30 @@ function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
   return (
     <tr className="border-t border-[var(--border)]">
       <td className="px-4 py-3">{c.display_name || "—"}</td>
-      <td className="px-4 py-3 text-[var(--charcoal)]/70">{c.email}</td>
+      <td className="px-4 py-3 text-[var(--charcoal)]/70">
+        {editingEmail ? (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1">
+              <input
+                type="email"
+                className="rounded border border-[var(--border)] px-2 py-1 text-sm"
+                value={emailVal}
+                onChange={(e) => setEmailVal(e.target.value)}
+              />
+              <button onClick={saveEmail} disabled={emailBusy || !emailVal.trim()} className="rounded p-1 text-green-700 hover:bg-green-50 disabled:opacity-50"><Check className="h-4 w-4" /></button>
+              <button onClick={() => { setEditingEmail(false); setEmailVal(c.email ?? ""); setEmailErr(null); }} className="rounded p-1 text-[var(--charcoal)]/60 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
+            </div>
+            {emailErr && <span className="text-xs text-red-600">{emailErr}</span>}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span>{c.email}</span>
+            <button onClick={() => setEditingEmail(true)} title="Change email" className="text-[var(--charcoal)]/40 hover:text-[var(--terracotta)]">
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+      </td>
       <td className="px-4 py-3">
         {resetting ? (
           <div className="flex items-center justify-end gap-1">
