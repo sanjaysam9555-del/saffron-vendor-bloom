@@ -14,7 +14,129 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      inbound_leads: {
+        Row: {
+          contact: string | null
+          email: string | null
+          id: string
+          instagram: string | null
+          location: string | null
+          name: string
+          portfolio: string | null
+          services: string | null
+          status: string
+          submitted_at: string
+        }
+        Insert: {
+          contact?: string | null
+          email?: string | null
+          id?: string
+          instagram?: string | null
+          location?: string | null
+          name: string
+          portfolio?: string | null
+          services?: string | null
+          status?: string
+          submitted_at?: string
+        }
+        Update: {
+          contact?: string | null
+          email?: string | null
+          id?: string
+          instagram?: string | null
+          location?: string | null
+          name?: string
+          portfolio?: string | null
+          services?: string | null
+          status?: string
+          submitted_at?: string
+        }
+        Relationships: []
+      }
+      vendors: {
+        Row: {
+          category: string
+          commission_model: string | null
+          contact_number: string | null
+          date_added: string
+          deliverables: string | null
+          distance_from_delhi: string | null
+          email: string | null
+          google_rating: number | null
+          hotel_category: string | null
+          id: string
+          instagram_handle: string | null
+          location: string | null
+          number_of_rooms: number | null
+          portfolio_link: string | null
+          price_range_high: number | null
+          price_range_low: number | null
+          quote_breakdown: string | null
+          remarks: string | null
+          source: string | null
+          subcategory: string | null
+          tags: string[] | null
+          team_size: string | null
+          updated_at: string
+          vendor_name: string
+          website: string | null
+        }
+        Insert: {
+          category: string
+          commission_model?: string | null
+          contact_number?: string | null
+          date_added?: string
+          deliverables?: string | null
+          distance_from_delhi?: string | null
+          email?: string | null
+          google_rating?: number | null
+          hotel_category?: string | null
+          id?: string
+          instagram_handle?: string | null
+          location?: string | null
+          number_of_rooms?: number | null
+          portfolio_link?: string | null
+          price_range_high?: number | null
+          price_range_low?: number | null
+          quote_breakdown?: string | null
+          remarks?: string | null
+          source?: string | null
+          subcategory?: string | null
+          tags?: string[] | null
+          team_size?: string | null
+          updated_at?: string
+          vendor_name: string
+          website?: string | null
+        }
+        Update: {
+          category?: string
+          commission_model?: string | null
+          contact_number?: string | null
+          date_added?: string
+          deliverables?: string | null
+          distance_from_delhi?: string | null
+          email?: string | null
+          google_rating?: number | null
+          hotel_category?: string | null
+          id?: string
+          instagram_handle?: string | null
+          location?: string | null
+          number_of_rooms?: number | null
+          portfolio_link?: string | null
+          price_range_high?: number | null
+          price_range_low?: number | null
+          quote_breakdown?: string | null
+          remarks?: string | null
+          source?: string | null
+          subcategory?: string | null
+          tags?: string[] | null
+          team_size?: string | null
+          updated_at?: string
+          vendor_name?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
