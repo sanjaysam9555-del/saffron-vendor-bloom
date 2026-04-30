@@ -12,7 +12,7 @@ export function AuthGate({ children, requireAdmin = false }: { children: ReactNo
     else if (requireAdmin && role && role !== "admin") navigate({ to: "/" });
   }, [loading, session, role, requireAdmin, navigate]);
 
-  if (loading || !session) {
+  if (loading || !session || (requireAdmin && !role)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] text-sm text-[var(--charcoal)]/60">
         Loading…
