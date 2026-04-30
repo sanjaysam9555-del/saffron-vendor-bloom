@@ -7,6 +7,7 @@ import {
   useAllCategories,
 } from "@/lib/categories";
 import type { Vendor } from "@/lib/vendor-types";
+import { useIsAdmin } from "@/lib/auth";
 
 interface CategoryManagerProps {
   vendors: Vendor[];
