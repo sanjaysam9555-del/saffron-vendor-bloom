@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar } from "lucide-react";
+import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import {
   getProject,
   createProjectClient,
   resetProjectClientPassword,
+  setProjectClientEmail,
   removeProjectClient,
   unassignVendorFromProject,
   deleteProject,
