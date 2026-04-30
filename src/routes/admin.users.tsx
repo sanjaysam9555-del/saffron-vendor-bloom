@@ -45,7 +45,7 @@ function AdminUsersPage() {
     setErr(null);
     try {
       const data = await listUsers();
-      setRows(data as Row[]);
+      setRows(Array.isArray(data) ? (data as Row[]) : []);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed to load users");
     } finally {
