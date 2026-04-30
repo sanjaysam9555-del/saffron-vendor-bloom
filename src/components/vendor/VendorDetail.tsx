@@ -1,9 +1,17 @@
 import type { Vendor } from "@/lib/vendor-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import {
-  X, MapPin, Phone, Mail, Instagram, Globe, Star, Pencil, Trash2, Copy, Check, Link as LinkIcon,
+  X, MapPin, Phone, Mail, Instagram, Globe, Star, Pencil, Trash2, Copy, Check, Link as LinkIcon, Paperclip, FileText,
 } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  formatFileSize,
+  getAttachmentUrl,
+  listVendorAttachments,
+  type VendorAttachment,
+} from "@/lib/vendor-files-api";
+import { DocumentViewer } from "./DocumentViewer";
 
 interface VendorDetailProps {
   vendor: Vendor | null;
@@ -15,6 +23,13 @@ interface VendorDetailProps {
 export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetailProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [copiedCard, setCopiedCard] = useState(false);
+  const [viewing, setViewing] = useState<VendorAttachment | null>(null);
+
+  const { data: attachments = [] } = useQuery({
+    queryKey: ["vendor-attachments", vendor?.id],
+    queryFn: () => listVendorAttachments(vendor!.id),
+    enabled: !!vendor?.id,
+  });
 
   if (!vendor) return null;
   const colors = CATEGORY_COLORS[vendor.category] ?? { bg: "bg-[var(--cream-deep)]", text: "text-[var(--charcoal)]" };
