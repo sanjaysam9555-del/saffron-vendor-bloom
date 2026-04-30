@@ -29,8 +29,16 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Saffron Events — Vendor Studio" },
-      { name: "description", content: "Internal vendor management dashboard for Saffron Events, premium wedding planning in Gurugram." },
+      { title: "Saffron Events — Planning Studio" },
+      { name: "description", content: "Saffron Vendor Hub manages wedding vendors, centralizing data for event planners." },
+      { property: "og:title", content: "Saffron Events — Planning Studio" },
+      { name: "twitter:title", content: "Saffron Events — Planning Studio" },
+      { property: "og:description", content: "Saffron Vendor Hub manages wedding vendors, centralizing data for event planners." },
+      { name: "twitter:description", content: "Saffron Vendor Hub manages wedding vendors, centralizing data for event planners." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7e2d1de8-2458-48e9-b9d1-6bab2bfe0e6a/id-preview-1148d56e--d7328052-e869-41c3-81e8-267167087b2a.lovable.app-1777546869219.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7e2d1de8-2458-48e9-b9d1-6bab2bfe0e6a/id-preview-1148d56e--d7328052-e869-41c3-81e8-267167087b2a.lovable.app-1777546869219.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:type", content: "website" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
