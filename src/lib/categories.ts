@@ -17,22 +17,22 @@ export const CATEGORIES = [
 
 export type Category = (typeof CATEGORIES)[number];
 
-// Distinct muted hues per category (HSL-ish via Tailwind arbitrary values).
+// Warm, brand-aligned muted hues for category chips (light backgrounds, charcoal text).
 export const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  "Photography & Videography": { bg: "bg-[oklch(0.42_0.12_25)]", text: "text-[oklch(0.95_0.04_25)]" },
-  "Decor":                      { bg: "bg-[oklch(0.42_0.10_140)]", text: "text-[oklch(0.95_0.04_140)]" },
-  "Catering":                   { bg: "bg-[oklch(0.45_0.13_55)]", text: "text-[oklch(0.97_0.04_55)]" },
-  "Sound & Lighting":           { bg: "bg-[oklch(0.40_0.12_270)]", text: "text-[oklch(0.95_0.04_270)]" },
-  "Production & Event Management": { bg: "bg-[oklch(0.40_0.10_220)]", text: "text-[oklch(0.95_0.04_220)]" },
-  "Special Effects (SFX)":      { bg: "bg-[oklch(0.42_0.14_320)]", text: "text-[oklch(0.95_0.04_320)]" },
-  "Makeup Artists":             { bg: "bg-[oklch(0.45_0.10_10)]", text: "text-[oklch(0.97_0.03_10)]" },
-  "Mehendi Artists":            { bg: "bg-[oklch(0.40_0.12_120)]", text: "text-[oklch(0.95_0.04_120)]" },
-  "Hospitality & Manpower":     { bg: "bg-[oklch(0.42_0.08_180)]", text: "text-[oklch(0.95_0.03_180)]" },
-  "Anchors & Emcees":           { bg: "bg-[oklch(0.45_0.12_290)]", text: "text-[oklch(0.96_0.04_290)]" },
-  "Car Rental & Transport":     { bg: "bg-[oklch(0.38_0.06_240)]", text: "text-[oklch(0.95_0.03_240)]" },
-  "Hotels & Venues":            { bg: "bg-[oklch(0.42_0.10_75)]", text: "text-[oklch(0.97_0.04_75)]" },
-  "DJs & Live Music":           { bg: "bg-[oklch(0.42_0.13_340)]", text: "text-[oklch(0.96_0.04_340)]" },
-  "Miscellaneous":              { bg: "bg-[oklch(0.40_0.02_60)]", text: "text-[oklch(0.95_0.01_60)]" },
+  "Photography & Videography":     { bg: "bg-[hsl(11_55%_92%)]",  text: "text-[hsl(11_65%_32%)]" },
+  "Decor":                         { bg: "bg-[hsl(140_30%_90%)]", text: "text-[hsl(140_40%_28%)]" },
+  "Catering":                      { bg: "bg-[hsl(30_55%_88%)]",  text: "text-[hsl(30_55%_30%)]" },
+  "Sound & Lighting":              { bg: "bg-[hsl(260_30%_92%)]", text: "text-[hsl(260_40%_38%)]" },
+  "Production & Event Management": { bg: "bg-[hsl(220_30%_92%)]", text: "text-[hsl(220_40%_36%)]" },
+  "Special Effects (SFX)":         { bg: "bg-[hsl(320_35%_92%)]", text: "text-[hsl(320_45%_38%)]" },
+  "Makeup Artists":                { bg: "bg-[hsl(0_45%_92%)]",   text: "text-[hsl(0_55%_38%)]" },
+  "Mehendi Artists":               { bg: "bg-[hsl(120_30%_90%)]", text: "text-[hsl(120_40%_28%)]" },
+  "Hospitality & Manpower":        { bg: "bg-[hsl(180_25%_90%)]", text: "text-[hsl(180_40%_28%)]" },
+  "Anchors & Emcees":              { bg: "bg-[hsl(290_30%_92%)]", text: "text-[hsl(290_40%_38%)]" },
+  "Car Rental & Transport":        { bg: "bg-[hsl(240_20%_92%)]", text: "text-[hsl(240_35%_38%)]" },
+  "Hotels & Venues":               { bg: "bg-[hsl(42_55%_88%)]",  text: "text-[hsl(42_65%_30%)]" },
+  "DJs & Live Music":              { bg: "bg-[hsl(340_40%_92%)]", text: "text-[hsl(340_50%_38%)]" },
+  "Miscellaneous":                 { bg: "bg-[hsl(40_15%_88%)]",  text: "text-[hsl(20_15%_32%)]" },
 };
 
 export const LOCATION_OPTIONS = ["Delhi", "Gurugram", "Noida", "Pan India", "Rajasthan", "Other"] as const;
