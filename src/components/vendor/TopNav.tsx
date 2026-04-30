@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Search, Plus, LayoutGrid, Inbox, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
-import logoLight from "@/assets/saffron-logo-light.jpg";
+import logoLight from "@/assets/saffron-logo-transparent.png";
 
 interface TopNavProps {
   search: string;
@@ -28,7 +28,7 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
       <div className="mx-auto flex max-w-[1600px] flex-col gap-3 px-6 py-3 lg:flex-row lg:items-center lg:gap-6">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 shrink-0">
-          <img src={logoLight} alt="Saffron Events" className="h-10 w-auto rounded-md object-contain" />
+          <img src={logoLight} alt="Saffron Events" className="h-10 w-auto object-contain" />
           <div className="leading-tight">
             <div className="font-display text-xl font-semibold text-[var(--terracotta)]">Saffron Events</div>
             <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--charcoal)]/55">Vendor Studio</div>
