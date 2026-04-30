@@ -1,9 +1,9 @@
 import type { Vendor } from "@/lib/vendor-types";
-import { CATEGORY_COLORS, formatPriceRange } from "@/lib/categories";
+import { CATEGORY_COLORS } from "@/lib/categories";
 import { Pencil, ArrowUpDown } from "lucide-react";
 import { useMemo, useState } from "react";
 
-type SortKey = "vendor_name" | "category" | "location" | "price_range_low" | "price_range_high" | "google_rating" | "date_added";
+type SortKey = "vendor_name" | "category" | "location" | "price_text" | "google_rating" | "date_added";
 type SortDir = "asc" | "desc";
 
 export function VendorTable({
@@ -54,8 +54,7 @@ export function VendorTable({
             <Th k="vendor_name" label="Name" />
             <Th k="category" label="Category" />
             <Th k="location" label="Location" />
-            <Th k="price_range_low" label="Price Low" />
-            <Th k="price_range_high" label="Price High" />
+            <Th k="price_text" label="Price" />
             <Th k="google_rating" label="Rating" />
             <Th k="date_added" label="Date Added" />
             <th className="px-3 py-2"></th>
@@ -77,8 +76,7 @@ export function VendorTable({
                   </span>
                 </td>
                 <td className="px-3 py-2.5 text-[var(--charcoal)]/75">{v.location ?? "—"}</td>
-                <td className="px-3 py-2.5 text-[var(--charcoal)]/75">{v.price_range_low != null ? formatPriceRange(v.price_range_low) : "—"}</td>
-                <td className="px-3 py-2.5 text-[var(--charcoal)]/75">{v.price_range_high != null ? formatPriceRange(v.price_range_high) : "—"}</td>
+                <td className="px-3 py-2.5 text-[var(--charcoal)]/75">{v.price_text ?? "—"}</td>
                 <td className="px-3 py-2.5 text-[var(--charcoal)]/75">{v.google_rating != null ? Number(v.google_rating).toFixed(1) : "—"}</td>
                 <td className="px-3 py-2.5 text-[var(--charcoal)]/55">{new Date(v.date_added).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</td>
                 <td className="px-3 py-2.5 text-right">

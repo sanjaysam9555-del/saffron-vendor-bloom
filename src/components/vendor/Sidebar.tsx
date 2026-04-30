@@ -5,7 +5,6 @@ import { Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
 export interface FilterState {
   category: string | null;
   locations: string[];
-  tags: string[];
 }
 
 interface SidebarProps {
@@ -22,15 +21,11 @@ export function Sidebar({ vendors, filters, onChange, collapsed, onToggle }: Sid
     return acc;
   }, {});
 
-  const allTags = Array.from(
-    new Set(vendors.flatMap((v) => v.tags ?? []).filter(Boolean)),
-  ).sort();
-
   const toggle = (arr: string[], val: string): string[] =>
     arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
 
   const hasActive = Boolean(
-    filters.category || filters.locations.length || filters.tags.length,
+    filters.category || filters.locations.length,
   );
 
   const chip = (active: boolean) =>
@@ -73,7 +68,7 @@ export function Sidebar({ vendors, filters, onChange, collapsed, onToggle }: Sid
         <div className="flex items-center gap-1">
           {hasActive ? (
             <button
-              onClick={() => onChange({ category: null, locations: [], tags: [] })}
+              onClick={() => onChange({ category: null, locations: [] })}
               className="flex items-center gap-1 text-xs text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"
             >
               <X className="h-3 w-3" /> Clear
@@ -143,26 +138,6 @@ export function Sidebar({ vendors, filters, onChange, collapsed, onToggle }: Sid
         </div>
       </div>
 
-      {/* Tags */}
-      {allTags.length > 0 && (
-        <div>
-          <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Tags</div>
-          <div className="flex flex-wrap gap-1">
-            {allTags.map((t) => {
-              const active = filters.tags.includes(t);
-              return (
-                <button
-                  key={t}
-                  onClick={() => onChange({ ...filters, tags: toggle(filters.tags, t) })}
-                  className={chip(active)}
-                >
-                  #{t}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </aside>
   );
 }

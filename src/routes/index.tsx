@@ -31,7 +31,7 @@ function DashboardPage() {
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"cards" | "table">("cards");
   const [filters, setFilters] = useState<FilterState>({
-    category: null, locations: [], tags: [],
+    category: null, locations: [],
   });
   const [seeding, setSeeding] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -42,7 +42,7 @@ function DashboardPage() {
       if (filters.category && v.category !== filters.category) return false;
       if (filters.locations.length && !filters.locations.some((l) => v.location?.toLowerCase().includes(l.toLowerCase()))) return false;
       
-      if (filters.tags.length && !filters.tags.every((t) => v.tags?.includes(t))) return false;
+
       if (q) {
         const hay = [v.vendor_name, v.location, v.instagram_handle, v.remarks].filter(Boolean).join(" ").toLowerCase();
         if (!hay.includes(q)) return false;
