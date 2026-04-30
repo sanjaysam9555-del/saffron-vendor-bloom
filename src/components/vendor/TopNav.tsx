@@ -1,5 +1,5 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { Search, Plus, LayoutGrid, Inbox, Upload } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Search, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import logoLight from "@/assets/saffron-logo-transparent.png";
 
@@ -13,15 +13,8 @@ interface TopNavProps {
 }
 
 export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, totalCategories, lastAdded }: TopNavProps) {
-  const path = useRouterState({ select: (r) => r.location.pathname });
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-
-  const navItems = [
-    { to: "/", label: "Vendors", icon: LayoutGrid },
-    { to: "/leads", label: "Inbound Leads", icon: Inbox },
-    { to: "/import", label: "Import / Export", icon: Upload },
-  ];
 
   return (
     <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--cream)]/95 backdrop-blur">
@@ -47,31 +40,10 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
           />
         </div>
 
-        {/* Nav + stats */}
+        {/* Stats + CTA */}
         <div className="flex items-center gap-4">
-          <nav className="hidden items-center gap-1 md:flex">
-            {navItems.map((item) => {
-              const active = path === item.to;
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                    active
-                      ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium"
-                      : "text-[var(--charcoal)]/70 hover:text-[var(--terracotta)]"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-
           {mounted && (
-            <div className="hidden items-center gap-4 border-l border-[var(--border)] pl-4 text-xs text-[var(--charcoal)]/60 xl:flex">
+            <div className="hidden items-center gap-4 text-xs text-[var(--charcoal)]/60 lg:flex">
               <div><span className="font-semibold text-[var(--terracotta)]">{totalVendors}</span> vendors</div>
               <div><span className="font-semibold text-[var(--terracotta)]">{totalCategories}</span> categories</div>
               {lastAdded && <div className="truncate max-w-[180px]">Last: {lastAdded}</div>}
@@ -87,26 +59,6 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
           </button>
         </div>
       </div>
-
-      {/* Mobile nav */}
-      <nav className="flex items-center gap-1 border-t border-[var(--border)] bg-[var(--cream-deep)] px-4 py-1.5 md:hidden">
-        {navItems.map((item) => {
-          const active = path === item.to;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs ${
-                active ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)]" : "text-[var(--charcoal)]/70"
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
     </header>
   );
 }
