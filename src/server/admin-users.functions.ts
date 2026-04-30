@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { attachAuthToken } from "./auth-client-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 async function assertAdmin(userId: string) {
@@ -15,7 +16,7 @@ async function assertAdmin(userId: string) {
 }
 
 export const listUsers = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([attachAuthToken, requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
 
@@ -41,7 +42,7 @@ export const listUsers = createServerFn({ method: "GET" })
   });
 
 export const createEmployee = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) =>
     z
       .object({
@@ -65,7 +66,7 @@ export const createEmployee = createServerFn({ method: "POST" })
   });
 
 export const setUserPassword = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) =>
     z.object({ user_id: z.string().uuid(), password: z.string().min(6) }).parse(d),
   )
@@ -79,7 +80,7 @@ export const setUserPassword = createServerFn({ method: "POST" })
   });
 
 export const setUserDisplayName = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) =>
     z.object({ user_id: z.string().uuid(), display_name: z.string().min(1) }).parse(d),
   )
@@ -94,7 +95,7 @@ export const setUserDisplayName = createServerFn({ method: "POST" })
   });
 
 export const deleteUser = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) => z.object({ user_id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
