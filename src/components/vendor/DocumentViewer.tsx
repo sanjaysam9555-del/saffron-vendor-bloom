@@ -1,10 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download, FileText, Loader2 } from "lucide-react";
-import * as pdfjs from "pdfjs-dist";
-// @ts-ignore - vite ?url import for the worker
-import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
+// pdfjs-dist references browser-only globals (DOMMatrix) and must NOT be
+// imported at module scope — that breaks SSR. Load it lazily on the client.
+type PdfjsModule = typeof import("pdfjs-dist");
+let pdfjsPromise: Promise<PdfjsModule> | null = null;
+function loadPdfjs(): Promise<PdfjsModule> {
+  if (typeof window === "undefined") return Promise.reject(new Error("pdfjs unavailable on server"));
+  if (!pdfjsPromise) {
+    pdfjsPromise = (async () => {
+      const mod = await import("pdfjs-dist");
+      // @ts-ignore - vite ?url import for the worker
+      const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
+      mod.GlobalWorkerOptions.workerSrc = workerUrl;
+      return mod;
+    })();
+  }
+  return pdfjsPromise;
+}
 
 interface DocumentViewerProps {
   url: string;
