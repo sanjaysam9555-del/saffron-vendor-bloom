@@ -4,6 +4,8 @@ import { CATEGORY_COLORS } from "@/lib/categories";
 import { X, MapPin, Instagram, Link as LinkIcon, Paperclip, FileText, Globe, Star } from "lucide-react";
 import { DocumentViewer } from "@/components/vendor/DocumentViewer";
 import { formatFileSize, getAttachmentUrl } from "@/lib/vendor-files-api";
+import { ClientStatusSelect } from "./ClientStatusSelect";
+import { useQuery } from "@tanstack/react-query";
 
 interface Props {
   vendor: ClientVendor | null;
