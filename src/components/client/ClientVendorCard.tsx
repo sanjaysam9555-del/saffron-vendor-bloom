@@ -45,17 +45,17 @@ export function ClientVendorCard({ vendor, onView }: Props) {
             .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
             .replace(/\/.*$/, "")
             .replace(/\?.*$/, "");
-          const href = `https://instagram.com/${handle}`;
+          const href = `https://www.instagram.com/${handle}/`;
           return (
             <a
               href={href}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               className="flex min-w-0 items-center gap-1.5 hover:text-[var(--terracotta)]"
             >
               <Instagram className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">@{handle}</span>
+              <span className="truncate">{href}</span>
             </a>
           );
         })()}
