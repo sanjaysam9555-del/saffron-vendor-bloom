@@ -34,6 +34,7 @@ function DashboardPage() {
     category: null, locations: [], tags: [],
   });
   const [seeding, setSeeding] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -74,7 +75,13 @@ function DashboardPage() {
       />
 
       <div className="mx-auto flex max-w-[1600px]">
-        <Sidebar vendors={vendors} filters={filters} onChange={setFilters} />
+        <Sidebar
+          vendors={vendors}
+          filters={filters}
+          onChange={setFilters}
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed((c) => !c)}
+        />
 
         <main className="min-w-0 flex-1 px-6 py-5 lg:px-8">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3 animate-fade-up">
