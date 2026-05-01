@@ -8,17 +8,17 @@ import { SIGN_IN_SUCCESS_HOLD_MS } from "@/components/auth/SignInButton";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Saffron Events — Wedding Planning Studio in Delhi" },
+      { title: "Wedding & Event Planning Studio | Saffron Events" },
       {
         name: "description",
         content:
-          "Saffron Events is a Delhi-based wedding planning studio. Sign in to your client portal to view your curated vendor shortlist, track decisions and plan your wedding with us.",
+          "Saffron Events is a boutique wedding & event planning studio in India. We craft unforgettable celebrations — from intimate gatherings to grand weddings. Plan with us today.",
       },
-      { property: "og:title", content: "Saffron Events — Wedding Planning Studio" },
+      { property: "og:title", content: "Wedding & Event Planning Studio | Saffron Events" },
       {
         property: "og:description",
         content:
-          "A Delhi-based wedding planning studio crafting thoughtful weddings. Sign in to view your vendor portal.",
+          "Boutique wedding & event planning studio in India. We craft unforgettable celebrations for every occasion.",
       },
     ],
   }),
@@ -34,7 +34,7 @@ function RootIndex() {
           Saffron Events
         </p>
         <h1 className="mt-2 font-display text-2xl text-[var(--charcoal)] sm:text-3xl">
-          A wedding planning studio for thoughtful celebrations.
+          Wedding & Event Planning Studio in India
         </h1>
         <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--charcoal)]/70">
           We curate vendors, manage logistics and design weddings end-to-end across
