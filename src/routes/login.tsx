@@ -8,7 +8,7 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const { signIn, session } = useAuth();
+  const { signIn, session, role, loading } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,16 +16,22 @@ function LoginPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (session) navigate({ to: "/" });
-  }, [session, navigate]);
+    if (loading || !session || !role) return;
+    navigate({ to: role === "client" ? "/client" : "/" });
+  }, [loading, session, role, navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    if (busy) return;
     setErr(null);
     setBusy(true);
-    const res = await signIn(email, password);
-    setBusy(false);
-    if (res.error) setErr(res.error);
+    try {
+      const res = await signIn(email, password);
+      if (res.error) setErr(res.error);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
