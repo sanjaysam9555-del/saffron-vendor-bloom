@@ -31,10 +31,10 @@ const knownStaffEmails = new Set(["info@saffronevents.in"]);
 
 async function requireStaffUser(): Promise<{ userId: string; email: string }> {
   const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  if (!token) throw new Error("Authentication is still loading. Please try again.");
+  if (!token) throw new Error("You're not signed in. Please sign in again to continue.");
 
   const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-  if (userError || !userData.user) throw new Error("Authentication is still loading. Please try again.");
+  if (userError || !userData.user) throw new Error("Your session expired. Please sign in again.");
 
   const userId = userData.user.id;
   const email = userData.user.email?.toLowerCase() ?? "";
