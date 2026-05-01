@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { SignInButton, type SignInButtonState } from "@/components/auth/SignInButton";
+import {
+  SignInButton,
+  SIGN_IN_ERROR_HOLD_MS,
+  type SignInButtonState,
+} from "@/components/auth/SignInButton";
 
 export function ClientLoginForm() {
   const { signIn, session, role, loading } = useAuth();
