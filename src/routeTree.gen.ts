@@ -16,6 +16,7 @@ import { Route as ClientIndexRouteImport } from './routes/client.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ClientLoginRouteImport } from './routes/client.login'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminSubmissionsRouteImport } from './routes/admin.submissions'
 import { Route as AdminProjectsIndexRouteImport } from './routes/admin.projects.index'
 import { Route as ApiPublicVendorSignupRouteImport } from './routes/api/public/vendor-signup'
 import { Route as AdminProjectsIdRouteImport } from './routes/admin.projects.$id'
@@ -56,6 +57,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/admin/users',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSubmissionsRoute = AdminSubmissionsRouteImport.update({
+  id: '/admin/submissions',
+  path: '/admin/submissions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminProjectsIndexRoute = AdminProjectsIndexRouteImport.update({
   id: '/admin/projects/',
   path: '/admin/projects/',
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/vendor-signup': typeof VendorSignupRoute
+  '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/client/login': typeof ClientLoginRoute
   '/admin/': typeof AdminIndexRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/vendor-signup': typeof VendorSignupRoute
+  '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/client/login': typeof ClientLoginRoute
   '/admin': typeof AdminIndexRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/vendor-signup': typeof VendorSignupRoute
+  '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/client/login': typeof ClientLoginRoute
   '/admin/': typeof AdminIndexRoute
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/vendor-signup'
+    | '/admin/submissions'
     | '/admin/users'
     | '/client/login'
     | '/admin/'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/vendor-signup'
+    | '/admin/submissions'
     | '/admin/users'
     | '/client/login'
     | '/admin'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/vendor-signup'
+    | '/admin/submissions'
     | '/admin/users'
     | '/client/login'
     | '/admin/'
@@ -164,6 +176,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   VendorSignupRoute: typeof VendorSignupRoute
+  AdminSubmissionsRoute: typeof AdminSubmissionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   ClientLoginRoute: typeof ClientLoginRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/submissions': {
+      id: '/admin/submissions'
+      path: '/admin/submissions'
+      fullPath: '/admin/submissions'
+      preLoaderRoute: typeof AdminSubmissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/projects/': {
       id: '/admin/projects/'
       path: '/admin/projects'
@@ -272,6 +292,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   VendorSignupRoute: VendorSignupRoute,
+  AdminSubmissionsRoute: AdminSubmissionsRoute,
   AdminUsersRoute: AdminUsersRoute,
   ClientLoginRoute: ClientLoginRoute,
   AdminIndexRoute: AdminIndexRoute,
