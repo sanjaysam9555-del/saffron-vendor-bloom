@@ -17,7 +17,7 @@ function ClientLoginPage() {
     if (loading || !session || !role) return;
     const t = setTimeout(() => {
       navigate({ to: role === "client" ? "/client" : "/admin" });
-    }, 700);
+    }, SIGN_IN_SUCCESS_HOLD_MS);
     return () => clearTimeout(t);
   }, [loading, session, role, navigate]);
 
