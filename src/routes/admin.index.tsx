@@ -36,7 +36,6 @@ function DashboardPage() {
   const [filters, setFilters] = useState<FilterState>({
     category: null, locations: [],
   });
-  const [seeding, setSeeding] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const filtered = useMemo(() => {
@@ -53,16 +52,6 @@ function DashboardPage() {
   }, [vendors, filters, search]);
 
   const lastAdded = vendors[0]?.vendor_name;
-
-  const handleSeed = async () => {
-    setSeeding(true);
-    try {
-      await bulkInsertVendors(SAMPLE_VENDORS);
-      window.location.reload();
-    } finally {
-      setSeeding(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[var(--cream)]">
