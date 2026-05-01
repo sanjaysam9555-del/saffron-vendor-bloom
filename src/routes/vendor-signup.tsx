@@ -249,13 +249,13 @@ function VendorSignupPage() {
     <div className="min-h-screen bg-[var(--cream)]">
       <header className="border-b border-[var(--border)] bg-[var(--cream)]/95 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link to="/" className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5">
             <img src={logoLight} alt="Saffron Events" className="h-9 w-auto object-contain" />
             <div className="leading-tight hidden sm:block">
               <div className="font-display text-lg font-semibold text-[var(--terracotta)]">Saffron Events</div>
               <div className="text-[9px] uppercase tracking-[0.22em] text-[var(--charcoal)]/55">Vendor Studio</div>
             </div>
-          </Link>
+          </div>
         </div>
       </header>
 
