@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare } from "lucide-react";
+import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { TopNav } from "@/components/vendor/TopNav";
@@ -42,6 +42,7 @@ function DashboardPage() {
     category: null, locations: [],
   });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -138,12 +139,14 @@ function DashboardPage() {
           onChange={setFilters}
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed((c) => !c)}
+          mobileOpen={mobileFiltersOpen}
+          onMobileClose={() => setMobileFiltersOpen(false)}
         />
 
-        <main className={`min-w-0 flex-1 px-6 py-5 lg:px-8 ${bulkMode ? "pb-28" : ""}`}>
+        <main className={`min-w-0 flex-1 px-3 py-4 sm:px-6 sm:py-5 lg:px-8 ${bulkMode ? "pb-28" : ""}`}>
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3 animate-fade-up">
             <div className="flex items-baseline gap-3">
-              <h1 className="brand-line font-display text-2xl font-semibold text-[var(--charcoal)]">
+              <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
                 {filters.category ?? "All Vendors"}
               </h1>
               <span className="text-xs text-[var(--charcoal)]/55">
@@ -151,13 +154,27 @@ function DashboardPage() {
               </span>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setMobileFiltersOpen(true)}
+                className={`relative inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium lg:hidden ${
+                  filters.category || filters.locations.length
+                    ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
+                    : "border-[var(--border)] bg-white text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+                }`}
+              >
+                <FilterIcon className="h-3.5 w-3.5" />
+                Filters
+                {(filters.category || filters.locations.length > 0) && (
+                  <span className="ml-0.5 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
+                )}
+              </button>
               {isAdmin && (
                 <button
                   onClick={() => {
                     if (bulkMode) exitBulkMode();
                     else setBulkMode(true);
                   }}
-                  className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`hidden items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors sm:inline-flex ${
                     bulkMode
                       ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
                       : "border-[var(--border)] bg-white text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
@@ -203,7 +220,7 @@ function DashboardPage() {
               onAdd={() => modals.openCreate(filters.category ? { category: filters.category } : undefined)}
             />
           ) : view === "cards" ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-fade-in">
+            <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-fade-in">
               {filtered.map((v) => (
                 <VendorCard
                   key={v.id}
