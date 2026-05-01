@@ -256,9 +256,6 @@ function VendorSignupPage() {
               <div className="text-[9px] uppercase tracking-[0.22em] text-[var(--charcoal)]/55">Vendor Studio</div>
             </div>
           </Link>
-          <Link to="/" className="text-xs text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]">
-            ← Back to homepage
-          </Link>
         </div>
       </header>
 
