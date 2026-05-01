@@ -64,6 +64,8 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
       const seed = { ...EMPTY, ...(initial ?? {}) } as VendorInput;
       setForm(seed);
       setError(null);
+      setSaved(false);
+      setSubmitting(false);
       setPendingFiles([]);
       setExisting([]);
       if (editingId) {
