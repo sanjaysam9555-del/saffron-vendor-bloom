@@ -30,19 +30,52 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Saffron Events — Planning Studio" },
-      { name: "description", content: "Saffron Vendor Hub manages wedding vendors, centralizing data for event planners." },
-      { property: "og:title", content: "Saffron Events — Planning Studio" },
-      { name: "twitter:title", content: "Saffron Events — Planning Studio" },
-      { property: "og:description", content: "Saffron Vendor Hub manages wedding vendors, centralizing data for event planners." },
-      { name: "twitter:description", content: "Saffron Vendor Hub manages wedding vendors, centralizing data for event planners." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7e2d1de8-2458-48e9-b9d1-6bab2bfe0e6a/id-preview-1148d56e--d7328052-e869-41c3-81e8-267167087b2a.lovable.app-1777546869219.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7e2d1de8-2458-48e9-b9d1-6bab2bfe0e6a/id-preview-1148d56e--d7328052-e869-41c3-81e8-267167087b2a.lovable.app-1777546869219.png" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { httpEquiv: "X-UA-Compatible", content: "IE=edge" },
+      { title: "Wedding & Event Planning Studio | Saffron Events" },
+      {
+        name: "description",
+        content:
+          "Saffron Events is a boutique wedding & event planning studio in India. We craft unforgettable celebrations — from intimate gatherings to grand weddings. Plan with us today.",
+      },
+      {
+        name: "keywords",
+        content:
+          "wedding planner India, event planning studio, wedding planning services, Saffron Events, boutique event planner, wedding coordinator India",
+      },
+      { name: "author", content: "Saffron Events" },
+      {
+        name: "robots",
+        content: "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+      },
+      { name: "theme-color", content: "#C4873A" },
+
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Saffron Events" },
+      { property: "og:title", content: "Wedding & Event Planning Studio | Saffron Events" },
+      {
+        property: "og:description",
+        content:
+          "Boutique wedding & event planning studio in India. We craft unforgettable celebrations for every occasion.",
+      },
+      { property: "og:url", content: "https://planwithsaffron.in/" },
+      { property: "og:image", content: "https://planwithsaffron.in/images/og-cover.jpg" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Saffron Events — Wedding & Event Planning Studio" },
+      { property: "og:locale", content: "en_IN" },
+
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Wedding & Event Planning Studio | Saffron Events" },
+      {
+        name: "twitter:description",
+        content: "Boutique wedding & event planning studio in India. Crafting unforgettable celebrations.",
+      },
+      { name: "twitter:image", content: "https://planwithsaffron.in/images/og-cover.jpg" },
+      { name: "twitter:image:alt", content: "Saffron Events — Wedding & Event Planning Studio" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "canonical", href: "https://planwithsaffron.in/" },
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
       { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32.png" },
       { rel: "icon", type: "image/png", sizes: "16x16", href: "/favicon-16x16.png" },
@@ -55,6 +88,32 @@ export const Route = createRootRoute({
         href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Jost:wght@300;400;500;600&display=swap",
       },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": ["EventPlanningService", "LocalBusiness"],
+          name: "Saffron Events",
+          alternateName: "Plan with Saffron",
+          url: "https://planwithsaffron.in",
+          logo: "https://planwithsaffron.in/images/logo.png",
+          image: "https://planwithsaffron.in/images/og-cover.jpg",
+          description:
+            "Saffron Events is a boutique wedding and event planning studio in India, crafting unforgettable celebrations from intimate gatherings to grand weddings.",
+          priceRange: "₹₹₹",
+          currenciesAccepted: "INR",
+          paymentAccepted: "Cash, Credit Card, Bank Transfer",
+          areaServed: { "@type": "Country", name: "India" },
+          contactPoint: {
+            "@type": "ContactPoint",
+            contactType: "customer service",
+            availableLanguage: ["English", "Hindi"],
+            email: "hello@planwithsaffron.in",
+          },
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -63,7 +122,7 @@ export const Route = createRootRoute({
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en-IN">
       <head>
         <HeadContent />
       </head>
