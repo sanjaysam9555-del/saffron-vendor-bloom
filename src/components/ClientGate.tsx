@@ -9,7 +9,7 @@ export function ClientGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading) return;
     if (!session) {
-      navigate({ to: "/client/login" });
+      navigate({ to: "/" });
       return;
     }
     if (role && role !== "client") {
