@@ -1,8 +1,27 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { attachAuthToken } from "./auth-client-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+async function requireClientUser(): Promise<{ userId: string }> {
+  const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+  if (!token) throw new Error("Authentication is still loading. Please try again.");
+  const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+  if (userError || !userData.user) throw new Error("Authentication is still loading. Please try again.");
+  const userId = userData.user.id;
+
+  const { data: roleRow, error: roleError } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "client")
+    .maybeSingle();
+  if (roleError) throw new Error(roleError.message);
+  if (!roleRow) throw new Error("This account is not a client account.");
+  return { userId };
+}
 
 async function assertStaff(userId: string) {
   const { data, error } = await supabaseAdmin
