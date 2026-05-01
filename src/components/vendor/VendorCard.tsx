@@ -1,6 +1,6 @@
 import type { Vendor } from "@/lib/vendor-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
-import { MapPin, Phone, Star, Instagram, Copy, Check } from "lucide-react";
+import { MapPin, Phone, Star, Instagram, Copy, Check, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
 
@@ -91,16 +91,50 @@ export function VendorCard({
             <MapPin className="h-3.5 w-3.5" /> {vendor.location}
           </div>
         )}
-        {vendor.contact_number && (
-          <button
-            onClick={copyPhone}
-            className="flex items-center gap-1.5 hover:text-[var(--terracotta)]"
-            title="Click to copy"
-          >
-            <Phone className="h-3.5 w-3.5" /> {vendor.contact_number}
-            {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 opacity-40" />}
-          </button>
-        )}
+        {vendor.contact_number && (() => {
+          const digits = vendor.contact_number.replace(/\D/g, "");
+          // Default to +91 (India) when no country code is present.
+          const intl = digits.length === 10 ? `91${digits}` : digits;
+          const telHref = `tel:+${intl}`;
+          const waHref = `https://wa.me/${intl}`;
+          return (
+            <div className="flex items-center gap-1.5">
+              <Phone className="h-3.5 w-3.5 shrink-0" />
+              <button
+                onClick={copyPhone}
+                className="min-w-0 truncate text-left hover:text-[var(--terracotta)]"
+                title="Click to copy"
+              >
+                {vendor.contact_number}
+              </button>
+              {copied ? (
+                <Check className="h-3 w-3 shrink-0 text-green-600" />
+              ) : (
+                <Copy className="h-3 w-3 shrink-0 opacity-40" />
+              )}
+              <a
+                href={waHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`WhatsApp ${vendor.vendor_name}`}
+                title="WhatsApp"
+                className="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)] text-[#25D366] hover:bg-[#25D366]/10 hover:border-[#25D366]"
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+              </a>
+              <a
+                href={telHref}
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`Call ${vendor.vendor_name}`}
+                title="Call"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)] text-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:border-[var(--terracotta)]"
+              >
+                <Phone className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          );
+        })()}
         {vendor.instagram_handle && (() => {
           const raw = vendor.instagram_handle.trim().replace(/^@+/, "");
           const handle = raw
