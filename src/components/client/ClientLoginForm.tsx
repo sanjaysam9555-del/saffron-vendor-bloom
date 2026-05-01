@@ -27,7 +27,7 @@ export function ClientLoginForm() {
     if (!email || !password) {
       setErr("Please enter your email and password.");
       setBtnState("error");
-      setTimeout(() => setBtnState("idle"), 1600);
+      setTimeout(() => setBtnState("idle"), SIGN_IN_ERROR_HOLD_MS);
       return;
     }
     setErr(null);
