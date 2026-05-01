@@ -177,36 +177,11 @@ function ProjectDetailPage() {
         </section>
 
         {/* Assigned vendors */}
-        <section className="mt-10">
-          <h2 className="font-display text-xl text-[var(--charcoal)]">Assigned vendors ({vendors.length})</h2>
-          <p className="text-xs text-[var(--charcoal)]/55">
-            Assign vendors from the main dashboard — open any vendor card and use “Assign to projects”.
-          </p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            {vendors.length === 0 ? (
-              <div className="sm:col-span-2 rounded-lg border border-dashed border-[var(--champagne)] bg-white py-10 text-center text-sm text-[var(--charcoal)]/60">
-                No vendors assigned to this project yet.
-              </div>
-            ) : (
-              vendors.map((v: any) => (
-                <div key={v.id} className="flex items-start justify-between gap-3 rounded-lg border border-[var(--border)] bg-white p-3">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">{v.category}{v.subcategory ? ` · ${v.subcategory}` : ""}</div>
-                    <div className="font-medium text-[var(--charcoal)]">{v.vendor_name}</div>
-                    {v.price_text && <div className="text-xs text-[var(--terracotta)]">{v.price_text}</div>}
-                  </div>
-                  <button
-                    onClick={() => removeVendor(v.id)}
-                    title="Remove from project"
-                    className="rounded p-1.5 text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
+        <AssignedVendorsSection
+          vendors={vendors}
+          selections={selections}
+          onRemove={removeVendor}
+        />
       </div>
     </div>
   );
