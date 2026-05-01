@@ -1,24 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { SignInButton, type SignInButtonState } from "@/components/auth/SignInButton";
 
 export function ClientLoginForm() {
-  const { signIn } = useAuth();
+  const { signIn, session, role, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [btnState, setBtnState] = useState<SignInButtonState>("idle");
+
+  useEffect(() => {
+    if (loading || !session || !role) return;
+    setBtnState("success");
+  }, [loading, session, role]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (busy) return;
+    if (btnState !== "idle") return;
     setErr(null);
-    setBusy(true);
-    try {
-      const res = await signIn(email, password);
-      if (res.error) setErr(res.error);
-    } finally {
-      setBusy(false);
+    setBtnState("loading");
+    const res = await signIn(email, password);
+    if (res.error) {
+      setErr(res.error);
+      setBtnState("idle");
+    } else {
+      setBtnState("success");
     }
   };
 
@@ -53,13 +60,7 @@ export function ClientLoginForm() {
             onChange={(e) => setPassword(e.target.value)}
           />
           {err && <div className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{err}</div>}
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-md bg-[var(--terracotta)] px-4 py-2 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 disabled:opacity-60"
-          >
-            {busy ? "Please wait…" : "Sign in"}
-          </button>
+          <SignInButton state={btnState} />
         </form>
       </div>
     </div>
