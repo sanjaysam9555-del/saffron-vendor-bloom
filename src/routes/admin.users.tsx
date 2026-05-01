@@ -81,7 +81,7 @@ function AdminUsersPage() {
   return (
     <div className="min-h-screen bg-[var(--cream)] px-6 py-8">
       <div className="mx-auto max-w-4xl">
-        <Link to="/" className="inline-flex items-center gap-1 text-sm text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]">
+        <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]">
           <ArrowLeft className="h-4 w-4" /> Back to dashboard
         </Link>
         <div className="mt-4 flex items-center justify-between">
