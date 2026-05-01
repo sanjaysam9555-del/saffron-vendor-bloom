@@ -19,7 +19,7 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
 
   return (
     <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--cream)]/95 backdrop-blur">
-      <div className="mx-auto flex max-w-[1600px] items-center gap-4 px-4 py-2.5 sm:px-6">
+      <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-3 py-2.5 sm:gap-4 sm:px-6">
         {/* Logo */}
         <Link to="/admin" className="flex items-center gap-2.5 shrink-0">
           <img src={logoLight} alt="Saffron Events" className="h-9 w-auto object-contain" />
@@ -30,7 +30,7 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
         </Link>
 
         {/* Compact search — same row as logo */}
-        <div className="relative w-full max-w-[280px]">
+        <div className="relative min-w-0 flex-1 sm:max-w-[280px]">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/40" />
           <input
             type="text"
@@ -42,7 +42,7 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
         </div>
 
         {/* Spacer pushes stats + CTA right */}
-        <div className="ml-auto flex items-center gap-4">
+        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
           {mounted && (
             <div className="hidden items-center gap-4 text-xs text-[var(--charcoal)]/60 lg:flex">
               <div><span className="font-semibold text-[var(--terracotta)]">{totalVendors}</span> vendors</div>
