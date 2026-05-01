@@ -369,18 +369,9 @@ export const listVendorProjectAssignments = createServerFn({ method: "GET" })
 // ---------- Client-facing ----------
 
 export const getMyProject = createServerFn({ method: "GET" })
-  .middleware([attachAuthToken, requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const userId = context.userId;
-
-    // Confirm role is client
-    const { data: role } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "client")
-      .maybeSingle();
-    if (!role) throw new Error("Not a client account");
+  .middleware([attachAuthToken])
+  .handler(async () => {
+    const { userId } = await requireClientUser();
 
     const { data: link } = await supabaseAdmin
       .from("project_clients")
@@ -458,7 +449,7 @@ export const getMyProject = createServerFn({ method: "GET" })
   });
 
 export const setMyVendorStatus = createServerFn({ method: "POST" })
-  .middleware([attachAuthToken, requireSupabaseAuth])
+  .middleware([attachAuthToken])
   .inputValidator((d) =>
     z
       .object({
@@ -469,17 +460,8 @@ export const setMyVendorStatus = createServerFn({ method: "POST" })
       })
       .parse(d),
   )
-  .handler(async ({ context, data }) => {
-    const userId = context.userId;
-
-    // Confirm caller is a client.
-    const { data: role } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "client")
-      .maybeSingle();
-    if (!role) throw new Error("Not a client account");
+  .handler(async ({ data }) => {
+    const { userId } = await requireClientUser();
 
     // Confirm vendor is in one of this client's projects.
     const { data: link } = await supabaseAdmin
