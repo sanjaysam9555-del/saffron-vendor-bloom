@@ -10,8 +10,6 @@ import { VendorForm } from "@/components/vendor/VendorForm";
 import { VendorDetail } from "@/components/vendor/VendorDetail";
 import { useVendors, useVendorMutations, useVendorModals } from "@/hooks/useVendorData";
 import { CATEGORIES } from "@/lib/categories";
-import { bulkInsertVendors } from "@/lib/vendor-api";
-import { SAMPLE_VENDORS } from "@/lib/seed-data";
 import { AuthGate } from "@/components/AuthGate";
 
 export const Route = createFileRoute("/admin/")({
@@ -38,7 +36,6 @@ function DashboardPage() {
   const [filters, setFilters] = useState<FilterState>({
     category: null, locations: [],
   });
-  const [seeding, setSeeding] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const filtered = useMemo(() => {
@@ -55,16 +52,6 @@ function DashboardPage() {
   }, [vendors, filters, search]);
 
   const lastAdded = vendors[0]?.vendor_name;
-
-  const handleSeed = async () => {
-    setSeeding(true);
-    try {
-      await bulkInsertVendors(SAMPLE_VENDORS);
-      window.location.reload();
-    } finally {
-      setSeeding(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[var(--cream)]">
@@ -123,8 +110,6 @@ function DashboardPage() {
               category={filters.category}
               vendorsExist={vendors.length > 0}
               onAdd={() => modals.openCreate(filters.category ? { category: filters.category } : undefined)}
-              onSeed={handleSeed}
-              seeding={seeding}
             />
           ) : view === "cards" ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-fade-in">
@@ -171,13 +156,11 @@ function DashboardPage() {
 }
 
 function EmptyState({
-  category, vendorsExist, onAdd, onSeed, seeding,
+  category, vendorsExist, onAdd,
 }: {
   category: string | null;
   vendorsExist: boolean;
   onAdd: () => void;
-  onSeed: () => void;
-  seeding: boolean;
 }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--champagne)] bg-white py-20 text-center animate-fade-up">
@@ -188,17 +171,12 @@ function EmptyState({
       <p className="mb-5 mt-2 max-w-md text-sm text-[var(--charcoal)]/60">
         {vendorsExist
           ? "Try adjusting filters or add a new vendor in this category."
-          : "Add your first vendor manually or seed sample wedding vendors to get started."}
+          : "Start building your vendor book by adding your first vendor."}
       </p>
       <div className="flex gap-2">
         <button onClick={onAdd} className="rounded-lg bg-[var(--terracotta)] px-5 py-2 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90">
           Add Vendor →
         </button>
-        {!vendorsExist && (
-          <button onClick={onSeed} disabled={seeding} className="rounded-lg border border-[var(--border)] bg-white px-5 py-2 text-sm text-[var(--charcoal)]/80 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] disabled:opacity-50">
-            {seeding ? "Seeding…" : "Load sample data"}
-          </button>
-        )}
       </div>
     </div>
   );

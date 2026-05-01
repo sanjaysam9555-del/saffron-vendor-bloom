@@ -1,0 +1,1 @@
+DELETE FROM public.vendors WHERE source = 'Sample Data';
