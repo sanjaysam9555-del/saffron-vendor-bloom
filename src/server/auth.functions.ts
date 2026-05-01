@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { getRequestHeader } from "@tanstack/react-start/server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { attachAuthToken } from "./auth-client-middleware";
 
@@ -8,21 +8,28 @@ const knownStaffEmails = new Map([
 ]);
 
 export const getCurrentUserAccess = createServerFn({ method: "GET" })
-  .middleware([attachAuthToken, requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const email = typeof context.claims.email === "string" ? context.claims.email.toLowerCase() : "";
+  .middleware([attachAuthToken])
+  .handler(async () => {
+    const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+    if (!token) throw new Error("Authentication is still loading. Please try again.");
+
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+    if (userError || !userData.user) throw new Error("Authentication is still loading. Please try again.");
+
+    const userId = userData.user.id;
+    const email = userData.user.email?.toLowerCase() ?? "";
 
     try {
       const [{ data: roleRow, error: roleError }, { data: profileRow, error: profileError }] = await Promise.all([
         supabaseAdmin
           .from("user_roles")
           .select("role")
-          .eq("user_id", context.userId)
+          .eq("user_id", userId)
           .maybeSingle(),
         supabaseAdmin
           .from("profiles")
           .select("display_name")
-          .eq("user_id", context.userId)
+          .eq("user_id", userId)
           .maybeSingle(),
       ]);
 
