@@ -1,15 +1,21 @@
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, X } from "lucide-react";
 
-export type SignInButtonState = "idle" | "loading" | "success";
+export type SignInButtonState = "idle" | "loading" | "success" | "error";
 
 export function SignInButton({ state }: { state: SignInButtonState }) {
-  const disabled = state !== "idle";
+  const disabled = state === "loading" || state === "success";
   return (
     <button
       type="submit"
       disabled={disabled}
-      className="relative w-full overflow-hidden rounded-md bg-[var(--terracotta)] px-4 py-2 text-sm font-medium text-[var(--cream)] transition-all hover:bg-[var(--terracotta)]/90 disabled:opacity-100 data-[state=success]:bg-emerald-600"
       data-state={state}
+      className={`relative w-full overflow-hidden rounded-md px-4 py-2 text-sm font-medium text-[var(--cream)] transition-colors duration-300 disabled:opacity-100 ${
+        state === "success"
+          ? "bg-emerald-600"
+          : state === "error"
+          ? "bg-red-600 animate-[shake_0.4s_ease-in-out]"
+          : "bg-[var(--terracotta)] hover:bg-[var(--terracotta)]/90"
+      }`}
     >
       <span
         className={`flex items-center justify-center gap-2 transition-all duration-300 ${
@@ -35,6 +41,16 @@ export function SignInButton({ state }: { state: SignInButtonState }) {
           <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
         </span>
         Signed in
+      </span>
+      <span
+        className={`absolute inset-0 flex items-center justify-center gap-2 transition-all duration-300 ${
+          state === "error" ? "opacity-100 scale-100" : "opacity-0 scale-90"
+        }`}
+      >
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 animate-scale-in">
+          <X className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+        </span>
+        Sign in failed
       </span>
     </button>
   );
