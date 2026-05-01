@@ -1,5 +1,3 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { Check, ChevronDown, X } from "lucide-react";
 import {
   DropdownMenu,
@@ -13,8 +11,7 @@ import {
   getClientStatusOption,
   type ClientVendorStatus,
 } from "@/lib/client-status";
-import type { ClientVendor } from "@/lib/project-types";
-import { setMyVendorStatus } from "@/server/projects.functions";
+import { useSetVendorStatus } from "@/hooks/useSetVendorStatus";
 
 interface Props {
   vendorId: string;
@@ -24,61 +21,12 @@ interface Props {
 }
 
 export function ClientStatusSelect({ vendorId, status, compact = false }: Props) {
-  const qc = useQueryClient();
   const current = getClientStatusOption(status);
-
-  const mutation = useMutation({
-    mutationFn: async (next: ClientVendorStatus | null) => {
-      // Retry once on transient network failures (preview proxy can intermittently
-      // drop the first POST with "Failed to fetch").
-      try {
-        await setMyVendorStatus({ data: { vendor_id: vendorId, status: next } });
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (/failed to fetch|networkerror|load failed/i.test(msg)) {
-          await new Promise((r) => setTimeout(r, 400));
-          await setMyVendorStatus({ data: { vendor_id: vendorId, status: next } });
-        } else {
-          throw err;
-        }
-      }
-      return next;
-    },
-    onMutate: async (next) => {
-      await qc.cancelQueries({ queryKey: ["my-project"] });
-      const previous = qc.getQueryData<{ vendors: ClientVendor[] }>([
-        "my-project",
-      ]);
-      if (previous) {
-        qc.setQueryData(["my-project"], {
-          ...previous,
-          vendors: previous.vendors.map((v) =>
-            v.id === vendorId ? { ...v, client_status: next } : v,
-          ),
-        });
-      }
-      return { previous };
-    },
-    onError: (err, _next, ctx) => {
-      const msg = err instanceof Error ? err.message : "Could not save status";
-      // Keep the optimistic value on transient network errors so the UI doesn't
-      // flicker back; surface a gentle warning instead of a full rollback.
-      if (/failed to fetch|networkerror|load failed/i.test(msg)) {
-        toast.warning("Saved locally — will sync when connection is restored");
-        return;
-      }
-      if (ctx?.previous) qc.setQueryData(["my-project"], ctx.previous);
-      toast.error(msg);
-    },
-    onSuccess: () => {
-      // Quietly refresh to reconcile with server truth.
-      qc.invalidateQueries({ queryKey: ["my-project"] });
-    },
-  });
+  const mutation = useSetVendorStatus();
 
   const handleSelect = (next: ClientVendorStatus | null) => {
     if (next === status) return;
-    mutation.mutate(next);
+    mutation.mutate({ vendor_id: vendorId, status: next });
   };
 
 

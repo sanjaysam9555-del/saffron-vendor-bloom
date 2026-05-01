@@ -1,52 +1,60 @@
-# Plan: Admin view of client vendor selections
+# Plan: Delete-vendor feedback + Client-side board view
 
-## Goal
+## 1. Delete vendor feedback (admin)
 
-From the admin panel, let staff see — for any project — exactly which vendors the project's client(s) have marked as Liked, Shortlisted, Finalised, Rejected, or "Need to think about it".
+**Issue**: Clicking "Confirm Delete" calls `onDelete()` and silently closes the panel — no spinner, no toast, no animation. If the request is slow the user has no idea anything happened.
 
-## Where it lives
+**Fix** (in `src/components/vendor/VendorDetail.tsx`):
+- Add a `deleting` local state. While `onDelete()` is in flight:
+  - Disable both Confirm/Cancel buttons.
+  - Replace the button label with a spinner + "Deleting…" (using `Loader2` from lucide).
+- On success, fire `toast.success("Vendor deleted")` from sonner.
+- On error, surface `toast.error(err.message)` and re-enable the buttons.
+- Add a brief fade-out animation on the detail panel before close (use the existing `animate-fade-out` utility — wrap the close call in a 150 ms timeout after success).
 
-The project detail page already exists at `/admin/projects/$id` and lists the project's clients and assigned vendors. This is the natural home — no new top-level page needed.
+`src/routes/admin.index.tsx` already calls `remove.mutateAsync` inside `onDelete`, which throws on failure — so the component just needs to await + try/catch. No server-side change.
 
-We add three things to that page:
+## 2. Client board (Kanban) view
 
-1. **Per-project status summary (counts)** — small chip row at the top:
-   `Liked 4 · Shortlisted 2 · Finalised 1 · Rejected 3 · Thinking 2 · No response 8`
-2. **Status column on each assigned vendor row** — a colored pill showing what the client marked. If the project has more than one client login, the pill shows the most recent client's status and hovering reveals a per-client breakdown.
-3. **"Client View" toggle** — a button on the page header that switches the vendor list into a grouped view:
-   ```text
-   ❤ Finalised (1)
-     - Cupcake Productions  (marked by bride@…)
-   ★ Shortlisted (2)
-     - …
-   ✗ Rejected (3)
-     - …
-   • No response yet (8)
-     - …
-   ```
-   Same data, just regrouped so staff can quickly answer "what did they pick?"
+**Goal**: A new view on `/client` where vendors are arranged in columns by their `client_status`. Dragging a card across columns updates the status (reuses the existing `setMyVendorStatus` server function — same one the dropdown calls).
 
-A separate **`/admin/projects` index enhancement**: each project card gets a tiny stat line (`✓ 1 finalised · ★ 2 shortlisted · 12 vendors`) so you can scan all 10 dashboards at once without opening each.
+### Columns
+Six columns, in this order:
+1. **No status** (vendors where `client_status === null`)
+2. **We like it** (`like`)
+3. **Shortlisted** (`shortlisted`)
+4. **Need to think about it** (`thinking`)
+5. **Finalised** (`finalised`)
+6. **Rejected** (`rejected`)
 
-## What to build
+Each column shows its colored header (reusing `CLIENT_STATUS_OPTIONS` colors), a count, and the vendor cards inside.
 
-### Backend (server functions)
-- New `getProjectClientSelections({ project_id })` in `src/server/projects.functions.ts`. Uses `supabaseAdmin` (staff-only, gated by `requireStaffUser`). Returns: for each assigned vendor, the list of `{ user_id, display_name, status }` rows from `client_vendor_status` joined with `profiles`. Also returns aggregate counts.
-- New `getProjectsOverview()` — extends `listProjects` with per-project status counts (one round-trip, grouped server-side) for the projects list page.
+### View toggle
+Add a small **Grid / Board** toggle in `ClientTopNav` (or inline above the grid in `client.index.tsx`). Persist the choice in `localStorage` so the view stays put across reloads.
 
-No DB schema changes needed — `client_vendor_status` already stores everything.
+### Drag-and-drop library
+Install **`@dnd-kit/core`** + **`@dnd-kit/sortable`** (small, accessible, React 19 compatible, ~works on touch + mouse + keyboard). These are the de-facto choice for modern React DnD.
 
-### Frontend
-- `src/routes/admin.projects.$id.tsx`: add the summary chip row, status pill per vendor row, and the "Group by client status" toggle. Reuse `CLIENT_STATUS_OPTIONS` from `src/lib/client-status.ts` for colors so admin and client see identical pills.
-- `src/routes/admin.projects.index.tsx`: add the per-card stat line.
-- New small component `src/components/admin/ClientStatusPill.tsx` so the same pill renders consistently in cards, rows, and the grouped view.
+### Components to add
+- `src/components/client/ClientBoardView.tsx` — wraps `DndContext`, renders six `ClientBoardColumn`s, owns the optimistic update + mutation.
+- `src/components/client/ClientBoardColumn.tsx` — droppable column with header + status pill + count + vertical list of cards.
+- `src/components/client/ClientBoardCard.tsx` — compact draggable card (vendor name, category chip, location, mini "View Details" link). Smaller than the grid card so a column shows several at once.
 
-## Out of scope (for now)
-- Editing a client's status from the admin side (read-only — if you want this later, say the word).
-- Notifications when a client changes a status.
+### Behavior
+- **Drag start**: card lifts (shadow + slight scale, `animate-scale-in`).
+- **Drop on a column**: optimistically move the card and call `setMyVendorStatus` with the new status (`null` for the "No status" column). Reuses the same retry/optimistic pattern from `ClientStatusSelect`, so we'll factor that pattern into a small `useSetVendorStatus()` hook in `src/hooks/useSetVendorStatus.ts` and reuse it from both the dropdown and the board.
+- **On error**: revert the card and `toast.error`.
+- **Filters + search**: the existing sidebar filters and search box still apply — only the matching vendors appear in the board.
+- **Click (without drag)**: opens the same `ClientVendorDetail` panel.
 
-## Files touched
-- `src/server/projects.functions.ts` — add 2 server functions
-- `src/routes/admin.projects.$id.tsx` — summary, pills, grouped view toggle
-- `src/routes/admin.projects.index.tsx` — per-card status counts
-- `src/components/admin/ClientStatusPill.tsx` (new)
+### Files touched
+- `src/components/vendor/VendorDetail.tsx` — delete UX (toast + spinner + fade).
+- `src/hooks/useSetVendorStatus.ts` — new shared mutation hook.
+- `src/components/client/ClientStatusSelect.tsx` — switch to the shared hook.
+- `src/components/client/ClientBoardView.tsx`, `ClientBoardColumn.tsx`, `ClientBoardCard.tsx` — new.
+- `src/routes/client.index.tsx` — Grid/Board toggle and conditional render.
+- `package.json` — add `@dnd-kit/core` and `@dnd-kit/sortable`.
+
+### Out of scope
+- Reordering vendors *within* a column (kept simple — only the column they're in matters; within a column they stay sorted by vendor name).
+- Multi-select / bulk move.

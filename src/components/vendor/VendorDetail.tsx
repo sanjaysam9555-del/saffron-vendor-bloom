@@ -1,8 +1,9 @@
 import type { Vendor } from "@/lib/vendor-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import {
-  X, MapPin, Phone, Mail, Instagram, Globe, Star, Pencil, Trash2, Copy, Check, Link as LinkIcon, Paperclip, FileText,
+  X, MapPin, Phone, Mail, Instagram, Globe, Star, Pencil, Trash2, Copy, Check, Link as LinkIcon, Paperclip, FileText, Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -24,8 +25,23 @@ interface VendorDetailProps {
 export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetailProps) {
   const isAdmin = useIsAdmin();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleted, setDeleted] = useState(false);
   const [copiedCard, setCopiedCard] = useState(false);
   const [viewing, setViewing] = useState<VendorAttachment | null>(null);
+
+  const handleConfirmDelete = async () => {
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      await onDelete();
+      setDeleted(true);
+      toast.success("Vendor deleted");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not delete vendor");
+      setDeleting(false);
+    }
+  };
 
   const { data: attachments = [] } = useQuery({
     queryKey: ["vendor-attachments", vendor?.id],
@@ -159,13 +175,24 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
           <div className="flex gap-2">
             {confirmDelete ? (
               <>
-                <span className="self-center text-sm text-red-700">Delete this vendor?</span>
-                <button onClick={() => setConfirmDelete(false)} className="rounded-md px-3 py-2 text-sm hover:bg-[var(--cream-deep)]">Cancel</button>
+                <span className="self-center text-sm text-red-700">
+                  {deleted ? "Deleted" : deleting ? "Deleting…" : "Delete this vendor?"}
+                </span>
                 <button
-                  onClick={async () => { await onDelete(); }}
-                  className="rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-[var(--charcoal)] hover:bg-red-700"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={deleting || deleted}
+                  className="rounded-md px-3 py-2 text-sm hover:bg-[var(--cream-deep)] disabled:opacity-40"
                 >
-                  Confirm Delete
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={deleting || deleted}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {deleting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {deleted ? <Check className="h-4 w-4" /> : null}
+                  {deleted ? "Deleted" : deleting ? "Deleting…" : "Confirm Delete"}
                 </button>
               </>
             ) : (
