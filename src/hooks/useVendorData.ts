@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listVendors,
@@ -9,9 +9,43 @@ import {
   bulkDeleteVendors,
 } from "@/lib/vendor-api";
 import type { Vendor, VendorInput } from "@/lib/vendor-types";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useVendors() {
-  return useQuery({ queryKey: ["vendors"], queryFn: listVendors });
+  const qc = useQueryClient();
+  const query = useQuery({ queryKey: ["vendors"], queryFn: listVendors });
+
+  // Live updates: subscribe to any change on the vendors table and
+  // invalidate the cache so the dashboard reflects edits/adds/deletes
+  // made from any device without a manual refresh.
+  useEffect(() => {
+    const channel = supabase
+      .channel("vendors-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "vendors" },
+        () => {
+          qc.invalidateQueries({ queryKey: ["vendors"] });
+        },
+      )
+      .subscribe();
+
+    // Safety net for iOS standalone apps: realtime connections can drop when
+    // the app is backgrounded. Refetch the moment the tab becomes visible.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        qc.invalidateQueries({ queryKey: ["vendors"] });
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      supabase.removeChannel(channel);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [qc]);
+
+  return query;
 }
 
 export function useVendorMutations() {

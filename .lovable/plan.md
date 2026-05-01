@@ -1,34 +1,57 @@
-## Fix vendor delete: "Authentication is still loading" race
+# Fix iPad "App" Logout + Add Live Updates
 
-The Confirm Delete button is firing before the Supabase session token is attached to the request, so the server function rejects it with "Authentication is still loading. Please try again." and the vendor never gets deleted. We'll fix the underlying race and improve the messaging so this stops happening.
+Two separate issues, both rooted in how the site behaves when installed to the iPad home screen.
 
-### Root cause
+## Problem 1 — Logged out every time the app reopens
 
-`src/server/auth-client-middleware.ts` (the `attachAuthToken` client middleware) calls `supabase.auth.getSession()` once. If the session hasn't hydrated yet — or the access token just expired — it sends the request with no `Authorization` header. The server (`src/server/vendors.functions.ts → requireStaffUser`) then throws the generic "Authentication is still loading." error. The same message also fires for genuinely invalid tokens, which is misleading.
+**Why this happens**
 
-The detail dialog `handleConfirmDelete` correctly toasts on error and resets `deleting`, so the dialog stays open and the vendor row stays in the DB — exactly what the screenshot shows.
+iOS "Add to Home Screen" runs the site in standalone mode using a separate WebKit storage partition. The Supabase auth session is stored in `localStorage` (see `src/integrations/supabase/client.ts`). Two things break it on iPadOS:
 
-### Changes
+1. iPadOS aggressively evicts `localStorage` for standalone web apps when the app is closed/backgrounded, especially under storage pressure or after ~7 days of inactivity (Intelligent Tracking Prevention). The session token gets wiped → user appears logged out.
+2. Our manifest (`public/site.webmanifest`) has empty `name`/`short_name` and `display: standalone`, but no `start_url`, `scope`, or `id`. iOS treats reopens with an unstable identity, which compounds the storage-eviction issue.
 
-**1. `src/server/auth-client-middleware.ts` — make token attach robust**
-- Try `supabase.auth.getSession()` first.
-- If no token, call `supabase.auth.refreshSession()`.
-- If still no token, poll `getSession()` for up to ~2s (5 attempts, 400ms apart) — covers the case where the session is hydrating from storage during initial load.
-- Only after that fall through with no Authorization header.
+**Fix**
 
-**2. `src/server/vendors.functions.ts` — clearer error + same hardening for all staff actions**
-- Split the two error cases in `requireStaffUser`:
-  - No bearer token → `"You're not signed in. Please sign in again to continue."`
-  - `getUser(token)` rejects → `"Your session expired. Please sign in again."`
-- No behavior change beyond message clarity. (`listVendorsServer`, `createVendorServer`, `updateVendorServer`, `deleteVendorServer`, `bulkInsertVendorsServer` all benefit because they share `requireStaffUser`.)
+- Switch Supabase auth storage from `localStorage` to a more durable wrapper that writes to **both `localStorage` and `IndexedDB`** (IndexedDB survives ITP eviction far better on iOS standalone). On read, fall back to IndexedDB if `localStorage` is empty, then mirror back into `localStorage`. This is implemented as a small custom `storage` adapter passed into `createClient({ auth: { storage } })`.
+- Make sure `autoRefreshToken: true` and `persistSession: true` stay on (already set) and add `detectSessionInUrl: true` so any callback flows still work.
+- Update `public/site.webmanifest` so iOS treats the installed app as a stable identity:
+  - `name`: "Saffron Events"
+  - `short_name`: "Saffron"
+  - `start_url`: "/login"
+  - `scope`: "/"
+  - `id`: "/"
+  - keep `display: standalone`
+- Note for the user: existing installed iPad icons keep the old manifest baked in. After this ships, **remove the app from the home screen and re-add it** so the new manifest takes effect.
 
-**3. `src/components/vendor/VendorDetail.tsx` — gate the Confirm Delete button on auth readiness**
-- Read `const { initialized, session } = useAuth();` (already importing from `@/lib/auth`).
-- The Confirm Delete button is `disabled` while `!initialized || !session` (in addition to the existing `deleting || deleted` checks).
-- Tooltip / label shows "Preparing…" in that brief window so the user understands why it's not clickable. Once auth is ready (the common case), the button works immediately.
-- No change to the success flow: on resolve, `setDeleted(true)` + `toast.success("Vendor deleted")` + `modals.closeDetail()` (called from `admin.index.tsx`'s `onDelete`) close the dialog; the React Query `invalidate` in `useVendorData` removes the row from the dashboard.
+## Problem 2 — Dashboard doesn't reflect changes in real time
 
-### Out of scope
-- No DB / RLS / migration changes — the delete itself works once the token reaches the server.
-- No changes to `admin.index.tsx` wiring (close-on-success is already correct).
-- No changes to the success toast styling.
+**Why this happens**
+
+`useVendors()` is a plain `useQuery({ queryKey: ["vendors"] })` with `staleTime: 30_000` and `refetchOnWindowFocus: false` (root QueryClient). Nothing pushes updates from the database, and the window-focus refetch that would normally rescue it is disabled. When a teammate adds/edits/deletes a vendor on another device, this iPad never finds out until a hard refresh.
+
+**Fix** (two complementary layers)
+
+1. **Supabase Realtime subscription on `vendors`**
+   - Migration: `ALTER PUBLICATION supabase_realtime ADD TABLE public.vendors;` (and `submissions` + `client_projects` if we want those live too — confirmed needed for admin views).
+   - In `useVendors()`, add a `useEffect` that subscribes to `postgres_changes` on the `vendors` table and calls `queryClient.invalidateQueries({ queryKey: ["vendors"] })` on any INSERT/UPDATE/DELETE. Subscription is torn down on unmount.
+
+2. **Re-enable focus / reconnect refetching as a safety net** (Realtime can drop on iOS when the app is backgrounded):
+   - Set `refetchOnWindowFocus: true` and `refetchOnReconnect: true` on the root `QueryClient`.
+   - Add a small `visibilitychange` listener inside `useVendors` that invalidates the vendors query when the tab becomes visible again — this is what guarantees the iPad sees fresh data the moment the user reopens the app.
+
+## Files to change
+
+- `src/integrations/supabase/client.ts` — custom `storage` adapter (localStorage + IndexedDB mirror), add `detectSessionInUrl: true`.
+- `public/site.webmanifest` — fill in `name`, `short_name`, `start_url`, `scope`, `id`.
+- `src/routes/__root.tsx` — flip `refetchOnWindowFocus` / `refetchOnReconnect` to `true`.
+- `src/hooks/useVendorData.ts` — add Realtime subscription + `visibilitychange` invalidation inside `useVendors()`.
+- New migration — add `vendors` (and optionally `submissions`, `client_projects`) to `supabase_realtime` publication.
+
+## What the user should do after deploy
+
+1. On the iPad, **remove** the existing Saffron app icon from the home screen.
+2. Open the site in Safari and **Add to Home Screen again** so the updated manifest is picked up.
+3. From then on, sessions should persist across reopens, and vendor changes from any device will appear within a second or two without manual refresh.
+
+Approve and I'll implement.

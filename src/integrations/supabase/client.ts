@@ -2,6 +2,145 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+/**
+ * Durable storage adapter for Supabase auth.
+ *
+ * On iPadOS standalone web apps (Add to Home Screen), Safari aggressively
+ * evicts localStorage when the app is closed/backgrounded — the user appears
+ * "logged out" on every reopen. IndexedDB survives ITP eviction far better.
+ *
+ * Strategy: write to BOTH localStorage and IndexedDB. On read, prefer
+ * localStorage (fast/sync), fall back to IndexedDB and rehydrate localStorage.
+ */
+const IDB_NAME = 'saffron-auth';
+const IDB_STORE = 'kv';
+
+function openIdb(): Promise<IDBDatabase> | null {
+  if (typeof indexedDB === 'undefined') return null;
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(IDB_STORE);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function idbGet(key: string): Promise<string | null> {
+  try {
+    const dbp = openIdb();
+    if (!dbp) return null;
+    const db = await dbp;
+    return await new Promise<string | null>((resolve) => {
+      const tx = db.transaction(IDB_STORE, 'readonly');
+      const req = tx.objectStore(IDB_STORE).get(key);
+      req.onsuccess = () => resolve((req.result as string | undefined) ?? null);
+      req.onerror = () => resolve(null);
+    });
+  } catch {
+    return null;
+  }
+}
+
+async function idbSet(key: string, value: string): Promise<void> {
+  try {
+    const dbp = openIdb();
+    if (!dbp) return;
+    const db = await dbp;
+    await new Promise<void>((resolve) => {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).put(value, key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    });
+  } catch {
+    /* noop */
+  }
+}
+
+async function idbDel(key: string): Promise<void> {
+  try {
+    const dbp = openIdb();
+    if (!dbp) return;
+    const db = await dbp;
+    await new Promise<void>((resolve) => {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).delete(key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    });
+  } catch {
+    /* noop */
+  }
+}
+
+function createDurableStorage() {
+  if (typeof window === 'undefined') return undefined;
+
+  // Eagerly hydrate localStorage from IndexedDB on startup so Supabase's
+  // synchronous storage.getItem() call finds the session on the first read
+  // even if Safari evicted localStorage between sessions.
+  void (async () => {
+    try {
+      const keys: string[] = [];
+      try {
+        const dbp = openIdb();
+        if (dbp) {
+          const db = await dbp;
+          await new Promise<void>((resolve) => {
+            const tx = db.transaction(IDB_STORE, 'readonly');
+            const req = tx.objectStore(IDB_STORE).getAllKeys();
+            req.onsuccess = () => {
+              for (const k of (req.result as IDBValidKey[]) ?? []) {
+                if (typeof k === 'string') keys.push(k);
+              }
+              resolve();
+            };
+            req.onerror = () => resolve();
+          });
+        }
+      } catch {
+        /* noop */
+      }
+      for (const key of keys) {
+        if (window.localStorage.getItem(key) == null) {
+          const v = await idbGet(key);
+          if (v != null) {
+            try { window.localStorage.setItem(key, v); } catch { /* quota */ }
+          }
+        }
+      }
+    } catch {
+      /* noop */
+    }
+  })();
+
+  return {
+    getItem: (key: string) => {
+      try {
+        const v = window.localStorage.getItem(key);
+        if (v != null) return v;
+      } catch {
+        /* noop */
+      }
+      // Fire-and-forget: rehydrate localStorage from IndexedDB for next sync read.
+      void idbGet(key).then((v) => {
+        if (v != null) {
+          try { window.localStorage.setItem(key, v); } catch { /* noop */ }
+        }
+      });
+      return null;
+    },
+    setItem: (key: string, value: string) => {
+      try { window.localStorage.setItem(key, value); } catch { /* noop */ }
+      void idbSet(key, value);
+    },
+    removeItem: (key: string) => {
+      try { window.localStorage.removeItem(key); } catch { /* noop */ }
+      void idbDel(key);
+    },
+  };
+}
+
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
@@ -20,9 +159,10 @@ function createSupabaseClient() {
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: {
-      storage: typeof window !== 'undefined' ? localStorage : undefined,
+      storage: createDurableStorage(),
       persistSession: true,
       autoRefreshToken: true,
+      detectSessionInUrl: true,
     }
   });
 }
@@ -37,4 +177,3 @@ export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>,
     return Reflect.get(_supabase, prop, receiver);
   },
 });
-
