@@ -24,29 +24,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
   const loadProfile = async (userId: string) => {
-    const [{ data: roleRow }, { data: profileRow }] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
-      supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle(),
-    ]);
-    setRole((roleRow?.role as AppRole) ?? "employee");
+    let roleRow: { role: string } | null = null;
+    let roleError: { message: string } | null = null;
+    let profileRow: { display_name: string | null } | null = null;
+    let profileError: { message: string } | null = null;
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const [roleResponse, profileResponse] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
+        supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle(),
+      ]);
+
+      roleRow = roleResponse.data;
+      roleError = roleResponse.error;
+      profileRow = profileResponse.data;
+      profileError = profileResponse.error;
+
+      if (!roleResponse.error) break;
+      if (attempt < 2) await wait(350 * (attempt + 1));
+    }
+
+    if (roleError) throw roleError;
+    if (profileError) console.warn("Unable to load profile", profileError.message);
+
+    const nextRole = (roleRow?.role as AppRole) ?? "employee";
+    setRole(nextRole);
     setDisplayName(profileRow?.display_name ?? null);
+    return nextRole;
   };
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       if (s?.user) {
-        setTimeout(() => loadProfile(s.user.id), 0);
+        setLoading(true);
+        setTimeout(() => {
+          loadProfile(s.user.id)
+            .catch((error) => {
+              console.error("Unable to load access role", error);
+              setRole(null);
+            })
+            .finally(() => setLoading(false));
+        }, 0);
       } else {
         setRole(null);
         setDisplayName(null);
+        setLoading(false);
       }
     });
 
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
-      if (s?.user) loadProfile(s.user.id).finally(() => setLoading(false));
+      if (s?.user) {
+        loadProfile(s.user.id)
+          .catch((error) => {
+            console.error("Unable to load access role", error);
+            setRole(null);
+          })
+          .finally(() => setLoading(false));
+      }
       else setLoading(false);
     });
 
@@ -60,8 +99,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     displayName,
     loading,
     signIn: async (email, password) => {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      return { error: error?.message ?? null };
+      try {
+        setLoading(true);
+        let data: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["data"] | null = null;
+        let error: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["error"] | null = null;
+
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          const response = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+          data = response.data;
+          error = response.error;
+          if (!error || !/database|schema|fetch|network/i.test(error.message)) break;
+          if (attempt < 2) await wait(450 * (attempt + 1));
+        }
+
+        if (error) return { error: error.message };
+        setSession(data?.session ?? null);
+        if (data?.user) await loadProfile(data.user.id);
+        return { error: null };
+      } catch (error) {
+        console.error("Sign in failed", error);
+        return { error: "Could not complete sign in. Please try again." };
+      } finally {
+        setLoading(false);
+      }
     },
     signUp: async (email, password, displayName) => {
       const { error } = await supabase.auth.signUp({
