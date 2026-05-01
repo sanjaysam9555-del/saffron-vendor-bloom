@@ -108,8 +108,8 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const runSave = async () => {
+    if (submitting || saved) return;
     if (!form.vendor_name.trim() || !form.category) {
       setError("Vendor name and category are required");
       return;
@@ -126,23 +126,33 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
       setError("Instagram handle is required");
       return;
     }
+    setError(null);
     setSubmitting(true);
     try {
-      const saved = await onSubmit(form);
+      const result = await onSubmit(form);
       // Upload pending files
       for (const file of pendingFiles) {
         try {
-          await uploadVendorAttachment(saved.id, file);
+          await uploadVendorAttachment(result.id, file);
         } catch (e: any) {
           setError(`Saved vendor, but failed to upload "${file.name}": ${e?.message ?? "error"}`);
         }
       }
-      onClose();
+      setSubmitting(false);
+      setSaved(true);
+      // brief success animation, then close
+      setTimeout(() => {
+        onClose();
+      }, 750);
     } catch (err: any) {
       setError(err?.message ?? "Failed to save vendor");
-    } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void runSave();
   };
 
   const isHotel = form.category === "Hotels & Venues";
