@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { ClientLoginForm } from "@/components/client/ClientLoginForm";
+import { SIGN_IN_SUCCESS_HOLD_MS } from "@/components/auth/SignInButton";
 
 export const Route = createFileRoute("/")({
   head: () => ({
