@@ -35,6 +35,18 @@ function ClientPortalPage() {
   const [filters, setFilters] = useState<ClientFilterState>({ category: null, locations: [] });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [detail, setDetail] = useState<ClientVendor | null>(null);
+  const [view, setView] = useState<ViewMode>("grid");
+
+  // Restore + persist view preference.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
+    if (stored === "grid" || stored === "board") setView(stored);
+  }, []);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(VIEW_STORAGE_KEY, view);
+  }, [view]);
 
   const vendors = (data?.vendors ?? []) as ClientVendor[];
 
