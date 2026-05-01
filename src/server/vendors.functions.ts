@@ -119,3 +119,40 @@ export const bulkInsertVendorsServer = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return count ?? data.rows.length;
   });
+
+export const bulkUpdateVendorsServer = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken])
+  .inputValidator((d) =>
+    z
+      .object({
+        ids: z.array(z.string().uuid()).min(1).max(500),
+        patch: vendorInputSchema.partial(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    await requireStaffUser();
+    if (Object.keys(data.patch).length === 0) {
+      throw new Error("No fields to update.");
+    }
+    const { error, count } = await supabaseAdmin
+      .from("vendors")
+      .update({ ...data.patch, updated_at: new Date().toISOString() }, { count: "exact" })
+      .in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { updated: count ?? data.ids.length };
+  });
+
+export const bulkDeleteVendorsServer = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken])
+  .inputValidator((d) => z.object({ ids: z.array(z.string().uuid()).min(1).max(500) }).parse(d))
+  .handler(async ({ data }) => {
+    await requireStaffUser();
+    const { error, count } = await supabaseAdmin
+      .from("vendors")
+      .delete({ count: "exact" })
+      .in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { deleted: count ?? data.ids.length };
+  });
+

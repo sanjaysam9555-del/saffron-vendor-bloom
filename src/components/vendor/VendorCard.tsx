@@ -8,9 +8,19 @@ interface VendorCardProps {
   vendor: Vendor;
   onView: () => void;
   onEdit: () => void;
+  selectMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }
 
-export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
+export function VendorCard({
+  vendor,
+  onView,
+  onEdit,
+  selectMode = false,
+  selected = false,
+  onToggleSelect,
+}: VendorCardProps) {
   const [copied, setCopied] = useState(false);
   const colors = CATEGORY_COLORS[vendor.category] ?? { bg: "bg-[var(--cream-deep)]", text: "text-[var(--charcoal)]" };
 
@@ -22,13 +32,32 @@ export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const handleCardClick = () => {
+    if (selectMode) onToggleSelect?.();
+    else onView();
+  };
+
   return (
     <div
-      onClick={onView}
-      className="vendor-card group flex h-full cursor-pointer flex-col rounded-lg bg-white p-4 text-[var(--charcoal)]"
+      onClick={handleCardClick}
+      className={`vendor-card group relative flex h-full cursor-pointer flex-col rounded-lg bg-white p-4 text-[var(--charcoal)] ${
+        selectMode && selected ? "ring-2 ring-[var(--terracotta)] ring-offset-2 ring-offset-[var(--cream)]" : ""
+      }`}
     >
+      {selectMode && (
+        <div className="absolute left-2 top-2 z-10">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={() => onToggleSelect?.()}
+            onClick={(e) => e.stopPropagation()}
+            className="h-4 w-4 rounded border-[var(--border)] accent-[var(--terracotta)]"
+            aria-label={`Select ${vendor.vendor_name}`}
+          />
+        </div>
+      )}
       <div className="mb-2 flex items-start justify-between gap-2">
-        <h3 className="font-display text-lg font-semibold leading-tight text-[var(--charcoal)]">{vendor.vendor_name}</h3>
+        <h3 className={`font-display text-lg font-semibold leading-tight text-[var(--charcoal)] ${selectMode ? "pl-6" : ""}`}>{vendor.vendor_name}</h3>
         {vendor.google_rating != null && (
           <div className="flex shrink-0 items-center gap-0.5 rounded-full bg-[hsl(42_65%_55%/0.18)] px-2 py-0.5 text-xs font-medium text-[hsl(42_65%_30%)]">
             <Star className="h-3 w-3 fill-current" />
@@ -99,24 +128,28 @@ export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
         )}
       </div>
 
-      <div className="mt-3 border-t border-[var(--border)] pt-3" style={{ marginTop: 'auto' }}>
-        <VendorProjectAssigner vendorId={vendor.id} compact />
-      </div>
+      {!selectMode && (
+        <>
+          <div className="mt-3 border-t border-[var(--border)] pt-3" style={{ marginTop: 'auto' }}>
+            <VendorProjectAssigner vendorId={vendor.id} compact />
+          </div>
 
-      <div className="mt-2 flex gap-2">
-        <button
-          onClick={(e) => { e.stopPropagation(); onView(); }}
-          className="flex-1 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
-        >
-          View Details
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onEdit(); }}
-          className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
-        >
-          Edit
-        </button>
-      </div>
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={(e) => { e.stopPropagation(); onView(); }}
+              className="flex-1 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
+            >
+              View Details
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+            >
+              Edit
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
