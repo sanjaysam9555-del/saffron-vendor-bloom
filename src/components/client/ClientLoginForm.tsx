@@ -43,7 +43,7 @@ export function ClientLoginForm({ embedded = false }: { embedded?: boolean } = {
   };
 
   return (
-    <div className={embedded ? "flex justify-center" : "flex min-h-screen items-center justify-center bg-[var(--cream)] px-4"}>
+    <div className={embedded ? "flex justify-center my-[30px]" : "flex min-h-screen items-center justify-center bg-[var(--cream)] px-4"}>
       <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-white p-8 shadow-sm">
         <h1 className="font-display text-3xl text-[var(--terracotta)]">Saffron Events</h1>
         <p className="mt-1 text-xs uppercase tracking-[0.22em] text-[var(--charcoal)]/55">
