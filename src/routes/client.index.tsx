@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles } from "lucide-react";
+import { Sparkles, LayoutGrid, Columns3 } from "lucide-react";
 import { ClientGate } from "@/components/ClientGate";
 import { useAuth } from "@/lib/auth";
 import { getMyProject } from "@/server/projects.functions";
@@ -9,7 +9,11 @@ import { ClientTopNav } from "@/components/client/ClientTopNav";
 import { ClientSidebar, type ClientFilterState } from "@/components/client/ClientSidebar";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
 import { ClientVendorDetail } from "@/components/client/ClientVendorDetail";
+import { ClientBoardView } from "@/components/client/ClientBoardView";
 import type { ClientVendor } from "@/lib/project-types";
+
+type ViewMode = "grid" | "board";
+const VIEW_STORAGE_KEY = "saffron.client.viewMode";
 
 export const Route = createFileRoute("/client/")({
   head: () => ({ meta: [{ title: "Your Vendors — Saffron Events" }] }),
