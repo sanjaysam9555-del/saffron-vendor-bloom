@@ -95,7 +95,7 @@ function ProjectDetailPage() {
     );
   }
 
-  const { project, clients, vendors } = data;
+  const { project, clients, vendors, selections = {} as Record<string, { user_id: string; display_name: string; email: string; status: string; updated_at: string }[]> } = data as any;
 
   return (
     <div className="min-h-screen bg-[var(--cream)] px-6 py-8">
