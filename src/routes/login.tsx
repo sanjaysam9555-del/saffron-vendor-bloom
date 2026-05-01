@@ -86,9 +86,6 @@ function LoginPage() {
           <SignInButton state={btnState} />
         </form>
 
-        <div className="mt-4 text-center text-xs text-[var(--charcoal)]/60">
-          New employees are added by an admin.
-        </div>
       </div>
     </div>
   );
