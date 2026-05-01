@@ -21,7 +21,7 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
     <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--cream)]/95 backdrop-blur">
       <div className="mx-auto flex max-w-[1600px] items-center gap-4 px-4 py-2.5 sm:px-6">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 shrink-0">
+        <Link to="/admin" className="flex items-center gap-2.5 shrink-0">
           <img src={logoLight} alt="Saffron Events" className="h-9 w-auto object-contain" />
           <div className="leading-tight hidden sm:block">
             <div className="font-display text-lg font-semibold text-[var(--terracotta)]">Saffron Events</div>

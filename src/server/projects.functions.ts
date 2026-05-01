@@ -1,8 +1,27 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { attachAuthToken } from "./auth-client-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+async function requireClientUser(): Promise<{ userId: string }> {
+  const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+  if (!token) throw new Error("Authentication is still loading. Please try again.");
+  const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+  if (userError || !userData.user) throw new Error("Authentication is still loading. Please try again.");
+  const userId = userData.user.id;
+
+  const { data: roleRow, error: roleError } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "client")
+    .maybeSingle();
+  if (roleError) throw new Error(roleError.message);
+  if (!roleRow) throw new Error("This account is not a client account.");
+  return { userId };
+}
 
 async function assertStaff(userId: string) {
   const { data, error } = await supabaseAdmin
@@ -350,18 +369,9 @@ export const listVendorProjectAssignments = createServerFn({ method: "GET" })
 // ---------- Client-facing ----------
 
 export const getMyProject = createServerFn({ method: "GET" })
-  .middleware([attachAuthToken, requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const userId = context.userId;
-
-    // Confirm role is client
-    const { data: role } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "client")
-      .maybeSingle();
-    if (!role) throw new Error("Not a client account");
+  .middleware([attachAuthToken])
+  .handler(async () => {
+    const { userId } = await requireClientUser();
 
     const { data: link } = await supabaseAdmin
       .from("project_clients")
@@ -439,7 +449,7 @@ export const getMyProject = createServerFn({ method: "GET" })
   });
 
 export const setMyVendorStatus = createServerFn({ method: "POST" })
-  .middleware([attachAuthToken, requireSupabaseAuth])
+  .middleware([attachAuthToken])
   .inputValidator((d) =>
     z
       .object({
@@ -450,17 +460,8 @@ export const setMyVendorStatus = createServerFn({ method: "POST" })
       })
       .parse(d),
   )
-  .handler(async ({ context, data }) => {
-    const userId = context.userId;
-
-    // Confirm caller is a client.
-    const { data: role } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "client")
-      .maybeSingle();
-    if (!role) throw new Error("Not a client account");
+  .handler(async ({ data }) => {
+    const { userId } = await requireClientUser();
 
     // Confirm vendor is in one of this client's projects.
     const { data: link } = await supabaseAdmin

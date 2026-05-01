@@ -15,7 +15,7 @@ function ClientLoginPage() {
   useEffect(() => {
     if (loading) return;
     if (session && role === "client") navigate({ to: "/client" });
-    else if (session && role && role !== "client") navigate({ to: "/" });
+    else if (session && role && role !== "client") navigate({ to: "/admin" });
   }, [loading, session, role, navigate]);
 
   return <ClientLoginForm />;

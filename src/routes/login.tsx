@@ -18,7 +18,7 @@ function LoginPage() {
     if (loading || !session || !role) return;
     setBtnState("success");
     const t = setTimeout(() => {
-      navigate({ to: role === "client" ? "/client" : "/" });
+      navigate({ to: role === "client" ? "/client" : "/admin" });
     }, 700);
     return () => clearTimeout(t);
   }, [loading, session, role, navigate]);
@@ -46,9 +46,7 @@ function LoginPage() {
       setTimeout(() => setBtnState("idle"), 1600);
     } else {
       setBtnState("success");
-      setTimeout(() => {
-        navigate({ to: "/" });
-      }, 700);
+      // Actual navigation happens in the useEffect above once role resolves.
     }
   };
 
