@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles, LayoutGrid, Columns3 } from "lucide-react";
+import { Sparkles, LayoutGrid, Columns3, Filter as FilterIcon } from "lucide-react";
 import { ClientGate } from "@/components/ClientGate";
 import { useAuth } from "@/lib/auth";
 import { getMyProject } from "@/server/projects.functions";
@@ -34,6 +34,7 @@ function ClientPortalPage() {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<ClientFilterState>({ category: null, locations: [] });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [detail, setDetail] = useState<ClientVendor | null>(null);
   const [view, setView] = useState<ViewMode>("grid");
 
@@ -118,12 +119,14 @@ function ClientPortalPage() {
           onChange={setFilters}
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed((c) => !c)}
+          mobileOpen={mobileFiltersOpen}
+          onMobileClose={() => setMobileFiltersOpen(false)}
         />
 
-        <main className="min-w-0 flex-1 px-6 py-5 lg:px-8">
+        <main className="min-w-0 flex-1 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3 animate-fade-up">
             <div>
-              <h1 className="brand-line font-display text-2xl font-semibold text-[var(--charcoal)]">
+              <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
                 {filters.category ?? "Welcome"}
               </h1>
               <p className="mt-1 text-sm text-[var(--charcoal)]/65">
@@ -132,35 +135,51 @@ function ClientPortalPage() {
                   : "Here are the vendors we think will be perfect for your wedding."}
               </p>
             </div>
-            <div
-              role="tablist"
-              aria-label="View"
-              className="inline-flex overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs"
-            >
+            <div className="flex items-center gap-2">
               <button
-                role="tab"
-                aria-selected={view === "grid"}
-                onClick={() => setView("grid")}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 transition-colors ${
-                  view === "grid"
-                    ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                    : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                onClick={() => setMobileFiltersOpen(true)}
+                className={`relative inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium lg:hidden ${
+                  filters.category || filters.locations.length
+                    ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
+                    : "border-[var(--border)] bg-white text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
                 }`}
               >
-                <LayoutGrid className="h-3.5 w-3.5" /> Grid
+                <FilterIcon className="h-3.5 w-3.5" />
+                Filters
+                {(filters.category || filters.locations.length > 0) && (
+                  <span className="ml-0.5 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
+                )}
               </button>
-              <button
-                role="tab"
-                aria-selected={view === "board"}
-                onClick={() => setView("board")}
-                className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 transition-colors ${
-                  view === "board"
-                    ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                    : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-                }`}
+              <div
+                role="tablist"
+                aria-label="View"
+                className="inline-flex overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs"
               >
-                <Columns3 className="h-3.5 w-3.5" /> Board
-              </button>
+                <button
+                  role="tab"
+                  aria-selected={view === "grid"}
+                  onClick={() => setView("grid")}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 transition-colors ${
+                    view === "grid"
+                      ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                      : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                  }`}
+                >
+                  <LayoutGrid className="h-3.5 w-3.5" /> Grid
+                </button>
+                <button
+                  role="tab"
+                  aria-selected={view === "board"}
+                  onClick={() => setView("board")}
+                  className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 transition-colors ${
+                    view === "board"
+                      ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                      : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                  }`}
+                >
+                  <Columns3 className="h-3.5 w-3.5" /> Board
+                </button>
+              </div>
             </div>
           </div>
 
@@ -169,7 +188,7 @@ function ClientPortalPage() {
           ) : filtered.length === 0 ? (
             <EmptyState message="No vendors match your filters." />
           ) : view === "grid" ? (
-            <div className="grid gap-4 animate-fade-in sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-3 sm:gap-4 animate-fade-in sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filtered.map((v) => (
                 <ClientVendorCard key={v.id} vendor={v} onView={() => setDetail(v)} />
               ))}

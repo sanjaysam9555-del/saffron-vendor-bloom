@@ -12,9 +12,19 @@ interface Props {
   onChange: (f: ClientFilterState) => void;
   collapsed: boolean;
   onToggle: () => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
-export function ClientSidebar({ vendors, filters, onChange, collapsed, onToggle }: Props) {
+export function ClientSidebar({
+  vendors,
+  filters,
+  onChange,
+  collapsed,
+  onToggle,
+  mobileOpen = false,
+  onMobileClose,
+}: Props) {
   const counts = vendors.reduce<Record<string, number>>((acc, v) => {
     acc[v.category] = (acc[v.category] ?? 0) + 1;
     return acc;
@@ -39,55 +49,8 @@ export function ClientSidebar({ vendors, filters, onChange, collapsed, onToggle 
         : "border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--champagne)] hover:text-[var(--charcoal)]"
     }`;
 
-  if (collapsed) {
-    return (
-      <aside className="w-12 shrink-0 self-stretch border-r border-[var(--border)] bg-[var(--cream-deep)] py-4 transition-all duration-200">
-        <button
-          onClick={onToggle}
-          title="Expand filters"
-          className="mx-auto flex h-9 w-9 items-center justify-center rounded-md text-[var(--terracotta)] hover:bg-white"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-        <div className="mt-2 flex justify-center">
-          <div className="rounded-md p-2 text-[var(--charcoal)]/60" title="Filters">
-            <Filter className="h-4 w-4" />
-          </div>
-        </div>
-        {hasActive && (
-          <div className="mt-1 flex justify-center">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" title="Filters active" />
-          </div>
-        )}
-      </aside>
-    );
-  }
-
-  return (
-    <aside className="w-64 shrink-0 self-stretch border-r border-[var(--border)] bg-[var(--cream-deep)] p-5 transition-all duration-200 lg:block">
-      <div className="mb-5 flex items-center justify-between">
-        <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-[var(--terracotta)]">
-          <Filter className="h-4 w-4" /> Filters
-        </h2>
-        <div className="flex items-center gap-1">
-          {hasActive ? (
-            <button
-              onClick={() => onChange({ category: null, locations: [] })}
-              className="flex items-center gap-1 text-xs text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"
-            >
-              <X className="h-3 w-3" /> Clear
-            </button>
-          ) : null}
-          <button
-            onClick={onToggle}
-            title="Collapse filters"
-            className="ml-1 rounded-md p-1 text-[var(--charcoal)]/55 hover:bg-white hover:text-[var(--terracotta)]"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-
+  const Body = (
+    <>
       <div className="mb-6">
         <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">
           Category
@@ -145,6 +108,95 @@ export function ClientSidebar({ vendors, filters, onChange, collapsed, onToggle 
           </div>
         </div>
       )}
-    </aside>
+    </>
+  );
+
+  const MobileOverlay = mobileOpen ? (
+    <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/40 animate-fade-in" onClick={onMobileClose} aria-label="Close filters" />
+      <aside className="absolute inset-y-0 left-0 flex w-[85%] max-w-xs flex-col overflow-y-auto bg-[var(--cream-deep)] p-5 shadow-xl">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-[var(--terracotta)]">
+            <Filter className="h-4 w-4" /> Filters
+          </h2>
+          <div className="flex items-center gap-2">
+            {hasActive && (
+              <button
+                onClick={() => onChange({ category: null, locations: [] })}
+                className="flex items-center gap-1 text-xs text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"
+              >
+                <X className="h-3 w-3" /> Clear
+              </button>
+            )}
+            <button
+              onClick={onMobileClose}
+              title="Close"
+              className="rounded-md p-1 text-[var(--charcoal)]/55 hover:bg-white hover:text-[var(--terracotta)]"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+        {Body}
+      </aside>
+    </div>
+  ) : null;
+
+  if (collapsed) {
+    return (
+      <>
+        <aside className="hidden w-12 shrink-0 self-stretch border-r border-[var(--border)] bg-[var(--cream-deep)] py-4 transition-all duration-200 lg:block">
+          <button
+            onClick={onToggle}
+            title="Expand filters"
+            className="mx-auto flex h-9 w-9 items-center justify-center rounded-md text-[var(--terracotta)] hover:bg-white"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          <div className="mt-2 flex justify-center">
+            <div className="rounded-md p-2 text-[var(--charcoal)]/60" title="Filters">
+              <Filter className="h-4 w-4" />
+            </div>
+          </div>
+          {hasActive && (
+            <div className="mt-1 flex justify-center">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" title="Filters active" />
+            </div>
+          )}
+        </aside>
+        {MobileOverlay}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <aside className="hidden w-64 shrink-0 self-stretch border-r border-[var(--border)] bg-[var(--cream-deep)] p-5 transition-all duration-200 lg:block">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-[var(--terracotta)]">
+            <Filter className="h-4 w-4" /> Filters
+          </h2>
+          <div className="flex items-center gap-1">
+            {hasActive ? (
+              <button
+                onClick={() => onChange({ category: null, locations: [] })}
+                className="flex items-center gap-1 text-xs text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"
+              >
+                <X className="h-3 w-3" /> Clear
+              </button>
+            ) : null}
+            <button
+              onClick={onToggle}
+              title="Collapse filters"
+              className="ml-1 rounded-md p-1 text-[var(--charcoal)]/55 hover:bg-white hover:text-[var(--terracotta)]"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+        {Body}
+      </aside>
+      {MobileOverlay}
+    </>
   );
 }
