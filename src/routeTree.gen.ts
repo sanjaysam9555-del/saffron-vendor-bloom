@@ -18,6 +18,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminProjectsIndexRouteImport } from './routes/admin.projects.index'
 import { Route as ApiPublicVendorSignupRouteImport } from './routes/api/public/vendor-signup'
 import { Route as AdminProjectsIdRouteImport } from './routes/admin.projects.$id'
+import { Route as ApiPublicVendorSignupCheckRouteImport } from './routes/api/public/vendor-signup.check'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -64,6 +65,12 @@ const AdminProjectsIdRoute = AdminProjectsIdRouteImport.update({
   path: '/admin/projects/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicVendorSignupCheckRoute =
+  ApiPublicVendorSignupCheckRouteImport.update({
+    id: '/check',
+    path: '/check',
+    getParentRoute: () => ApiPublicVendorSignupRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,8 +80,9 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
   '/admin/projects/$id': typeof AdminProjectsIdRoute
-  '/api/public/vendor-signup': typeof ApiPublicVendorSignupRoute
+  '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/admin/projects/': typeof AdminProjectsIndexRoute
+  '/api/public/vendor-signup/check': typeof ApiPublicVendorSignupCheckRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -84,8 +92,9 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/client': typeof ClientIndexRoute
   '/admin/projects/$id': typeof AdminProjectsIdRoute
-  '/api/public/vendor-signup': typeof ApiPublicVendorSignupRoute
+  '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/admin/projects': typeof AdminProjectsIndexRoute
+  '/api/public/vendor-signup/check': typeof ApiPublicVendorSignupCheckRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -96,8 +105,9 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
   '/admin/projects/$id': typeof AdminProjectsIdRoute
-  '/api/public/vendor-signup': typeof ApiPublicVendorSignupRoute
+  '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/admin/projects/': typeof AdminProjectsIndexRoute
+  '/api/public/vendor-signup/check': typeof ApiPublicVendorSignupCheckRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/admin/projects/$id'
     | '/api/public/vendor-signup'
     | '/admin/projects/'
+    | '/api/public/vendor-signup/check'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +133,7 @@ export interface FileRouteTypes {
     | '/admin/projects/$id'
     | '/api/public/vendor-signup'
     | '/admin/projects'
+    | '/api/public/vendor-signup/check'
   id:
     | '__root__'
     | '/'
@@ -133,6 +145,7 @@ export interface FileRouteTypes {
     | '/admin/projects/$id'
     | '/api/public/vendor-signup'
     | '/admin/projects/'
+    | '/api/public/vendor-signup/check'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -143,7 +156,7 @@ export interface RootRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   ClientIndexRoute: typeof ClientIndexRoute
   AdminProjectsIdRoute: typeof AdminProjectsIdRoute
-  ApiPublicVendorSignupRoute: typeof ApiPublicVendorSignupRoute
+  ApiPublicVendorSignupRoute: typeof ApiPublicVendorSignupRouteWithChildren
   AdminProjectsIndexRoute: typeof AdminProjectsIndexRoute
 }
 
@@ -212,8 +225,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProjectsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/vendor-signup/check': {
+      id: '/api/public/vendor-signup/check'
+      path: '/check'
+      fullPath: '/api/public/vendor-signup/check'
+      preLoaderRoute: typeof ApiPublicVendorSignupCheckRouteImport
+      parentRoute: typeof ApiPublicVendorSignupRoute
+    }
   }
 }
+
+interface ApiPublicVendorSignupRouteChildren {
+  ApiPublicVendorSignupCheckRoute: typeof ApiPublicVendorSignupCheckRoute
+}
+
+const ApiPublicVendorSignupRouteChildren: ApiPublicVendorSignupRouteChildren = {
+  ApiPublicVendorSignupCheckRoute: ApiPublicVendorSignupCheckRoute,
+}
+
+const ApiPublicVendorSignupRouteWithChildren =
+  ApiPublicVendorSignupRoute._addFileChildren(
+    ApiPublicVendorSignupRouteChildren,
+  )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -223,7 +256,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   ClientIndexRoute: ClientIndexRoute,
   AdminProjectsIdRoute: AdminProjectsIdRoute,
-  ApiPublicVendorSignupRoute: ApiPublicVendorSignupRoute,
+  ApiPublicVendorSignupRoute: ApiPublicVendorSignupRouteWithChildren,
   AdminProjectsIndexRoute: AdminProjectsIndexRoute,
 }
 export const routeTree = rootRouteImport
