@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentUserAccess } from "@/server/auth.functions";
 
 export type AppRole = "admin" | "employee" | "client";
 
@@ -27,31 +28,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
   const loadProfile = async (userId: string) => {
-    let roleRow: { role: string } | null = null;
-    let roleError: { message: string } | null = null;
-    let profileRow: { display_name: string | null } | null = null;
-    let profileError: { message: string } | null = null;
+    let access: { role: string; displayName: string | null } | null = null;
+    let accessError: Error | null = null;
 
     for (let attempt = 0; attempt < 8; attempt += 1) {
-      const roleResponse = await supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle();
+      try {
+        access = await getCurrentUserAccess();
+        accessError = null;
+        break;
+      } catch (error) {
+        accessError = error instanceof Error ? error : new Error("Unable to load access role");
+      }
 
-      roleRow = roleResponse.data;
-      roleError = roleResponse.error;
-
-      if (!roleResponse.error) break;
       if (attempt < 7) await wait(Math.min(1500, 350 * (attempt + 1)));
     }
 
-    const profileResponse = await supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle();
-    profileRow = profileResponse.data;
-    profileError = profileResponse.error;
+    if (accessError) throw accessError;
 
-    if (roleError) throw roleError;
-    if (profileError) console.warn("Unable to load profile", profileError.message);
-
-    const nextRole = (roleRow?.role as AppRole) ?? "employee";
+    const nextRole = (access?.role as AppRole) ?? "employee";
     setRole(nextRole);
-    setDisplayName(profileRow?.display_name ?? null);
+    setDisplayName(access?.displayName ?? null);
     return nextRole;
   };
 
