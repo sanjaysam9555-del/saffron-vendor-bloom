@@ -15,12 +15,8 @@ export const attachAuthToken = createMiddleware({ type: "function" }).client(
       token = refreshed.data.session?.access_token;
     }
 
-    if (!token) {
-      throw new Error("Your session is still loading. Please try again in a moment.");
-    }
-
     return next({
-      headers: { Authorization: `Bearer ${token}` },
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   },
 );
