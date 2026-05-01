@@ -106,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
           return;
         }
+        setLoading(true);
         void loadProfile(s.user.id);
       } else {
         setLoading(false);
