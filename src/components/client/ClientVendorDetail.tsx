@@ -2,8 +2,8 @@ import { useState } from "react";
 import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import { X, MapPin, Instagram, Link as LinkIcon, Paperclip, FileText, Globe, Star } from "lucide-react";
-import { DocumentViewer } from "@/components/vendor/DocumentViewer";
-import { formatFileSize, getAttachmentUrl } from "@/lib/vendor-files-api";
+import { SignedDocumentViewer } from "@/components/vendor/SignedDocumentViewer";
+import { formatFileSize } from "@/lib/vendor-files-api";
 import { ClientStatusSelect } from "./ClientStatusSelect";
 import { useQuery } from "@tanstack/react-query";
 
@@ -135,8 +135,8 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
       </div>
 
       {viewing && (
-        <DocumentViewer
-          url={getAttachmentUrl(viewing.file_path)}
+        <SignedDocumentViewer
+          filePath={viewing.file_path}
           fileName={viewing.file_name}
           mimeType={viewing.mime_type}
           onClose={() => setViewing(null)}
