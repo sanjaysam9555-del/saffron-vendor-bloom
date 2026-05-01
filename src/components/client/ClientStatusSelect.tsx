@@ -1,5 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Check, ChevronDown, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   CLIENT_STATUS_OPTIONS,
   getClientStatusOption,
@@ -45,48 +53,88 @@ export function ClientStatusSelect({ vendorId, status, compact = false }: Props)
     },
   });
 
-  const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    e.stopPropagation();
-    const value = e.target.value;
-    const next = value === "" ? null : (value as ClientVendorStatus);
+  const handleSelect = (next: ClientVendorStatus | null) => {
+    if (next === status) return;
     mutation.mutate(next);
   };
 
-  const accent = current?.dot ?? "var(--charcoal)";
-  const valueAttr = status ?? "";
+  // Distinct, vibrant trigger styling so it stands out from category tags.
+  const triggerBase =
+    "inline-flex items-center justify-between gap-2 rounded-md border-2 px-3 py-1.5 text-xs font-semibold shadow-sm transition-all hover:shadow active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1";
+  const triggerStyle = current
+    ? `${current.pill} border-transparent ring-1 ring-black/5`
+    : "bg-[var(--charcoal)] text-[var(--cream)] border-[var(--charcoal)] hover:bg-[var(--charcoal)]/90";
 
   return (
     <div
-      onClick={(e) => e.stopPropagation()}
-      className={`relative inline-flex items-center ${compact ? "" : "w-full"}`}
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
+      className={compact ? "inline-flex" : "w-full"}
     >
-      <span
-        aria-hidden
-        className="pointer-events-none absolute left-2 h-2 w-2 rounded-full"
-        style={{ backgroundColor: current ? accent : "transparent", border: current ? "none" : "1px dashed var(--border)" }}
-      />
-      <select
-        value={valueAttr}
-        onChange={onChange}
-        disabled={mutation.isPending}
-        className={`appearance-none rounded-md border border-[var(--border)] bg-white pl-5 pr-7 py-1.5 text-xs font-medium text-[var(--charcoal)] hover:border-[var(--terracotta)] focus:border-[var(--terracotta)] focus:outline-none disabled:opacity-60 ${compact ? "" : "w-full"}`}
-        title={current?.label ?? "Set your status for this vendor"}
-      >
-        <option value="">Set status…</option>
-        {CLIENT_STATUS_OPTIONS.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      <svg
-        aria-hidden
-        className="pointer-events-none absolute right-2 h-3 w-3 text-[var(--charcoal)]/50"
-        viewBox="0 0 12 12"
-        fill="none"
-      >
-        <path d="M3 4.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger
+          asChild
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            className={`${triggerBase} ${triggerStyle} ${compact ? "" : "w-full"}`}
+          >
+            <span className="flex items-center gap-2 truncate">
+              {current && (
+                <span
+                  aria-hidden
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: current.dot }}
+                />
+              )}
+              <span className="truncate">
+                {current ? current.label : "Set your status"}
+              </span>
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          sideOffset={4}
+          className="z-[60] min-w-[12rem]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {CLIENT_STATUS_OPTIONS.map((opt) => {
+            const active = opt.value === status;
+            return (
+              <DropdownMenuItem
+                key={opt.value}
+                onSelect={() => handleSelect(opt.value)}
+                className="flex items-center justify-between gap-2"
+              >
+                <span className="flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: opt.dot }}
+                  />
+                  {opt.label}
+                </span>
+                {active && <Check className="h-3.5 w-3.5 opacity-70" />}
+              </DropdownMenuItem>
+            );
+          })}
+          {status && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={() => handleSelect(null)}
+                className="text-[var(--charcoal)]/70"
+              >
+                <X className="mr-2 h-3.5 w-3.5" /> Clear status
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
