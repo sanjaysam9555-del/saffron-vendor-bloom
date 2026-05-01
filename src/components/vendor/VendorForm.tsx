@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Vendor, VendorInput } from "@/lib/vendor-types";
 import { HOTEL_CATEGORIES, addCustomCategory, useAllCategories } from "@/lib/categories";
-import { X, Upload, Paperclip, Trash2 } from "lucide-react";
+import { X, Upload, Paperclip, Trash2, Check, Loader2 } from "lucide-react";
 import {
   ACCEPTED_FILE_TYPES,
   MAX_FILE_SIZE,
@@ -45,6 +45,7 @@ const EMPTY: VendorInput = {
 export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps) {
   const [form, setForm] = useState<VendorInput>(EMPTY);
   const [submitting, setSubmitting] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [existing, setExisting] = useState<VendorAttachment[]>([]);
@@ -63,6 +64,8 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
       const seed = { ...EMPTY, ...(initial ?? {}) } as VendorInput;
       setForm(seed);
       setError(null);
+      setSaved(false);
+      setSubmitting(false);
       setPendingFiles([]);
       setExisting([]);
       if (editingId) {
@@ -105,8 +108,8 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const runSave = async () => {
+    if (submitting || saved) return;
     if (!form.vendor_name.trim() || !form.category) {
       setError("Vendor name and category are required");
       return;
@@ -123,23 +126,33 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
       setError("Instagram handle is required");
       return;
     }
+    setError(null);
     setSubmitting(true);
     try {
-      const saved = await onSubmit(form);
+      const result = await onSubmit(form);
       // Upload pending files
       for (const file of pendingFiles) {
         try {
-          await uploadVendorAttachment(saved.id, file);
+          await uploadVendorAttachment(result.id, file);
         } catch (e: any) {
           setError(`Saved vendor, but failed to upload "${file.name}": ${e?.message ?? "error"}`);
         }
       }
-      onClose();
+      setSubmitting(false);
+      setSaved(true);
+      // brief success animation, then close
+      setTimeout(() => {
+        onClose();
+      }, 750);
     } catch (err: any) {
       setError(err?.message ?? "Failed to save vendor");
-    } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void runSave();
   };
 
   const isHotel = form.category === "Hotels & Venues";
@@ -412,13 +425,47 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
         {error && <div className="px-6 pb-2 text-sm text-red-600">{error}</div>}
 
         <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-[var(--border)] bg-[var(--cream)] px-6 py-3">
-          <button type="button" onClick={onClose} className="rounded-md px-4 py-2 text-sm text-[var(--charcoal)]/65 hover:bg-[var(--cream-deep)]">Cancel</button>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting || saved}
+            className="rounded-md px-4 py-2 text-sm text-[var(--charcoal)]/65 hover:bg-[var(--cream-deep)] disabled:opacity-40"
+          >
+            Cancel
+          </button>
           <button
             type="submit"
-            disabled={submitting}
-            className="rounded-md bg-[var(--terracotta)] px-4 py-2 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 disabled:opacity-50"
+            disabled={submitting || saved}
+            // Fire on pointerdown so a single tap works even when a text input
+            // is currently focused (the focused input's blur would otherwise
+            // swallow the first tap on iOS / mobile Safari).
+            onPointerDown={(e) => {
+              // Left mouse button or touch/pen
+              if (e.pointerType !== "mouse" || e.button === 0) {
+                e.preventDefault();
+                (e.currentTarget as HTMLButtonElement).focus();
+                void runSave();
+              }
+            }}
+            className={`inline-flex min-w-[140px] items-center justify-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium text-[var(--cream)] transition-colors disabled:cursor-not-allowed ${
+              saved
+                ? "bg-green-600"
+                : "bg-[var(--terracotta)] hover:bg-[var(--terracotta)]/90 disabled:opacity-60"
+            }`}
           >
-            {submitting ? "Saving…" : "Save Vendor"}
+            {saved ? (
+              <>
+                <Check className="h-4 w-4 animate-fade-in" />
+                <span>Saved!</span>
+              </>
+            ) : submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Saving…</span>
+              </>
+            ) : (
+              <span>Save Vendor</span>
+            )}
           </button>
         </div>
       </form>
