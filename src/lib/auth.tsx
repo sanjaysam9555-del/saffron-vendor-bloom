@@ -101,10 +101,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn: async (email, password) => {
       try {
         setLoading(true);
-        const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        let data: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["data"] | null = null;
+        let error: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["error"] | null = null;
+
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          const response = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+          data = response.data;
+          error = response.error;
+          if (!error || !/database|schema|fetch|network/i.test(error.message)) break;
+          if (attempt < 2) await wait(450 * (attempt + 1));
+        }
+
         if (error) return { error: error.message };
-        setSession(data.session ?? null);
-        if (data.user) await loadProfile(data.user.id);
+        setSession(data?.session ?? null);
+        if (data?.user) await loadProfile(data.user.id);
         return { error: null };
       } catch (error) {
         console.error("Sign in failed", error);
