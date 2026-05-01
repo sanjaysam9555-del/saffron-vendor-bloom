@@ -40,7 +40,7 @@ export function VendorCard({
   return (
     <div
       onClick={handleCardClick}
-      className={`vendor-card group relative flex h-full cursor-pointer flex-col rounded-lg bg-white p-4 text-[var(--charcoal)] ${
+      className={`vendor-card group relative flex h-full min-w-0 max-w-full cursor-pointer flex-col overflow-hidden rounded-lg bg-white p-4 text-[var(--charcoal)] ${
         selectMode && selected ? "ring-2 ring-[var(--terracotta)] ring-offset-2 ring-offset-[var(--cream)]" : ""
       }`}
     >
