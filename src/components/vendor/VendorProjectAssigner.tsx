@@ -28,10 +28,12 @@ export function VendorProjectAssigner({ vendorId, compact = false }: Props) {
     queryFn: () => listVendorProjectAssignments(),
   });
 
+  const projectList = Array.isArray(projects) ? projects : [];
+
   const assigned = (assignments as Record<string, any[]>)[vendorId] ?? [];
   const assignedIds = new Set(assigned.map((p) => p.id));
 
-  const filteredProjects = (projects as any[]).filter((p) => {
+  const filteredProjects = projectList.filter((p) => {
     if (!q) return true;
     const hay = `${p.bride_name} ${p.groom_name}`.toLowerCase();
     return hay.includes(q.toLowerCase());
@@ -49,7 +51,7 @@ export function VendorProjectAssigner({ vendorId, compact = false }: Props) {
     onMutate: async ({ project_id, currentlyAssigned }) => {
       await qc.cancelQueries({ queryKey: ["vendor-project-assignments"] });
       const previous = qc.getQueryData(["vendor-project-assignments"]);
-      const project = (projects as any[]).find((p) => p.id === project_id);
+      const project = projectList.find((p) => p.id === project_id);
       qc.setQueryData(["vendor-project-assignments"], (old: any) => {
         const next: Record<string, any[]> = { ...(old ?? {}) };
         const list = next[vendorId] ? [...next[vendorId]] : [];
@@ -131,7 +133,7 @@ export function VendorProjectAssigner({ vendorId, compact = false }: Props) {
           <div className="max-h-60 overflow-y-auto py-1">
             {filteredProjects.length === 0 ? (
               <div className="px-3 py-3 text-xs text-[var(--charcoal)]/55">
-                {projects.length === 0 ? "No projects yet — create one in Projects." : "No matches."}
+                {projectList.length === 0 ? "No projects yet — create one in Projects." : "No matches."}
               </div>
             ) : (
               filteredProjects.map((p: any) => {
