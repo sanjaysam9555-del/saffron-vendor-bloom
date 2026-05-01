@@ -26,9 +26,11 @@ export function UserMenu() {
       )}
       <button
         onClick={() => signOut()}
-        className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-xs text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+        title="Sign out"
+        aria-label="Sign out"
+        className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-xs text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:px-2.5"
       >
-        <LogOut className="h-3.5 w-3.5" /> Logout
+        <LogOut className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Logout</span>
       </button>
     </div>
   );
