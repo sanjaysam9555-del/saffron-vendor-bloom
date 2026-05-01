@@ -32,20 +32,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let profileRow: { display_name: string | null } | null = null;
     let profileError: { message: string } | null = null;
 
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      const [roleResponse, profileResponse] = await Promise.all([
-        supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
-        supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle(),
-      ]);
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const roleResponse = await supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle();
 
       roleRow = roleResponse.data;
       roleError = roleResponse.error;
-      profileRow = profileResponse.data;
-      profileError = profileResponse.error;
 
       if (!roleResponse.error) break;
-      if (attempt < 2) await wait(350 * (attempt + 1));
+      if (attempt < 7) await wait(Math.min(1500, 350 * (attempt + 1)));
     }
+
+    const profileResponse = await supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle();
+    profileRow = profileResponse.data;
+    profileError = profileResponse.error;
 
     if (roleError) throw roleError;
     if (profileError) console.warn("Unable to load profile", profileError.message);
@@ -114,7 +113,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (error) return { error: error.message };
         setSession(data?.session ?? null);
-        if (data?.user) await loadProfile(data.user.id);
+        if (data?.user) {
+          loadProfile(data.user.id).catch((error) => {
+            console.error("Unable to load access role after sign in", error);
+            setRole(null);
+          });
+        }
         return { error: null };
       } catch (error) {
         console.error("Sign in failed", error);
