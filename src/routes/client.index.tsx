@@ -121,26 +121,62 @@ function ClientPortalPage() {
         />
 
         <main className="min-w-0 flex-1 px-6 py-5 lg:px-8">
-          <div className="mb-5 animate-fade-up">
-            <h1 className="brand-line font-display text-2xl font-semibold text-[var(--charcoal)]">
-              {filters.category ?? "Welcome"}
-            </h1>
-            <p className="mt-1 text-sm text-[var(--charcoal)]/65">
-              {filters.category
-                ? `${filtered.length} of ${vendors.length} vendor${vendors.length === 1 ? "" : "s"}`
-                : "Here are the vendors we think will be perfect for your wedding."}
-            </p>
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3 animate-fade-up">
+            <div>
+              <h1 className="brand-line font-display text-2xl font-semibold text-[var(--charcoal)]">
+                {filters.category ?? "Welcome"}
+              </h1>
+              <p className="mt-1 text-sm text-[var(--charcoal)]/65">
+                {filters.category
+                  ? `${filtered.length} of ${vendors.length} vendor${vendors.length === 1 ? "" : "s"}`
+                  : "Here are the vendors we think will be perfect for your wedding."}
+              </p>
+            </div>
+            <div
+              role="tablist"
+              aria-label="View"
+              className="inline-flex overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs"
+            >
+              <button
+                role="tab"
+                aria-selected={view === "grid"}
+                onClick={() => setView("grid")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 transition-colors ${
+                  view === "grid"
+                    ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                    : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                }`}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" /> Grid
+              </button>
+              <button
+                role="tab"
+                aria-selected={view === "board"}
+                onClick={() => setView("board")}
+                className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 transition-colors ${
+                  view === "board"
+                    ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                    : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                }`}
+              >
+                <Columns3 className="h-3.5 w-3.5" /> Board
+              </button>
+            </div>
           </div>
 
           {vendors.length === 0 ? (
             <EmptyState message="Your planner hasn't shared any vendors yet. Check back soon." />
           ) : filtered.length === 0 ? (
             <EmptyState message="No vendors match your filters." />
-          ) : (
+          ) : view === "grid" ? (
             <div className="grid gap-4 animate-fade-in sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filtered.map((v) => (
                 <ClientVendorCard key={v.id} vendor={v} onView={() => setDetail(v)} />
               ))}
+            </div>
+          ) : (
+            <div className="animate-fade-in">
+              <ClientBoardView vendors={filtered} onView={(v) => setDetail(v)} />
             </div>
           )}
         </main>
