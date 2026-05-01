@@ -30,7 +30,7 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
         </Link>
 
         {/* Right cluster on mobile sits next to logo; search drops to its own row */}
-        <div className="ml-auto flex shrink-0 items-center gap-2 sm:order-3 sm:ml-auto sm:gap-4">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:order-3 sm:ml-auto sm:gap-4">
           {mounted && (
             <div className="hidden items-center gap-4 text-xs text-[var(--charcoal)]/60 lg:flex">
               <div><span className="font-semibold text-[var(--terracotta)]">{totalVendors}</span> vendors</div>
