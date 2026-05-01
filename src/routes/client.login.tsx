@@ -13,9 +13,11 @@ function ClientLoginPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (loading) return;
-    if (session && role === "client") navigate({ to: "/client" });
-    else if (session && role && role !== "client") navigate({ to: "/admin" });
+    if (loading || !session || !role) return;
+    const t = setTimeout(() => {
+      navigate({ to: role === "client" ? "/client" : "/admin" });
+    }, 700);
+    return () => clearTimeout(t);
   }, [loading, session, role, navigate]);
 
   return <ClientLoginForm />;
