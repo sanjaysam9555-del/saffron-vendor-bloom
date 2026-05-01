@@ -156,13 +156,11 @@ function DashboardPage() {
 }
 
 function EmptyState({
-  category, vendorsExist, onAdd, onSeed, seeding,
+  category, vendorsExist, onAdd,
 }: {
   category: string | null;
   vendorsExist: boolean;
   onAdd: () => void;
-  onSeed: () => void;
-  seeding: boolean;
 }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--champagne)] bg-white py-20 text-center animate-fade-up">
@@ -173,17 +171,12 @@ function EmptyState({
       <p className="mb-5 mt-2 max-w-md text-sm text-[var(--charcoal)]/60">
         {vendorsExist
           ? "Try adjusting filters or add a new vendor in this category."
-          : "Add your first vendor manually or seed sample wedding vendors to get started."}
+          : "Start building your vendor book by adding your first vendor."}
       </p>
       <div className="flex gap-2">
         <button onClick={onAdd} className="rounded-lg bg-[var(--terracotta)] px-5 py-2 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90">
           Add Vendor →
         </button>
-        {!vendorsExist && (
-          <button onClick={onSeed} disabled={seeding} className="rounded-lg border border-[var(--border)] bg-white px-5 py-2 text-sm text-[var(--charcoal)]/80 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] disabled:opacity-50">
-            {seeding ? "Seeding…" : "Load sample data"}
-          </button>
-        )}
       </div>
     </div>
   );
