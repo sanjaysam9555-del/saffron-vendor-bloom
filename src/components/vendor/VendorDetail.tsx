@@ -175,13 +175,24 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
           <div className="flex gap-2">
             {confirmDelete ? (
               <>
-                <span className="self-center text-sm text-red-700">Delete this vendor?</span>
-                <button onClick={() => setConfirmDelete(false)} className="rounded-md px-3 py-2 text-sm hover:bg-[var(--cream-deep)]">Cancel</button>
+                <span className="self-center text-sm text-red-700">
+                  {deleted ? "Deleted" : deleting ? "Deleting…" : "Delete this vendor?"}
+                </span>
                 <button
-                  onClick={async () => { await onDelete(); }}
-                  className="rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-[var(--charcoal)] hover:bg-red-700"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={deleting || deleted}
+                  className="rounded-md px-3 py-2 text-sm hover:bg-[var(--cream-deep)] disabled:opacity-40"
                 >
-                  Confirm Delete
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={deleting || deleted}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {deleting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {deleted ? <Check className="h-4 w-4" /> : null}
+                  {deleted ? "Deleted" : deleting ? "Deleting…" : "Confirm Delete"}
                 </button>
               </>
             ) : (
