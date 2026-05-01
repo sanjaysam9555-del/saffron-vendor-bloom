@@ -19,7 +19,7 @@ function ProjectsListPage() {
   const qc = useQueryClient();
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects"],
-    queryFn: () => listProjects(),
+    queryFn: () => listProjectsOverview(),
   });
 
   const [showCreate, setShowCreate] = useState(false);
