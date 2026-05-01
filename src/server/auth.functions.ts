@@ -11,10 +11,10 @@ export const getCurrentUserAccess = createServerFn({ method: "GET" })
   .middleware([attachAuthToken])
   .handler(async () => {
     const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-    if (!token) throw new Error("Authentication is still loading. Please try again.");
+    if (!token) return null;
 
     const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    if (userError || !userData.user) throw new Error("Authentication is still loading. Please try again.");
+    if (userError || !userData.user) return null;
 
     const userId = userData.user.id;
     const email = userData.user.email?.toLowerCase() ?? "";
