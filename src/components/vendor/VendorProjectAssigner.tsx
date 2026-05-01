@@ -2,6 +2,16 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Briefcase, Check, Search, X } from "lucide-react";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogOverlay,
+  DialogPortal,
+} from "@/components/ui/dialog";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { cn } from "@/lib/utils";
+import {
   listProjects,
   assignVendorToProject,
   unassignVendorFromProject,
