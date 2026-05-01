@@ -38,7 +38,13 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
     try {
       await onDelete();
       setDeleted(true);
-      toast.success("Vendor deleted");
+      toast.success(`${vendor?.vendor_name ?? "Vendor"} deleted`);
+      setTimeout(() => {
+        setConfirmDelete(false);
+        setDeleted(false);
+        setDeleting(false);
+        onClose();
+      }, 600);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not delete vendor");
       setDeleting(false);
