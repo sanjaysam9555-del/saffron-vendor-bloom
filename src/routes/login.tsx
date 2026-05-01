@@ -34,7 +34,8 @@ function LoginPage() {
     const res = await signIn(email, password);
     if (res.error) {
       setErr(res.error);
-      setBtnState("idle");
+      setBtnState("error");
+      setTimeout(() => setBtnState("idle"), 1600);
     } else {
       setBtnState("success");
     }
