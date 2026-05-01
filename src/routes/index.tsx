@@ -29,14 +29,14 @@ function RootIndex() {
   return (
     <main className="min-h-screen bg-[var(--cream)]">
       {/* SEO-visible intro — rendered server-side so crawlers can index it. */}
-      <section className="mx-auto max-w-3xl px-6 pt-12 pb-2 text-center">
+      <section className="mx-auto max-w-3xl px-6 pt-8 pb-2 text-center">
         <p className="text-xs uppercase tracking-[0.28em] text-[var(--terracotta)]">
           Saffron Events
         </p>
-        <h1 className="mt-3 font-display text-3xl text-[var(--charcoal)] sm:text-4xl">
+        <h1 className="mt-2 font-display text-2xl text-[var(--charcoal)] sm:text-3xl">
           A wedding planning studio for thoughtful celebrations.
         </h1>
-        <p className="mx-auto mt-3 max-w-xl text-sm text-[var(--charcoal)]/70">
+        <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--charcoal)]/70">
           We curate vendors, manage logistics and design weddings end-to-end across
           Delhi NCR and destinations across India. Couples we work with use this
           portal to view their shortlist, share feedback and finalise decisions
@@ -44,8 +44,8 @@ function RootIndex() {
         </p>
       </section>
 
-      <div className="px-4 pb-12">
-        <ClientOnly fallback={<ClientLoginForm />}>
+      <div className="px-4 pb-10 pt-3">
+        <ClientOnly fallback={<ClientLoginForm embedded />}>
           <RedirectingLogin />
         </ClientOnly>
       </div>
@@ -70,6 +70,5 @@ function RedirectingLogin() {
     return () => clearTimeout(t);
   }, [loading, session, role, navigate]);
 
-  // Render the form regardless — once redirect fires it'll unmount.
-  return <ClientLoginForm />;
+  return <ClientLoginForm embedded />;
 }

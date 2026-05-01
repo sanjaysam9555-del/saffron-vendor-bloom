@@ -6,7 +6,7 @@ import {
   type SignInButtonState,
 } from "@/components/auth/SignInButton";
 
-export function ClientLoginForm() {
+export function ClientLoginForm({ embedded = false }: { embedded?: boolean } = {}) {
   const { signIn, session, role, loading } = useAuth();
   const [err, setErr] = useState<string | null>(null);
   const [btnState, setBtnState] = useState<SignInButtonState>("idle");
@@ -43,7 +43,7 @@ export function ClientLoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] px-4">
+    <div className={embedded ? "flex justify-center" : "flex min-h-screen items-center justify-center bg-[var(--cream)] px-4"}>
       <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-white p-8 shadow-sm">
         <h1 className="font-display text-3xl text-[var(--terracotta)]">Saffron Events</h1>
         <p className="mt-1 text-xs uppercase tracking-[0.22em] text-[var(--charcoal)]/55">
