@@ -48,7 +48,7 @@ function LoginPage() {
     if (res.error) {
       setErr(res.error);
       setBtnState("error");
-      setTimeout(() => setBtnState("idle"), 1600);
+      setTimeout(() => setBtnState("idle"), SIGN_IN_ERROR_HOLD_MS);
     } else {
       setBtnState("success");
       // Actual navigation happens in the useEffect above once role resolves.
