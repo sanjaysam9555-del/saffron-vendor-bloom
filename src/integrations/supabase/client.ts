@@ -76,37 +76,41 @@ async function idbDel(key: string): Promise<void> {
 function createDurableStorage() {
   if (typeof window === 'undefined') return undefined;
 
-  // Eagerly hydrate localStorage from IndexedDB on startup so Supabase's
-  // synchronous storage.getItem() call finds the session on the first read
-  // even if Safari evicted localStorage between sessions.
-  void (async () => {
+  // Kick off IndexedDB → localStorage hydration immediately. Supabase's
+  // getSession() awaits storage.getItem(), so returning a promise here lets
+  // Supabase properly wait for IndexedDB on the very first read after Safari
+  // has evicted localStorage (common in iOS PWAs added to home screen).
+  const hydrationPromise: Promise<void> = (async () => {
     try {
-      const keys: string[] = [];
-      try {
-        const dbp = openIdb();
-        if (dbp) {
-          const db = await dbp;
-          await new Promise<void>((resolve) => {
-            const tx = db.transaction(IDB_STORE, 'readonly');
-            const req = tx.objectStore(IDB_STORE).getAllKeys();
-            req.onsuccess = () => {
-              for (const k of (req.result as IDBValidKey[]) ?? []) {
-                if (typeof k === 'string') keys.push(k);
-              }
-              resolve();
-            };
-            req.onerror = () => resolve();
-          });
+      const dbp = openIdb();
+      if (!dbp) return;
+      const db = await dbp;
+      const keys: string[] = await new Promise((resolve) => {
+        try {
+          const tx = db.transaction(IDB_STORE, 'readonly');
+          const req = tx.objectStore(IDB_STORE).getAllKeys();
+          req.onsuccess = () => {
+            const out: string[] = [];
+            for (const k of (req.result as IDBValidKey[]) ?? []) {
+              if (typeof k === 'string') out.push(k);
+            }
+            resolve(out);
+          };
+          req.onerror = () => resolve([]);
+        } catch {
+          resolve([]);
         }
-      } catch {
-        /* noop */
-      }
+      });
       for (const key of keys) {
-        if (window.localStorage.getItem(key) == null) {
-          const v = await idbGet(key);
-          if (v != null) {
-            try { window.localStorage.setItem(key, v); } catch { /* quota */ }
+        try {
+          if (window.localStorage.getItem(key) == null) {
+            const v = await idbGet(key);
+            if (v != null) {
+              try { window.localStorage.setItem(key, v); } catch { /* quota */ }
+            }
           }
+        } catch {
+          /* noop */
         }
       }
     } catch {
@@ -115,19 +119,29 @@ function createDurableStorage() {
   })();
 
   return {
-    getItem: (key: string) => {
+    // Async getItem: Supabase awaits this, so we can safely block on the
+    // initial IndexedDB hydration before returning the session.
+    getItem: async (key: string): Promise<string | null> => {
       try {
         const v = window.localStorage.getItem(key);
         if (v != null) return v;
       } catch {
         /* noop */
       }
-      // Fire-and-forget: rehydrate localStorage from IndexedDB for next sync read.
-      void idbGet(key).then((v) => {
-        if (v != null) {
-          try { window.localStorage.setItem(key, v); } catch { /* noop */ }
-        }
-      });
+      // Wait for the initial bulk hydration to finish, then re-check localStorage.
+      try { await hydrationPromise; } catch { /* noop */ }
+      try {
+        const v = window.localStorage.getItem(key);
+        if (v != null) return v;
+      } catch {
+        /* noop */
+      }
+      // Last resort: read this specific key directly from IndexedDB.
+      const v = await idbGet(key);
+      if (v != null) {
+        try { window.localStorage.setItem(key, v); } catch { /* noop */ }
+        return v;
+      }
       return null;
     },
     setItem: (key: string, value: string) => {
