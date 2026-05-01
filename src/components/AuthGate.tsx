@@ -9,11 +9,11 @@ export function AuthGate({
   children: ReactNode;
   requireAdmin?: boolean;
 }) {
-  const { session, loading, role } = useAuth();
+  const { session, loading, role, initialized } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (loading) return;
+    if (!initialized || loading) return;
     if (!session) {
       navigate({ to: "/" });
       return;
@@ -25,13 +25,13 @@ export function AuthGate({
     if (role && requireAdmin && role !== "admin") {
       navigate({ to: "/admin" });
     }
-  }, [loading, session, role, requireAdmin, navigate]);
+  }, [initialized, loading, session, role, requireAdmin, navigate]);
 
   // Hard gate: never render protected content unless role matches.
   const isStaff = role === "admin" || role === "employee";
   const passes = requireAdmin ? role === "admin" : isStaff;
 
-  if (loading || !session || !role || !passes) {
+  if (!initialized || loading || !session || !role || !passes) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] text-sm text-[var(--charcoal)]/60">
         Loading…

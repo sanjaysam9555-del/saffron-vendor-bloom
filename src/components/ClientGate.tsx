@@ -3,11 +3,11 @@ import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 
 export function ClientGate({ children }: { children: ReactNode }) {
-  const { session, loading, role } = useAuth();
+  const { session, loading, role, initialized } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (loading) return;
+    if (!initialized || loading) return;
     if (!session) {
       navigate({ to: "/" });
       return;
@@ -15,9 +15,9 @@ export function ClientGate({ children }: { children: ReactNode }) {
     if (role && role !== "client") {
       navigate({ to: "/admin" });
     }
-  }, [loading, session, role, navigate]);
+  }, [initialized, loading, session, role, navigate]);
 
-  if (loading || !session || !role || role !== "client") {
+  if (!initialized || loading || !session || !role || role !== "client") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] text-sm text-[var(--charcoal)]/60">
         Loading…

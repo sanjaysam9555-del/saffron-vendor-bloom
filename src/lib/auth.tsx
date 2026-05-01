@@ -11,6 +11,8 @@ interface AuthState {
   role: AppRole | null;
   displayName: string | null;
   loading: boolean;
+  /** True once the initial Supabase session restore has completed (client-side). */
+  initialized: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -35,11 +37,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
-  // Default to NOT loading. We only flip to `true` once we know there's a
-  // user whose role still needs fetching. This prevents SSR (and the very
-  // first client paint) from rendering a spinner — public pages get to
-  // render their real content immediately, which Google can index.
+  // `loading` only flips true while we're actively fetching the role for a
+  // known user. SSR and the very first paint render with loading=false so
+  // public pages (login, marketing) emit real content for SEO.
   const [loading, setLoading] = useState(false);
+  // `initialized` is false until the initial getSession() has resolved on the
+  // client. Auth gates use THIS (not `loading`) to know whether to wait
+  // before redirecting — this prevents a logged-in user from being bounced
+  // to "/" during the brief window before the session is restored.
+  const [initialized, setInitialized] = useState(false);
 
   // Track which user we've already loaded so onAuthStateChange + getSession
   // don't trigger duplicate parallel server calls.
@@ -104,13 +110,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (s?.user) {
         if (loadedForUserRef.current === s.user.id) {
           setLoading(false);
-          return;
+        } else {
+          setLoading(true);
+          void loadProfile(s.user.id);
         }
-        setLoading(true);
-        void loadProfile(s.user.id);
       } else {
         setLoading(false);
       }
+      setInitialized(true);
     });
 
     return () => {
@@ -125,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role,
     displayName,
     loading,
+    initialized,
     signIn: async (email, password) => {
       try {
         setLoading(true);
