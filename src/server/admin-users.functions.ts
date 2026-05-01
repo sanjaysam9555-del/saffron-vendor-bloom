@@ -108,11 +108,3 @@ export const deleteUser = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const hasAnyAdmin = createServerFn({ method: "GET" }).handler(async () => {
-  const { count, error } = await supabaseAdmin
-    .from("user_roles")
-    .select("id", { count: "exact", head: true })
-    .eq("role", "admin");
-  if (error) throw new Error(error.message);
-  return { hasAdmin: (count ?? 0) > 0 };
-});
