@@ -25,8 +25,23 @@ interface VendorDetailProps {
 export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetailProps) {
   const isAdmin = useIsAdmin();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleted, setDeleted] = useState(false);
   const [copiedCard, setCopiedCard] = useState(false);
   const [viewing, setViewing] = useState<VendorAttachment | null>(null);
+
+  const handleConfirmDelete = async () => {
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      await onDelete();
+      setDeleted(true);
+      toast.success("Vendor deleted");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not delete vendor");
+      setDeleting(false);
+    }
+  };
 
   const { data: attachments = [] } = useQuery({
     queryKey: ["vendor-attachments", vendor?.id],
