@@ -19,7 +19,7 @@ export function ClientVendorCard({ vendor, onView }: Props) {
   return (
     <div
       onClick={onView}
-      className="vendor-card group flex h-full cursor-pointer flex-col rounded-lg bg-white p-4 text-[var(--charcoal)]"
+      className="vendor-card group flex h-full min-w-0 max-w-full cursor-pointer flex-col overflow-hidden rounded-lg bg-white p-4 text-[var(--charcoal)]"
     >
       <h3 className="mb-2 font-display text-lg font-semibold leading-tight text-[var(--charcoal)]">
         {vendor.vendor_name}
@@ -41,7 +41,7 @@ export function ClientVendorCard({ vendor, onView }: Props) {
         )}
       </div>
 
-      <div className="space-y-1.5 text-sm text-[var(--charcoal)]/75">
+      <div className="min-w-0 space-y-1.5 text-sm text-[var(--charcoal)]/75">
         {vendor.location && (
           <div className="flex items-center gap-1.5">
             <MapPin className="h-3.5 w-3.5" /> {vendor.location}
