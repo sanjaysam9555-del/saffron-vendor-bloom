@@ -1,57 +1,52 @@
-I inspected the current auth/routing/server-function code and the backend data. I found the main causes:
+# Plan: Admin view of client vendor selections
 
-- The `/` page is overloaded: it is both the client login page and the admin vendor dashboard. If role resolution is delayed or fails, this can leave users stuck at “Loading…” or expose the wrong UI path.
-- Client-facing routes rely on component-level redirects instead of hard route guards, so protected UI can render before role checks fully settle.
-- Server functions still use mixed auth patterns. Some staff-only functions are safe, but client project loading still depends on middleware that can race with session hydration.
-- The app fetches admin-only data eagerly on the root dashboard, and repeated auth lookups/parallel server calls are making the app feel slow.
-- The database currently has the correct real roles for the visible users: `info@saffronevents.in = admin`, `gautam@saffronevents.in = employee`, and `sunilvats6919@gmail.com = client`. The leakage is in routing/auth state handling, not because that client currently has an admin role.
+## Goal
 
-Plan to fix:
+From the admin panel, let staff see — for any project — exactly which vendors the project's client(s) have marked as Liked, Shortlisted, Finalised, Rejected, or "Need to think about it".
 
-1. Separate client and admin entry points cleanly
-   - Make `/` a client-only entry point that shows client login when signed out and redirects signed-in clients to `/client`.
-   - Move the admin/vendor dashboard away from `/` to a dedicated route such as `/admin` or `/admin/vendors`.
-   - Make `/login` the staff login page and only send staff users to the admin route.
-   - Update all “Back to dashboard” and admin navigation links to the new admin route.
+## Where it lives
 
-2. Add strict route guards so clients can never see admin UI
-   - Create/strengthen a staff gate that only renders children after auth is fully loaded and role is `admin` or `employee`.
-   - Create/strengthen an admin-only gate for user management.
-   - Update the vendor dashboard and `/admin/projects` routes to use the staff gate.
-   - Update client routes so staff/admin users are redirected away and clients stay in the client portal.
-   - Do not render admin components while role is `null`, `loading`, or `client`.
+The project detail page already exists at `/admin/projects/$id` and lists the project's clients and assigned vendors. This is the natural home — no new top-level page needed.
 
-3. Fix auth loading so the app cannot hang forever
-   - Refactor `src/lib/auth.tsx` so role/profile loading has a bounded timeout and always settles `loading=false`.
-   - Cache the current access result per session to avoid repeated `getCurrentUserAccess` calls.
-   - Avoid firing duplicate profile loads from both `onAuthStateChange` and `getSession` for the same session.
-   - If access lookup fails for a signed-in user, show a controlled error/sign-out option rather than an infinite “Loading…” screen.
+We add three things to that page:
 
-4. Make client project loading resilient
-   - Replace `getMyProject`’s middleware dependency with the same manual token-verification pattern already used by the repaired auth/vendor functions, but without any staff fallback.
-   - Verify the caller has exactly a `client` role before returning client data.
-   - Return a typed empty/error state for “no project assigned” instead of throwing into a blank/error state.
-   - Ensure client project data only includes client-safe vendor fields.
+1. **Per-project status summary (counts)** — small chip row at the top:
+   `Liked 4 · Shortlisted 2 · Finalised 1 · Rejected 3 · Thinking 2 · No response 8`
+2. **Status column on each assigned vendor row** — a colored pill showing what the client marked. If the project has more than one client login, the pill shows the most recent client's status and hovering reveals a per-client breakdown.
+3. **"Client View" toggle** — a button on the page header that switches the vendor list into a grouped view:
+   ```text
+   ❤ Finalised (1)
+     - Cupcake Productions  (marked by bride@…)
+   ★ Shortlisted (2)
+     - …
+   ✗ Rejected (3)
+     - …
+   • No response yet (8)
+     - …
+   ```
+   Same data, just regrouped so staff can quickly answer "what did they pick?"
 
-5. Reduce slow page loads
-   - Stop loading admin vendor data on `/` for everyone.
-   - Only enable vendor/project queries after the correct role is known.
-   - Combine or defer admin dashboard queries where practical so the first paint is faster.
-   - Tune React Query settings to avoid unnecessary refetches on initial navigation.
-   - Add graceful skeleton/error states rather than repeated retries that block the whole page.
+A separate **`/admin/projects` index enhancement**: each project card gets a tiny stat line (`✓ 1 finalised · ★ 2 shortlisted · 12 vendors`) so you can scan all 10 dashboards at once without opening each.
 
-6. Tighten backend role safety
-   - Add a migration to enforce that a user cannot simultaneously have `client` and staff (`admin`/`employee`) roles.
-   - Add a `project_clients.user_id` uniqueness constraint if each client account should belong to only one project, matching the current app behavior.
-   - Add/repair the new-user trigger so server-created client accounts are assigned `client` when intentionally created by staff, while public/self signups never get privileged roles.
-   - Re-run the database linter after changes and address any remaining obvious role/RLS warnings.
+## What to build
 
-7. Verify the critical flows
-   - Client login (`sunilvats6919@gmail.com`) should land on `/client`, not `/` or admin.
-   - Admin login (`info@saffronevents.in`) should land on the dedicated admin dashboard.
-   - Employee login should access staff/vendor/project tools but not admin user management.
-   - Signed-out users should see only login/client portal entry, never dashboard data.
-   - Reloading after login should not get stuck on “Loading…”.
-   - Measure loading after the change and confirm unnecessary root/admin requests no longer fire for client sessions.
+### Backend (server functions)
+- New `getProjectClientSelections({ project_id })` in `src/server/projects.functions.ts`. Uses `supabaseAdmin` (staff-only, gated by `requireStaffUser`). Returns: for each assigned vendor, the list of `{ user_id, display_name, status }` rows from `client_vendor_status` joined with `profiles`. Also returns aggregate counts.
+- New `getProjectsOverview()` — extends `listProjects` with per-project status counts (one round-trip, grouped server-side) for the projects list page.
 
-Once approved, I’ll implement these changes directly.
+No DB schema changes needed — `client_vendor_status` already stores everything.
+
+### Frontend
+- `src/routes/admin.projects.$id.tsx`: add the summary chip row, status pill per vendor row, and the "Group by client status" toggle. Reuse `CLIENT_STATUS_OPTIONS` from `src/lib/client-status.ts` for colors so admin and client see identical pills.
+- `src/routes/admin.projects.index.tsx`: add the per-card stat line.
+- New small component `src/components/admin/ClientStatusPill.tsx` so the same pill renders consistently in cards, rows, and the grouped view.
+
+## Out of scope (for now)
+- Editing a client's status from the admin side (read-only — if you want this later, say the word).
+- Notifications when a client changes a status.
+
+## Files touched
+- `src/server/projects.functions.ts` — add 2 server functions
+- `src/routes/admin.projects.$id.tsx` — summary, pills, grouped view toggle
+- `src/routes/admin.projects.index.tsx` — per-card status counts
+- `src/components/admin/ClientStatusPill.tsx` (new)
