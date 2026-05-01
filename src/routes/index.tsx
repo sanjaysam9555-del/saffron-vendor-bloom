@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { LayoutGrid, Table as TableIcon, Sparkles } from "lucide-react";
 
+import { useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { TopNav } from "@/components/vendor/TopNav";
 import { Sidebar, type FilterState } from "@/components/vendor/Sidebar";
 import { VendorCard } from "@/components/vendor/VendorCard";
@@ -12,21 +14,43 @@ import { useVendors, useVendorMutations, useVendorModals } from "@/hooks/useVend
 import { CATEGORIES } from "@/lib/categories";
 import { bulkInsertVendors } from "@/lib/vendor-api";
 import { SAMPLE_VENDORS } from "@/lib/seed-data";
-import { AuthGate } from "@/components/AuthGate";
+import { useAuth } from "@/lib/auth";
+import { ClientLoginForm } from "@/components/client/ClientLoginForm";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Vendor Dashboard — Saffron Events" },
-      { name: "description", content: "Browse, filter, and manage 500+ wedding vendors across 14 categories." },
+      { title: "Saffron Events — Client Portal" },
+      { name: "description", content: "Sign in to your Saffron Events client portal to view your wedding vendors and planning." },
     ],
   }),
-  component: () => (
-    <AuthGate>
-      <DashboardPage />
-    </AuthGate>
-  ),
+  component: RootIndex,
 });
+
+function RootIndex() {
+  const { session, role, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (loading) return;
+    if (session && role === "client") {
+      navigate({ to: "/client" });
+    }
+  }, [loading, session, role, navigate]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] text-sm text-[var(--charcoal)]/60">
+        Loading…
+      </div>
+    );
+  }
+
+  if (!session) return <ClientLoginForm />;
+  if (role === "client") return null; // redirecting
+  // admin / employee
+  return <DashboardPage />;
+}
 
 function DashboardPage() {
   const { data: vendors = [], isLoading } = useVendors();

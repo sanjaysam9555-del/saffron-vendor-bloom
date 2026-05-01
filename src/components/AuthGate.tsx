@@ -9,7 +9,7 @@ export function AuthGate({ children, requireAdmin = false }: { children: ReactNo
   useEffect(() => {
     if (loading) return;
     if (!session) {
-      navigate({ to: "/client/login" });
+      navigate({ to: "/" });
       return;
     }
     if (role === "client") {
