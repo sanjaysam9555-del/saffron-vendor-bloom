@@ -2,6 +2,11 @@ import { Check, Loader2, X } from "lucide-react";
 
 export type SignInButtonState = "idle" | "loading" | "success" | "error";
 
+// Shared timings so every login form animates consistently before navigating
+// or resetting after an error.
+export const SIGN_IN_SUCCESS_HOLD_MS = 700;
+export const SIGN_IN_ERROR_HOLD_MS = 1600;
+
 export function SignInButton({ state }: { state: SignInButtonState }) {
   const disabled = state === "loading" || state === "success";
   return (

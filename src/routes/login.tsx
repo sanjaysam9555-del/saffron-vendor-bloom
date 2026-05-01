@@ -1,7 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { SignInButton, type SignInButtonState } from "@/components/auth/SignInButton";
+import {
+  SignInButton,
+  SIGN_IN_ERROR_HOLD_MS,
+  SIGN_IN_SUCCESS_HOLD_MS,
+  type SignInButtonState,
+} from "@/components/auth/SignInButton";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in — Saffron Events" }] }),
@@ -19,7 +24,7 @@ function LoginPage() {
     setBtnState("success");
     const t = setTimeout(() => {
       navigate({ to: role === "client" ? "/client" : "/admin" });
-    }, 700);
+    }, SIGN_IN_SUCCESS_HOLD_MS);
     return () => clearTimeout(t);
   }, [loading, session, role, navigate]);
 
@@ -34,7 +39,7 @@ function LoginPage() {
     if (!email || !password) {
       setErr("Please enter your email and password.");
       setBtnState("error");
-      setTimeout(() => setBtnState("idle"), 1600);
+      setTimeout(() => setBtnState("idle"), SIGN_IN_ERROR_HOLD_MS);
       return;
     }
     setErr(null);
@@ -43,7 +48,7 @@ function LoginPage() {
     if (res.error) {
       setErr(res.error);
       setBtnState("error");
-      setTimeout(() => setBtnState("idle"), 1600);
+      setTimeout(() => setBtnState("idle"), SIGN_IN_ERROR_HOLD_MS);
     } else {
       setBtnState("success");
       // Actual navigation happens in the useEffect above once role resolves.

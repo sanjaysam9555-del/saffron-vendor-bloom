@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { SignInButton, type SignInButtonState } from "@/components/auth/SignInButton";
+import {
+  SignInButton,
+  SIGN_IN_ERROR_HOLD_MS,
+  type SignInButtonState,
+} from "@/components/auth/SignInButton";
 
 export function ClientLoginForm() {
   const { signIn, session, role, loading } = useAuth();
@@ -23,7 +27,7 @@ export function ClientLoginForm() {
     if (!email || !password) {
       setErr("Please enter your email and password.");
       setBtnState("error");
-      setTimeout(() => setBtnState("idle"), 1600);
+      setTimeout(() => setBtnState("idle"), SIGN_IN_ERROR_HOLD_MS);
       return;
     }
     setErr(null);
@@ -32,7 +36,7 @@ export function ClientLoginForm() {
     if (res.error) {
       setErr(res.error);
       setBtnState("error");
-      setTimeout(() => setBtnState("idle"), 1600);
+      setTimeout(() => setBtnState("idle"), SIGN_IN_ERROR_HOLD_MS);
     } else {
       setBtnState("success");
     }

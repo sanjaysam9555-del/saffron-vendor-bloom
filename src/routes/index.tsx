@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { ClientLoginForm } from "@/components/client/ClientLoginForm";
+import { SIGN_IN_SUCCESS_HOLD_MS } from "@/components/auth/SignInButton";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,7 +27,7 @@ function RootIndex() {
       } else if (role === "admin" || role === "employee") {
         navigate({ to: "/admin" });
       }
-    }, 700);
+    }, SIGN_IN_SUCCESS_HOLD_MS);
     return () => clearTimeout(t);
   }, [loading, session, role, navigate]);
 
