@@ -35,7 +35,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Default to NOT loading. We only flip to `true` once we know there's a
+  // user whose role still needs fetching. This prevents SSR (and the very
+  // first client paint) from rendering a spinner — public pages get to
+  // render their real content immediately, which Google can index.
+  const [loading, setLoading] = useState(false);
 
   // Track which user we've already loaded so onAuthStateChange + getSession
   // don't trigger duplicate parallel server calls.
@@ -102,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
           return;
         }
+        setLoading(true);
         void loadProfile(s.user.id);
       } else {
         setLoading(false);
