@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Plus, Calendar, Heart } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
-import { listProjects, createProject } from "@/server/projects.functions";
+import { listProjectsOverview, createProject } from "@/server/projects.functions";
+import { StatusCountsRow } from "@/components/admin/ClientStatusPill";
 
 export const Route = createFileRoute("/admin/projects/")({
   head: () => ({ meta: [{ title: "Projects — Saffron Events" }] }),
@@ -18,7 +19,7 @@ function ProjectsListPage() {
   const qc = useQueryClient();
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects"],
-    queryFn: () => listProjects(),
+    queryFn: () => listProjectsOverview(),
   });
 
   const [showCreate, setShowCreate] = useState(false);
@@ -119,6 +120,14 @@ function ProjectsListPage() {
                   <Calendar className="h-3.5 w-3.5" />
                   {new Date(p.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
                 </div>
+                <div className="mt-2 text-[11px] text-[var(--charcoal)]/55">
+                  {p.vendor_count ?? 0} vendor{(p.vendor_count ?? 0) === 1 ? "" : "s"} · {p.client_count ?? 0} client login{(p.client_count ?? 0) === 1 ? "" : "s"}
+                </div>
+                {p.status_counts && (p.vendor_count ?? 0) > 0 && (
+                  <div className="mt-2">
+                    <StatusCountsRow counts={p.status_counts} />
+                  </div>
+                )}
               </Link>
             ))
           )}

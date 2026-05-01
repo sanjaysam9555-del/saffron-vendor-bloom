@@ -109,15 +109,107 @@ export const getProject = createServerFn({ method: "GET" })
       .eq("project_id", data.id);
     const vendorIds = (pv ?? []).map((r) => r.vendor_id);
     let vendors: any[] = [];
+    let selections: Record<string, { user_id: string; display_name: string; email: string; status: string; updated_at: string }[]> = {};
     if (vendorIds.length > 0) {
       const { data: vrows } = await supabaseAdmin
         .from("vendors")
         .select("*")
         .in("id", vendorIds);
       vendors = vrows ?? [];
+
+      if (clientIds.length > 0) {
+        const { data: statusRows } = await supabaseAdmin
+          .from("client_vendor_status")
+          .select("vendor_id, user_id, status, updated_at")
+          .in("vendor_id", vendorIds)
+          .in("user_id", clientIds);
+        const clientLookup = new Map(clientRows.map((c) => [c.user_id, c]));
+        for (const s of statusRows ?? []) {
+          const c = clientLookup.get(s.user_id);
+          if (!c) continue;
+          (selections[s.vendor_id] ??= []).push({
+            user_id: s.user_id,
+            display_name: c.display_name,
+            email: c.email,
+            status: s.status,
+            updated_at: s.updated_at,
+          });
+        }
+      }
     }
 
-    return { project, clients: clientRows, vendors };
+    return { project, clients: clientRows, vendors, selections };
+  });
+
+// Returns all projects with per-status vendor counts (for the projects index page).
+export const listProjectsOverview = createServerFn({ method: "GET" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertStaff(context.userId);
+    const { data: projects, error } = await supabaseAdmin
+      .from("projects")
+      .select("*")
+      .order("wedding_date", { ascending: true });
+    if (error) throw new Error(error.message);
+    if (!projects || projects.length === 0) return [];
+
+    const projectIds = projects.map((p) => p.id);
+
+    // project -> vendors and clients
+    const [{ data: pvAll }, { data: pcAll }] = await Promise.all([
+      supabaseAdmin.from("project_vendors").select("project_id, vendor_id").in("project_id", projectIds),
+      supabaseAdmin.from("project_clients").select("project_id, user_id").in("project_id", projectIds),
+    ]);
+
+    const vendorCount = new Map<string, number>();
+    const projectVendorPairs: { project_id: string; vendor_id: string }[] = [];
+    for (const r of pvAll ?? []) {
+      vendorCount.set(r.project_id, (vendorCount.get(r.project_id) ?? 0) + 1);
+      projectVendorPairs.push(r);
+    }
+    const clientsByProject = new Map<string, string[]>();
+    const allClientIds = new Set<string>();
+    for (const r of pcAll ?? []) {
+      const arr = clientsByProject.get(r.project_id) ?? [];
+      arr.push(r.user_id);
+      clientsByProject.set(r.project_id, arr);
+      allClientIds.add(r.user_id);
+    }
+
+    // Fetch all relevant statuses in one go.
+    const allVendorIds = Array.from(new Set(projectVendorPairs.map((p) => p.vendor_id)));
+    let statusRows: { vendor_id: string; user_id: string; status: string }[] = [];
+    if (allVendorIds.length > 0 && allClientIds.size > 0) {
+      const { data: srows } = await supabaseAdmin
+        .from("client_vendor_status")
+        .select("vendor_id, user_id, status")
+        .in("vendor_id", allVendorIds)
+        .in("user_id", Array.from(allClientIds));
+      statusRows = (srows ?? []) as any;
+    }
+    // index statuses by user+vendor
+    const statusKey = (u: string, v: string) => `${u}::${v}`;
+    const statusMap = new Map<string, string>();
+    for (const s of statusRows) statusMap.set(statusKey(s.user_id, s.vendor_id), s.status);
+
+    return projects.map((p) => {
+      const counts: Record<string, number> = { like: 0, shortlisted: 0, finalised: 0, rejected: 0, thinking: 0 };
+      const clientIds = clientsByProject.get(p.id) ?? [];
+      const vendorIdsForProject = projectVendorPairs.filter((pv) => pv.project_id === p.id).map((pv) => pv.vendor_id);
+      // Count any (most-recent-not-needed for index): if any client marked vendor with status, count once per (vendor,status,client)
+      for (const vid of vendorIdsForProject) {
+        for (const uid of clientIds) {
+          const st = statusMap.get(statusKey(uid, vid));
+          if (st && st in counts) counts[st]++;
+        }
+      }
+      return {
+        ...p,
+        vendor_count: vendorCount.get(p.id) ?? 0,
+        client_count: clientIds.length,
+        status_counts: counts,
+      };
+    });
   });
 
 export const createProject = createServerFn({ method: "POST" })
