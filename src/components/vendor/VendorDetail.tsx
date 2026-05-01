@@ -81,6 +81,14 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
               {vendor.subcategory && (
                 <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/65">{vendor.subcategory}</span>
               )}
+              {vendor.submitted_via_form && (
+                <span
+                  className="inline-flex items-center gap-0.5 rounded-full border border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--terracotta)]"
+                  title="Vendor self-registered via the public signup form"
+                >
+                  ✦ Via Form
+                </span>
+              )}
             </div>
             <h2 className="font-display text-3xl leading-tight">{vendor.vendor_name}</h2>
             {vendor.google_rating != null && (
