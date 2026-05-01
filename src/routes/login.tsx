@@ -1,7 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { SignInButton, type SignInButtonState } from "@/components/auth/SignInButton";
+import {
+  SignInButton,
+  SIGN_IN_ERROR_HOLD_MS,
+  SIGN_IN_SUCCESS_HOLD_MS,
+  type SignInButtonState,
+} from "@/components/auth/SignInButton";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in — Saffron Events" }] }),
