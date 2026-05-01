@@ -46,6 +46,14 @@ export function VendorCard({ vendor, onView, onEdit }: VendorCardProps) {
             {vendor.subcategory}
           </span>
         )}
+        {vendor.submitted_via_form && (
+          <span
+            className="inline-flex items-center gap-0.5 rounded-full border border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--terracotta)]"
+            title="Vendor self-registered via the public signup form"
+          >
+            ✦ Via Form
+          </span>
+        )}
       </div>
 
       <div className="space-y-1.5 text-sm text-[var(--charcoal)]/75">

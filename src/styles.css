@@ -163,3 +163,52 @@
   60% { transform: translateX(-4px); }
   80% { transform: translateX(4px); }
 }
+
+/* Scale-in for success card */
+@keyframes scale-in {
+  0%   { opacity: 0; transform: scale(0.92); }
+  60%  { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in { animation: scale-in 480ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Vendor signup success — animated checkmark */
+@keyframes draw-circle {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes draw-tick {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes tick-pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.vendor-success-check { transform-origin: center; }
+.vendor-success-check__circle {
+  stroke-dasharray: 240;
+  stroke-dashoffset: 240;
+  animation: draw-circle 600ms cubic-bezier(0.65, 0, 0.45, 1) 120ms forwards;
+}
+.vendor-success-check__tick {
+  stroke-dasharray: 80;
+  stroke-dashoffset: 80;
+  animation: draw-tick 380ms cubic-bezier(0.65, 0, 0.45, 1) 720ms forwards;
+}
+.vendor-success-card {
+  animation: scale-in 480ms cubic-bezier(0.16, 1, 0.3, 1) both,
+             tick-pop 500ms cubic-bezier(0.34, 1.56, 0.64, 1) 1100ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vendor-success-check__circle,
+  .vendor-success-check__tick {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+  .vendor-success-card,
+  .animate-scale-in {
+    animation: none !important;
+  }
+}
+

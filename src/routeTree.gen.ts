@@ -9,15 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VendorSignupRouteImport } from './routes/vendor-signup'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClientIndexRouteImport } from './routes/client.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ClientLoginRouteImport } from './routes/client.login'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminSubmissionsRouteImport } from './routes/admin.submissions'
 import { Route as AdminProjectsIndexRouteImport } from './routes/admin.projects.index'
+import { Route as ApiPublicVendorSignupRouteImport } from './routes/api/public/vendor-signup'
 import { Route as AdminProjectsIdRouteImport } from './routes/admin.projects.$id'
+import { Route as ApiPublicVendorSignupCheckRouteImport } from './routes/api/public/vendor-signup.check'
 
+const VendorSignupRoute = VendorSignupRouteImport.update({
+  id: '/vendor-signup',
+  path: '/vendor-signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -48,9 +57,19 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/admin/users',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSubmissionsRoute = AdminSubmissionsRouteImport.update({
+  id: '/admin/submissions',
+  path: '/admin/submissions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminProjectsIndexRoute = AdminProjectsIndexRouteImport.update({
   id: '/admin/projects/',
   path: '/admin/projects/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicVendorSignupRoute = ApiPublicVendorSignupRouteImport.update({
+  id: '/api/public/vendor-signup',
+  path: '/api/public/vendor-signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminProjectsIdRoute = AdminProjectsIdRouteImport.update({
@@ -58,84 +77,124 @@ const AdminProjectsIdRoute = AdminProjectsIdRouteImport.update({
   path: '/admin/projects/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicVendorSignupCheckRoute =
+  ApiPublicVendorSignupCheckRouteImport.update({
+    id: '/check',
+    path: '/check',
+    getParentRoute: () => ApiPublicVendorSignupRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/vendor-signup': typeof VendorSignupRoute
+  '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/client/login': typeof ClientLoginRoute
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
   '/admin/projects/$id': typeof AdminProjectsIdRoute
+  '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/admin/projects/': typeof AdminProjectsIndexRoute
+  '/api/public/vendor-signup/check': typeof ApiPublicVendorSignupCheckRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/vendor-signup': typeof VendorSignupRoute
+  '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/client/login': typeof ClientLoginRoute
   '/admin': typeof AdminIndexRoute
   '/client': typeof ClientIndexRoute
   '/admin/projects/$id': typeof AdminProjectsIdRoute
+  '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/admin/projects': typeof AdminProjectsIndexRoute
+  '/api/public/vendor-signup/check': typeof ApiPublicVendorSignupCheckRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/vendor-signup': typeof VendorSignupRoute
+  '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/client/login': typeof ClientLoginRoute
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
   '/admin/projects/$id': typeof AdminProjectsIdRoute
+  '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/admin/projects/': typeof AdminProjectsIndexRoute
+  '/api/public/vendor-signup/check': typeof ApiPublicVendorSignupCheckRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
+    | '/vendor-signup'
+    | '/admin/submissions'
     | '/admin/users'
     | '/client/login'
     | '/admin/'
     | '/client/'
     | '/admin/projects/$id'
+    | '/api/public/vendor-signup'
     | '/admin/projects/'
+    | '/api/public/vendor-signup/check'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
+    | '/vendor-signup'
+    | '/admin/submissions'
     | '/admin/users'
     | '/client/login'
     | '/admin'
     | '/client'
     | '/admin/projects/$id'
+    | '/api/public/vendor-signup'
     | '/admin/projects'
+    | '/api/public/vendor-signup/check'
   id:
     | '__root__'
     | '/'
     | '/login'
+    | '/vendor-signup'
+    | '/admin/submissions'
     | '/admin/users'
     | '/client/login'
     | '/admin/'
     | '/client/'
     | '/admin/projects/$id'
+    | '/api/public/vendor-signup'
     | '/admin/projects/'
+    | '/api/public/vendor-signup/check'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  VendorSignupRoute: typeof VendorSignupRoute
+  AdminSubmissionsRoute: typeof AdminSubmissionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   ClientLoginRoute: typeof ClientLoginRoute
   AdminIndexRoute: typeof AdminIndexRoute
   ClientIndexRoute: typeof ClientIndexRoute
   AdminProjectsIdRoute: typeof AdminProjectsIdRoute
+  ApiPublicVendorSignupRoute: typeof ApiPublicVendorSignupRouteWithChildren
   AdminProjectsIndexRoute: typeof AdminProjectsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/vendor-signup': {
+      id: '/vendor-signup'
+      path: '/vendor-signup'
+      fullPath: '/vendor-signup'
+      preLoaderRoute: typeof VendorSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -178,11 +237,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/submissions': {
+      id: '/admin/submissions'
+      path: '/admin/submissions'
+      fullPath: '/admin/submissions'
+      preLoaderRoute: typeof AdminSubmissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/projects/': {
       id: '/admin/projects/'
       path: '/admin/projects'
       fullPath: '/admin/projects/'
       preLoaderRoute: typeof AdminProjectsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/vendor-signup': {
+      id: '/api/public/vendor-signup'
+      path: '/api/public/vendor-signup'
+      fullPath: '/api/public/vendor-signup'
+      preLoaderRoute: typeof ApiPublicVendorSignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/projects/$id': {
@@ -192,17 +265,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProjectsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/vendor-signup/check': {
+      id: '/api/public/vendor-signup/check'
+      path: '/check'
+      fullPath: '/api/public/vendor-signup/check'
+      preLoaderRoute: typeof ApiPublicVendorSignupCheckRouteImport
+      parentRoute: typeof ApiPublicVendorSignupRoute
+    }
   }
 }
+
+interface ApiPublicVendorSignupRouteChildren {
+  ApiPublicVendorSignupCheckRoute: typeof ApiPublicVendorSignupCheckRoute
+}
+
+const ApiPublicVendorSignupRouteChildren: ApiPublicVendorSignupRouteChildren = {
+  ApiPublicVendorSignupCheckRoute: ApiPublicVendorSignupCheckRoute,
+}
+
+const ApiPublicVendorSignupRouteWithChildren =
+  ApiPublicVendorSignupRoute._addFileChildren(
+    ApiPublicVendorSignupRouteChildren,
+  )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  VendorSignupRoute: VendorSignupRoute,
+  AdminSubmissionsRoute: AdminSubmissionsRoute,
   AdminUsersRoute: AdminUsersRoute,
   ClientLoginRoute: ClientLoginRoute,
   AdminIndexRoute: AdminIndexRoute,
   ClientIndexRoute: ClientIndexRoute,
   AdminProjectsIdRoute: AdminProjectsIdRoute,
+  ApiPublicVendorSignupRoute: ApiPublicVendorSignupRouteWithChildren,
   AdminProjectsIndexRoute: AdminProjectsIndexRoute,
 }
 export const routeTree = rootRouteImport

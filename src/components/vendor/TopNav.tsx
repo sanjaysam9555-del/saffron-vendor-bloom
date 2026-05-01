@@ -51,6 +51,13 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
             </div>
           )}
 
+          <Link
+            to="/admin/submissions"
+            className="hidden rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:inline-flex"
+          >
+            Submissions
+          </Link>
+
           <button
             onClick={onAddVendor}
             className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3.5 py-1.5 text-sm font-medium text-[var(--cream)] shadow-sm transition-all hover:bg-[var(--terracotta)]/90 hover:-translate-y-0.5"

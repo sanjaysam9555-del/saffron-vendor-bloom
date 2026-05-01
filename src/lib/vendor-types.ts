@@ -20,8 +20,9 @@ export interface Vendor {
   quote_breakdown: string | null;
   team_size: string | null;
   deliverables: string | null;
+  submitted_via_form: boolean;
   date_added: string;
   updated_at: string;
 }
 
-export type VendorInput = Omit<Vendor, "id" | "date_added" | "updated_at">;
+export type VendorInput = Omit<Vendor, "id" | "date_added" | "updated_at" | "submitted_via_form">;
