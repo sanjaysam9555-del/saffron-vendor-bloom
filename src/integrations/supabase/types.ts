@@ -282,6 +282,7 @@ export type Database = {
           remarks: string | null
           source: string | null
           subcategory: string | null
+          submitted_via_form: boolean
           team_size: string | null
           updated_at: string
           vendor_name: string
@@ -307,6 +308,7 @@ export type Database = {
           remarks?: string | null
           source?: string | null
           subcategory?: string | null
+          submitted_via_form?: boolean
           team_size?: string | null
           updated_at?: string
           vendor_name: string
@@ -332,6 +334,7 @@ export type Database = {
           remarks?: string | null
           source?: string | null
           subcategory?: string | null
+          submitted_via_form?: boolean
           team_size?: string | null
           updated_at?: string
           vendor_name?: string
