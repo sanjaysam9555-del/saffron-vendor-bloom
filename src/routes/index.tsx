@@ -27,7 +27,7 @@ function RootIndex() {
       } else if (role === "admin" || role === "employee") {
         navigate({ to: "/admin" });
       }
-    }, 700);
+    }, SIGN_IN_SUCCESS_HOLD_MS);
     return () => clearTimeout(t);
   }, [loading, session, role, navigate]);
 
