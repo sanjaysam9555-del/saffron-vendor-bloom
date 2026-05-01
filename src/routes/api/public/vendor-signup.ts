@@ -229,11 +229,13 @@ export const Route = createFileRoute("/api/public/vendor-signup")({
         } catch (err) {
           console.error("Vendor signup file upload failed, rolling back:", err);
           // Best-effort cleanup
-          if (uploaded.length > 0) {
-            await supabaseAdmin.storage.from(BUCKET).remove(uploaded).catch(() => {});
-          }
-          await supabaseAdmin.from("vendor_attachments").delete().eq("vendor_id", vendor.id).catch(() => {});
-          await supabaseAdmin.from("vendors").delete().eq("id", vendor.id).catch(() => {});
+          try {
+            if (uploaded.length > 0) {
+              await supabaseAdmin.storage.from(BUCKET).remove(uploaded);
+            }
+          } catch { /* ignore */ }
+          try { await supabaseAdmin.from("vendor_attachments").delete().eq("vendor_id", vendor.id); } catch { /* ignore */ }
+          try { await supabaseAdmin.from("vendors").delete().eq("id", vendor.id); } catch { /* ignore */ }
           return jsonResponse({ ok: false, error: "upload_failed", message: "Could not upload your documents. Please try again." }, 500);
         }
 

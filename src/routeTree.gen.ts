@@ -16,6 +16,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ClientLoginRouteImport } from './routes/client.login'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminProjectsIndexRouteImport } from './routes/admin.projects.index'
+import { Route as ApiPublicVendorSignupRouteImport } from './routes/api/public/vendor-signup'
 import { Route as AdminProjectsIdRouteImport } from './routes/admin.projects.$id'
 
 const LoginRoute = LoginRouteImport.update({
@@ -53,6 +54,11 @@ const AdminProjectsIndexRoute = AdminProjectsIndexRouteImport.update({
   path: '/admin/projects/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicVendorSignupRoute = ApiPublicVendorSignupRouteImport.update({
+  id: '/api/public/vendor-signup',
+  path: '/api/public/vendor-signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminProjectsIdRoute = AdminProjectsIdRouteImport.update({
   id: '/admin/projects/$id',
   path: '/admin/projects/$id',
@@ -67,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
   '/admin/projects/$id': typeof AdminProjectsIdRoute
+  '/api/public/vendor-signup': typeof ApiPublicVendorSignupRoute
   '/admin/projects/': typeof AdminProjectsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/client': typeof ClientIndexRoute
   '/admin/projects/$id': typeof AdminProjectsIdRoute
+  '/api/public/vendor-signup': typeof ApiPublicVendorSignupRoute
   '/admin/projects': typeof AdminProjectsIndexRoute
 }
 export interface FileRoutesById {
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
   '/admin/projects/$id': typeof AdminProjectsIdRoute
+  '/api/public/vendor-signup': typeof ApiPublicVendorSignupRoute
   '/admin/projects/': typeof AdminProjectsIndexRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/client/'
     | '/admin/projects/$id'
+    | '/api/public/vendor-signup'
     | '/admin/projects/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/client'
     | '/admin/projects/$id'
+    | '/api/public/vendor-signup'
     | '/admin/projects'
   id:
     | '__root__'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/client/'
     | '/admin/projects/$id'
+    | '/api/public/vendor-signup'
     | '/admin/projects/'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   ClientIndexRoute: typeof ClientIndexRoute
   AdminProjectsIdRoute: typeof AdminProjectsIdRoute
+  ApiPublicVendorSignupRoute: typeof ApiPublicVendorSignupRoute
   AdminProjectsIndexRoute: typeof AdminProjectsIndexRoute
 }
 
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProjectsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/vendor-signup': {
+      id: '/api/public/vendor-signup'
+      path: '/api/public/vendor-signup'
+      fullPath: '/api/public/vendor-signup'
+      preLoaderRoute: typeof ApiPublicVendorSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/projects/$id': {
       id: '/admin/projects/$id'
       path: '/admin/projects/$id'
@@ -203,6 +223,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   ClientIndexRoute: ClientIndexRoute,
   AdminProjectsIdRoute: AdminProjectsIdRoute,
+  ApiPublicVendorSignupRoute: ApiPublicVendorSignupRoute,
   AdminProjectsIndexRoute: AdminProjectsIndexRoute,
 }
 export const routeTree = rootRouteImport
