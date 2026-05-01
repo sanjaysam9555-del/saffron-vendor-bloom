@@ -33,11 +33,12 @@ async function requireStaffUser(): Promise<{ userId: string; email: string }> {
   const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
   if (!token) throw new Error("You're not signed in. Please sign in again to continue.");
 
-  const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-  if (userError || !userData.user) throw new Error("Your session expired. Please sign in again.");
+  const { data: claimsData, error: claimsError } = await supabaseAdmin.auth.getClaims(token);
+  const claims = claimsData?.claims;
+  if (claimsError || !claims?.sub) throw new Error("Your session expired. Please sign in again.");
 
-  const userId = userData.user.id;
-  const email = userData.user.email?.toLowerCase() ?? "";
+  const userId = claims.sub;
+  const email = typeof claims.email === "string" ? claims.email.toLowerCase() : "";
 
   try {
     const { data, error } = await supabaseAdmin
