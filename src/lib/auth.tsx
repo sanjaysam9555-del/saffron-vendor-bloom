@@ -25,28 +25,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const loadProfile = async (userId: string) => {
-    const [{ data: roleRow }, { data: profileRow }] = await Promise.all([
+    const [{ data: roleRow, error: roleError }, { data: profileRow, error: profileError }] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
       supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle(),
     ]);
-    setRole((roleRow?.role as AppRole) ?? "employee");
+
+    if (roleError) throw roleError;
+    if (profileError) console.warn("Unable to load profile", profileError.message);
+
+    const nextRole = (roleRow?.role as AppRole) ?? "employee";
+    setRole(nextRole);
     setDisplayName(profileRow?.display_name ?? null);
+    return nextRole;
   };
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       if (s?.user) {
-        setTimeout(() => loadProfile(s.user.id), 0);
+        setLoading(true);
+        setTimeout(() => {
+          loadProfile(s.user.id)
+            .catch((error) => {
+              console.error("Unable to load access role", error);
+              setRole(null);
+            })
+            .finally(() => setLoading(false));
+        }, 0);
       } else {
         setRole(null);
         setDisplayName(null);
+        setLoading(false);
       }
     });
 
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
-      if (s?.user) loadProfile(s.user.id).finally(() => setLoading(false));
+      if (s?.user) {
+        loadProfile(s.user.id)
+          .catch((error) => {
+            console.error("Unable to load access role", error);
+            setRole(null);
+          })
+          .finally(() => setLoading(false));
+      }
       else setLoading(false);
     });
 
@@ -60,8 +82,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     displayName,
     loading,
     signIn: async (email, password) => {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      return { error: error?.message ?? null };
+      try {
+        setLoading(true);
+        const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (error) return { error: error.message };
+        setSession(data.session ?? null);
+        if (data.user) await loadProfile(data.user.id);
+        return { error: null };
+      } catch (error) {
+        console.error("Sign in failed", error);
+        return { error: "Could not complete sign in. Please try again." };
+      } finally {
+        setLoading(false);
+      }
     },
     signUp: async (email, password, displayName) => {
       const { error } = await supabase.auth.signUp({
