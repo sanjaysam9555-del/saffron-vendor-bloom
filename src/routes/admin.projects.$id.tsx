@@ -280,3 +280,153 @@ function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
     </tr>
   );
 }
+
+type Selection = { user_id: string; display_name: string; email: string; status: string; updated_at: string };
+
+function pickPrimary(rows: Selection[] | undefined): Selection | null {
+  if (!rows || rows.length === 0) return null;
+  return [...rows].sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1))[0];
+}
+
+function AssignedVendorsSection({
+  vendors,
+  selections,
+  onRemove,
+}: {
+  vendors: any[];
+  selections: Record<string, Selection[]>;
+  onRemove: (id: string) => void;
+}) {
+  const [view, setView] = useState<"list" | "grouped">("list");
+
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { like: 0, shortlisted: 0, finalised: 0, rejected: 0, thinking: 0 };
+    for (const v of vendors) {
+      const rows = selections[v.id] ?? [];
+      for (const r of rows) if (r.status in c) c[r.status]++;
+    }
+    return c;
+  }, [vendors, selections]);
+
+  const grouped = useMemo(() => {
+    const buckets: Record<string, { vendor: any; selection: Selection | null }[]> = {
+      finalised: [],
+      shortlisted: [],
+      like: [],
+      thinking: [],
+      rejected: [],
+      none: [],
+    };
+    for (const v of vendors) {
+      const primary = pickPrimary(selections[v.id]);
+      const key = primary?.status && primary.status in buckets ? primary.status : "none";
+      buckets[key].push({ vendor: v, selection: primary });
+    }
+    return buckets;
+  }, [vendors, selections]);
+
+  return (
+    <section className="mt-10">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-display text-xl text-[var(--charcoal)]">Assigned vendors ({vendors.length})</h2>
+          <p className="text-xs text-[var(--charcoal)]/55">
+            What the client has marked appears next to each vendor.
+          </p>
+        </div>
+        <div className="inline-flex overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs">
+          <button
+            onClick={() => setView("list")}
+            className={`inline-flex items-center gap-1 px-2.5 py-1.5 ${view === "list" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"}`}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" /> List
+          </button>
+          <button
+            onClick={() => setView("grouped")}
+            className={`inline-flex items-center gap-1 border-l border-[var(--border)] px-2.5 py-1.5 ${view === "grouped" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"}`}
+          >
+            <ListFilter className="h-3.5 w-3.5" /> Group by client status
+          </button>
+        </div>
+      </div>
+
+      {vendors.length > 0 && (
+        <div className="mt-3">
+          <StatusCountsRow counts={counts} />
+        </div>
+      )}
+
+      {vendors.length === 0 ? (
+        <div className="mt-4 rounded-lg border border-dashed border-[var(--champagne)] bg-white py-10 text-center text-sm text-[var(--charcoal)]/60">
+          No vendors assigned to this project yet.
+        </div>
+      ) : view === "list" ? (
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {vendors.map((v: any) => {
+            const rows = selections[v.id] ?? [];
+            const primary = pickPrimary(rows);
+            return (
+              <div key={v.id} className="flex items-start justify-between gap-3 rounded-lg border border-[var(--border)] bg-white p-3">
+                <div className="min-w-0 flex-1">
+                  <div className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
+                    {v.category}{v.subcategory ? ` · ${v.subcategory}` : ""}
+                  </div>
+                  <div className="font-medium text-[var(--charcoal)]">{v.vendor_name}</div>
+                  {v.price_text && <div className="text-xs text-[var(--terracotta)]">{v.price_text}</div>}
+                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                    <ClientStatusPill status={primary?.status ?? null} />
+                    {rows.length > 1 && (
+                      <span className="text-[10px] text-[var(--charcoal)]/50" title={rows.map((r) => `${r.display_name || r.email}: ${r.status}`).join("\n")}>
+                        +{rows.length - 1} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => onRemove(v.id)}
+                  title="Remove from project"
+                  className="rounded p-1.5 text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="mt-4 space-y-4">
+          {(["finalised", "shortlisted", "like", "thinking", "rejected", "none"] as const).map((key) => {
+            const items = grouped[key];
+            if (items.length === 0) return null;
+            const opt = CLIENT_STATUS_OPTIONS.find((o) => o.value === key);
+            const label = opt?.label ?? "No response yet";
+            return (
+              <div key={key} className="rounded-lg border border-[var(--border)] bg-white">
+                <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: opt?.dot ?? "#9ca3af" }} />
+                    <span className="font-medium text-[var(--charcoal)]">{label}</span>
+                    <span className="text-xs text-[var(--charcoal)]/55">({items.length})</span>
+                  </div>
+                </div>
+                <ul className="divide-y divide-[var(--border)]">
+                  {items.map(({ vendor: v, selection }) => (
+                    <li key={v.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+                      <div className="min-w-0">
+                        <div className="font-medium text-[var(--charcoal)]">{v.vendor_name}</div>
+                        <div className="text-[11px] text-[var(--charcoal)]/55">
+                          {v.category}{v.subcategory ? ` · ${v.subcategory}` : ""}
+                          {selection && <> · marked by {selection.display_name || selection.email}</>}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
