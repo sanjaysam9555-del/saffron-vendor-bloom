@@ -57,8 +57,11 @@ export async function deleteVendorAttachment(att: VendorAttachment): Promise<voi
   if (error) throw error;
 }
 
-export function getAttachmentUrl(filePath: string): string {
-  return supabase.storage.from(BUCKET).getPublicUrl(filePath).data.publicUrl;
+import { getVendorFileSignedUrl } from "@/server/vendor-files.functions";
+
+export async function getAttachmentUrl(filePath: string): Promise<string> {
+  const { url } = await getVendorFileSignedUrl({ data: { file_path: filePath } });
+  return url;
 }
 
 export const ACCEPTED_FILE_TYPES =
