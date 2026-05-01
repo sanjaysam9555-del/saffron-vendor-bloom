@@ -1,6 +1,8 @@
 import type { Vendor, VendorInput } from "./vendor-types";
 import {
+  bulkDeleteVendorsServer,
   bulkInsertVendorsServer,
+  bulkUpdateVendorsServer,
   createVendorServer,
   deleteVendorServer,
   listVendorsServer,
@@ -26,4 +28,15 @@ export async function deleteVendor(id: string): Promise<void> {
 export async function bulkInsertVendors(rows: VendorInput[]): Promise<number> {
   if (!rows.length) return 0;
   return await bulkInsertVendorsServer({ data: { rows } });
+}
+
+export async function bulkUpdateVendors(
+  ids: string[],
+  patch: Partial<VendorInput>,
+): Promise<{ updated: number }> {
+  return await bulkUpdateVendorsServer({ data: { ids, patch } });
+}
+
+export async function bulkDeleteVendors(ids: string[]): Promise<{ deleted: number }> {
+  return await bulkDeleteVendorsServer({ data: { ids } });
 }

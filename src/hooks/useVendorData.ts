@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  listVendors, createVendor, updateVendor, deleteVendor,
+  listVendors,
+  createVendor,
+  updateVendor,
+  deleteVendor,
+  bulkUpdateVendors,
+  bulkDeleteVendors,
 } from "@/lib/vendor-api";
 import type { Vendor, VendorInput } from "@/lib/vendor-types";
 
@@ -20,7 +25,17 @@ export function useVendorMutations() {
   });
   const remove = useMutation({ mutationFn: deleteVendor, onSuccess: invalidate });
 
-  return { create, update, remove };
+  const bulkUpdate = useMutation({
+    mutationFn: ({ ids, patch }: { ids: string[]; patch: Partial<VendorInput> }) =>
+      bulkUpdateVendors(ids, patch),
+    onSuccess: invalidate,
+  });
+  const bulkDelete = useMutation({
+    mutationFn: (ids: string[]) => bulkDeleteVendors(ids),
+    onSuccess: invalidate,
+  });
+
+  return { create, update, remove, bulkUpdate, bulkDelete };
 }
 
 export interface VendorModalState {
