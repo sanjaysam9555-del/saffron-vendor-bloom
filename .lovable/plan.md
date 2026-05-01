@@ -1,56 +1,57 @@
-## Goal
+I inspected the current auth/routing/server-function code and the backend data. I found the main causes:
 
-When someone visits `planwithsaffron.in` (the root `/`), they should see the **client login form right there** — the URL must stay as `planwithsaffron.in`, with no redirect to `/client/login`.
+- The `/` page is overloaded: it is both the client login page and the admin vendor dashboard. If role resolution is delayed or fails, this can leave users stuck at “Loading…” or expose the wrong UI path.
+- Client-facing routes rely on component-level redirects instead of hard route guards, so protected UI can render before role checks fully settle.
+- Server functions still use mixed auth patterns. Some staff-only functions are safe, but client project loading still depends on middleware that can race with session hydration.
+- The app fetches admin-only data eagerly on the root dashboard, and repeated auth lookups/parallel server calls are making the app feel slow.
+- The database currently has the correct real roles for the visible users: `info@saffronevents.in = admin`, `gautam@saffronevents.in = employee`, and `sunilvats6919@gmail.com = client`. The leakage is in routing/auth state handling, not because that client currently has an admin role.
 
-Admins/employees continue to use `planwithsaffron.in/login` as today.
+Plan to fix:
 
-## Current behavior (the bug)
+1. Separate client and admin entry points cleanly
+   - Make `/` a client-only entry point that shows client login when signed out and redirects signed-in clients to `/client`.
+   - Move the admin/vendor dashboard away from `/` to a dedicated route such as `/admin` or `/admin/vendors`.
+   - Make `/login` the staff login page and only send staff users to the admin route.
+   - Update all “Back to dashboard” and admin navigation links to the new admin route.
 
-- `/` renders the vendor dashboard wrapped in `AuthGate`.
-- `AuthGate` sees no session → redirects to `/client/login`.
-- Result: URL changes to `/client/login` instead of staying at root.
+2. Add strict route guards so clients can never see admin UI
+   - Create/strengthen a staff gate that only renders children after auth is fully loaded and role is `admin` or `employee`.
+   - Create/strengthen an admin-only gate for user management.
+   - Update the vendor dashboard and `/admin/projects` routes to use the staff gate.
+   - Update client routes so staff/admin users are redirected away and clients stay in the client portal.
+   - Do not render admin components while role is `null`, `loading`, or `client`.
 
-## Changes
+3. Fix auth loading so the app cannot hang forever
+   - Refactor `src/lib/auth.tsx` so role/profile loading has a bounded timeout and always settles `loading=false`.
+   - Cache the current access result per session to avoid repeated `getCurrentUserAccess` calls.
+   - Avoid firing duplicate profile loads from both `onAuthStateChange` and `getSession` for the same session.
+   - If access lookup fails for a signed-in user, show a controlled error/sign-out option rather than an infinite “Loading…” screen.
 
-### 1. `src/routes/index.tsx` — make `/` smart based on auth state
+4. Make client project loading resilient
+   - Replace `getMyProject`’s middleware dependency with the same manual token-verification pattern already used by the repaired auth/vendor functions, but without any staff fallback.
+   - Verify the caller has exactly a `client` role before returning client data.
+   - Return a typed empty/error state for “no project assigned” instead of throwing into a blank/error state.
+   - Ensure client project data only includes client-safe vendor fields.
 
-Replace the current always-dashboard component with a small router-aware component:
+5. Reduce slow page loads
+   - Stop loading admin vendor data on `/` for everyone.
+   - Only enable vendor/project queries after the correct role is known.
+   - Combine or defer admin dashboard queries where practical so the first paint is faster.
+   - Tune React Query settings to avoid unnecessary refetches on initial navigation.
+   - Add graceful skeleton/error states rather than repeated retries that block the whole page.
 
-- While auth is loading → show a centered "Loading…" splash.
-- If no session → render the **client login form inline** (same UI as `/client/login`), so the URL stays `/`.
-- If session exists and role is `client` → redirect to `/client` (their portal).
-- If session exists and role is `admin` or `employee` → render the existing vendor `DashboardPage` (no AuthGate wrapper needed since we've already checked).
+6. Tighten backend role safety
+   - Add a migration to enforce that a user cannot simultaneously have `client` and staff (`admin`/`employee`) roles.
+   - Add a `project_clients.user_id` uniqueness constraint if each client account should belong to only one project, matching the current app behavior.
+   - Add/repair the new-user trigger so server-created client accounts are assigned `client` when intentionally created by staff, while public/self signups never get privileged roles.
+   - Re-run the database linter after changes and address any remaining obvious role/RLS warnings.
 
-Update the route's `head()` meta so the homepage title reads as the client portal landing (e.g. "Saffron Events — Client Portal") instead of "Vendor Dashboard", since that's what unauthenticated visitors see.
+7. Verify the critical flows
+   - Client login (`sunilvats6919@gmail.com`) should land on `/client`, not `/` or admin.
+   - Admin login (`info@saffronevents.in`) should land on the dedicated admin dashboard.
+   - Employee login should access staff/vendor/project tools but not admin user management.
+   - Signed-out users should see only login/client portal entry, never dashboard data.
+   - Reloading after login should not get stuck on “Loading…”.
+   - Measure loading after the change and confirm unnecessary root/admin requests no longer fire for client sessions.
 
-### 2. Extract the client login form into a shared component
-
-Create `src/components/client/ClientLoginForm.tsx` containing the existing form markup + `signIn` logic from `src/routes/client.login.tsx`. Both `/` (new) and `/client/login` (existing, kept for backwards compatibility / direct links) render this component so we don't duplicate the form.
-
-### 3. `src/routes/client.login.tsx` — keep route, use shared component
-
-Keep the route alive (so old links don't 404) but have it just render `<ClientLoginForm />`. Behavior unchanged for users who land here directly.
-
-### 4. `src/components/AuthGate.tsx` — redirect target for protected pages
-
-For other admin/employee-protected pages (e.g. `/admin/...`), unauthenticated access should still bounce somewhere sensible. Change the redirect target from `/client/login` back to `/` (the new public landing). That keeps the rule consistent: root is the public entry, and `/login` remains the staff entry.
-
-### 5. `src/components/ClientGate.tsx` — same update
-
-Change unauthenticated redirect from `/client/login` to `/` for consistency.
-
-## Files touched
-
-- `src/routes/index.tsx` — auth-aware root: shows client login when logged out, dashboard when admin/employee, redirects clients to `/client`.
-- `src/components/client/ClientLoginForm.tsx` — new shared form component.
-- `src/routes/client.login.tsx` — render shared `ClientLoginForm`.
-- `src/components/AuthGate.tsx` — redirect to `/` instead of `/client/login`.
-- `src/components/ClientGate.tsx` — redirect to `/` instead of `/client/login`.
-
-## Result
-
-- `planwithsaffron.in` → shows client login form, URL stays at root.
-- `planwithsaffron.in/login` → admin / employee login (unchanged).
-- `planwithsaffron.in/client/login` → still works, shows same client form.
-- Logged-in clients hitting `/` → sent to `/client`.
-- Logged-in admins/employees hitting `/` → see the vendor dashboard.
+Once approved, I’ll implement these changes directly.
