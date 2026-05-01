@@ -46,6 +46,9 @@ function LoginPage() {
       setTimeout(() => setBtnState("idle"), 1600);
     } else {
       setBtnState("success");
+      setTimeout(() => {
+        navigate({ to: "/" });
+      }, 700);
     }
   };
 
