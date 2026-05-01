@@ -85,7 +85,7 @@ export function VendorCard({
         )}
       </div>
 
-      <div className="space-y-1.5 text-sm text-[var(--charcoal)]/75">
+      <div className="min-w-0 space-y-1.5 text-sm text-[var(--charcoal)]/75">
         {vendor.location && (
           <div className="flex items-center gap-1.5">
             <MapPin className="h-3.5 w-3.5" /> {vendor.location}
