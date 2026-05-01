@@ -7,11 +7,10 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   formatFileSize,
-  getAttachmentUrl,
   listVendorAttachments,
   type VendorAttachment,
 } from "@/lib/vendor-files-api";
-import { DocumentViewer } from "./DocumentViewer";
+import { SignedDocumentViewer } from "./SignedDocumentViewer";
 import { useIsAdmin } from "@/lib/auth";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
 
@@ -186,8 +185,8 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
       </div>
 
       {viewing && (
-        <DocumentViewer
-          url={getAttachmentUrl(viewing.file_path)}
+        <SignedDocumentViewer
+          filePath={viewing.file_path}
           fileName={viewing.file_name}
           mimeType={viewing.mime_type}
           onClose={() => setViewing(null)}

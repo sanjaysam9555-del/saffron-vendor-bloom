@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { hasAnyAdmin } from "@/server/admin-users.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in — Saffron Events" }] }),
@@ -9,21 +8,12 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const { signIn, signUp, session } = useAuth();
+  const { signIn, session } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [hasUsers, setHasUsers] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    hasAnyAdmin()
-      .then((res) => setHasUsers(res.hasAdmin))
-      .catch(() => setHasUsers(true));
-  }, []);
 
   useEffect(() => {
     if (session) navigate({ to: "/" });
@@ -33,16 +23,9 @@ function LoginPage() {
     e.preventDefault();
     setErr(null);
     setBusy(true);
-    const res =
-      mode === "signin"
-        ? await signIn(email, password)
-        : await signUp(email, password, displayName || email.split("@")[0]);
+    const res = await signIn(email, password);
     setBusy(false);
     if (res.error) setErr(res.error);
-    else if (mode === "signup") {
-      // signed in immediately due to auto-confirm
-      navigate({ to: "/" });
-    }
   };
 
   return (
@@ -53,19 +36,9 @@ function LoginPage() {
           Vendor Studio
         </p>
 
-        <h2 className="mt-6 text-lg font-semibold text-[var(--charcoal)]">
-          {mode === "signin" ? "Sign in" : hasUsers === false ? "Create the first admin account" : "Create account"}
-        </h2>
+        <h2 className="mt-6 text-lg font-semibold text-[var(--charcoal)]">Sign in</h2>
 
         <form onSubmit={submit} className="mt-4 space-y-3">
-          {mode === "signup" && (
-            <input
-              className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
-              placeholder="Display name"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-            />
-          )}
           <input
             className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
             type="email"
@@ -89,24 +62,12 @@ function LoginPage() {
             disabled={busy}
             className="w-full rounded-md bg-[var(--terracotta)] px-4 py-2 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 disabled:opacity-60"
           >
-            {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
+            {busy ? "Please wait…" : "Sign in"}
           </button>
         </form>
 
         <div className="mt-4 text-center text-xs text-[var(--charcoal)]/60">
-          {mode === "signin" ? (
-            hasUsers === false ? (
-              <button onClick={() => setMode("signup")} className="text-[var(--terracotta)] underline">
-                Create the first admin account
-              </button>
-            ) : (
-              <span>New employees are added by an admin.</span>
-            )
-          ) : (
-            <button onClick={() => setMode("signin")} className="text-[var(--terracotta)] underline">
-              Back to sign in
-            </button>
-          )}
+          New employees are added by an admin.
         </div>
       </div>
     </div>
