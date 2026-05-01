@@ -425,13 +425,47 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
         {error && <div className="px-6 pb-2 text-sm text-red-600">{error}</div>}
 
         <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-[var(--border)] bg-[var(--cream)] px-6 py-3">
-          <button type="button" onClick={onClose} className="rounded-md px-4 py-2 text-sm text-[var(--charcoal)]/65 hover:bg-[var(--cream-deep)]">Cancel</button>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting || saved}
+            className="rounded-md px-4 py-2 text-sm text-[var(--charcoal)]/65 hover:bg-[var(--cream-deep)] disabled:opacity-40"
+          >
+            Cancel
+          </button>
           <button
             type="submit"
-            disabled={submitting}
-            className="rounded-md bg-[var(--terracotta)] px-4 py-2 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 disabled:opacity-50"
+            disabled={submitting || saved}
+            // Fire on pointerdown so a single tap works even when a text input
+            // is currently focused (the focused input's blur would otherwise
+            // swallow the first tap on iOS / mobile Safari).
+            onPointerDown={(e) => {
+              // Left mouse button or touch/pen
+              if (e.pointerType !== "mouse" || e.button === 0) {
+                e.preventDefault();
+                (e.currentTarget as HTMLButtonElement).focus();
+                void runSave();
+              }
+            }}
+            className={`inline-flex min-w-[140px] items-center justify-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium text-[var(--cream)] transition-colors disabled:cursor-not-allowed ${
+              saved
+                ? "bg-green-600"
+                : "bg-[var(--terracotta)] hover:bg-[var(--terracotta)]/90 disabled:opacity-60"
+            }`}
           >
-            {submitting ? "Saving…" : "Save Vendor"}
+            {saved ? (
+              <>
+                <Check className="h-4 w-4 animate-fade-in" />
+                <span>Saved!</span>
+              </>
+            ) : submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Saving…</span>
+              </>
+            ) : (
+              <span>Save Vendor</span>
+            )}
           </button>
         </div>
       </form>
