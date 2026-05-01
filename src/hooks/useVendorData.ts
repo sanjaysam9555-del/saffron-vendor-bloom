@@ -10,10 +10,19 @@ import {
 } from "@/lib/vendor-api";
 import type { Vendor, VendorInput } from "@/lib/vendor-types";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 
 export function useVendors() {
   const qc = useQueryClient();
-  const query = useQuery({ queryKey: ["vendors"], queryFn: listVendors });
+  const { session, initialized } = useAuth();
+  const query = useQuery({
+    queryKey: ["vendors", session?.user?.id ?? null],
+    queryFn: listVendors,
+    // Wait until Supabase has restored the session from storage AND we have
+    // a valid bearer token. Prevents the "session expired" race on cold loads
+    // (especially the iPad PWA reopening after being backgrounded).
+    enabled: initialized && !!session?.access_token,
+  });
 
   // Live updates: subscribe to any change on the vendors table and
   // invalidate the cache so the dashboard reflects edits/adds/deletes
