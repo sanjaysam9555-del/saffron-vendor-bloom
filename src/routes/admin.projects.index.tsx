@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Plus, Calendar, Heart } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
-import { listProjects, createProject } from "@/server/projects.functions";
+import { listProjectsOverview, createProject } from "@/server/projects.functions";
+import { StatusCountsRow } from "@/components/admin/ClientStatusPill";
 
 export const Route = createFileRoute("/admin/projects/")({
   head: () => ({ meta: [{ title: "Projects — Saffron Events" }] }),
