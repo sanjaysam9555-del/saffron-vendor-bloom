@@ -4,7 +4,6 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getRequestIP } from "@tanstack/react-start/server";
 import {
   findDuplicateVendor,
-  type DuplicateField,
 } from "@/server/duplicate-detection.server";
 
 const BUCKET = "vendor-files";
