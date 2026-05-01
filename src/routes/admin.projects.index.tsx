@@ -120,6 +120,14 @@ function ProjectsListPage() {
                   <Calendar className="h-3.5 w-3.5" />
                   {new Date(p.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
                 </div>
+                <div className="mt-2 text-[11px] text-[var(--charcoal)]/55">
+                  {p.vendor_count ?? 0} vendor{(p.vendor_count ?? 0) === 1 ? "" : "s"} · {p.client_count ?? 0} client login{(p.client_count ?? 0) === 1 ? "" : "s"}
+                </div>
+                {p.status_counts && (p.vendor_count ?? 0) > 0 && (
+                  <div className="mt-2">
+                    <StatusCountsRow counts={p.status_counts} />
+                  </div>
+                )}
               </Link>
             ))
           )}
