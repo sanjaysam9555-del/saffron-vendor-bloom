@@ -277,9 +277,10 @@ function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
         {resetting ? (
           <div className="flex items-center justify-end gap-1">
             <input
-              type="text"
+              type="password"
               minLength={6}
               placeholder="New password"
+              autoComplete="new-password"
               className="rounded border border-[var(--border)] px-2 py-1 text-sm"
               value={pwd}
               onChange={(e) => setPwd(e.target.value)}
