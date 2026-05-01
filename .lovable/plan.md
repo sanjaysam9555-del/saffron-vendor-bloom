@@ -1,60 +1,56 @@
-# Plan: Delete-vendor feedback + Client-side board view
+## Diagnosis
 
-## 1. Delete vendor feedback (admin)
+Good news: your site **already does SSR** (it's built on TanStack Start, not CRA). I confirmed by fetching the live HTML — the server returns a full document with `<title>`, meta tags, og: tags, and module preloads. So the SEO advice you received ("migrate to Next.js") is **incorrect for this stack**.
 
-**Issue**: Clicking "Confirm Delete" calls `onDelete()` and silently closes the panel — no spinner, no toast, no animation. If the request is slow the user has no idea anything happened.
+The real problem: the **visible body** that gets server-rendered is just the word `Loading…`. That's because `AuthProvider` starts with `loading: true` and every page (including the home page) renders a spinner until auth resolves. On the server there's no browser session to restore, so SSR always emits the spinner.
 
-**Fix** (in `src/components/vendor/VendorDetail.tsx`):
-- Add a `deleting` local state. While `onDelete()` is in flight:
-  - Disable both Confirm/Cancel buttons.
-  - Replace the button label with a spinner + "Deleting…" (using `Loader2` from lucide).
-- On success, fire `toast.success("Vendor deleted")` from sonner.
-- On error, surface `toast.error(err.message)` and re-enable the buttons.
-- Add a brief fade-out animation on the detail panel before close (use the existing `animate-fade-out` utility — wrap the close call in a 150 ms timeout after success).
+So Google sees:
+- ✅ Correct title, description, og:image
+- ❌ Body content: just "Loading…"
 
-`src/routes/admin.index.tsx` already calls `remove.mutateAsync` inside `onDelete`, which throws on failure — so the component just needs to await + try/catch. No server-side change.
+This is a content-visibility bug, not a framework bug.
 
-## 2. Client board (Kanban) view
+## Plan
 
-**Goal**: A new view on `/client` where vendors are arranged in columns by their `client_status`. Dragging a card across columns updates the status (reuses the existing `setMyVendorStatus` server function — same one the dropdown calls).
+### 1. Stop blocking SSR on auth restoration
 
-### Columns
-Six columns, in this order:
-1. **No status** (vendors where `client_status === null`)
-2. **We like it** (`like`)
-3. **Shortlisted** (`shortlisted`)
-4. **Need to think about it** (`thinking`)
-5. **Finalised** (`finalised`)
-6. **Rejected** (`rejected`)
+In `src/lib/auth.tsx`, change the initial `loading` state so it is only `true` while we are actively fetching the role for a known session — not as a global default.
 
-Each column shows its colored header (reusing `CLIENT_STATUS_OPTIONS` colors), a count, and the vendor cards inside.
+- Initial state: `loading: false`, `session: null`.
+- When `getSession()` resolves and finds a user → set `loading: true` and load the role.
+- When `getSession()` resolves with no user → stay at `loading: false`.
 
-### View toggle
-Add a small **Grid / Board** toggle in `ClientTopNav` (or inline above the grid in `client.index.tsx`). Persist the choice in `localStorage` so the view stays put across reloads.
+Result: server-side render produces the "no session" branch, which renders the actual login form HTML — not a spinner.
 
-### Drag-and-drop library
-Install **`@dnd-kit/core`** + **`@dnd-kit/sortable`** (small, accessible, React 19 compatible, ~works on touch + mouse + keyboard). These are the de-facto choice for modern React DnD.
+### 2. Render the login form on the server
 
-### Components to add
-- `src/components/client/ClientBoardView.tsx` — wraps `DndContext`, renders six `ClientBoardColumn`s, owns the optimistic update + mutation.
-- `src/components/client/ClientBoardColumn.tsx` — droppable column with header + status pill + count + vertical list of cards.
-- `src/components/client/ClientBoardCard.tsx` — compact draggable card (vendor name, category chip, location, mini "View Details" link). Smaller than the grid card so a column shows several at once.
+`src/routes/index.tsx` currently shows `Loading…` while `loading` is true. After step 1, the SSR branch will fall through to `<ClientLoginForm />` directly. The form has real content (heading, copy, fields) that crawlers can read.
 
-### Behavior
-- **Drag start**: card lifts (shadow + slight scale, `animate-scale-in`).
-- **Drop on a column**: optimistically move the card and call `setMyVendorStatus` with the new status (`null` for the "No status" column). Reuses the same retry/optimistic pattern from `ClientStatusSelect`, so we'll factor that pattern into a small `useSetVendorStatus()` hook in `src/hooks/useSetVendorStatus.ts` and reuse it from both the dropdown and the board.
-- **On error**: revert the card and `toast.error`.
-- **Filters + search**: the existing sidebar filters and search box still apply — only the matching vendors appear in the board.
-- **Click (without drag)**: opens the same `ClientVendorDetail` panel.
+Also remove the second post-login "Loading…" branch — replace it with a small `<ClientOnly>` wrapper so the redirect logic only runs on the client, and SSR always emits the form.
 
-### Files touched
-- `src/components/vendor/VendorDetail.tsx` — delete UX (toast + spinner + fade).
-- `src/hooks/useSetVendorStatus.ts` — new shared mutation hook.
-- `src/components/client/ClientStatusSelect.tsx` — switch to the shared hook.
-- `src/components/client/ClientBoardView.tsx`, `ClientBoardColumn.tsx`, `ClientBoardCard.tsx` — new.
-- `src/routes/client.index.tsx` — Grid/Board toggle and conditional render.
-- `package.json` — add `@dnd-kit/core` and `@dnd-kit/sortable`.
+### 3. Add proper SEO content to the home route
 
-### Out of scope
-- Reordering vendors *within* a column (kept simple — only the column they're in matters; within a column they stay sorted by vendor name).
-- Multi-select / bulk move.
+Right now `/` is the client login. For SEO this is thin. Add a short SEO-friendly intro section above the login form (visible to crawlers, styled subtly for users) describing Saffron Events — what you do, who you serve. This gives Google indexable copy on the homepage.
+
+Per-route head() is already correct; we'll just enrich the body.
+
+### 4. Verify SSR output
+
+After deploy, `curl https://planwithsaffron.in/` should return HTML containing the real login form markup and the new intro copy — not "Loading…".
+
+## Files to change
+
+- `src/lib/auth.tsx` — flip initial loading semantics (only loading while fetching a known user's role)
+- `src/routes/index.tsx` — render login form during SSR; defer redirect logic to client
+- `src/routes/login.tsx` and `src/routes/client.login.tsx` — same SSR-friendly treatment if they currently spin
+- (optional) Brief SEO hero block above the login form on `/`
+
+## What we will NOT do
+
+- ❌ Migrate to Next.js — your stack already SSRs. The advice was based on assuming this is plain Vite/CRA.
+- ❌ Add prerender.io — same reason; unnecessary cost and complexity.
+- ❌ Touch the build pipeline.
+
+## Out of scope (raise separately if you want)
+
+- A real public marketing landing at `/` with hero, services, testimonials (right now `/` is purely the client login). If you want planwithsaffron.in to be a marketing site with the login moved to `/login`, that's a bigger restructure I can do as a follow-up.
