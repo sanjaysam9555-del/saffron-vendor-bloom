@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentUserAccess } from "@/server/auth.functions";
@@ -19,52 +19,75 @@ interface AuthState {
 
 const AuthCtx = createContext<AuthState | undefined>(undefined);
 
+const ACCESS_TIMEOUT_MS = 6000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const t = window.setTimeout(() => reject(new Error("timeout")), ms);
+    promise.then(
+      (v) => { window.clearTimeout(t); resolve(v); },
+      (e) => { window.clearTimeout(t); reject(e); },
+    );
+  });
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+  // Track which user we've already loaded so onAuthStateChange + getSession
+  // don't trigger duplicate parallel server calls.
+  const loadedForUserRef = useRef<string | null>(null);
+  const inFlightRef = useRef<Promise<void> | null>(null);
 
-  const loadProfile = async (userId: string) => {
-    let access: { role: string; displayName: string | null } | null = null;
-    let accessError: Error | null = null;
+  const loadProfile = async (userId: string): Promise<void> => {
+    if (inFlightRef.current) return inFlightRef.current;
 
-    for (let attempt = 0; attempt < 8; attempt += 1) {
+    const run = (async () => {
       try {
-        access = await getCurrentUserAccess();
-        accessError = null;
-        break;
+        const access = await withTimeout(getCurrentUserAccess(), ACCESS_TIMEOUT_MS);
+        const nextRole = (access?.role as AppRole) ?? null;
+        setRole(nextRole);
+        setDisplayName(access?.displayName ?? null);
+        loadedForUserRef.current = userId;
       } catch (error) {
-        accessError = error instanceof Error ? error : new Error("Unable to load access role");
+        console.error("Unable to load access role", error);
+        // Don't keep the user stuck on a spinner forever — surface a null role
+        // so gates redirect/show the appropriate fallback.
+        setRole(null);
+        setDisplayName(null);
+        loadedForUserRef.current = userId;
+      } finally {
+        setLoading(false);
+        inFlightRef.current = null;
       }
+    })();
 
-      if (attempt < 7) await wait(Math.min(1500, 350 * (attempt + 1)));
-    }
-
-    if (accessError) throw accessError;
-
-    const nextRole = (access?.role as AppRole) ?? "employee";
-    setRole(nextRole);
-    setDisplayName(access?.displayName ?? null);
-    return nextRole;
+    inFlightRef.current = run;
+    return run;
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+      if (!mounted) return;
       setSession(s);
       if (s?.user) {
+        if (loadedForUserRef.current === s.user.id) {
+          // Already loaded for this user — just make sure we aren't stuck loading.
+          setLoading(false);
+          return;
+        }
         setLoading(true);
+        // Defer to next tick to avoid running inside the auth callback.
         setTimeout(() => {
-          loadProfile(s.user.id)
-            .catch((error) => {
-              console.error("Unable to load access role", error);
-              setRole(null);
-            })
-            .finally(() => setLoading(false));
+          if (mounted) void loadProfile(s.user.id);
         }, 0);
       } else {
+        loadedForUserRef.current = null;
         setRole(null);
         setDisplayName(null);
         setLoading(false);
@@ -72,19 +95,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (!mounted) return;
       setSession(s);
       if (s?.user) {
-        loadProfile(s.user.id)
-          .catch((error) => {
-            console.error("Unable to load access role", error);
-            setRole(null);
-          })
-          .finally(() => setLoading(false));
+        if (loadedForUserRef.current === s.user.id) {
+          setLoading(false);
+          return;
+        }
+        void loadProfile(s.user.id);
+      } else {
+        setLoading(false);
       }
-      else setLoading(false);
     });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const value: AuthState = {
@@ -96,31 +123,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn: async (email, password) => {
       try {
         setLoading(true);
-        let data: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["data"] | null = null;
-        let error: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["error"] | null = null;
-
-        for (let attempt = 0; attempt < 3; attempt += 1) {
-          const response = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-          data = response.data;
-          error = response.error;
-          if (!error || !/database|schema|fetch|network/i.test(error.message)) break;
-          if (attempt < 2) await wait(450 * (attempt + 1));
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+        if (error) {
+          setLoading(false);
+          return { error: error.message };
         }
-
-        if (error) return { error: error.message };
         setSession(data?.session ?? null);
         if (data?.user) {
-          loadProfile(data.user.id).catch((error) => {
-            console.error("Unable to load access role after sign in", error);
-            setRole(null);
-          });
+          // Force-refresh access for this user.
+          loadedForUserRef.current = null;
+          void loadProfile(data.user.id);
+        } else {
+          setLoading(false);
         }
         return { error: null };
       } catch (error) {
         console.error("Sign in failed", error);
-        return { error: "Could not complete sign in. Please try again." };
-      } finally {
         setLoading(false);
+        return { error: "Could not complete sign in. Please try again." };
       }
     },
     signUp: async (email, password, displayName) => {
@@ -136,9 +159,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     signOut: async () => {
       await supabase.auth.signOut();
+      loadedForUserRef.current = null;
+      setRole(null);
+      setDisplayName(null);
     },
     refresh: async () => {
-      if (session?.user) await loadProfile(session.user.id);
+      if (session?.user) {
+        loadedForUserRef.current = null;
+        await loadProfile(session.user.id);
+      }
     },
   };
 

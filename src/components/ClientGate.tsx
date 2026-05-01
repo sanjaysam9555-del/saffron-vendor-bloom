@@ -13,17 +13,16 @@ export function ClientGate({ children }: { children: ReactNode }) {
       return;
     }
     if (role && role !== "client") {
-      navigate({ to: "/" });
+      navigate({ to: "/admin" });
     }
   }, [loading, session, role, navigate]);
 
-  if (loading || !session || !role) {
+  if (loading || !session || !role || role !== "client") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] text-sm text-[var(--charcoal)]/60">
         Loading…
       </div>
     );
   }
-  if (role !== "client") return null;
   return <>{children}</>;
 }
