@@ -22,9 +22,9 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
       <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-2 gap-y-2 px-3 py-2.5 sm:flex-nowrap sm:gap-4 sm:px-6">
         {/* Logo */}
         <Link to="/admin" className="flex items-center gap-2.5 shrink-0">
-          <img src={logoLight} alt="Saffron Events" className="h-8 w-auto object-contain sm:h-9" />
-          <div className="leading-tight hidden sm:block">
-            <div className="font-display text-lg font-semibold text-[var(--terracotta)]">Saffron Events</div>
+          <img src={logoLight} alt="Saffron Events" className="hidden h-9 w-auto object-contain sm:block" />
+          <div className="leading-tight">
+            <div className="font-display text-base font-semibold text-[var(--terracotta)] sm:text-lg">Saffron Events</div>
             <div className="text-[9px] uppercase tracking-[0.22em] text-[var(--charcoal)]/55">Vendor Studio</div>
           </div>
         </Link>
