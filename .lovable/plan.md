@@ -1,60 +1,40 @@
-# Mobile Optimization for Vendor Dashboards (Admin & Client)
+# Centered "+ Project" Modal
 
-The All-Vendors dashboard works well on desktop but breaks down on phones because:
+## Problem
+`VendorProjectAssigner` currently renders its picker as an `absolute right-0 mt-1 w-64` panel anchored next to the card's `+ Project` chip. Inside vendor cards (which are now `overflow-hidden` with `min-w-0`) and inside the vendor detail drawer, this anchored panel:
+- gets clipped by the card/drawer bounds,
+- can be pushed off-screen on mobile,
+- causes the surrounding layout to look "auto-zoomed" because the absolute child has no width constraint relative to the viewport.
 
-- The 64px filter sidebar is always visible, eating screen width.
-- The top nav crams logo + search + stats + buttons into one row.
-- Main content uses `px-6 py-5` even on small screens, leaving too little room for cards.
-- The dashboard header (title + view toggle) wraps awkwardly.
-- Card grid drops to 1 column but with desktop-sized gaps.
+## Goal
+Open the project list as a centered, screen-blurred modal on every viewport (mobile, tablet, desktop), with an internally scrollable project list. Same behavior whether triggered from a `VendorCard` chip or the `VendorDetail` drawer.
 
-This plan fixes both `/admin` and `/client` with a consistent mobile pattern.
+## Approach
+Refactor `src/components/vendor/VendorProjectAssigner.tsx` to use the existing shadcn `Dialog` (`@/components/ui/dialog`) instead of an absolutely-positioned div.
 
-## Changes
+Specifics:
+- Keep the existing trigger chip (`+ Project` / `Assign to project`) and assigned-project pills exactly as they are.
+- Replace the `{open && <div className="absolute …">…</div>}` block with:
+  - `<Dialog open={open} onOpenChange={setOpen}>` with `<DialogContent>` styled to:
+    - Center on screen (default Radix behavior).
+    - Width: `w-[calc(100vw-2rem)] max-w-md` so it stays readable on mobile and capped on desktop.
+    - Max height: `max-h-[85vh]` with internal flex column.
+    - Header: `DialogTitle` "Assign to project" + search input row.
+    - Body: project list inside `flex-1 overflow-y-auto` (this is the scrollable region).
+- Keep the search input, empty state, and toggle behavior identical.
+- Remove the now-unneeded `relative` wrapper and `e.stopPropagation()` on the outer div (Radix Dialog manages its own portal, so card click handlers won't fire from the modal).
+- The `DialogOverlay` from shadcn already applies `bg-black/80` plus a subtle blur via the existing styles; confirm `backdrop-blur-sm` is present and add it to the overlay class on `DialogContent` if needed (shadcn's default overlay already blurs).
+- After toggling a project with `closeAfter: true`, call `setOpen(false)` and clear search as today.
 
-### 1. Filter sidebars become a slide-over drawer on mobile
-Files: `src/components/vendor/Sidebar.tsx`, `src/components/client/ClientSidebar.tsx`
+## Files to change
+- `src/components/vendor/VendorProjectAssigner.tsx` — swap absolute popover for `Dialog`/`DialogContent`/`DialogHeader`/`DialogTitle`. No API changes; `VendorCard` and `VendorDetail` keep their existing usage.
 
-- Hide the inline sidebar on `<lg` (`hidden lg:block`).
-- Add an overlay drawer (slides in from the left, ~85% width, scrim behind) that mounts only when `mobileOpen` is true.
-- Reuse the existing category/location markup inside the drawer (extract to a small inner block to avoid duplication).
-- Drawer has its own close (X) button and "Clear" link.
+## Out of scope
+- No changes to project assignment server logic, queries, or mutations.
+- No changes to the assigned-project pill row or the trigger chip styling.
+- No changes to other modals/drawers.
 
-### 2. Add a "Filters" trigger on the dashboard header (mobile only)
-Files: `src/routes/admin.index.tsx`, `src/routes/client.index.tsx`
-
-- New `mobileFiltersOpen` state in each route.
-- Show a `Filters` button (with funnel icon and a small dot when filters are active) next to the view toggle, visible only on `<lg`.
-- Pass `mobileOpen` / `onMobileClose` props into the sidebar.
-
-### 3. Tighten TopNavs for narrow screens
-Files: `src/components/vendor/TopNav.tsx`, `src/components/client/ClientTopNav.tsx`
-
-- Reduce horizontal gap from `gap-4` to `gap-2 sm:gap-4`.
-- Drop the search `max-w-[280px]` cap on mobile so it stretches across the row (`max-w-none sm:max-w-[280px]`).
-- Logo: drop the textual block on mobile (already hidden), keep just the mark.
-- Admin: keep the "+" Add Vendor button icon-only on mobile (already does); keep UserMenu compact.
-- Client: stack name/date below the header on mobile via `hidden md:block` (already does) — leave as-is.
-
-### 4. Tighten main content padding + grid on mobile
-Files: `src/routes/admin.index.tsx`, `src/routes/client.index.tsx`
-
-- `main` padding: `px-3 py-4 sm:px-6 sm:py-5 lg:px-8`.
-- Card grid gap: `gap-3 sm:gap-4`.
-- Dashboard header (title row + view toggle): allow it to wrap cleanly with `flex-wrap` and shrink the title to `text-xl sm:text-2xl`.
-
-### 5. Bulk-edit affordances stay desktop-only
-- Hide the "Bulk Edit" toggle button on `<sm` (it's a power-user action and the BulkActionBar doesn't fit on phones anyway). Existing `BulkActionBar` already sticks to bottom — leave its layout, but make sure it wraps on small screens.
-
-## Files touched
-- `src/components/vendor/Sidebar.tsx` — add overlay drawer mode
-- `src/components/client/ClientSidebar.tsx` — add overlay drawer mode
-- `src/components/vendor/TopNav.tsx` — tighter mobile spacing
-- `src/components/client/ClientTopNav.tsx` — tighter mobile spacing
-- `src/routes/admin.index.tsx` — Filters trigger, padded main, header layout, hide bulk toggle on mobile
-- `src/routes/client.index.tsx` — Filters trigger, padded main, header layout
-- `src/components/vendor/BulkActionBar.tsx` — minor wrap fix on mobile (if needed after testing)
-
-No data, schema, or API changes. Vendor cards themselves already render well at narrow widths after the recent WhatsApp/Call addition.
-
-Approve and I'll implement.
+## Verification
+- Open from a vendor card on 390px width: modal is centered, background blurred, list scrolls inside the modal, page does not zoom or shift.
+- Open from the vendor detail drawer on desktop: modal sits above the drawer, centered on the viewport.
+- Search filters list; selecting a project toggles assignment and closes the modal; X / overlay click / Esc all close it.
