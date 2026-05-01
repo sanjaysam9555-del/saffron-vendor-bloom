@@ -132,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role,
     displayName,
     loading,
+    initialized,
     signIn: async (email, password) => {
       try {
         setLoading(true);
