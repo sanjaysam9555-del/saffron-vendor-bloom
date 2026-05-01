@@ -27,8 +27,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
   const loadProfile = async (userId: string) => {
-    let roleResult: Awaited<ReturnType<typeof supabase.from<"user_roles">>> extends never ? never : unknown;
-    let profileResult: Awaited<ReturnType<typeof supabase.from<"profiles">>> extends never ? never : unknown;
+    let roleRow: { role: string } | null = null;
+    let roleError: { message: string } | null = null;
+    let profileRow: { display_name: string | null } | null = null;
+    let profileError: { message: string } | null = null;
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const [roleResponse, profileResponse] = await Promise.all([
@@ -36,15 +38,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle(),
       ]);
 
-      roleResult = roleResponse;
-      profileResult = profileResponse;
+      roleRow = roleResponse.data;
+      roleError = roleResponse.error;
+      profileRow = profileResponse.data;
+      profileError = profileResponse.error;
 
       if (!roleResponse.error) break;
       if (attempt < 2) await wait(350 * (attempt + 1));
     }
-
-    const { data: roleRow, error: roleError } = roleResult as Awaited<ReturnType<ReturnType<typeof supabase.from<"user_roles">["select"]>>;
-    const { data: profileRow, error: profileError } = profileResult as Awaited<ReturnType<ReturnType<typeof supabase.from<"profiles">["select"]>>;
 
     if (roleError) throw roleError;
     if (profileError) console.warn("Unable to load profile", profileError.message);
