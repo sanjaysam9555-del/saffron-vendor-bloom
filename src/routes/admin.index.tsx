@@ -10,8 +10,6 @@ import { VendorForm } from "@/components/vendor/VendorForm";
 import { VendorDetail } from "@/components/vendor/VendorDetail";
 import { useVendors, useVendorMutations, useVendorModals } from "@/hooks/useVendorData";
 import { CATEGORIES } from "@/lib/categories";
-import { bulkInsertVendors } from "@/lib/vendor-api";
-import { SAMPLE_VENDORS } from "@/lib/seed-data";
 import { AuthGate } from "@/components/AuthGate";
 
 export const Route = createFileRoute("/admin/")({
