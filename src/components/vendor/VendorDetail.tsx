@@ -12,7 +12,7 @@ import {
   type VendorAttachment,
 } from "@/lib/vendor-files-api";
 import { SignedDocumentViewer } from "./SignedDocumentViewer";
-import { useIsAdmin } from "@/lib/auth";
+import { useAuth, useIsAdmin } from "@/lib/auth";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
 
 interface VendorDetailProps {
@@ -24,6 +24,8 @@ interface VendorDetailProps {
 
 export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetailProps) {
   const isAdmin = useIsAdmin();
+  const { initialized, session } = useAuth();
+  const authReady = initialized && !!session;
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
@@ -184,7 +186,13 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
             {confirmDelete ? (
               <>
                 <span className="self-center text-sm text-red-700">
-                  {deleted ? "Deleted" : deleting ? "Deleting…" : "Delete this vendor?"}
+                  {deleted
+                    ? "Deleted"
+                    : deleting
+                    ? "Deleting…"
+                    : !authReady
+                    ? "Preparing…"
+                    : "Delete this vendor?"}
                 </span>
                 <button
                   onClick={() => setConfirmDelete(false)}
@@ -195,12 +203,13 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
                 </button>
                 <button
                   onClick={handleConfirmDelete}
-                  disabled={deleting || deleted}
+                  disabled={deleting || deleted || !authReady}
+                  title={!authReady ? "Waiting for sign-in to finish loading…" : undefined}
                   className="inline-flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {deleting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {(deleting || !authReady) && <Loader2 className="h-4 w-4 animate-spin" />}
                   {deleted ? <Check className="h-4 w-4" /> : null}
-                  {deleted ? "Deleted" : deleting ? "Deleting…" : "Confirm Delete"}
+                  {deleted ? "Deleted" : deleting ? "Deleting…" : !authReady ? "Preparing…" : "Confirm Delete"}
                 </button>
               </>
             ) : (
