@@ -167,7 +167,7 @@ function ProjectDetailPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {clients.map((c) => (
+                  {clients.map((c: any) => (
                     <ClientRow key={c.id} c={c} onChanged={refresh} />
                   ))}
                 </tbody>
