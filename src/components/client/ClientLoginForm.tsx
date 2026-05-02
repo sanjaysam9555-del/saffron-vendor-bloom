@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import {
   SignInButton,
