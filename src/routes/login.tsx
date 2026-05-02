@@ -86,6 +86,14 @@ function LoginPage() {
           <SignInButton state={btnState} />
         </form>
 
+        <div className="mt-5 border-t border-[var(--border)] pt-4 text-center">
+          <Link
+            to="/"
+            className="text-xs uppercase tracking-[0.18em] text-[var(--charcoal)]/55 hover:text-[var(--terracotta)] hover:underline"
+          >
+            Client sign in →
+          </Link>
+        </div>
       </div>
     </div>
   );
