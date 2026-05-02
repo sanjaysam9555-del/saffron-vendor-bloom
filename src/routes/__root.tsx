@@ -152,6 +152,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={client}>
       <AuthProvider>
+        <RouteProgress />
         <Outlet />
         <Toaster />
       </AuthProvider>
