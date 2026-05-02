@@ -5,6 +5,7 @@ import { useState } from "react";
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
+import { RouteProgress } from "@/components/RouteProgress";
 
 function NotFoundComponent() {
   return (
