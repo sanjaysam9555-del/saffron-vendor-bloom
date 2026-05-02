@@ -16,7 +16,7 @@ type ViewMode = "grid" | "board";
 const VIEW_STORAGE_KEY = "saffron.client.viewMode";
 
 export const Route = createFileRoute("/client/")({
-  head: () => ({ meta: [{ title: "Your Vendors — Saffron Events" }] }),
+  head: () => ({ meta: [{ title: "Your Vendors — Saffron Planning Studio" }] }),
   component: () => (
     <ClientGate>
       <ClientPortalPage />

@@ -10,7 +10,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/admin/submissions")({
   head: () => ({
     meta: [
-      { title: "Vendor Submissions — Saffron Events" },
+      { title: "Vendor Submissions — Saffron Planning Studio" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

@@ -19,8 +19,8 @@ import { useIsAdmin } from "@/lib/auth";
 export const Route = createFileRoute("/admin/")({
   head: () => ({
     meta: [
-      { title: "Vendor Dashboard — Saffron Events" },
-      { name: "description", content: "Saffron Events staff dashboard for managing wedding vendors." },
+      { title: "Vendor Dashboard — Saffron Planning Studio" },
+      { name: "description", content: "Saffron Planning Studio staff dashboard for managing wedding vendors." },
     ],
   }),
   component: () => (

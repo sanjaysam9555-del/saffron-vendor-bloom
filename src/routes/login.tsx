@@ -9,7 +9,7 @@ import {
 } from "@/components/auth/SignInButton";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Sign in — Saffron Events" }] }),
+  head: () => ({ meta: [{ title: "Sign in — Saffron Planning Studio" }] }),
   component: LoginPage,
 });
 
@@ -58,7 +58,7 @@ function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] px-4">
       <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-white p-8 shadow-sm">
-        <h1 className="font-display text-3xl text-[var(--terracotta)]">Saffron Events</h1>
+        <h1 className="font-display text-3xl text-[var(--terracotta)]">Saffron Planning Studio</h1>
         <p className="mt-1 text-xs uppercase tracking-[0.22em] text-[var(--charcoal)]/55">
           Vendor Studio
         </p>

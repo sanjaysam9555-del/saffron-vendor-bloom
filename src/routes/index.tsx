@@ -8,13 +8,13 @@ import { SIGN_IN_SUCCESS_HOLD_MS } from "@/components/auth/SignInButton";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Wedding & Event Planning Studio | Saffron Events" },
+      { title: "Wedding & Event Planning Studio | Saffron Planning Studio" },
       {
         name: "description",
         content:
-          "Saffron Events is a boutique wedding & event planning studio in India. We craft unforgettable celebrations — from intimate gatherings to grand weddings. Plan with us today.",
+          "Saffron Planning Studio is a boutique wedding & event planning studio in India. We craft unforgettable celebrations — from intimate gatherings to grand weddings. Plan with us today.",
       },
-      { property: "og:title", content: "Wedding & Event Planning Studio | Saffron Events" },
+      { property: "og:title", content: "Wedding & Event Planning Studio | Saffron Planning Studio" },
       {
         property: "og:description",
         content:
@@ -31,7 +31,7 @@ function RootIndex() {
       {/* SEO-visible intro — rendered server-side so crawlers can index it. */}
       <section className="mx-auto max-w-3xl px-6 pt-8 pb-2 text-center">
         <p className="text-xs uppercase tracking-[0.28em] text-[var(--terracotta)]">
-          Saffron Events
+          Saffron Planning Studio
         </p>
         <h1 className="mt-2 font-display text-2xl text-[var(--charcoal)] sm:text-3xl">
           Wedding & Event Planning Studio in India

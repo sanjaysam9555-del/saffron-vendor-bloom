@@ -46,14 +46,14 @@ export function ClientLoginForm({ embedded = false }: { embedded?: boolean } = {
   return (
     <div className={embedded ? "flex justify-center my-[30px]" : "flex min-h-screen items-center justify-center bg-[var(--cream)] px-4"}>
       <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-white p-8 shadow-sm">
-        <h1 className="font-display text-3xl text-[var(--terracotta)]">Saffron Events</h1>
+        <h1 className="font-display text-3xl text-[var(--terracotta)]">Saffron Planning Studio</h1>
         <p className="mt-1 text-xs uppercase tracking-[0.22em] text-[var(--charcoal)]/55">
           Client Portal
         </p>
 
         <h2 className="mt-6 text-lg font-semibold text-[var(--charcoal)]">Welcome — sign in</h2>
         <p className="mt-1 text-sm text-[var(--charcoal)]/60">
-          Use the email and password your Saffron Events planner shared with you.
+          Use the email and password your Saffron Planning Studio planner shared with you.
         </p>
 
         <form onSubmit={submit} className="mt-5 space-y-3" noValidate>

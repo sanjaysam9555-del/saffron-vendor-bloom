@@ -5,7 +5,7 @@ import { ClientLoginForm } from "@/components/client/ClientLoginForm";
 import { SIGN_IN_SUCCESS_HOLD_MS } from "@/components/auth/SignInButton";
 
 export const Route = createFileRoute("/client/login")({
-  head: () => ({ meta: [{ title: "Client Sign in — Saffron Events" }] }),
+  head: () => ({ meta: [{ title: "Client Sign in — Saffron Planning Studio" }] }),
   component: ClientLoginPage,
 });
 

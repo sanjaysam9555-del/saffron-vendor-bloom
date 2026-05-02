@@ -9,16 +9,16 @@ import { VendorSignupSuccess } from "@/components/vendor/VendorSignupSuccess";
 export const Route = createFileRoute("/vendor-signup")({
   head: () => ({
     meta: [
-      { title: "Partner With Us | Saffron Events Vendor Signup" },
+      { title: "Partner With Us | Saffron Planning Studio Vendor Signup" },
       {
         name: "description",
         content:
-          "List your business with Saffron Events — share your details with our planning team to be considered for upcoming weddings and events across India.",
+          "List your business with Saffron Planning Studio — share your details with our planning team to be considered for upcoming weddings and events across India.",
       },
-      { property: "og:title", content: "Partner With Us | Saffron Events" },
+      { property: "og:title", content: "Partner With Us | Saffron Planning Studio" },
       {
         property: "og:description",
-        content: "Vendors — register your business with Saffron Events.",
+        content: "Vendors — register your business with Saffron Planning Studio.",
       },
       { name: "robots", content: "index, follow" },
     ],
@@ -250,9 +250,9 @@ function VendorSignupPage() {
       <header className="border-b border-[var(--border)] bg-[var(--cream)]/95 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2.5">
-            <img src={logoLight} alt="Saffron Events" className="h-9 w-auto object-contain" />
+            <img src={logoLight} alt="Saffron Planning Studio" className="h-9 w-auto object-contain" />
             <div className="leading-tight hidden sm:block">
-              <div className="font-display text-lg font-semibold text-[var(--terracotta)]">Saffron Events</div>
+              <div className="font-display text-lg font-semibold text-[var(--terracotta)]">Saffron Planning Studio</div>
               <div className="text-[9px] uppercase tracking-[0.22em] text-[var(--charcoal)]/55">Vendor Studio</div>
             </div>
           </div>
@@ -266,7 +266,7 @@ function VendorSignupPage() {
           <>
             <div className="mb-8 text-center animate-fade-up">
               <div className="mx-auto mb-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--terracotta-soft)] px-3 py-1 text-xs font-medium text-[var(--terracotta)]">
-                <Sparkles className="h-3 w-3" /> Partner With Saffron Events
+                <Sparkles className="h-3 w-3" /> Partner With Saffron Planning Studio
               </div>
               <h1 className="font-display text-4xl font-semibold text-[var(--charcoal)] sm:text-5xl">
                 List your business with us
@@ -610,7 +610,7 @@ function VendorSignupPage() {
                   {submitting ? "Submitting…" : "Submit my details"}
                 </button>
                 <p className="text-center text-xs text-[var(--charcoal)]/50">
-                  By submitting, you agree to be contacted by Saffron Events about potential collaborations.
+                  By submitting, you agree to be contacted by Saffron Planning Studio about potential collaborations.
                 </p>
               </div>
             </form>

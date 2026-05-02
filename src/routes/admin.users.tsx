@@ -12,7 +12,7 @@ import {
 } from "@/server/admin-users.functions";
 
 export const Route = createFileRoute("/admin/users")({
-  head: () => ({ meta: [{ title: "User Management — Saffron Events" }] }),
+  head: () => ({ meta: [{ title: "User Management — Saffron Planning Studio" }] }),
   component: () => (
     <AuthGate requireAdmin>
       <AdminUsersPage />
