@@ -214,6 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut: async () => {
       await supabase.auth.signOut();
       loadedForUserRef.current = null;
+      writeCachedAccess(null);
       setRole(null);
       setDisplayName(null);
     },
