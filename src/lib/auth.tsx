@@ -87,12 +87,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRole(nextRole);
         setDisplayName(access?.displayName ?? null);
         loadedForUserRef.current = userId;
+        writeCachedAccess({ userId, role: nextRole, displayName: access?.displayName ?? null });
       } catch (error) {
         console.error("Unable to load access role", error);
-        // Don't keep the user stuck on a spinner forever — surface a null role
-        // so gates redirect/show the appropriate fallback.
-        setRole(null);
-        setDisplayName(null);
+        // If we have a cached role for this user, keep it instead of dumping to null.
+        const cached = readCachedAccess();
+        if (cached && cached.userId === userId && cached.role) {
+          setRole(cached.role);
+          setDisplayName(cached.displayName);
+        } else {
+          setRole(null);
+          setDisplayName(null);
+        }
         loadedForUserRef.current = userId;
       } finally {
         setLoading(false);
@@ -111,8 +117,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!mounted) return;
       setSession(s);
       if (s?.user) {
+        // Hydrate from cache immediately so admin-gated UI renders without waiting.
+        const cached = readCachedAccess();
+        if (cached && cached.userId === s.user.id && cached.role) {
+          setRole(cached.role);
+          setDisplayName(cached.displayName);
+        }
         if (loadedForUserRef.current === s.user.id) {
-          // Already loaded for this user — just make sure we aren't stuck loading.
           setLoading(false);
           return;
         }
@@ -133,6 +144,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!mounted) return;
       setSession(s);
       if (s?.user) {
+        const cached = readCachedAccess();
+        if (cached && cached.userId === s.user.id && cached.role) {
+          setRole(cached.role);
+          setDisplayName(cached.displayName);
+        }
         if (loadedForUserRef.current === s.user.id) {
           setLoading(false);
         } else {
