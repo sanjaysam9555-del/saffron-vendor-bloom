@@ -7,7 +7,7 @@ import { listProjectsOverview, createProject } from "@/server/projects.functions
 import { StatusCountsRow } from "@/components/admin/ClientStatusPill";
 
 export const Route = createFileRoute("/admin/projects/")({
-  head: () => ({ meta: [{ title: "Projects — Saffron Events" }] }),
+  head: () => ({ meta: [{ title: "Projects — Saffron Planning Studio" }] }),
   component: () => (
     <AuthGate>
       <ProjectsListPage />

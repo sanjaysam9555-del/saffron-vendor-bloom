@@ -17,7 +17,7 @@ import { useVendors } from "@/hooks/useVendorData";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/admin/projects/$id")({
-  head: () => ({ meta: [{ title: "Project — Saffron Events" }] }),
+  head: () => ({ meta: [{ title: "Project — Saffron Planning Studio" }] }),
   component: () => (
     <AuthGate>
       <ProjectDetailPage />

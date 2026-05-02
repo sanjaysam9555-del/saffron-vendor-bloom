@@ -22,9 +22,9 @@ export function ClientTopNav({ search, onSearchChange, brideName, groomName, wed
     <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--cream)]/95 backdrop-blur">
       <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-2 gap-y-2 px-3 py-2.5 sm:flex-nowrap sm:gap-4 sm:px-6">
         <div className="flex shrink-0 items-center gap-2.5">
-          <img src={logoLight} alt="Saffron Events" className="h-8 w-auto object-contain sm:h-9" />
+          <img src={logoLight} alt="Saffron Planning Studio" className="h-8 w-auto object-contain sm:h-9" />
           <div className="hidden leading-tight sm:block">
-            <div className="font-display text-lg font-semibold text-[var(--terracotta)]">Saffron Events</div>
+            <div className="font-display text-lg font-semibold text-[var(--terracotta)]">Saffron Planning Studio</div>
             <div className="text-[9px] uppercase tracking-[0.22em] text-[var(--charcoal)]/55">Your Vendor Folio</div>
           </div>
         </div>

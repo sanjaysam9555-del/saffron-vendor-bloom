@@ -36,18 +36,18 @@ export const Route = createRootRoute({
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "Saffron" },
-      { title: "Wedding & Event Planning Studio | Saffron Events" },
+      { title: "Wedding & Event Planning Studio | Saffron Planning Studio" },
       {
         name: "description",
         content:
-          "Saffron Events is a boutique wedding & event planning studio in India. We craft unforgettable celebrations — from intimate gatherings to grand weddings. Plan with us today.",
+          "Saffron Planning Studio is a boutique wedding & event planning studio in India. We craft unforgettable celebrations — from intimate gatherings to grand weddings. Plan with us today.",
       },
       {
         name: "keywords",
         content:
-          "wedding planner India, event planning studio, wedding planning services, Saffron Events, boutique event planner, wedding coordinator India",
+          "wedding planner India, event planning studio, wedding planning services, Saffron Planning Studio, boutique event planner, wedding coordinator India",
       },
-      { name: "author", content: "Saffron Events" },
+      { name: "author", content: "Saffron Planning Studio" },
       {
         name: "robots",
         content: "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
@@ -55,8 +55,8 @@ export const Route = createRootRoute({
       { name: "theme-color", content: "#C4873A" },
 
       { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "Saffron Events" },
-      { property: "og:title", content: "Wedding & Event Planning Studio | Saffron Events" },
+      { property: "og:site_name", content: "Saffron Planning Studio" },
+      { property: "og:title", content: "Wedding & Event Planning Studio | Saffron Planning Studio" },
       {
         property: "og:description",
         content:
@@ -66,17 +66,17 @@ export const Route = createRootRoute({
       { property: "og:image", content: "https://planwithsaffron.in/images/og-cover.jpg" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
-      { property: "og:image:alt", content: "Saffron Events — Wedding & Event Planning Studio" },
+      { property: "og:image:alt", content: "Saffron Planning Studio — Wedding & Event Planning Studio" },
       { property: "og:locale", content: "en_IN" },
 
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Wedding & Event Planning Studio | Saffron Events" },
+      { name: "twitter:title", content: "Wedding & Event Planning Studio | Saffron Planning Studio" },
       {
         name: "twitter:description",
         content: "Boutique wedding & event planning studio in India. Crafting unforgettable celebrations.",
       },
       { name: "twitter:image", content: "https://planwithsaffron.in/images/og-cover.jpg" },
-      { name: "twitter:image:alt", content: "Saffron Events — Wedding & Event Planning Studio" },
+      { name: "twitter:image:alt", content: "Saffron Planning Studio — Wedding & Event Planning Studio" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -99,13 +99,13 @@ export const Route = createRootRoute({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": ["EventPlanningService", "LocalBusiness"],
-          name: "Saffron Events",
+          name: "Saffron Planning Studio",
           alternateName: "Plan with Saffron",
           url: "https://planwithsaffron.in",
           logo: "https://planwithsaffron.in/images/logo.png",
           image: "https://planwithsaffron.in/images/og-cover.jpg",
           description:
-            "Saffron Events is a boutique wedding and event planning studio in India, crafting unforgettable celebrations from intimate gatherings to grand weddings.",
+            "Saffron Planning Studio is a boutique wedding and event planning studio in India, crafting unforgettable celebrations from intimate gatherings to grand weddings.",
           priceRange: "₹₹₹",
           currenciesAccepted: "INR",
           paymentAccepted: "Cash, Credit Card, Bank Transfer",
