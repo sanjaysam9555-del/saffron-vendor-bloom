@@ -33,6 +33,31 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
+const ROLE_CACHE_KEY = "saffron.access.cache.v1";
+
+type CachedAccess = { userId: string; role: AppRole | null; displayName: string | null };
+
+function readCachedAccess(): CachedAccess | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(ROLE_CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as CachedAccess;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedAccess(value: CachedAccess | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (value) window.localStorage.setItem(ROLE_CACHE_KEY, JSON.stringify(value));
+    else window.localStorage.removeItem(ROLE_CACHE_KEY);
+  } catch {
+    /* noop */
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
