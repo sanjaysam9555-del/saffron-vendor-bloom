@@ -227,3 +227,9 @@ button:active, a:active, [role="button"]:active {
   transform: scale(0.98);
   transition: transform 60ms ease-out;
 }
+
+@keyframes route-progress {
+  0% { transform: scaleX(0); }
+  50% { transform: scaleX(0.7); }
+  100% { transform: scaleX(1); }
+}
