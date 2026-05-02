@@ -5,6 +5,7 @@ import { useState } from "react";
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
+import { RouteProgress } from "@/components/RouteProgress";
 
 function NotFoundComponent() {
   return (
@@ -29,8 +30,12 @@ export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" },
       { httpEquiv: "X-UA-Compatible", content: "IE=edge" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "Saffron" },
       { title: "Wedding & Event Planning Studio | Saffron Events" },
       {
         name: "description",
@@ -147,6 +152,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={client}>
       <AuthProvider>
+        <RouteProgress />
         <Outlet />
         <Toaster />
       </AuthProvider>

@@ -27,9 +27,15 @@ export function AuthGate({
     }
   }, [initialized, loading, session, role, requireAdmin, navigate]);
 
-  // Hard gate: never render protected content unless role matches.
   const isStaff = role === "admin" || role === "employee";
   const passes = requireAdmin ? role === "admin" : isStaff;
+
+  // If we already have a session + matching cached role, render immediately
+  // even while a background re-check is in flight. This prevents the
+  // full-screen "Loading…" flash on every cold boot (especially on iOS PWA).
+  if (session && role && passes) {
+    return <>{children}</>;
+  }
 
   if (!initialized || loading || !session || !role || !passes) {
     return (

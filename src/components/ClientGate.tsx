@@ -17,6 +17,10 @@ export function ClientGate({ children }: { children: ReactNode }) {
     }
   }, [initialized, loading, session, role, navigate]);
 
+  if (session && role === "client") {
+    return <>{children}</>;
+  }
+
   if (!initialized || loading || !session || !role || role !== "client") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] text-sm text-[var(--charcoal)]/60">
