@@ -77,7 +77,7 @@ function LoginPage() {
 
         <h2 className="mt-6 text-lg font-semibold text-[var(--charcoal)]">Sign in</h2>
 
-        <form onSubmit={submit} className="mt-4 space-y-3" noValidate>
+        <form onSubmit={submit} method="post" action="/login" className="mt-4 space-y-3" noValidate>
           <input
             className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
             type="email"
@@ -95,7 +95,9 @@ function LoginPage() {
             defaultValue=""
           />
           {err && <div className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{err}</div>}
-          <SignInButton state={btnState} />
+          <fieldset disabled={!hydrated} className="contents">
+            <SignInButton state={hydrated ? btnState : "loading"} />
+          </fieldset>
         </form>
 
         <div className="mt-5 border-t border-[var(--border)] pt-4 text-center">
