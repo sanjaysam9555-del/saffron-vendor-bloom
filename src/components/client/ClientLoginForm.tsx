@@ -68,7 +68,7 @@ export function ClientLoginForm({ embedded = false }: { embedded?: boolean } = {
           Use the email and password your Saffron Planning Studio planner shared with you.
         </p>
 
-        <form onSubmit={submit} className="mt-5 space-y-3" noValidate>
+        <form onSubmit={submit} method="post" action="/" className="mt-5 space-y-3" noValidate>
           <input
             className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
             type="email"
@@ -86,7 +86,9 @@ export function ClientLoginForm({ embedded = false }: { embedded?: boolean } = {
             defaultValue=""
           />
           {err && <div className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{err}</div>}
-          <SignInButton state={btnState} />
+          <fieldset disabled={!hydrated} className="contents">
+            <SignInButton state={hydrated ? btnState : "loading"} />
+          </fieldset>
         </form>
 
         <div className="mt-5 border-t border-[var(--border)] pt-4 text-center">
