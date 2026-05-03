@@ -233,3 +233,8 @@ button:active, a:active, [role="button"]:active {
   50% { transform: scaleX(0.7); }
   100% { transform: scaleX(1); }
 }
+
+@keyframes saffron-pulse {
+  0%, 100% { transform: scale(0.92); opacity: 0.65; }
+  50%      { transform: scale(1);    opacity: 1; }
+}
