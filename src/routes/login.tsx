@@ -4,7 +4,6 @@ import { useAuth } from "@/lib/auth";
 import {
   SignInButton,
   SIGN_IN_ERROR_HOLD_MS,
-  SIGN_IN_SUCCESS_HOLD_MS,
   type SignInButtonState,
 } from "@/components/auth/SignInButton";
 
