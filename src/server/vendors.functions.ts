@@ -14,6 +14,7 @@ const vendorInputSchema = z.object({
   instagram_handle: z.string().nullable(),
   website: z.string().nullable(),
   google_rating: z.number().nullable(),
+  saffron_rating: z.number().nullable().optional(),
   price_text: z.string().nullable(),
   commission_model: z.string().nullable(),
   portfolio_link: z.string().nullable(),

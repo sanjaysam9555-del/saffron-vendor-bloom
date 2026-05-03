@@ -29,6 +29,7 @@ const EMPTY: VendorInput = {
   instagram_handle: null,
   website: null,
   google_rating: null,
+  saffron_rating: null,
   price_text: null,
   commission_model: null,
   portfolio_link: null,
@@ -271,6 +272,9 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
 
           <Field label="Google Rating (0-5)">
             <input type="number" step="0.1" min="0" max="5" className={inputCls} value={form.google_rating ?? ""} onChange={(e) => set("google_rating", numField(e.target.value))} />
+          </Field>
+          <Field label="Saffron Team Rating (0-5)">
+            <input type="number" step="0.1" min="0" max="5" className={inputCls} value={form.saffron_rating ?? ""} onChange={(e) => set("saffron_rating", numField(e.target.value))} placeholder="Internal team rating" />
           </Field>
           <Field label="Commission Model">
             <input className={inputCls} value={form.commission_model ?? ""} onChange={(e) => set("commission_model", e.target.value || null)} placeholder='e.g. "15%", "On discussion"' />
