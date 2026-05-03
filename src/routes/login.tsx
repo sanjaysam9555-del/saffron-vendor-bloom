@@ -18,14 +18,26 @@ function LoginPage() {
   const navigate = useNavigate();
   const [err, setErr] = useState<string | null>(null);
   const [btnState, setBtnState] = useState<SignInButtonState>("idle");
+  const [hydrated, setHydrated] = useState(false);
+
+  // Strip any leaked credentials from the URL the moment the page mounts on
+  // the client. This recovers from a pre-hydration GET submit where the form
+  // posted email/password as query params.
+  useEffect(() => {
+    setHydrated(true);
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("email") || url.searchParams.has("password")) {
+      url.searchParams.delete("email");
+      url.searchParams.delete("password");
+      window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+    }
+  }, []);
 
   useEffect(() => {
     if (loading || !session || !role) return;
     setBtnState("success");
-    const t = setTimeout(() => {
-      navigate({ to: role === "client" ? "/client" : "/admin" });
-    }, SIGN_IN_SUCCESS_HOLD_MS);
-    return () => clearTimeout(t);
+    navigate({ to: role === "client" ? "/client" : "/admin" });
   }, [loading, session, role, navigate]);
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
