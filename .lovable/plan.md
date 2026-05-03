@@ -1,79 +1,63 @@
-## 1. Pulsing Saffron logo loader (replaces top progress bar)
+I checked the current app instead of guessing. The slowness and failed logins are real, and there are a few concrete causes we can fix.
 
-**Problem:** `RouteProgress` keeps animating even after the page finishes loading because `useRouterState` reads `s.isLoading || s.status === "pending"`. The `status === "pending"` flag is hardly ever cleared in this app (no `loader` defined on routes), so the bar never fully turns off.
+What I found:
 
-**Fix:**
-- Upload the provided logo to `src/assets/saffron-events-loader.png` (using the user's attached `final_logo-2.png`).
-- Rewrite `src/components/RouteProgress.tsx` as `<RouteLoader />`:
-  - Show a small floating **pulsing logo** (~64px) centered top of screen.
-  - Drive visibility off `useRouterState({ select: s => s.isLoading })` only — don't include `status === "pending"` (which is sticky).
-  - Add a 120 ms debounce so the loader doesn't blink for instant transitions.
-  - Add a 6 s safety timeout to force-hide it even if router state stalls.
-  - Use a CSS `@keyframes saffron-pulse` (scale 0.92→1, opacity 0.6→1) defined in `src/styles.css`.
+1. Login can fail because the form submits before JavaScript is ready
+- Your current URL includes `?email=...&password=...`, and the session replay shows the login page doing a normal browser navigation to `/login?email=...&password=...`.
+- That means the login form was submitted before the React submit handler had hydrated/attached.
+- Result: the app reloads like an old website, the login does not run, and the password is exposed in the URL query string.
 
-## 2. Stop login-screen flash on iOS PWA cold boot
+2. Initial load is currently too close to or above 3 seconds
+- On the published domain I measured roughly:
+  - TTFB: about 1.4s
+  - First contentful paint: about 2.26s
+  - Full page load: about 2.85s
+- On preview/dev it is worse because preview loads many separate development modules; that part is expected in Lovable preview, but the published site still needs optimization.
 
-**Problem:** `RootIndex` (`src/routes/index.tsx`) always renders `<ClientLoginForm />`, then `RedirectingLogin` waits for auth + a delay, then navigates to `/admin`. So an already-signed-in admin sees the login screen for ~half a second on every PWA launch.
+3. The login/dashboard flow has too many sequential waits
+- Cold open does: load document -> load JS -> restore auth storage -> ask backend for role -> redirect -> load admin route -> fetch vendors/projects/assignments.
+- That creates a waterfall, so the app feels like it reloads from page to page.
 
-**Fix in `src/routes/index.tsx`:**
-- Inside the `ClientOnly` block, while `auth.initialized === false` OR (we have a session but role hasn't loaded), return a full-screen branded splash that simply shows the **same pulsing Saffron logo** on a `var(--cream)` background — not the login form.
-- Once initialized:
-  - If `session && (role === "admin" || role === "employee")` → `navigate({ to: "/admin", replace: true })` immediately (no `SIGN_IN_SUCCESS_HOLD_MS` delay on cold boot — only after a fresh sign-in).
-  - If `session && role === "client"` → `navigate({ to: "/client", replace: true })` immediately.
-  - Else render `<ClientLoginForm embedded />`.
-- Use the existing `saffron.access.cache.v1` localStorage cache to know the role on the very first paint (already implemented in `auth.tsx`) — so the redirect can fire before the network round-trip completes.
+4. Dashboard cards trigger unnecessary backend work
+- Every vendor card mounts `VendorProjectAssigner`, and each instance sets up project/assignment queries. React Query deduplicates some of it, but 292 vendor cards still create lots of hook work and render overhead.
+- The assignment UI should not load on every card by default. It should load once at dashboard level or lazily only when the assign button is opened.
 
-This eliminates the login-form flash entirely for returning admins.
+5. Some refetch settings make the app feel unstable on mobile
+- Queries refetch on focus/reconnect and the vendor hook also invalidates on visibility change. On iPhone PWA, switching apps or reopening can cause repeated loading states.
 
-## 3. "Saffron Team" rating alongside Google rating
+Plan to fix this properly:
 
-**DB migration** (new column on `vendors`):
-```sql
-ALTER TABLE public.vendors
-  ADD COLUMN saffron_rating numeric(2,1)
-  CHECK (saffron_rating IS NULL OR (saffron_rating >= 0 AND saffron_rating <= 5));
-```
+1. Make login reliable and stop URL password leakage
+- Update all login forms so they cannot submit as a plain GET before hydration.
+- Add `method="post"`, remove any chance of query-string credential submission, and disable/show “Preparing secure sign-in…” until the client handler is ready.
+- Clear existing `email`/`password` query params from the URL immediately if present.
+- Make successful login navigate immediately once role is known; avoid extra cosmetic delays.
 
-**Type update:** `src/lib/vendor-types.ts` — add `saffron_rating: number | null` to `Vendor`.
+2. Reduce auth startup waterfall
+- Hydrate role from the existing local cache immediately for returning users.
+- Only call the backend role check in the background if the cached user matches.
+- Ensure protected pages wait for auth readiness without bouncing to the client login page first.
+- Keep server validation for security; the cache is only for instant UI routing, not authorization.
 
-**Form (`VendorForm.tsx`):** add a "Saffron Team Rating (0–5)" input next to Google Rating, admin-editable.
+3. Optimize dashboard data loading
+- Fetch vendors once, but avoid rendering project assignment logic on every card.
+- Move project/assignment loading to a single parent-level query or lazy-load it only when the user taps “+ Project”.
+- Keep the card list lightweight so 292 vendors render quickly on mobile.
 
-**Card (`VendorCard.tsx`):** show a second pill next to the Google rating pill — visually distinct:
-- Google pill (existing): amber background, `Star` icon.
-- Saffron pill (new): terracotta background (`bg-[var(--terracotta-soft)]`, `text-[var(--terracotta)]`), `Sparkles` icon, label `"S"` prefix to be unmistakable, e.g. `✦ 4.5`.
+4. Tune mobile refetch behavior
+- Increase dashboard query stale time and disable aggressive `refetchOnWindowFocus` for heavy dashboard data.
+- Keep manual/realtime refresh where useful, but avoid repeated full reloads when the iPhone app is reopened.
+- Show cached dashboard data instantly while background refresh happens.
 
-**Detail (`VendorDetail.tsx`):** under the Google rating line, add a matching "Saffron Team rating" line with the same distinctive terracotta styling and Sparkles icon.
+5. Improve first paint and perceived speed
+- Reduce login-page work so sign-in screen becomes interactive faster.
+- Avoid loading dashboard-only code during login as much as the route setup allows.
+- Keep the logo splash only for actual auth restoration/route transitions, not as a mask for repeated reloads.
 
-**Client-facing card/detail:** unchanged for now (Saffron rating is internal-only) — confirm with user if they want it visible to clients.
+6. Verify after implementation
+- Re-test published-style timings and login behavior.
+- Confirm submitting login never produces `/login?email=...&password=...` again.
+- Confirm dashboard opens directly for an already logged-in admin in the iPhone-sized viewport.
+- Confirm vendor dashboard no longer triggers unnecessary repeated project assignment query work.
 
-## 4. Mobile vendor TopNav layout
-
-**Problem:** Currently on mobile (under "Vendor Studio" sub-label), only the `+` button shows on the right; Submissions is hidden (`hidden ... sm:inline-flex`). User wants on mobile, in the top row:
-- `+` (Add Vendor) button moved to the **left** of the cluster
-- **Submissions** button visible in the middle
-- **UserMenu** on the right
-- Equal spacing between them
-
-**Fix in `src/components/vendor/TopNav.tsx`:**
-- Restructure the header so on mobile (`< sm`):
-  - Row 1: Logo + title (left), then a right cluster `[+] [Submissions] [UserMenu]` distributed with `gap` and `justify-between` inside its own flex container that takes available space.
-  - Reorder DOM: put the `+` button first in the cluster (it currently sits between Submissions and UserMenu), make Submissions visible on mobile (remove the `hidden ... sm:inline-flex` — keep label short, maybe icon + text "Inbox" or just "Submissions" depending on width).
-  - On `sm+`, keep the existing order/sizing (logo, search, stats, Submissions, +, UserMenu).
-- Use `flex-1 justify-between` on the mobile cluster so the three buttons sit at left/center/right of the available width.
-
-## Technical Summary
-
-Files touched:
-- `src/components/RouteProgress.tsx` — replace bar with debounced pulsing logo
-- `src/styles.css` — add `@keyframes saffron-pulse`
-- `src/assets/saffron-events-loader.png` — new (from upload)
-- `src/routes/index.tsx` — splash + immediate redirect on cold boot
-- `src/lib/vendor-types.ts` — `saffron_rating`
-- `src/components/vendor/VendorForm.tsx` — input field
-- `src/components/vendor/VendorCard.tsx` — distinctive Saffron pill
-- `src/components/vendor/VendorDetail.tsx` — Saffron rating line
-- `src/server/vendors.functions.ts` — include `saffron_rating` in select/insert/update payloads
-- `src/components/vendor/TopNav.tsx` — mobile layout reorder
-- DB migration adding `vendors.saffron_rating`
-
-No auth or RLS changes required.
+The highest-priority fix is the login form hydration issue, because it explains both “logins fail” and the old-style page reload behavior.

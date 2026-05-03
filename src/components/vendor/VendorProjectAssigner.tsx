@@ -28,14 +28,23 @@ export function VendorProjectAssigner({ vendorId, compact = false }: Props) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
 
+  // `projects` is only needed when the picker dialog is open. Lazy-load it
+  // to avoid hitting the backend until the user actually wants to assign.
   const { data: projects = [] } = useQuery({
     queryKey: ["projects"],
     queryFn: () => listProjects(),
+    enabled: open,
+    staleTime: 60_000,
   });
 
+  // Assignments power the chips shown on the vendor card itself, so this has
+  // to load on mount — but the same query key is shared across every card so
+  // React Query dedupes it to one network call. Long stale time prevents
+  // refetch storms when the iPhone PWA regains focus.
   const { data: assignments = {} } = useQuery({
     queryKey: ["vendor-project-assignments"],
     queryFn: () => listVendorProjectAssignments(),
+    staleTime: 5 * 60_000,
   });
 
   const projectList = Array.isArray(projects) ? projects : [];

@@ -4,7 +4,6 @@ import { useAuth } from "@/lib/auth";
 import {
   SignInButton,
   SIGN_IN_ERROR_HOLD_MS,
-  SIGN_IN_SUCCESS_HOLD_MS,
   type SignInButtonState,
 } from "@/components/auth/SignInButton";
 
@@ -18,14 +17,26 @@ function LoginPage() {
   const navigate = useNavigate();
   const [err, setErr] = useState<string | null>(null);
   const [btnState, setBtnState] = useState<SignInButtonState>("idle");
+  const [hydrated, setHydrated] = useState(false);
+
+  // Strip any leaked credentials from the URL the moment the page mounts on
+  // the client. This recovers from a pre-hydration GET submit where the form
+  // posted email/password as query params.
+  useEffect(() => {
+    setHydrated(true);
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("email") || url.searchParams.has("password")) {
+      url.searchParams.delete("email");
+      url.searchParams.delete("password");
+      window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+    }
+  }, []);
 
   useEffect(() => {
     if (loading || !session || !role) return;
     setBtnState("success");
-    const t = setTimeout(() => {
-      navigate({ to: role === "client" ? "/client" : "/admin" });
-    }, SIGN_IN_SUCCESS_HOLD_MS);
-    return () => clearTimeout(t);
+    navigate({ to: role === "client" ? "/client" : "/admin" });
   }, [loading, session, role, navigate]);
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -65,7 +76,7 @@ function LoginPage() {
 
         <h2 className="mt-6 text-lg font-semibold text-[var(--charcoal)]">Sign in</h2>
 
-        <form onSubmit={submit} className="mt-4 space-y-3" noValidate>
+        <form onSubmit={submit} method="post" action="/login" className="mt-4 space-y-3" noValidate>
           <input
             className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
             type="email"
@@ -83,7 +94,9 @@ function LoginPage() {
             defaultValue=""
           />
           {err && <div className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{err}</div>}
-          <SignInButton state={btnState} />
+          <fieldset disabled={!hydrated} className="contents">
+            <SignInButton state={hydrated ? btnState : "loading"} />
+          </fieldset>
         </form>
 
         <div className="mt-5 border-t border-[var(--border)] pt-4 text-center">

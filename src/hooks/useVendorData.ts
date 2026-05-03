@@ -39,18 +39,8 @@ export function useVendors() {
       )
       .subscribe();
 
-    // Safety net for iOS standalone apps: realtime connections can drop when
-    // the app is backgrounded. Refetch the moment the tab becomes visible.
-    const onVisible = () => {
-      if (document.visibilityState === "visible") {
-        qc.invalidateQueries({ queryKey: ["vendors"] });
-      }
-    };
-    document.addEventListener("visibilitychange", onVisible);
-
     return () => {
       supabase.removeChannel(channel);
-      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [qc]);
 
