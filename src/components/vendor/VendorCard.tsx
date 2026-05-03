@@ -1,6 +1,6 @@
 import type { Vendor } from "@/lib/vendor-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
-import { MapPin, Phone, Star, Instagram, Copy, Check, MessageCircle } from "lucide-react";
+import { MapPin, Phone, Star, Sparkles, Instagram, Copy, Check, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
 
@@ -58,12 +58,26 @@ export function VendorCard({
       )}
       <div className="mb-2 flex items-start justify-between gap-2">
         <h3 className={`font-display text-lg font-semibold leading-tight text-[var(--charcoal)] ${selectMode ? "pl-6" : ""}`}>{vendor.vendor_name}</h3>
-        {vendor.google_rating != null && (
-          <div className="flex shrink-0 items-center gap-0.5 rounded-full bg-[hsl(42_65%_55%/0.18)] px-2 py-0.5 text-xs font-medium text-[hsl(42_65%_30%)]">
-            <Star className="h-3 w-3 fill-current" />
-            {Number(vendor.google_rating).toFixed(1)}
-          </div>
-        )}
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          {vendor.google_rating != null && (
+            <div
+              className="flex items-center gap-0.5 rounded-full bg-[hsl(42_65%_55%/0.18)] px-2 py-0.5 text-xs font-medium text-[hsl(42_65%_30%)]"
+              title="Google rating"
+            >
+              <Star className="h-3 w-3 fill-current" />
+              {Number(vendor.google_rating).toFixed(1)}
+            </div>
+          )}
+          {vendor.saffron_rating != null && (
+            <div
+              className="flex items-center gap-0.5 rounded-full border border-[var(--terracotta)]/40 bg-[var(--terracotta-soft)] px-2 py-0.5 text-xs font-semibold text-[var(--terracotta)]"
+              title="Saffron Team rating"
+            >
+              <Sparkles className="h-3 w-3" />
+              <span className="tracking-wide">S {Number(vendor.saffron_rating).toFixed(1)}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="mb-2 flex flex-wrap gap-1">

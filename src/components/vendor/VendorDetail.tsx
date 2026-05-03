@@ -1,7 +1,7 @@
 import type { Vendor } from "@/lib/vendor-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import {
-  X, MapPin, Phone, Mail, Instagram, Globe, Star, Pencil, Trash2, Copy, Check, Link as LinkIcon, Paperclip, FileText, Loader2,
+  X, MapPin, Phone, Mail, Instagram, Globe, Star, Sparkles, Pencil, Trash2, Copy, Check, Link as LinkIcon, Paperclip, FileText, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -99,11 +99,18 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
               )}
             </div>
             <h2 className="font-display text-3xl leading-tight">{vendor.vendor_name}</h2>
-            {vendor.google_rating != null && (
-              <div className="mt-1 flex items-center gap-1 text-sm text-amber-700">
-                <Star className="h-4 w-4 fill-current" /> {Number(vendor.google_rating).toFixed(1)} Google rating
-              </div>
-            )}
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {vendor.google_rating != null && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(42_65%_55%/0.18)] px-2.5 py-0.5 text-xs font-medium text-[hsl(42_65%_30%)]">
+                  <Star className="h-3.5 w-3.5 fill-current" /> {Number(vendor.google_rating).toFixed(1)} Google
+                </span>
+              )}
+              {vendor.saffron_rating != null && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--terracotta)]/40 bg-[var(--terracotta-soft)] px-2.5 py-0.5 text-xs font-semibold text-[var(--terracotta)]">
+                  <Sparkles className="h-3.5 w-3.5" /> {Number(vendor.saffron_rating).toFixed(1)} Saffron Team
+                </span>
+              )}
+            </div>
           </div>
           <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]"><X className="h-5 w-5" /></button>
         </div>
