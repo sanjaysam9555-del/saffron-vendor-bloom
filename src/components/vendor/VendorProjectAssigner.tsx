@@ -28,14 +28,21 @@ export function VendorProjectAssigner({ vendorId, compact = false }: Props) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
 
+  // Only fetch projects + assignments when the user actually opens the picker.
+  // Previously these queries were enabled on every vendor card mount, which on
+  // a 292-vendor dashboard caused unnecessary work and refetches.
   const { data: projects = [] } = useQuery({
     queryKey: ["projects"],
     queryFn: () => listProjects(),
+    enabled: open,
+    staleTime: 60_000,
   });
 
   const { data: assignments = {} } = useQuery({
     queryKey: ["vendor-project-assignments"],
     queryFn: () => listVendorProjectAssignments(),
+    enabled: open,
+    staleTime: 60_000,
   });
 
   const projectList = Array.isArray(projects) ? projects : [];
