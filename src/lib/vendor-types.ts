@@ -9,6 +9,7 @@ export interface Vendor {
   instagram_handle: string | null;
   website: string | null;
   google_rating: number | null;
+  saffron_rating: number | null;
   price_text: string | null;
   commission_model: string | null;
   portfolio_link: string | null;

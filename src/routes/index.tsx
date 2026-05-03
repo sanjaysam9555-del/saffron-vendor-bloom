@@ -3,7 +3,7 @@ import { ClientOnly } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { ClientLoginForm } from "@/components/client/ClientLoginForm";
-import { SIGN_IN_SUCCESS_HOLD_MS } from "@/components/auth/SignInButton";
+import logo from "@/assets/saffron-events-loader.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -28,7 +28,6 @@ export const Route = createFileRoute("/")({
 function RootIndex() {
   return (
     <main className="min-h-screen bg-[var(--cream)]">
-      {/* SEO-visible intro — rendered server-side so crawlers can index it. */}
       <section className="mx-auto max-w-3xl px-6 pt-8 pb-2 text-center">
         <p className="text-xs uppercase tracking-[0.28em] text-[var(--terracotta)]">
           Saffron Planning Studio
@@ -53,22 +52,37 @@ function RootIndex() {
   );
 }
 
+function Splash() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--cream)]">
+      <img
+        src={logo}
+        alt="Saffron Planning Studio"
+        className="h-28 w-auto"
+        style={{ animation: "saffron-pulse 1.2s ease-in-out infinite" }}
+      />
+    </div>
+  );
+}
+
 function RedirectingLogin() {
-  const { session, role, loading } = useAuth();
+  const { session, role, initialized } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (loading) return;
+    if (!initialized) return;
     if (!session) return;
-    const t = setTimeout(() => {
-      if (role === "client") {
-        navigate({ to: "/client" });
-      } else if (role === "admin" || role === "employee") {
-        navigate({ to: "/admin" });
-      }
-    }, SIGN_IN_SUCCESS_HOLD_MS);
-    return () => clearTimeout(t);
-  }, [loading, session, role, navigate]);
+    if (role === "client") {
+      navigate({ to: "/client", replace: true });
+    } else if (role === "admin" || role === "employee") {
+      navigate({ to: "/admin", replace: true });
+    }
+  }, [initialized, session, role, navigate]);
 
+  // While auth is restoring, OR we have a session whose role/redirect is
+  // still in flight, show the branded splash instead of the login form.
+  // This prevents the "login screen flash → dashboard" jump on iOS PWA cold boot.
+  if (!initialized) return <Splash />;
+  if (session) return <Splash />;
   return <ClientLoginForm embedded />;
 }

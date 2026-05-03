@@ -1,21 +1,46 @@
+import { useEffect, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
+import logo from "@/assets/saffron-events-loader.png";
 
 /**
- * Thin top-of-screen progress bar that appears whenever a route is loading.
- * Gives instant visual feedback after a click even before data arrives.
+ * Pulsing Saffron logo shown briefly while a route transition is in flight.
+ * Uses only `isLoading` (not the sticky `status === "pending"`) so it always
+ * disappears once the new route has rendered.
  */
 export function RouteProgress() {
-  const isLoading = useRouterState({ select: (s) => s.isLoading || s.status === "pending" });
+  const isLoading = useRouterState({ select: (s) => s.isLoading });
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    let showTimer: number | undefined;
+    let safety: number | undefined;
+    if (isLoading) {
+      // Debounce so instant transitions don't flash the loader.
+      showTimer = window.setTimeout(() => setVisible(true), 120);
+      // Safety net — never keep it on screen longer than 6s.
+      safety = window.setTimeout(() => setVisible(false), 6000);
+    } else {
+      setVisible(false);
+    }
+    return () => {
+      if (showTimer) window.clearTimeout(showTimer);
+      if (safety) window.clearTimeout(safety);
+    };
+  }, [isLoading]);
 
   return (
     <div
       aria-hidden
-      className={`pointer-events-none fixed left-0 right-0 top-0 z-[100] h-[2px] origin-left bg-[var(--terracotta)] transition-opacity duration-200 ${
-        isLoading ? "opacity-100" : "opacity-0"
+      className={`pointer-events-none fixed left-1/2 top-4 z-[100] -translate-x-1/2 transition-opacity duration-200 ${
+        visible ? "opacity-100" : "opacity-0"
       }`}
-      style={{
-        animation: isLoading ? "route-progress 1.4s ease-in-out infinite" : "none",
-      }}
-    />
+    >
+      <img
+        src={logo}
+        alt=""
+        className="h-14 w-auto"
+        style={{ animation: visible ? "saffron-pulse 1.2s ease-in-out infinite" : "none" }}
+      />
+    </div>
   );
 }
