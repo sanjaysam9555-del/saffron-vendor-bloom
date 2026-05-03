@@ -29,8 +29,8 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
           </div>
         </Link>
 
-        {/* Right cluster on mobile sits next to logo; search drops to its own row */}
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:order-3 sm:ml-auto sm:gap-4">
+        {/* Right cluster — on mobile this fills the row with even spacing */}
+        <div className="ml-auto flex flex-1 items-center justify-between gap-2 sm:order-3 sm:ml-auto sm:flex-none sm:justify-end sm:gap-4">
           {mounted && (
             <div className="hidden items-center gap-4 text-xs text-[var(--charcoal)]/60 lg:flex">
               <div><span className="font-semibold text-[var(--terracotta)]">{totalVendors}</span> vendors</div>
@@ -39,23 +39,25 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
             </div>
           )}
 
-          <Link
-            to="/admin/submissions"
-            className="hidden rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:inline-flex"
-          >
-            Submissions
-          </Link>
-
           <button
             onClick={onAddVendor}
             aria-label="Add Vendor"
-            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-2.5 py-1.5 text-sm font-medium text-[var(--cream)] shadow-sm transition-all hover:bg-[var(--terracotta)]/90 hover:-translate-y-0.5 sm:px-3.5"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-2.5 py-1.5 text-sm font-medium text-[var(--cream)] shadow-sm transition-all hover:bg-[var(--terracotta)]/90 hover:-translate-y-0.5 sm:order-2 sm:px-3.5"
           >
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Add Vendor</span>
           </button>
 
-          <UserMenu />
+          <Link
+            to="/admin/submissions"
+            className="inline-flex items-center rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:order-1"
+          >
+            Submissions
+          </Link>
+
+          <div className="sm:order-3">
+            <UserMenu />
+          </div>
         </div>
 
         {/* Search — full-width row on mobile, inline on >=sm */}
