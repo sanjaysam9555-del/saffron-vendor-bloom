@@ -280,6 +280,7 @@ export type Database = {
           price_text: string | null
           quote_breakdown: string | null
           remarks: string | null
+          saffron_rating: number | null
           source: string | null
           subcategory: string | null
           submitted_via_form: boolean
@@ -306,6 +307,7 @@ export type Database = {
           price_text?: string | null
           quote_breakdown?: string | null
           remarks?: string | null
+          saffron_rating?: number | null
           source?: string | null
           subcategory?: string | null
           submitted_via_form?: boolean
@@ -332,6 +334,7 @@ export type Database = {
           price_text?: string | null
           quote_breakdown?: string | null
           remarks?: string | null
+          saffron_rating?: number | null
           source?: string | null
           subcategory?: string | null
           submitted_via_form?: boolean
