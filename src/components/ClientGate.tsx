@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
+import { BrandSplash } from "@/components/BrandSplash";
 
 export function ClientGate({ children }: { children: ReactNode }) {
   const { session, loading, role, initialized } = useAuth();
@@ -22,11 +23,7 @@ export function ClientGate({ children }: { children: ReactNode }) {
   }
 
   if (!initialized || loading || !session || !role || role !== "client") {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] text-sm text-[var(--charcoal)]/60">
-        Loading…
-      </div>
-    );
+    return <BrandSplash />;
   }
   return <>{children}</>;
 }
