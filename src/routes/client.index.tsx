@@ -72,11 +72,7 @@ function ClientPortalPage() {
   }, [vendors, filters, search]);
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] text-sm text-[var(--charcoal)]/60">
-        Loading…
-      </div>
-    );
+    return <BrandSplash />;
   }
 
   if (error || !data) {
