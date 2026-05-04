@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          is_base: boolean
+          is_deleted: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_base?: boolean
+          is_deleted?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_base?: boolean
+          is_deleted?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_vendor_status: {
         Row: {
           created_at: string

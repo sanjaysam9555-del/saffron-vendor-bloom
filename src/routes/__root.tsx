@@ -34,7 +34,7 @@ export const Route = createRootRoute({
       { httpEquiv: "X-UA-Compatible", content: "IE=edge" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "Planning Studio" },
       { title: "Wedding & Event Planning Studio | Saffron Planning Studio" },
       {
@@ -52,7 +52,7 @@ export const Route = createRootRoute({
         name: "robots",
         content: "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
       },
-      { name: "theme-color", content: "#C4873A" },
+      { name: "theme-color", content: "#9F3822" },
 
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Saffron Planning Studio" },

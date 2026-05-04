@@ -1,63 +1,98 @@
-I checked the current app instead of guessing. The slowness and failed logins are real, and there are a few concrete causes we can fix.
+## 1. Brand splash / loading screen — unified across the app
 
-What I found:
+Currently three different loading states exist:
 
-1. Login can fail because the form submits before JavaScript is ready
-- Your current URL includes `?email=...&password=...`, and the session replay shows the login page doing a normal browser navigation to `/login?email=...&password=...`.
-- That means the login form was submitted before the React submit handler had hydrated/attached.
-- Result: the app reloads like an old website, the login does not run, and the password is exposed in the URL query string.
+- `RouteProgress` — small pulsing logo at the top of the page (route transitions)
+- `index.tsx` Splash — pulsing logo on cream
+- `AuthGate` / `ClientGate` / `client.index.tsx` — plain "Loading…" text
 
-2. Initial load is currently too close to or above 3 seconds
-- On the published domain I measured roughly:
-  - TTFB: about 1.4s
-  - First contentful paint: about 2.26s
-  - Full page load: about 2.85s
-- On preview/dev it is worse because preview loads many separate development modules; that part is expected in Lovable preview, but the published site still needs optimization.
+Replace all of them with a single full-screen branded splash:
 
-3. The login/dashboard flow has too many sequential waits
-- Cold open does: load document -> load JS -> restore auth storage -> ask backend for role -> redirect -> load admin route -> fetch vendors/projects/assignments.
-- That creates a waterfall, so the app feels like it reloads from page to page.
+- **Background**: solid terracotta (`var(--terracotta)`) — the primary brand colour
+- **Content**: the Saffron logo image, centred horizontally and vertically, with the wordmark "Saffron Planning Studio" beneath it in cream serif (Cormorant Garamond)
+- **Animation**: existing `saffron-pulse` keyframe slowed by 40% — change duration from `1.2s` to `2s`
+- **No "Loading…" text** anywhere
+- **Position**: `fixed inset-0 z-[100] flex items-center justify-center` so it fully covers the dashboard / underlying UI (fixes "dashboard visible behind splash" bug)
 
-4. Dashboard cards trigger unnecessary backend work
-- Every vendor card mounts `VendorProjectAssigner`, and each instance sets up project/assignment queries. React Query deduplicates some of it, but 292 vendor cards still create lots of hook work and render overhead.
-- The assignment UI should not load on every card by default. It should load once at dashboard level or lazily only when the assign button is opened.
+### Where it gets used
 
-5. Some refetch settings make the app feel unstable on mobile
-- Queries refetch on focus/reconnect and the vendor hook also invalidates on visibility change. On iPhone PWA, switching apps or reopening can cause repeated loading states.
+Create `src/components/BrandSplash.tsx` (the single source of truth) and use it in:
 
-Plan to fix this properly:
+- `src/components/RouteProgress.tsx` — replace the small top-bar logo with `<BrandSplash />` while a route is loading (keep the 120ms debounce and 6s safety timeout so instant transitions don't flash it)
+- `src/routes/index.tsx` — replace the inline `Splash` with `<BrandSplash />`
+- `src/components/AuthGate.tsx` and `src/components/ClientGate.tsx` — replace the "Loading…" div with `<BrandSplash />`
+- `src/routes/client.index.tsx` — replace the "Loading…" fallback with `<BrandSplash />`
 
-1. Make login reliable and stop URL password leakage
-- Update all login forms so they cannot submit as a plain GET before hydration.
-- Add `method="post"`, remove any chance of query-string credential submission, and disable/show “Preparing secure sign-in…” until the client handler is ready.
-- Clear existing `email`/`password` query params from the URL immediately if present.
-- Make successful login navigate immediately once role is known; avoid extra cosmetic delays.
+### PWA / iPhone webapp cold-boot splash
 
-2. Reduce auth startup waterfall
-- Hydrate role from the existing local cache immediately for returning users.
-- Only call the backend role check in the background if the cached user matches.
-- Ensure protected pages wait for auth readiness without bouncing to the client login page first.
-- Keep server validation for security; the cache is only for instant UI routing, not authorization.
+iOS PWAs show a static splash image (not HTML) before JS boots. Update so the OS-level splash matches:
 
-3. Optimize dashboard data loading
-- Fetch vendors once, but avoid rendering project assignment logic on every card.
-- Move project/assignment loading to a single parent-level query or lazy-load it only when the user taps “+ Project”.
-- Keep the card list lightweight so 292 vendors render quickly on mobile.
+- `public/site.webmanifest`: set `"background_color": "#9F3822"` (terracotta) and `"theme_color": "#9F3822"`
+- Add `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">` in `__root.tsx` head (already standalone-capable)
+- Use the existing `android-chrome-512x512.png` as the apple-touch-icon (iOS scales it on the terracotta background)
 
-4. Tune mobile refetch behavior
-- Increase dashboard query stale time and disable aggressive `refetchOnWindowFocus` for heavy dashboard data.
-- Keep manual/realtime refresh where useful, but avoid repeated full reloads when the iPhone app is reopened.
-- Show cached dashboard data instantly while background refresh happens.
+This way the iOS launch background matches the in-app splash so there's no visible jump from OS splash → app splash.
 
-5. Improve first paint and perceived speed
-- Reduce login-page work so sign-in screen becomes interactive faster.
-- Avoid loading dashboard-only code during login as much as the route setup allows.
-- Keep the logo splash only for actual auth restoration/route transitions, not as a mask for repeated reloads.
+### Slowing the pulse
 
-6. Verify after implementation
-- Re-test published-style timings and login behavior.
-- Confirm submitting login never produces `/login?email=...&password=...` again.
-- Confirm dashboard opens directly for an already logged-in admin in the iPhone-sized viewport.
-- Confirm vendor dashboard no longer triggers unnecessary repeated project assignment query work.
+In `src/styles.css`, change the `saffron-pulse` animation duration applied inline from `1.2s` to `2s` (40% slower). Keep the keyframe shape (scale 0.92→1, opacity 0.65→1).
 
-The highest-priority fix is the login form hydration issue, because it explains both “logins fail” and the old-style page reload behavior.
+---
+
+## 2. Custom Categories not showing in dropdown / sidebar filter
+
+### Root cause
+
+`src/lib/categories.ts` stores custom categories, renames, and deletions in **`localStorage` only** (`saffron.customCategories`, `saffron.categoryRenames`, `saffron.deletedCategories`). Consequences:
+
+- A custom category added on one device/browser is invisible everywhere else (different phone, different laptop, incognito, after cache clear).
+- A vendor saved with that category will exist, but the category name will be missing from the Sidebar list and the VendorForm dropdown on any other session — so it can't be filtered or re-selected.
+- Renames and deletes don't sync either.
+
+### Fix — move category management into the database
+
+**New table** `public.categories`:
+
+```text
+id           uuid pk default gen_random_uuid()
+name         text not null unique
+is_base      boolean not null default false   -- seeded built-ins
+is_deleted   boolean not null default false   -- soft delete (so base ones can be hidden)
+created_at   timestamptz default now()
+updated_at   timestamptz default now()
+```
+
+- Enable RLS.
+- Policy: any authenticated user can `SELECT`. Staff (`admin` or `employee`) can `INSERT` / `UPDATE`. Only `admin` can soft-delete.
+- Seed it in the migration with the existing `BASE_CATEGORIES` list with `is_base = true`.
+- `updated_at` maintained by existing `touch_updated_at()` trigger.
+
+**Refactor `src/lib/categories.ts`**:
+
+- Replace localStorage helpers with a TanStack Query hook `useAllCategories()` that selects from `categories` where `is_deleted = false`, ordered by name.
+- `addCustomCategory(name)` → `insert` row, then `queryClient.invalidateQueries(["categories"])`.
+- `renameCategory(old, new)` → `update categories.name` + bulk `update vendors set category = new where category = old` (already done) + invalidate.
+- `deleteCategory(name)` → set `is_deleted = true` + reassign vendors to "Miscellaneous" + invalidate.
+- Subscribe to a Supabase realtime channel on `categories` so changes appear instantly across open sessions/devices.
+- Keep `BASE_CATEGORIES` exported only as a fallback used during the first render before the query resolves (prevents an empty dropdown flash).
+
+**Consumers** (`VendorForm`, `BulkEditDialog`, `Sidebar`, `CategoryManager`) keep calling `useAllCategories()` — no API change for them. Once the mutation resolves, the dropdown and the left-panel filter list update automatically.
+
+### One-time migration of any existing localStorage entries
+
+Add a small client-side bootstrap (runs once per device on app load) that reads any existing `saffron.customCategories` entries, upserts them into the new `categories` table, then clears the localStorage key. This avoids losing categories users have already created on this device.
+
+---
+
+## Files to change
+
+- `public/site.webmanifest` — terracotta background/theme colour
+- `src/styles.css` — slow `saffron-pulse` to 2s
+- `src/components/BrandSplash.tsx` — new
+- `src/components/RouteProgress.tsx` — use BrandSplash full-screen
+- `src/components/AuthGate.tsx`, `src/components/ClientGate.tsx` — use BrandSplash
+- `src/routes/index.tsx` — use BrandSplash, remove inline Splash
+- `src/routes/__root.tsx` — iOS PWA meta tags
+- `src/routes/client.index.tsx` — replace "Loading…" with BrandSplash
+- `src/lib/categories.ts` — DB-backed category store + realtime + one-time localStorage migration
+- New Supabase migration — `categories` table, RLS, seed, trigger
