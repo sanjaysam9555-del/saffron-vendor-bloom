@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Sparkles, LayoutGrid, Columns3, Filter as FilterIcon } from "lucide-react";
 import { ClientGate } from "@/components/ClientGate";
+import { BrandSplash } from "@/components/BrandSplash";
 import { useAuth } from "@/lib/auth";
 import { getMyProject } from "@/server/projects.functions";
 import { ClientTopNav } from "@/components/client/ClientTopNav";
