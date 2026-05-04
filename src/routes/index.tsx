@@ -3,7 +3,7 @@ import { ClientOnly } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { ClientLoginForm } from "@/components/client/ClientLoginForm";
-import logo from "@/assets/saffron-events-loader.png";
+import { BrandSplash } from "@/components/BrandSplash";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -53,16 +53,7 @@ function RootIndex() {
 }
 
 function Splash() {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--cream)]">
-      <img
-        src={logo}
-        alt="Saffron Planning Studio"
-        className="h-28 w-auto"
-        style={{ animation: "saffron-pulse 1.2s ease-in-out infinite" }}
-      />
-    </div>
-  );
+  return <BrandSplash />;
 }
 
 function RedirectingLogin() {
