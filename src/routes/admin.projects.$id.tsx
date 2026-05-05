@@ -154,24 +154,29 @@ function ProjectDetailPage() {
             </form>
           )}
 
-          <div className="mt-3 overflow-hidden rounded-lg border border-[var(--border)] bg-white">
+          <div className="mt-3 -mx-6 sm:mx-0 sm:rounded-lg sm:border sm:border-[var(--border)] bg-white">
             {clients.length === 0 ? (
               <div className="p-6 text-sm text-[var(--charcoal)]/60">No client login yet.</div>
             ) : (
-              <table className="w-full text-sm">
-                <thead className="bg-[var(--cream)] text-left text-xs uppercase tracking-wider text-[var(--charcoal)]/60">
-                  <tr>
-                    <th className="px-4 py-2.5">Name</th>
-                    <th className="px-4 py-2.5">Email</th>
-                    <th className="px-4 py-2.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {clients.map((c: any) => (
-                    <ClientRow key={c.id} c={c} onChanged={refresh} />
-                  ))}
-                </tbody>
-              </table>
+              <div
+                className="overflow-x-auto touch-pan-x"
+                style={{ WebkitOverflowScrolling: "touch" }}
+              >
+                <table className="w-full min-w-[560px] text-sm">
+                  <thead className="bg-[var(--cream)] text-left text-xs uppercase tracking-wider text-[var(--charcoal)]/60">
+                    <tr>
+                      <th className="px-4 py-2.5">Name</th>
+                      <th className="px-4 py-2.5">Email</th>
+                      <th className="px-4 py-2.5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {clients.map((c: any) => (
+                      <ClientRow key={c.id} c={c} onChanged={refresh} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </section>
