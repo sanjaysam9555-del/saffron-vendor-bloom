@@ -80,6 +80,16 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
   const set = <K extends keyof VendorInput>(k: K, v: VendorInput[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
+  const saveNewCategory = async () => {
+    const res = await addCustomCategory(newCategoryName);
+    if (!res.ok) {
+      setNewCategoryError(res.error ?? "Invalid");
+      return;
+    }
+    set("category", res.value!);
+    setShowNewCategory(false);
+  };
+
   const numField = (v: string): number | null => (v.trim() === "" ? null : Number(v));
 
   const addFiles = (files: FileList | File[]) => {
@@ -212,10 +222,7 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
-                        const res = addCustomCategory(newCategoryName);
-                        if (!res.ok) { setNewCategoryError(res.error ?? "Invalid"); return; }
-                        set("category", res.value!);
-                        setShowNewCategory(false);
+                        void saveNewCategory();
                       } else if (e.key === "Escape") {
                         e.preventDefault();
                         set("category", prevCategoryRef.current);
@@ -225,12 +232,7 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
                   />
                   <button
                     type="button"
-                    onClick={() => {
-                      const res = addCustomCategory(newCategoryName);
-                      if (!res.ok) { setNewCategoryError(res.error ?? "Invalid"); return; }
-                      set("category", res.value!);
-                      setShowNewCategory(false);
-                    }}
+                    onClick={() => void saveNewCategory()}
                     className="rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
                   >
                     Add
