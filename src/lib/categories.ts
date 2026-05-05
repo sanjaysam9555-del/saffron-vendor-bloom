@@ -219,23 +219,38 @@ export function subscribeCategories(cb: () => void): () => void {
   return () => listeners.delete(cb);
 }
 
+// Module-level singleton realtime channel. Multiple components can call
+// useAllCategories() concurrently — we must NOT create a new channel per
+// mount, because Supabase Realtime de-duplicates channels by name and
+// throws "cannot add postgres_changes callbacks ... after subscribe()" if
+// a second mount tries to attach a listener to the already-subscribed
+// channel.
+let realtimeChannelStarted = false;
+function ensureRealtime(): void {
+  if (realtimeChannelStarted) return;
+  if (typeof window === "undefined") return;
+  realtimeChannelStarted = true;
+  supabase
+    .channel("categories-sync")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "categories" },
+      () => {
+        void refreshCategories();
+      },
+    )
+    .subscribe();
+}
+
 export function useAllCategories(): string[] {
   const [list, setList] = useState<string[]>(() => getAllCategories());
   useEffect(() => {
     const update = () => setList(getAllCategories());
     const unsubscribe = subscribeCategories(update);
     void refreshCategories();
-
-    const channel = supabase
-      .channel("categories-sync")
-      .on("postgres_changes", { event: "*", schema: "public", table: "categories" }, () => {
-        void refreshCategories();
-      })
-      .subscribe();
-
+    ensureRealtime();
     return () => {
       unsubscribe();
-      void supabase.removeChannel(channel);
     };
   }, []);
   return list;
