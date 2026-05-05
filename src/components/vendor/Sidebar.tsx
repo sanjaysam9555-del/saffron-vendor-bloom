@@ -67,7 +67,7 @@ export function Sidebar({
         <ul className="space-y-0.5">
           <li>
             <button
-              onClick={() => onChange({ ...filters, category: null })}
+              onClick={() => { onChange({ ...filters, category: null }); onMobileClose?.(); }}
               className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm transition-colors ${
                 !filters.category
                   ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium"
@@ -81,7 +81,7 @@ export function Sidebar({
           {allCategories.map((c) => (
             <li key={c}>
               <button
-                onClick={() => onChange({ ...filters, category: c })}
+                onClick={() => { onChange({ ...filters, category: c }); onMobileClose?.(); }}
                 className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
                   filters.category === c
                     ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium"
