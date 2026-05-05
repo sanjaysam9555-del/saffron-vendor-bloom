@@ -12,7 +12,7 @@ import { VendorDetail } from "@/components/vendor/VendorDetail";
 import { BulkActionBar } from "@/components/vendor/BulkActionBar";
 import { BulkEditDialog } from "@/components/vendor/BulkEditDialog";
 import { useVendors, useVendorMutations, useVendorModals } from "@/hooks/useVendorData";
-import { CATEGORIES } from "@/lib/categories";
+import { useAllCategories } from "@/lib/categories";
 import { AuthGate } from "@/components/AuthGate";
 import { useIsAdmin } from "@/lib/auth";
 
@@ -32,6 +32,7 @@ export const Route = createFileRoute("/admin/")({
 
 function DashboardPage() {
   const isAdmin = useIsAdmin();
+  const categories = useAllCategories();
   const { data: vendors = [], isLoading } = useVendors();
   const { create, update, remove, bulkUpdate, bulkDelete } = useVendorMutations();
   const modals = useVendorModals();
@@ -128,7 +129,7 @@ function DashboardPage() {
         onSearchChange={setSearch}
         onAddVendor={() => modals.openCreate()}
         totalVendors={vendors.length}
-        totalCategories={CATEGORIES.length}
+        totalCategories={categories.length}
         lastAdded={lastAdded}
       />
 

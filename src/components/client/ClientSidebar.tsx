@@ -1,5 +1,6 @@
 import { Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { ClientVendor } from "@/lib/project-types";
+import { useAllCategories } from "@/lib/categories";
 
 export interface ClientFilterState {
   category: string | null;
@@ -25,11 +26,12 @@ export function ClientSidebar({
   mobileOpen = false,
   onMobileClose,
 }: Props) {
+  const allCategories = useAllCategories();
   const counts = vendors.reduce<Record<string, number>>((acc, v) => {
     acc[v.category] = (acc[v.category] ?? 0) + 1;
     return acc;
   }, {});
-  const categories = Object.keys(counts).sort();
+  const categories = Array.from(new Set([...allCategories, ...Object.keys(counts)])).sort((a, b) => a.localeCompare(b));
 
   const locationSet = new Set<string>();
   for (const v of vendors) {

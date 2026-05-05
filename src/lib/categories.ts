@@ -23,13 +23,27 @@ export const CATEGORIES = BASE_CATEGORIES;
 
 export type Category = (typeof BASE_CATEGORIES)[number];
 
-// ---------- Storage keys ----------
+// ---------- Legacy local storage keys (used only for one-time migration) ----------
 const CUSTOM_KEY = "saffron.customCategories";
-const RENAMES_KEY = "saffron.categoryRenames"; // { [oldName]: newName }
-const DELETED_KEY = "saffron.deletedCategories"; // string[] of names hidden from UI
 
+let categoryCache = uniqueSort([...BASE_CATEGORIES]);
+let fetchPromise: Promise<string[]> | null = null;
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((cb) => cb());
+
+function uniqueSort(names: string[]): string[] {
+  const seen = new Set<string>();
+  return names
+    .map((name) => name.trim())
+    .filter(Boolean)
+    .filter((name) => {
+      const key = name.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((a, b) => a.localeCompare(b));
+}
 
 // ---------- Low-level storage helpers ----------
 function readJSON<T>(key: string, fallback: T): T {
@@ -51,69 +65,77 @@ function readCustom(): string[] {
   const v = readJSON<unknown>(CUSTOM_KEY, []);
   return Array.isArray(v) ? v.filter((x) => typeof x === "string") : [];
 }
-function readRenames(): Record<string, string> {
-  const v = readJSON<unknown>(RENAMES_KEY, {});
-  return v && typeof v === "object" ? (v as Record<string, string>) : {};
+
+function clearLegacyCustom(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(CUSTOM_KEY);
 }
-function readDeleted(): string[] {
-  const v = readJSON<unknown>(DELETED_KEY, []);
-  return Array.isArray(v) ? v.filter((x) => typeof x === "string") : [];
+
+async function migrateLegacyCustomCategories(names: string[]): Promise<void> {
+  const rows = uniqueSort(names).map((name) => ({ name, is_deleted: false }));
+  if (!rows.length) return;
+  const { error } = await supabase.from("categories").upsert(rows, { onConflict: "name" });
+  if (!error) {
+    clearLegacyCustom();
+    await refreshCategories();
+  }
 }
 
 // ---------- Public read API ----------
 export function getCustomCategories(): string[] {
-  return readCustom();
+  const base = new Set(BASE_CATEGORIES.map((c) => c.toLowerCase()));
+  return categoryCache.filter((c) => !base.has(c.toLowerCase()));
 }
 
-/** Map a stored vendor.category to its current display name (after renames). */
+/** Map a stored vendor.category to its current display name. */
 export function getDisplayCategory(name: string | null | undefined): string {
-  if (!name) return "";
-  const renames = readRenames();
-  // follow rename chain (with cycle guard)
-  let current = name;
-  const seen = new Set<string>();
-  while (renames[current] && !seen.has(current)) {
-    seen.add(current);
-    current = renames[current];
-  }
-  return current;
+  return name ?? "";
 }
 
 export function getAllCategories(): string[] {
-  const renames = readRenames();
-  const deleted = new Set(readDeleted());
+  return categoryCache;
+}
 
-  // Apply renames to base + custom, then filter deleted
-  const applyRename = (n: string) => getDisplayCategory(n);
-  const merged = [
-    ...BASE_CATEGORIES.map(applyRename),
-    ...readCustom().map(applyRename),
-  ].filter((c) => !deleted.has(c));
+export async function refreshCategories(): Promise<string[]> {
+  if (fetchPromise) return fetchPromise;
 
-  const seen = new Set<string>();
-  const unique = merged.filter((c) => {
-    const k = c.toLowerCase();
-    if (seen.has(k)) return false;
-    seen.add(k);
-    return true;
+  fetchPromise = (async () => {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("name")
+      .eq("is_deleted", false)
+      .order("name", { ascending: true });
+
+    if (!error) {
+      const legacy = readCustom();
+      categoryCache = uniqueSort([...(data ?? []).map((row) => row.name), ...legacy]);
+      notify();
+      if (legacy.length) void migrateLegacyCustomCategories(legacy);
+    }
+
+    return categoryCache;
+  })().finally(() => {
+    fetchPromise = null;
   });
-  return unique.sort((a, b) => a.localeCompare(b));
+
+  return fetchPromise;
 }
 
 // ---------- Mutations ----------
-export function addCustomCategory(name: string): { ok: boolean; value?: string; error?: string } {
+export async function addCustomCategory(name: string): Promise<{ ok: boolean; value?: string; error?: string }> {
   const trimmed = name.trim();
   if (!trimmed) return { ok: false, error: "Category name is required" };
-  const existing = getAllCategories().map((c) => c.toLowerCase());
+  const existing = categoryCache.map((c) => c.toLowerCase());
   if (existing.includes(trimmed.toLowerCase())) {
     return { ok: false, error: "Category already exists" };
   }
-  // If this name was previously deleted, un-delete it
-  const deleted = readDeleted().filter((n) => n.toLowerCase() !== trimmed.toLowerCase());
-  writeJSON(DELETED_KEY, deleted);
 
-  const next = [...readCustom(), trimmed];
-  writeJSON(CUSTOM_KEY, next);
+  const { error } = await supabase
+    .from("categories")
+    .upsert({ name: trimmed, is_deleted: false }, { onConflict: "name" });
+  if (error) return { ok: false, error: error.message };
+
+  categoryCache = uniqueSort([...categoryCache, trimmed]);
   notify();
   return { ok: true, value: trimmed };
 }
@@ -131,41 +153,32 @@ export async function renameCategory(
   if (!from || !to) return { ok: false, error: "Names are required" };
   if (from === to) return { ok: true, value: to };
 
-  const all = getAllCategories().map((c) => c.toLowerCase());
+  const all = categoryCache.map((c) => c.toLowerCase());
   if (all.includes(to.toLowerCase()) && to.toLowerCase() !== from.toLowerCase()) {
     return { ok: false, error: "A category with that name already exists" };
   }
 
-  // 1) DB: update all vendors using the old name
+  const { data: updatedCategories, error: categoryError } = await supabase
+    .from("categories")
+    .update({ name: to, is_deleted: false })
+    .eq("name", from)
+    .select("id");
+  if (categoryError) return { ok: false, error: categoryError.message };
+
+  if (!updatedCategories?.length) {
+    const { error: insertError } = await supabase
+      .from("categories")
+      .upsert({ name: to, is_deleted: false }, { onConflict: "name" });
+    if (insertError) return { ok: false, error: insertError.message };
+  }
+
   const { error } = await supabase
     .from("vendors")
     .update({ category: to })
     .eq("category", from);
   if (error) return { ok: false, error: error.message };
 
-  // 2) Local: record rename mapping (so future stored "from" values still resolve)
-  const renames = readRenames();
-
-  // If renaming a custom category that has no vendors, also update the custom list directly
-  const custom = readCustom();
-  const customIdx = custom.findIndex((c) => c === from);
-  if (customIdx >= 0) {
-    custom[customIdx] = to;
-    writeJSON(CUSTOM_KEY, custom);
-  } else {
-    // Base or already-renamed name: store mapping
-    renames[from] = to;
-    // Also collapse any chains pointing to "from"
-    for (const k of Object.keys(renames)) {
-      if (renames[k] === from) renames[k] = to;
-    }
-    writeJSON(RENAMES_KEY, renames);
-  }
-
-  // If "to" was previously hidden via delete, un-hide it
-  const deleted = readDeleted().filter((n) => n.toLowerCase() !== to.toLowerCase());
-  writeJSON(DELETED_KEY, deleted);
-
+  categoryCache = uniqueSort(categoryCache.map((c) => (c === from ? to : c)));
   notify();
   return { ok: true, value: to };
 }
@@ -189,28 +202,13 @@ export async function deleteCategory(
     .eq("category", target);
   if (error) return { ok: false, error: error.message };
 
-  // 2) Local: remove from custom list if present
-  const custom = readCustom().filter((c) => c !== target);
-  writeJSON(CUSTOM_KEY, custom);
+  const { error: categoryError } = await supabase
+    .from("categories")
+    .update({ is_deleted: true })
+    .eq("name", target);
+  if (categoryError) return { ok: false, error: categoryError.message };
 
-  // 3) Local: clear any rename pointing TO this name
-  const renames = readRenames();
-  let changed = false;
-  for (const [k, v] of Object.entries(renames)) {
-    if (v === target) {
-      delete renames[k];
-      changed = true;
-    }
-  }
-  if (changed) writeJSON(RENAMES_KEY, renames);
-
-  // 4) Local: hide from UI (covers base categories and any that survive via rename chain)
-  const deleted = readDeleted();
-  if (!deleted.includes(target)) {
-    deleted.push(target);
-    writeJSON(DELETED_KEY, deleted);
-  }
-
+  categoryCache = categoryCache.filter((c) => c !== target);
   notify();
   return { ok: true };
 }
@@ -225,8 +223,20 @@ export function useAllCategories(): string[] {
   const [list, setList] = useState<string[]>(() => getAllCategories());
   useEffect(() => {
     const update = () => setList(getAllCategories());
-    update();
-    return subscribeCategories(update);
+    const unsubscribe = subscribeCategories(update);
+    void refreshCategories();
+
+    const channel = supabase
+      .channel("categories-sync")
+      .on("postgres_changes", { event: "*", schema: "public", table: "categories" }, () => {
+        void refreshCategories();
+      })
+      .subscribe();
+
+    return () => {
+      unsubscribe();
+      void supabase.removeChannel(channel);
+    };
   }, []);
   return list;
 }
