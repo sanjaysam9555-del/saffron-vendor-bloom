@@ -238,3 +238,9 @@ button:active, a:active, [role="button"]:active {
   0%, 100% { transform: scale(0.94); opacity: 0.7; }
   50%      { transform: scale(1.04); opacity: 1; }
 }
+
+@keyframes saffron-dot-cycle {
+  0%, 100% { opacity: 0.25; }
+  20%      { opacity: 1; }
+  40%      { opacity: 0.25; }
+}

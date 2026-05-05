@@ -79,8 +79,8 @@ function AdminUsersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--cream)] px-6 py-8">
-      <div className="mx-auto max-w-4xl">
+    <div className="min-h-screen bg-[var(--cream)] py-8">
+      <div className="mx-auto max-w-4xl px-6">
         <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]">
           <ArrowLeft className="h-4 w-4" /> Back to dashboard
         </Link>
@@ -118,11 +118,14 @@ function AdminUsersPage() {
 
         {err && <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{err}</div>}
 
-        <div className="mt-6 overflow-hidden rounded-lg border border-[var(--border)] bg-white">
+        <div className="mt-6 -mx-6 sm:mx-0 sm:rounded-lg sm:border sm:border-[var(--border)] bg-white">
           {loading ? (
             <div className="p-6 text-sm text-[var(--charcoal)]/60">Loading…</div>
           ) : (
-            <div className="overflow-x-auto">
+            <div
+              className="overflow-x-auto touch-pan-x"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
               <table className="w-full min-w-[640px] text-sm">
                 <thead className="bg-[var(--cream)] text-left text-xs uppercase tracking-wider text-[var(--charcoal)]/60">
                   <tr>
