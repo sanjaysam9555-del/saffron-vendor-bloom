@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ClientOnly } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { ClientLoginForm } from "@/components/client/ClientLoginForm";
 import { BrandSplash } from "@/components/BrandSplash";
@@ -52,13 +52,18 @@ function RootIndex() {
   );
 }
 
-function Splash() {
-  return <BrandSplash />;
-}
-
 function RedirectingLogin() {
   const { session, role, initialized } = useAuth();
   const navigate = useNavigate();
+
+  // Opening "splash plate" — shown for ~1.5s on every cold boot (PWA, fresh
+  // tab, returning visitor) so users never see a sudden login flash. No
+  // "Loading…" caption: this is brand presence, not progress.
+  const [openingPlate, setOpeningPlate] = useState(true);
+  useEffect(() => {
+    const t = window.setTimeout(() => setOpeningPlate(false), 1500);
+    return () => window.clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     if (!initialized) return;
@@ -70,10 +75,8 @@ function RedirectingLogin() {
     }
   }, [initialized, session, role, navigate]);
 
-  // While auth is restoring, OR we have a session whose role/redirect is
-  // still in flight, show the branded splash instead of the login form.
-  // This prevents the "login screen flash → dashboard" jump on iOS PWA cold boot.
-  if (!initialized) return <Splash />;
-  if (session) return <Splash />;
+  if (openingPlate || !initialized) return <BrandSplash showLoading={false} />;
+  // Signed-in users: keep splash visible while the redirect effect fires.
+  if (session) return <BrandSplash />;
   return <ClientLoginForm embedded />;
 }
