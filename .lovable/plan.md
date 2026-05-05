@@ -1,43 +1,40 @@
-## Goals
+## Problem
 
-1. The branded loading screen should match the **dashboard** background (cream `--cream` = `#F5F0E8`) with logo + wordmark in **terracotta** (`--terracotta` = `#9F3822`) — the inverse of today's solid red.
-2. Add a "Loading…" hint at the bottom of the splash so users know the page is loading.
-3. Use this same splash everywhere a route or dashboard is loading (already centralized in `BrandSplash`).
-4. iPhone PWA cold boot: instead of flashing the **login screen**, show an opening splash plate (logo + wordmark, **no "Loading…" text**) for ~1.5 seconds, then reveal whatever comes next (dashboard if signed in, login form if not).
+Admins get `permission denied for function has_role` when editing custom categories (rename / delete / add).
 
-## Changes
+## Root cause
 
-### `src/components/BrandSplash.tsx` — restyle + optional loading text
+The `public.has_role(uuid, app_role)` function only has EXECUTE granted to `postgres`, `service_role`, and `sandbox_exec` — **not to `authenticated`**.
 
-- Background: `bg-[var(--cream)]` (was solid terracotta).
-- Logo: keep, same gentle 2s pulse.
-- Wordmark "Saffron Planning Studio": colour `text-[var(--terracotta)]`.
-- Subtitle "Wedding & Event Planning": `text-[var(--terracotta)]/70`.
-- Add a new prop `showLoading?: boolean` (default `true`). When `true`, render a small uppercase `Loading…` line below the wordmark. When `false`, omit it (used for the PWA opening plate).
+```
+Access privileges:
+  postgres=X/postgres
+  service_role=X/postgres
+  sandbox_exec=X/postgres
+```
 
-All current callers (`AuthGate`, `ClientGate`, `RouteProgress`, `client.index`, `index`) keep working unchanged — they all want the loading variant.
+Every RLS policy on `categories` (Staff insert / Staff update / Admin delete) calls `public.has_role(auth.uid(), 'admin')`. When the browser hits the table as the `authenticated` role, Postgres tries to execute `has_role()` and fails with permission denied — even though the function is SECURITY DEFINER, the caller still needs the EXECUTE grant.
 
-### `public/site.webmanifest` + `__root.tsx` theme-color
+The same latent bug exists for `public.has_project_access(...)` and `public.client_can_view_vendor(...)`, which are also referenced from RLS policies. They happen to work today only because earlier migrations granted EXECUTE on them. We'll grant defensively to be safe.
 
-- Update `theme_color` and `background_color` from `#9F3822` to `#F5F0E8` so the iOS PWA splash chrome matches the new cream splash plate.
-- Update the `meta name="theme-color"` in `src/routes/__root.tsx` to `#F5F0E8`.
-- Change `apple-mobile-web-app-status-bar-style` to `default` (dark text on light bg) so the iOS status bar reads correctly over the cream plate.
+## Fix — single migration
 
-### `src/routes/index.tsx` — opening splash plate before login/redirect
+```sql
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role)
+  TO authenticated, anon;
 
-The root `/` route currently renders the login form immediately when there's no session, which is what the user sees on iPhone PWA cold boot.
+GRANT EXECUTE ON FUNCTION public.has_project_access(uuid, uuid)
+  TO authenticated, anon;
 
-Add a small client-only "opening plate" gate inside `RedirectingLogin`:
+GRANT EXECUTE ON FUNCTION public.client_can_view_vendor(uuid, uuid)
+  TO authenticated, anon;
+```
 
-- On first mount, set `showOpeningPlate = true` and start a `setTimeout(..., 1500)` that flips it back to `false`.
-- While `showOpeningPlate || !initialized` → render `<BrandSplash showLoading={false} />`.
-- If a session exists, the existing `useEffect` redirects to `/admin` or `/client` — the splash naturally bridges that navigation.
-- If no session and the timer has elapsed, render the embedded `ClientLoginForm` as today.
+This is safe: the functions are SECURITY DEFINER with `STABLE` and a pinned `search_path = public`, so granting EXECUTE only lets the authenticated user *invoke* them — they don't get any extra table privileges. RLS still gates everything.
 
-This gives every visitor (PWA cold boot, fresh tab, returning user) a brief brand plate first. Signed-in users see splash → dashboard with no login flash. Logged-out users see splash → login form.
+## Verification
 
-### Verification
-
-- Loading screens across the app now show cream background with terracotta logo and a "Loading…" caption (admin gate, client gate, route transitions, dashboard first-load).
-- Opening the installed iPhone PWA shows the cream splash plate (no "Loading…" text) for ~1.5s, then either the dashboard (signed-in) or the login form (signed-out) — never a sudden login flash.
-- iOS PWA status bar/icons render in dark colour over the cream splash plate (no white-on-cream invisible bar).
+- As an admin, rename a custom category → succeeds, no `permission denied` error.
+- As an admin, delete a custom category → succeeds.
+- As an admin, add a new category → succeeds.
+- Non-staff (client) users still cannot insert/update/delete categories (their `has_role(..., 'admin')` returns `false`, the policy denies, RLS returns nothing).
