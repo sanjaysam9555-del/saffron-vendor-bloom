@@ -1,40 +1,42 @@
-## Problem
+# Plan
 
-Admins get `permission denied for function has_role` when editing custom categories (rename / delete / add).
+Four small, focused fixes.
 
-## Root cause
+## 1. Auto-close mobile filter drawer on category click
 
-The `public.has_role(uuid, app_role)` function only has EXECUTE granted to `postgres`, `service_role`, and `sandbox_exec` — **not to `authenticated`**.
+**Files:** `src/components/vendor/Sidebar.tsx`, `src/components/client/ClientSidebar.tsx`
 
-```
-Access privileges:
-  postgres=X/postgres
-  service_role=X/postgres
-  sandbox_exec=X/postgres
-```
+In each "All Vendors" and per-category button's `onClick`, after calling `onChange(...)`, also call `onMobileClose?.()` so the slide-over drawer dismisses immediately on mobile. Desktop sidebar passes no `onMobileClose`, so behavior there is unchanged. Location chips stay open (multi-select — closing on every tap would be annoying).
 
-Every RLS policy on `categories` (Staff insert / Staff update / Admin delete) calls `public.has_role(auth.uid(), 'admin')`. When the browser hits the table as the `authenticated` role, Postgres tries to execute `has_role()` and fails with permission denied — even though the function is SECURITY DEFINER, the caller still needs the EXECUTE grant.
+## 2. Admin users table scrollable on mobile
 
-The same latent bug exists for `public.has_project_access(...)` and `public.client_can_view_vendor(...)`, which are also referenced from RLS policies. They happen to work today only because earlier migrations granted EXECUTE on them. We'll grant defensively to be safe.
+**File:** `src/routes/admin.users.tsx`
 
-## Fix — single migration
+The page currently uses `px-6` on the outer wrapper, which clips the table's horizontal scroll inside a narrow inner `overflow-x-auto`. Fix:
+- Move the horizontal padding off the outermost wrapper for the table area, or wrap the table in a full-bleed scroll container (`-mx-6` + `px-6` on the inner edges) so it can scroll edge-to-edge on mobile.
+- Add `touch-pan-x` and `[-webkit-overflow-scrolling:touch]` style hints to the scroll container so iOS handles horizontal flick correctly.
+- Keep `min-w-[640px]` on the table so columns don't squish.
 
-```sql
-GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role)
-  TO authenticated, anon;
+## 3. Redesign Loading screen — text only, animated dots
 
-GRANT EXECUTE ON FUNCTION public.has_project_access(uuid, uuid)
-  TO authenticated, anon;
+**File:** `src/components/BrandSplash.tsx`
 
-GRANT EXECUTE ON FUNCTION public.client_can_view_vendor(uuid, uuid)
-  TO authenticated, anon;
-```
+Strip the `<img>` logo entirely and the import for it. New layout, cream background unchanged:
 
-This is safe: the functions are SECURITY DEFINER with `STABLE` and a pinned `search_path = public`, so granting EXECUTE only lets the authenticated user *invoke* them — they don't get any extra table privileges. RLS still gates everything.
+- Centered "Saffron Planning Studio" wordmark in terracotta (display font, same size as today).
+- Below it: "Wedding & Event Planning" subtitle (unchanged).
+- When `showLoading` is true: render the word **"Loading"** followed by four dots, where one dot is highlighted at a time, cycling 1 → 2 → 3 → 4 → 1 (a "circuit" of dots). Implement with four `<span>` dots, each animated with the same keyframe (opacity / color from terracotta-soft → full terracotta → back) but with staggered `animation-delay` of `0s`, `0.2s`, `0.4s`, `0.6s` over a `1.2s` infinite loop. The keyframe `saffron-dot-cycle` is added to `src/styles.css`.
+- When `showLoading` is false (PWA opening plate): render only the wordmark + subtitle, no "Loading" line, no dots — keeps the cold-boot plate calm.
 
-## Verification
+No more pulse animation on a logo (logo is gone).
 
-- As an admin, rename a custom category → succeeds, no `permission denied` error.
-- As an admin, delete a custom category → succeeds.
-- As an admin, add a new category → succeeds.
-- Non-staff (client) users still cannot insert/update/delete categories (their `has_role(..., 'admin')` returns `false`, the policy denies, RLS returns nothing).
+## 4. Verify everything still uses BrandSplash consistently
+
+No changes — already used by `AuthGate`, `ClientGate`, `RouteProgress`, `routes/index.tsx`, `routes/client.index.tsx`. Removing the logo + adding dots applies everywhere automatically.
+
+## Technical notes
+
+- `src/styles.css`: add `@keyframes saffron-dot-cycle { 0%, 100% { opacity: 0.25 } 25% { opacity: 1 } }` and offset each dot via inline `style={{ animationDelay: '...' }}`.
+- The four-dot "Loading...." string uses real `<span>.</span>` elements (not literal periods) so each can animate independently.
+- Mobile drawer close: pass `onMobileClose` through to category buttons only — locations stay multi-select.
+- Admin table: use `-mx-6 px-6 overflow-x-auto` pattern so the scroll viewport spans the full screen width on mobile, while content keeps padding.
