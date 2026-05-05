@@ -1,42 +1,48 @@
-# Plan
+# Plan — Fix iOS status bar overlap in installed PWA
 
-Four small, focused fixes.
+## Problem
 
-## 1. Auto-close mobile filter drawer on category click
+The root layout sets `viewport-fit=cover` so the cream background stretches edge-to-edge on iPhones with a notch/Dynamic Island. But no page reserves space for the iOS status bar, so when launched from the home screen (`display: standalone`), the time, signal, and battery icons sit on top of page content (header text, "Back" links, etc.).
 
-**Files:** `src/components/vendor/Sidebar.tsx`, `src/components/client/ClientSidebar.tsx`
+This only happens in the installed PWA — the in-browser preview and Safari tab are fine because Safari already reserves the status bar area.
 
-In each "All Vendors" and per-category button's `onClick`, after calling `onChange(...)`, also call `onMobileClose?.()` so the slide-over drawer dismisses immediately on mobile. Desktop sidebar passes no `onMobileClose`, so behavior there is unchanged. Location chips stay open (multi-select — closing on every tap would be annoying).
+## Fix
 
-## 2. Admin users table scrollable on mobile
+Add a global safe-area padding rule in `src/styles.css`, scoped to `display-mode: standalone` so it only affects the home-screen app and never the browser/preview:
 
-**File:** `src/routes/admin.users.tsx`
+```css
+@media all and (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    background-color: var(--cream);
+  }
+}
+```
 
-The page currently uses `px-6` on the outer wrapper, which clips the table's horizontal scroll inside a narrow inner `overflow-x-auto`. Fix:
-- Move the horizontal padding off the outermost wrapper for the table area, or wrap the table in a full-bleed scroll container (`-mx-6` + `px-6` on the inner edges) so it can scroll edge-to-edge on mobile.
-- Add `touch-pan-x` and `[-webkit-overflow-scrolling:touch]` style hints to the scroll container so iOS handles horizontal flick correctly.
-- Keep `min-w-[640px]` on the table so columns don't squish.
+Plus a Safari fallback that guarantees a minimum 44px top inset on older iOS (where `env()` sometimes returns 0 if not opted in correctly):
 
-## 3. Redesign Loading screen — text only, animated dots
+```css
+@supports (-webkit-touch-callout: none) {
+  @media all and (display-mode: standalone) {
+    body { padding-top: max(env(safe-area-inset-top), 44px); }
+  }
+}
+```
 
-**File:** `src/components/BrandSplash.tsx`
+The `background-color: var(--cream)` on body ensures the inset region behind the status bar is the same cream color as the dashboard — no white strip, no visible status bar background.
 
-Strip the `<img>` logo entirely and the import for it. New layout, cream background unchanged:
+## Why this approach
 
-- Centered "Saffron Planning Studio" wordmark in terracotta (display font, same size as today).
-- Below it: "Wedding & Event Planning" subtitle (unchanged).
-- When `showLoading` is true: render the word **"Loading"** followed by four dots, where one dot is highlighted at a time, cycling 1 → 2 → 3 → 4 → 1 (a "circuit" of dots). Implement with four `<span>` dots, each animated with the same keyframe (opacity / color from terracotta-soft → full terracotta → back) but with staggered `animation-delay` of `0s`, `0.2s`, `0.4s`, `0.6s` over a `1.2s` infinite loop. The keyframe `saffron-dot-cycle` is added to `src/styles.css`.
-- When `showLoading` is false (PWA opening plate): render only the wordmark + subtitle, no "Loading" line, no dots — keeps the cold-boot plate calm.
+- **One rule covers every page** — no per-route edits needed.
+- **Browser preview untouched** — Lovable's preview iframe is not in standalone mode, so the rule is inert there.
+- **Bottom + sides handled too** — home indicator on Face ID iPhones and landscape notches are also covered.
+- **`apple-mobile-web-app-status-bar-style` stays `default`** — keeps dark text on cream, matching the brand. (Switching to `black-translucent` would put the status bar over content with no inset, which is the opposite of what we want.)
 
-No more pulse animation on a logo (logo is gone).
+## Files changed
 
-## 4. Verify everything still uses BrandSplash consistently
+- `src/styles.css` — append the two `@media (display-mode: standalone)` blocks after the existing `@layer base` rules (around line 110).
 
-No changes — already used by `AuthGate`, `ClientGate`, `RouteProgress`, `routes/index.tsx`, `routes/client.index.tsx`. Removing the logo + adding dots applies everywhere automatically.
-
-## Technical notes
-
-- `src/styles.css`: add `@keyframes saffron-dot-cycle { 0%, 100% { opacity: 0.25 } 25% { opacity: 1 } }` and offset each dot via inline `style={{ animationDelay: '...' }}`.
-- The four-dot "Loading...." string uses real `<span>.</span>` elements (not literal periods) so each can animate independently.
-- Mobile drawer close: pass `onMobileClose` through to category buttons only — locations stay multi-select.
-- Admin table: use `-mx-6 px-6 overflow-x-auto` pattern so the scroll viewport spans the full screen width on mobile, while content keeps padding.
+No changes to `__root.tsx`, `site.webmanifest`, or any route file. The existing `viewport-fit=cover` and `apple-mobile-web-app-capable` meta tags stay as-is.
