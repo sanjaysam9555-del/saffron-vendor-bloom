@@ -47,6 +47,10 @@ function ClientPortalPage() {
         qc.invalidateQueries({ queryKey: ["my-project"] });
         qc.invalidateQueries({ queryKey: ["client-vendor-quote", projectId] });
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_comments", filter: `project_id=eq.${projectId}` }, () => {
+        qc.invalidateQueries({ queryKey: ["my-project"] });
+        qc.invalidateQueries({ queryKey: ["vendor-comments"] });
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [projectId, qc]);
