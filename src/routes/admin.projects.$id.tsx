@@ -485,6 +485,38 @@ function AssignedVendorsSection({
           onClose={() => setQuotesFor(null)}
         />
       )}
+
+      {commentsFor && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onClick={() => setCommentsFor(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-xl bg-[var(--cream)] shadow-2xl"
+          >
+            <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-[var(--border)] bg-[var(--cream)] px-5 py-3">
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-[var(--charcoal)]/55">
+                  Client comments
+                </div>
+                <h3 className="font-display text-xl text-[var(--charcoal)]">{commentsFor.name}</h3>
+              </div>
+              <button onClick={() => setCommentsFor(null)} className="rounded p-1 hover:bg-[var(--cream-deep)]">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="px-5 py-4">
+              <VendorCommentsThread
+                projectId={projectId}
+                vendorId={commentsFor.id}
+                readOnly
+                adminCanDelete
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
