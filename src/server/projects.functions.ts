@@ -599,6 +599,19 @@ export const getMyProject = createServerFn({ method: "GET" })
       quoteSummaryByVendor.set(q.vendor_id, s);
     }
 
+    // Per-vendor comment counts (across all clients on this project)
+    const commentCountByVendor = new Map<string, number>();
+    {
+      const { data: crows } = await supabaseAdmin
+        .from("project_vendor_comments")
+        .select("vendor_id")
+        .eq("project_id", link.project_id)
+        .in("vendor_id", vendorIds);
+      for (const c of crows ?? []) {
+        commentCountByVendor.set(c.vendor_id, (commentCountByVendor.get(c.vendor_id) ?? 0) + 1);
+      }
+    }
+
     const vendors = (vrows ?? []).map((v) => ({
       id: v.id,
       category: v.category,
