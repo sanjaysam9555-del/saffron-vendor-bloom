@@ -128,6 +128,12 @@ export function ClientVendorCard({ vendor, onView }: Props) {
                 {vendor.attachments.length} doc{vendor.attachments.length === 1 ? "" : "s"}
               </span>
             )}
+            {vendor.comment_count != null && vendor.comment_count > 0 && (
+              <span className="inline-flex items-center gap-1 text-[10px] text-[var(--charcoal)]/55">
+                <MessageSquare className="h-3 w-3" />
+                {vendor.comment_count}
+              </span>
+            )}
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); onView(); }}
