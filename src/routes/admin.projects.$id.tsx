@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck } from "lucide-react";
+import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck, MessageSquare } from "lucide-react";
 import { ClientStatusPill, StatusCountsRow, CLIENT_STATUS_OPTIONS } from "@/components/admin/ClientStatusPill";
 import { AuthGate } from "@/components/AuthGate";
 import {
@@ -19,6 +19,7 @@ import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotes
 import { listProjectVendorQuotes } from "@/lib/quote-api";
 import { formatINR } from "@/lib/quote-types";
 import { ordinal } from "@/lib/quote-summary";
+import { VendorCommentsThread } from "@/components/client/VendorCommentsThread";
 
 export const Route = createFileRoute("/admin/projects/$id")({
   head: () => ({ meta: [{ title: "Project — Saffron Planning Studio" }] }),
@@ -49,6 +50,13 @@ function ProjectDetailPage() {
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quote_files" }, () => {
         qc.invalidateQueries({ queryKey: ["project-vendor-quotes", id] });
+        qc.invalidateQueries({ queryKey: ["project", id] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_comments", filter: `project_id=eq.${id}` }, () => {
+        qc.invalidateQueries({ queryKey: ["project", id] });
+        qc.invalidateQueries({ queryKey: ["vendor-comments"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "client_vendor_status" }, () => {
         qc.invalidateQueries({ queryKey: ["project", id] });
       })
       .subscribe();
@@ -326,6 +334,7 @@ function AssignedVendorsSection({
 }) {
   const [view, setView] = useState<"list" | "grouped">("list");
   const [quotesFor, setQuotesFor] = useState<{ id: string; name: string; category: string | null; autoOpenForm?: boolean } | null>(null);
+  const [commentsFor, setCommentsFor] = useState<{ id: string; name: string } | null>(null);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { like: 0, shortlisted: 0, finalised: 0, rejected: 0, thinking: 0 };
@@ -409,7 +418,7 @@ function AssignedVendorsSection({
                       </span>
                     )}
                   </div>
-                  <div className="mt-2">
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     <VendorQuotesPill
                       projectId={projectId}
                       vendorId={v.id}
@@ -417,6 +426,14 @@ function AssignedVendorsSection({
                         setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null, autoOpenForm })
                       }
                     />
+                    <button
+                      onClick={() => setCommentsFor({ id: v.id, name: v.vendor_name })}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2.5 py-1 text-[11px] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
+                      title="View client comments for this vendor"
+                    >
+                      <MessageSquare className="h-3 w-3" />
+                      {(v.comment_count ?? 0) > 0 ? `${v.comment_count} comment${v.comment_count === 1 ? "" : "s"}` : "No comments"}
+                    </button>
                   </div>
                 </div>
                 <button
@@ -474,6 +491,38 @@ function AssignedVendorsSection({
           autoOpenForm={quotesFor.autoOpenForm}
           onClose={() => setQuotesFor(null)}
         />
+      )}
+
+      {commentsFor && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onClick={() => setCommentsFor(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-xl bg-[var(--cream)] shadow-2xl"
+          >
+            <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-[var(--border)] bg-[var(--cream)] px-5 py-3">
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-[var(--charcoal)]/55">
+                  Client comments
+                </div>
+                <h3 className="font-display text-xl text-[var(--charcoal)]">{commentsFor.name}</h3>
+              </div>
+              <button onClick={() => setCommentsFor(null)} className="rounded p-1 hover:bg-[var(--cream-deep)]">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="px-5 py-4">
+              <VendorCommentsThread
+                projectId={projectId}
+                vendorId={commentsFor.id}
+                readOnly
+                adminCanDelete
+              />
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

@@ -2,7 +2,7 @@ import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import { getClientStatusOption } from "@/lib/client-status";
 import { ClientStatusSelect } from "./ClientStatusSelect";
-import { MapPin, Instagram, Link as LinkIcon, Paperclip, Globe, Star, FileText, CircleCheck } from "lucide-react";
+import { MapPin, Instagram, Link as LinkIcon, Paperclip, Globe, Star, FileText, CircleCheck, MessageSquare } from "lucide-react";
 import { quoteSummaryLabel } from "@/lib/quote-summary";
 
 interface Props {
@@ -126,6 +126,12 @@ export function ClientVendorCard({ vendor, onView }: Props) {
               <span className="inline-flex items-center gap-1 text-[10px] text-[var(--charcoal)]/55">
                 <Paperclip className="h-3 w-3" />
                 {vendor.attachments.length} doc{vendor.attachments.length === 1 ? "" : "s"}
+              </span>
+            )}
+            {vendor.comment_count != null && vendor.comment_count > 0 && (
+              <span className="inline-flex items-center gap-1 text-[10px] text-[var(--charcoal)]/55">
+                <MessageSquare className="h-3 w-3" />
+                {vendor.comment_count}
               </span>
             )}
           </div>
