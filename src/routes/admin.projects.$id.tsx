@@ -447,6 +447,63 @@ function AssignedVendorsSection({
           })}
         </div>
       )}
+
+      {quotesFor && (
+        <ProjectVendorQuotesPanel
+          projectId={projectId}
+          vendorId={quotesFor.id}
+          vendorName={quotesFor.name}
+          vendorCategory={quotesFor.category}
+          onClose={() => setQuotesFor(null)}
+        />
+      )}
     </section>
+  );
+}
+
+function VendorQuotesPill({
+  projectId,
+  vendorId,
+  onOpen,
+}: {
+  projectId: string;
+  vendorId: string;
+  onOpen: () => void;
+}) {
+  const { data: quotes = [] } = useQuery({
+    queryKey: ["project-vendor-quotes", projectId, vendorId],
+    queryFn: () => listProjectVendorQuotes(projectId, vendorId),
+    staleTime: 30_000,
+  });
+  const closed = quotes.find((q) => q.is_final || q.status === "closed");
+  const fileCount = quotes.reduce((n, q) => n + (q.files?.length ?? 0), 0);
+
+  return (
+    <button
+      onClick={onOpen}
+      className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2.5 py-1 text-[11px] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
+      title="Manage quotes for this vendor on this project"
+    >
+      <FileText className="h-3 w-3" />
+      {quotes.length === 0 ? (
+        <span>Add quote</span>
+      ) : closed ? (
+        <>
+          <CircleCheck className="h-3 w-3 text-green-700" />
+          <span className="font-semibold text-green-800">
+            Closed{closed.closed_amount != null ? ` ${formatINR(closed.closed_amount)}` : ""}
+          </span>
+        </>
+      ) : (
+        <span>
+          {quotes.length} quote{quotes.length === 1 ? "" : "s"}
+        </span>
+      )}
+      {fileCount > 0 && (
+        <span className="inline-flex items-center gap-0.5 text-[10px] text-[var(--charcoal)]/55">
+          <Paperclip className="h-2.5 w-2.5" /> {fileCount}
+        </span>
+      )}
+    </button>
   );
 }
