@@ -160,6 +160,113 @@ export type Database = {
           },
         ]
       }
+      project_vendor_quote_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string | null
+          quote_id: string
+          size_bytes: number | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type?: string | null
+          quote_id: string
+          size_bytes?: number | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string | null
+          quote_id?: string
+          size_bytes?: number | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_vendor_quote_files_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "project_vendor_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_vendor_quotes: {
+        Row: {
+          category: string | null
+          closed_amount: number | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          id: string
+          is_final: boolean
+          notes: string | null
+          project_id: string
+          quote_amount: number | null
+          quote_text: string | null
+          status: Database["public"]["Enums"]["quote_status"]
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          category?: string | null
+          closed_amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          is_final?: boolean
+          notes?: string | null
+          project_id: string
+          quote_amount?: number | null
+          quote_text?: string | null
+          status?: Database["public"]["Enums"]["quote_status"]
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          category?: string | null
+          closed_amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          is_final?: boolean
+          notes?: string | null
+          project_id?: string
+          quote_amount?: number | null
+          quote_text?: string | null
+          status?: Database["public"]["Enums"]["quote_status"]
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_vendor_quotes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_vendor_quotes_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_vendors: {
         Row: {
           created_at: string
@@ -374,7 +481,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vendor_booked_summary: {
+        Row: {
+          last_booked_at: string | null
+          last_closed_amount: number | null
+          last_project_id: string | null
+          times_booked: number | null
+          vendor_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_vendor_quotes_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       client_can_view_vendor: {
@@ -401,6 +525,7 @@ export type Database = {
         | "finalised"
         | "rejected"
         | "thinking"
+      quote_status: "received" | "revised" | "closed" | "withdrawn"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -536,6 +661,7 @@ export const Constants = {
         "rejected",
         "thinking",
       ],
+      quote_status: ["received", "revised", "closed", "withdrawn"],
     },
   },
 } as const
