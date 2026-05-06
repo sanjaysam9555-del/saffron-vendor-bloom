@@ -186,6 +186,12 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
             </ul>
           </div>
         )}
+
+        {projectId && (
+          <div className="border-t border-[var(--border)] px-6 py-4">
+            <VendorCommentsThread projectId={projectId} vendorId={vendor.id} />
+          </div>
+        )}
       </div>
 
       {viewing && (
