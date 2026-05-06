@@ -1,95 +1,84 @@
-# Fix: Login page flashes on iPhone PWA cold boot
+# Fix: iPhone PWA still flashes login before dashboard
 
-## Root cause
+## New hypothesis (different from prior attempts)
 
-The flash is **not** an auth race — the auth gating already keeps the splash up until role is known. The flash is **server-rendered HTML**.
+Prior fix made the **SSR HTML** at `/` render only the splash — verified by curling the live site, which now returns only "Saffron Planning" brand markup, no login form. So the **first paint is correct**. The flash the user reports is happening **after hydration**, in `RedirectingLogin`.
 
-In `src/routes/index.tsx`:
+Walk through the cold-boot path:
 
-- Lines 30–44 render the marketing hero ("Saffron Planning Studio", "Wedding & Event Planning Studio in India", paragraph) **outside** any `ClientOnly`. That means it ships in the SSR HTML for `/`.
-- Line 47: `<ClientOnly fallback={<ClientLoginForm embedded />}>` — the SSR fallback **is the login form**.
+1. iOS paints SSR splash (good — verified).
+2. React hydrates. `RedirectingLogin` mounts: `openingPlate=true` → splash continues.
+3. After 800ms, `openingPlate=false`.
+4. Meanwhile, `useAuth()` is calling `supabase.auth.getSession()` which reads from IndexedDB/localStorage. On iPhone PWA cold boot, this can take **>800ms** to resolve because iOS suspends storage access.
+5. So at t=800ms we have: `openingPlate=false`, `initialized=false` → still splash (good).
+6. Eventually `getSession()` resolves with a session → `setInitialized(true)` and `setSession(s)` happen in the same synchronous block. So we render `BrandSplash` (signed-in branch).
+7. Then `loadProfile` fires; redirect effect waits for `role`. Once role is loaded, `navigate('/admin')` fires.
 
-So the HTML the iPhone receives for `/` literally contains marketing copy + the login form. iOS paints that HTML the moment the PWA opens, **before** any JavaScript runs. Then React hydrates, `RedirectingLogin` mounts, sees the cached session, and the splash overlay covers everything. Result: a brief but very visible flash of the login page on every cold boot.
+**The actual race:** between step 6 and the navigate completing, React renders once with `initialized=true, session=null` if Supabase momentarily returns null before the persisted session deserializes. Or — more likely — there's a render where `session=null` was the initial state, `initialized` is still false, but the 800ms timer already fired, and the `!initialized` check holds it. Let me re-read…
 
-The previous "opening plate" splash (1.5s `setTimeout`) only kicks in **after** hydration, so it can't hide the pre-hydration paint.
+Actually the gap is here: `setInitialized(true)` is called inside `getSession().then(...)`. If `s` is null momentarily (race with `onAuthStateChange` firing INITIAL_SESSION), the component renders with `initialized=true, session=null` → falls through to login form for one frame before the next state update.
 
 ## Fix
 
-Make the SSR output of `/` the branded splash itself — never marketing copy, never the login form. Only after the client hydrates and confirms there is no session do we swap to the real marketing + login UI.
+Add a synchronous guard that reads our own `localStorage` cache key (`saffron.access.cache.v1`) at component mount. If a cached role exists, this device has a previously signed-in user — we MUST keep the splash up until either the redirect fires or session is confirmed null after a real signOut. No transient `session=null` render can flash the login form.
 
-### Change 1: `src/routes/index.tsx`
+This also covers the "OLD installed PWA" case: if the user installed the app before previous fixes, that install persists. The cached role survives across reloads, so the splash holds.
 
-Move the entire marketing section + login form into the client-only branch, and use `<BrandSplash showLoading={false} />` as the `ClientOnly` fallback.
+### Single file change: `src/routes/index.tsx`
+
+In `RedirectingLogin`:
 
 ```tsx
-function RootIndex() {
-  return (
-    <main className="min-h-screen bg-[var(--cream)]">
-      <ClientOnly fallback={<BrandSplash showLoading={false} />}>
-        <RedirectingLogin />
-      </ClientOnly>
-    </main>
-  );
-}
-
-function RedirectingLogin() {
-  const { session, role, initialized } = useAuth();
-  const navigate = useNavigate();
-
-  // Keep the opening plate so first-time visitors also see brand, not a flash
-  // of the login form, while auth restores from localStorage.
-  const [openingPlate, setOpeningPlate] = useState(true);
-  useEffect(() => {
-    const t = window.setTimeout(() => setOpeningPlate(false), 800);
-    return () => window.clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
-    if (!initialized || !session) return;
-    if (role === "client") navigate({ to: "/client", replace: true });
-    else if (role === "admin" || role === "employee") navigate({ to: "/admin", replace: true });
-  }, [initialized, session, role, navigate]);
-
-  if (openingPlate || !initialized) return <BrandSplash showLoading={false} />;
-  if (session) return <BrandSplash />; // signed in — keep splash until redirect fires
-
-  // No session — now it's safe to reveal marketing + login form.
-  return (
-    <>
-      <section className="mx-auto max-w-3xl px-6 pt-8 pb-2 text-center">
-        <p className="text-xs uppercase tracking-[0.28em] text-[var(--terracotta)]">
-          Saffron Planning Studio
-        </p>
-        <h1 className="mt-2 font-display text-2xl text-[var(--charcoal)] sm:text-3xl">
-          Wedding & Event Planning Studio in India
-        </h1>
-        <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--charcoal)]/70">
-          We curate vendors, manage logistics and design weddings end-to-end across
-          Delhi NCR and destinations across India. Couples we work with use this
-          portal to view their shortlist, share feedback and finalise decisions
-          with their planner.
-        </p>
-      </section>
-      <div className="px-4 pb-10 pt-3">
-        <ClientLoginForm embedded />
-      </div>
-    </>
-  );
-}
+// Read synchronously at mount — does this device have a cached signed-in user?
+const [hasCachedUser] = useState<boolean>(() => {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = window.localStorage.getItem("saffron.access.cache.v1");
+    if (!raw) return false;
+    const parsed = JSON.parse(raw) as { role?: string | null };
+    return Boolean(parsed?.role);
+  } catch {
+    return false;
+  }
+});
 ```
 
-That's the only file change.
+Then add a render branch after the existing `if (session) return <BrandSplash />;`:
 
-## Why this works
+```tsx
+// Device had a cached signed-in user — never flash the login form on
+// cold boot. The cache is cleared on signOut (see auth.tsx writeCachedAccess(null)),
+// so genuinely-logged-out users will fall through after their next signOut.
+if (hasCachedUser) return <BrandSplash />;
+```
 
-- **SSR HTML for `/` becomes just the branded splash on a cream background.** The iPhone's first paint after the PWA launch is the splash — identical to the dashboard's cream background — so there's nothing to flash.
-- React hydrates, reads the cached session+role from `localStorage` (already implemented in `src/lib/auth.tsx`), and `AuthGate` on `/admin` or `/client` renders the dashboard immediately (no second splash since cached role passes the gate per `src/components/AuthGate.tsx`).
-- For unauthenticated visitors, the splash holds for ~800ms then reveals marketing + login. No worse than today.
+The cache cleanup on signOut already exists in `src/lib/auth.tsx` (line: `writeCachedAccess(null)` inside `signOut`), so this branch self-heals.
 
-## SEO note
+### Risk: stale cache after token expiry
 
-Marketing copy will no longer be in SSR HTML for `/`. That's acceptable here because `/` is effectively the login gateway for a private portal — but worth flagging. If SEO on `/` matters, we can later split: a public `/` marketing route and a separate `/login` for the gateway. Not doing that now.
+If the user's Supabase session expired but `saffron.access.cache.v1` is still set (e.g. they didn't actively sign out), they'd be stuck on the splash. Mitigate with a 5-second safety: if `initialized=true && session=null && hasCachedUser`, clear the cache and reveal the login form.
+
+```tsx
+// Safety: if auth confirms no session (token expired), clear stale cache.
+useEffect(() => {
+  if (initialized && !session && hasCachedUser) {
+    try { window.localStorage.removeItem("saffron.access.cache.v1"); } catch {}
+    // Force a re-render to drop the splash by reloading once. Better:
+    // just let the next branch check fall through after we set local state.
+    // Simplest: setHasCachedUser(false) — but it's a const from useState.
+    // Switch hasCachedUser to a state with setter so we can clear it.
+  }
+}, [initialized, session, hasCachedUser]);
+```
+
+Refactor `hasCachedUser` to `[hasCachedUser, setHasCachedUser]` so the safety effect can clear it.
 
 ## Files changed
 
-- `src/routes/index.tsx` — restructure render so SSR output is the brand splash, not the marketing+login content.
+- `src/routes/index.tsx` — add synchronous cached-user check + safety effect to clear stale cache.
+
+## Verification after edit
+
+1. Curl `/` again — should still SSR only the splash (already verified).
+2. Build should succeed.
+3. Behavior on iPhone PWA: cold boot → splash → dashboard, no login flash even if Supabase session restore is slow. Logged-out users (no cache key) → splash → login form, unchanged.
