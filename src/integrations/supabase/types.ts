@@ -160,6 +160,33 @@ export type Database = {
           },
         ]
       }
+      project_vendor_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          project_id: string
+          user_id: string
+          vendor_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          project_id: string
+          user_id: string
+          vendor_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+          user_id?: string
+          vendor_id?: string
+        }
+        Relationships: []
+      }
       project_vendor_quote_files: {
         Row: {
           created_at: string
