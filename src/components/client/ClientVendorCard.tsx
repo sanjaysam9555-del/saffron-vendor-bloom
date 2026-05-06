@@ -2,7 +2,8 @@ import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import { getClientStatusOption } from "@/lib/client-status";
 import { ClientStatusSelect } from "./ClientStatusSelect";
-import { MapPin, Instagram, Link as LinkIcon, Paperclip, Globe, Star } from "lucide-react";
+import { MapPin, Instagram, Link as LinkIcon, Paperclip, Globe, Star, FileText, CircleCheck } from "lucide-react";
+import { quoteSummaryLabel } from "@/lib/quote-summary";
 
 interface Props {
   vendor: ClientVendor;
@@ -102,16 +103,35 @@ export function ClientVendorCard({ vendor, onView }: Props) {
 
       <div className="mt-3 space-y-2 border-t border-[var(--border)] pt-3" style={{ marginTop: "auto" }}>
         <ClientStatusSelect vendorId={vendor.id} status={vendor.client_status} />
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs text-[var(--charcoal)]/60">
-            <Paperclip className="h-3.5 w-3.5" />
-            {vendor.attachments.length === 0
-              ? "No documents"
-              : `${vendor.attachments.length} document${vendor.attachments.length === 1 ? "" : "s"}`}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            {(() => {
+              const label = quoteSummaryLabel(vendor.quote_summary);
+              if (!label) return null;
+              const closed = vendor.quote_summary?.has_closed;
+              return (
+                <span
+                  className={
+                    closed
+                      ? "inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-800"
+                      : "inline-flex items-center gap-1 rounded-full border border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--terracotta)]"
+                  }
+                >
+                  {closed ? <CircleCheck className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
+                  {label}
+                </span>
+              );
+            })()}
+            {vendor.attachments.length > 0 && (
+              <span className="inline-flex items-center gap-1 text-[10px] text-[var(--charcoal)]/55">
+                <Paperclip className="h-3 w-3" />
+                {vendor.attachments.length} doc{vendor.attachments.length === 1 ? "" : "s"}
+              </span>
+            )}
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); onView(); }}
-            className="rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
+            className="shrink-0 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
           >
             View Details
           </button>
