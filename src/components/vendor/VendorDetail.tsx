@@ -112,6 +112,7 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
                   <Sparkles className="h-3.5 w-3.5" /> {Number(vendor.saffron_rating).toFixed(1)} Saffron Team
                 </span>
               )}
+              <BookedBadge vendorId={vendor.id} />
             </div>
           </div>
           <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]"><X className="h-5 w-5" /></button>
