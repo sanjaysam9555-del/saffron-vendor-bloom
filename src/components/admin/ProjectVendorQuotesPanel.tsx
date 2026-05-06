@@ -39,6 +39,7 @@ interface Props {
   vendorId: string;
   vendorName: string;
   vendorCategory: string | null;
+  autoOpenForm?: boolean;
   onClose: () => void;
 }
 
@@ -47,6 +48,7 @@ export function ProjectVendorQuotesPanel({
   vendorId,
   vendorName,
   vendorCategory,
+  autoOpenForm,
   onClose,
 }: Props) {
   const qc = useQueryClient();
@@ -63,7 +65,7 @@ export function ProjectVendorQuotesPanel({
     qc.invalidateQueries({ queryKey: ["vendor-booked-summary"] });
   };
 
-  const [showAdd, setShowAdd] = useState(false);
+  const [showAdd, setShowAdd] = useState(!!autoOpenForm);
   const [editing, setEditing] = useState<ProjectVendorQuote | null>(null);
   const [viewing, setViewing] = useState<QuoteFile | null>(null);
 
