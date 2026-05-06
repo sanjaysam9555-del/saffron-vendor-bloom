@@ -469,7 +469,7 @@ function VendorQuotesPill({
 }: {
   projectId: string;
   vendorId: string;
-  onOpen: () => void;
+  onOpen: (autoOpenForm: boolean) => void;
 }) {
   const { data: quotes = [] } = useQuery({
     queryKey: ["project-vendor-quotes", projectId, vendorId],
@@ -478,10 +478,11 @@ function VendorQuotesPill({
   });
   const closed = quotes.find((q) => q.is_final || q.status === "closed");
   const fileCount = quotes.reduce((n, q) => n + (q.files?.length ?? 0), 0);
+  const isEmpty = quotes.length === 0;
 
   return (
     <button
-      onClick={onOpen}
+      onClick={() => onOpen(isEmpty)}
       className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2.5 py-1 text-[11px] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
       title="Manage quotes for this vendor on this project"
     >
