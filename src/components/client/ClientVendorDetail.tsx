@@ -9,6 +9,7 @@ import { ClientStatusSelect } from "./ClientStatusSelect";
 import { useQuery } from "@tanstack/react-query";
 import { getLatestProjectVendorQuote } from "@/lib/quote-api";
 import { formatINR, type QuoteFile } from "@/lib/quote-types";
+import { VendorCommentsThread } from "./VendorCommentsThread";
 
 interface Props {
   vendor: ClientVendor | null;
