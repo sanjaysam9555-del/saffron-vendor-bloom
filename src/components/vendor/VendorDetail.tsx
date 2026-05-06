@@ -14,6 +14,8 @@ import {
 import { SignedDocumentViewer } from "./SignedDocumentViewer";
 import { useAuth, useIsAdmin } from "@/lib/auth";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
+import { BookedBadge } from "./BookedBadge";
+import { VendorQuoteHistory } from "./VendorQuoteHistory";
 
 interface VendorDetailProps {
   vendor: Vendor | null;
