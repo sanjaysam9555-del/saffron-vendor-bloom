@@ -411,7 +411,7 @@ function AssignedVendorsSection({
                       </span>
                     )}
                   </div>
-                  <div className="mt-2">
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     <VendorQuotesPill
                       projectId={projectId}
                       vendorId={v.id}
@@ -419,6 +419,14 @@ function AssignedVendorsSection({
                         setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null, autoOpenForm })
                       }
                     />
+                    <button
+                      onClick={() => setCommentsFor({ id: v.id, name: v.vendor_name })}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2.5 py-1 text-[11px] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
+                      title="View client comments for this vendor"
+                    >
+                      <MessageSquare className="h-3 w-3" />
+                      {(v.comment_count ?? 0) > 0 ? `${v.comment_count} comment${v.comment_count === 1 ? "" : "s"}` : "No comments"}
+                    </button>
                   </div>
                 </div>
                 <button
