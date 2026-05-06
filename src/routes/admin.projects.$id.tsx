@@ -396,8 +396,8 @@ function AssignedVendorsSection({
                     <VendorQuotesPill
                       projectId={projectId}
                       vendorId={v.id}
-                      onOpen={() =>
-                        setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null })
+                      onOpen={(autoOpenForm) =>
+                        setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null, autoOpenForm })
                       }
                     />
                   </div>
