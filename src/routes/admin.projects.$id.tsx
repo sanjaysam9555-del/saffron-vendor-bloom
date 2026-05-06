@@ -52,6 +52,13 @@ function ProjectDetailPage() {
         qc.invalidateQueries({ queryKey: ["project-vendor-quotes", id] });
         qc.invalidateQueries({ queryKey: ["project", id] });
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_comments", filter: `project_id=eq.${id}` }, () => {
+        qc.invalidateQueries({ queryKey: ["project", id] });
+        qc.invalidateQueries({ queryKey: ["vendor-comments"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "client_vendor_status" }, () => {
+        qc.invalidateQueries({ queryKey: ["project", id] });
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [id, qc]);
