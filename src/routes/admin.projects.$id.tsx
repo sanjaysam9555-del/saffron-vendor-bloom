@@ -454,6 +454,7 @@ function AssignedVendorsSection({
           vendorId={quotesFor.id}
           vendorName={quotesFor.name}
           vendorCategory={quotesFor.category}
+          autoOpenForm={quotesFor.autoOpenForm}
           onClose={() => setQuotesFor(null)}
         />
       )}
