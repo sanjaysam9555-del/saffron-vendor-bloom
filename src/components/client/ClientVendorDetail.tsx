@@ -1,11 +1,14 @@
 import { useState } from "react";
 import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
-import { X, MapPin, Instagram, Link as LinkIcon, Paperclip, FileText, Globe, Star } from "lucide-react";
+import { X, MapPin, Instagram, Link as LinkIcon, Paperclip, FileText, Globe, Star, CircleCheck } from "lucide-react";
 import { SignedDocumentViewer } from "@/components/vendor/SignedDocumentViewer";
+import { SignedQuoteFileViewer } from "@/components/admin/SignedQuoteFileViewer";
 import { formatFileSize } from "@/lib/vendor-files-api";
 import { ClientStatusSelect } from "./ClientStatusSelect";
 import { useQuery } from "@tanstack/react-query";
+import { getLatestProjectVendorQuote } from "@/lib/quote-api";
+import { formatINR, type QuoteFile } from "@/lib/quote-types";
 
 interface Props {
   vendor: ClientVendor | null;
