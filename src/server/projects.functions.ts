@@ -158,9 +158,23 @@ export const getProject = createServerFn({ method: "GET" })
         quoteSummaryByVendor.set(q.vendor_id, s);
       }
     }
+    // Per-vendor comment counts
+    const commentCountByVendor = new Map<string, number>();
+    if (vendorIds.length > 0) {
+      const { data: crows } = await supabaseAdmin
+        .from("project_vendor_comments")
+        .select("vendor_id")
+        .eq("project_id", data.id)
+        .in("vendor_id", vendorIds);
+      for (const c of crows ?? []) {
+        commentCountByVendor.set(c.vendor_id, (commentCountByVendor.get(c.vendor_id) ?? 0) + 1);
+      }
+    }
+
     const vendorsWithQuotes = vendors.map((v) => ({
       ...v,
       quote_summary: quoteSummaryByVendor.get(v.id) ?? { count: 0, latest_status: null, has_closed: false, closed_amount: null },
+      comment_count: commentCountByVendor.get(v.id) ?? 0,
     }));
 
     return { project, clients: clientRows, vendors: vendorsWithQuotes, selections };
