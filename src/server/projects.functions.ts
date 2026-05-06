@@ -632,6 +632,45 @@ export const getMyProject = createServerFn({ method: "GET" })
     return { project, vendors };
   });
 
+async function loadVendorContext(projectId: string, vendorId: string, userId: string) {
+  const [{ data: project }, { data: vendor }, { data: profile }, { data: userRow }] =
+    await Promise.all([
+      supabaseAdmin
+        .from("projects")
+        .select("id, bride_name, groom_name, wedding_date")
+        .eq("id", projectId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("vendors")
+        .select("id, vendor_name, category")
+        .eq("id", vendorId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", userId)
+        .maybeSingle(),
+      supabaseAdmin.auth.admin.getUserById(userId),
+    ]);
+
+  const projectName = project ? `${project.bride_name} & ${project.groom_name}` : undefined;
+  const weddingDate = project?.wedding_date
+    ? new Date(project.wedding_date).toLocaleDateString("en-IN", {
+        day: "numeric", month: "short", year: "numeric",
+      })
+    : undefined;
+  return {
+    projectName,
+    weddingDate,
+    vendorName: vendor?.vendor_name ?? "Vendor",
+    vendorCategory: vendor?.category ?? undefined,
+    clientName:
+      profile?.display_name || userRow?.user?.email?.split("@")[0] || "Client",
+    clientEmail: userRow?.user?.email ?? undefined,
+    adminUrl: project ? `https://planwithsaffront.in/admin/projects/${project.id}` : undefined,
+  };
+}
+
 export const setMyVendorStatus = createServerFn({ method: "POST" })
   .middleware([attachAuthToken])
   .inputValidator((d) =>
@@ -657,11 +696,20 @@ export const setMyVendorStatus = createServerFn({ method: "POST" })
 
     const { data: pv } = await supabaseAdmin
       .from("project_vendors")
-      .select("vendor_id")
+      .select("vendor_id, project_id")
       .in("project_id", projectIds)
       .eq("vendor_id", data.vendor_id)
       .maybeSingle();
     if (!pv) throw new Error("Vendor not available to this client");
+
+    // Read previous status to avoid noisy "no-op" emails
+    const { data: prevRow } = await supabaseAdmin
+      .from("client_vendor_status")
+      .select("status")
+      .eq("user_id", userId)
+      .eq("vendor_id", data.vendor_id)
+      .maybeSingle();
+    const previousStatus = prevRow?.status ?? null;
 
     if (data.status === null) {
       const { error } = await supabaseAdmin
@@ -670,15 +718,183 @@ export const setMyVendorStatus = createServerFn({ method: "POST" })
         .eq("user_id", userId)
         .eq("vendor_id", data.vendor_id);
       if (error) throw new Error(error.message);
-      return { ok: true, status: null as null };
+    } else {
+      const { error } = await supabaseAdmin
+        .from("client_vendor_status")
+        .upsert(
+          { user_id: userId, vendor_id: data.vendor_id, status: data.status },
+          { onConflict: "user_id,vendor_id" },
+        );
+      if (error) throw new Error(error.message);
     }
 
-    const { error } = await supabaseAdmin
-      .from("client_vendor_status")
-      .upsert(
-        { user_id: userId, vendor_id: data.vendor_id, status: data.status },
-        { onConflict: "user_id,vendor_id" },
-      );
-    if (error) throw new Error(error.message);
+    // Fire email if the status actually changed
+    if (previousStatus !== data.status) {
+      try {
+        const { notifyStaff } = await import("@/lib/notify-staff.server");
+        const ctx = await loadVendorContext(pv.project_id, data.vendor_id, userId);
+        await notifyStaff({
+          templateName: "client-status-change-notification",
+          idempotencyKey: `status-${userId}-${data.vendor_id}-${Date.now()}`,
+          templateData: {
+            ...ctx,
+            previousStatus,
+            newStatus: data.status,
+          },
+        });
+      } catch (e) {
+        console.warn("status change email failed:", e);
+      }
+    }
+
     return { ok: true, status: data.status };
+  });
+
+// ---------- Project vendor comments ----------
+
+export const listProjectVendorComments = createServerFn({ method: "GET" })
+  .middleware([attachAuthToken])
+  .inputValidator((d) =>
+    z.object({ project_id: z.string().uuid(), vendor_id: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+    if (!token) throw new Error("Authentication is still loading. Please try again.");
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+    if (userError || !userData.user) throw new Error("Authentication is still loading.");
+    const userId = userData.user.id;
+
+    // Authorize: staff OR client on this project
+    const { data: roles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    const roleSet = new Set((roles ?? []).map((r) => r.role));
+    const isStaff = roleSet.has("admin") || roleSet.has("employee");
+    if (!isStaff) {
+      const { data: pc } = await supabaseAdmin
+        .from("project_clients")
+        .select("project_id")
+        .eq("user_id", userId)
+        .eq("project_id", data.project_id)
+        .maybeSingle();
+      if (!pc) throw new Error("Forbidden");
+    }
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("project_vendor_comments")
+      .select("id, body, created_at, user_id")
+      .eq("project_id", data.project_id)
+      .eq("vendor_id", data.vendor_id)
+      .order("created_at", { ascending: true });
+    if (error) throw new Error(error.message);
+
+    const userIds = Array.from(new Set((rows ?? []).map((r) => r.user_id)));
+    let nameMap = new Map<string, string>();
+    let emailMap = new Map<string, string>();
+    if (userIds.length > 0) {
+      const { data: profs } = await supabaseAdmin
+        .from("profiles")
+        .select("user_id, display_name")
+        .in("user_id", userIds);
+      nameMap = new Map((profs ?? []).map((p) => [p.user_id, p.display_name ?? ""]));
+      // For staff view, also pull emails
+      if (isStaff) {
+        const { data: usersData } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+        emailMap = new Map(usersData.users.map((u) => [u.id, u.email ?? ""]));
+      }
+    }
+
+    return (rows ?? []).map((r) => ({
+      id: r.id,
+      body: r.body,
+      created_at: r.created_at,
+      user_id: r.user_id,
+      author_name: nameMap.get(r.user_id) || (emailMap.get(r.user_id)?.split("@")[0] ?? "Client"),
+      author_email: isStaff ? (emailMap.get(r.user_id) ?? null) : null,
+      is_own: r.user_id === userId,
+    }));
+  });
+
+export const addProjectVendorComment = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken])
+  .inputValidator((d) =>
+    z
+      .object({
+        vendor_id: z.string().uuid(),
+        body: z.string().trim().min(1).max(4000),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const { userId } = await requireClientUser();
+
+    // Find the project this client owns and confirm vendor is on it
+    const { data: links } = await supabaseAdmin
+      .from("project_clients")
+      .select("project_id")
+      .eq("user_id", userId);
+    const projectIds = (links ?? []).map((l) => l.project_id);
+    if (projectIds.length === 0) throw new Error("No project assigned");
+
+    const { data: pv } = await supabaseAdmin
+      .from("project_vendors")
+      .select("project_id, vendor_id")
+      .in("project_id", projectIds)
+      .eq("vendor_id", data.vendor_id)
+      .maybeSingle();
+    if (!pv) throw new Error("Vendor not available to this client");
+
+    const { data: inserted, error } = await supabaseAdmin
+      .from("project_vendor_comments")
+      .insert({
+        project_id: pv.project_id,
+        vendor_id: data.vendor_id,
+        user_id: userId,
+        body: data.body.trim(),
+      })
+      .select("id, body, created_at, user_id")
+      .single();
+    if (error) throw new Error(error.message);
+
+    // Fire email — best-effort
+    try {
+      const { notifyStaff } = await import("@/lib/notify-staff.server");
+      const ctx = await loadVendorContext(pv.project_id, data.vendor_id, userId);
+      await notifyStaff({
+        templateName: "client-comment-notification",
+        idempotencyKey: `comment-${inserted.id}`,
+        templateData: {
+          ...ctx,
+          commentBody: inserted.body,
+        },
+      });
+    } catch (e) {
+      console.warn("comment email failed:", e);
+    }
+
+    return inserted;
+  });
+
+export const deleteProjectVendorComment = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => {
+    const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+    if (!token) throw new Error("Authentication is still loading.");
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+    if (userError || !userData.user) throw new Error("Authentication is still loading.");
+    const userId = userData.user.id;
+
+    const { data: roles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    const isStaff = (roles ?? []).some((r) => r.role === "admin" || r.role === "employee");
+
+    let q = supabaseAdmin.from("project_vendor_comments").delete().eq("id", data.id);
+    if (!isStaff) q = q.eq("user_id", userId);
+    const { error } = await q;
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
