@@ -123,7 +123,13 @@ export interface UpdateQuoteInput {
 export async function updateProjectVendorQuote(
   input: UpdateQuoteInput,
 ): Promise<void> {
-  const patch: Record<string, unknown> = {};
+  const patch: {
+    quote_text?: string | null;
+    quote_amount?: number | null;
+    notes?: string | null;
+    status?: QuoteStatus;
+    closed_amount?: number | null;
+  } = {};
   if ("quote_text" in input) patch.quote_text = input.quote_text;
   if ("quote_amount" in input) patch.quote_amount = input.quote_amount;
   if ("notes" in input) patch.notes = input.notes;
