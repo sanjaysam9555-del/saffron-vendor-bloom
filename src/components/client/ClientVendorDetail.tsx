@@ -17,14 +17,22 @@ interface Props {
 
 export function ClientVendorDetail({ vendor, onClose }: Props) {
   const [viewing, setViewing] = useState<ClientVendor["attachments"][number] | null>(null);
+  const [viewingQuoteFile, setViewingQuoteFile] = useState<QuoteFile | null>(null);
 
   // Subscribe to the my-project cache so the status stays in sync with the card.
-  const { data: project } = useQuery<{ vendors: ClientVendor[] }>({
+  const { data: project } = useQuery<{ project: { id: string }; vendors: ClientVendor[] }>({
     queryKey: ["my-project"],
     enabled: false,
   });
   const liveVendor = project?.vendors.find((v) => v.id === vendor?.id);
   const liveStatus = liveVendor?.client_status ?? vendor?.client_status ?? null;
+  const projectId = project?.project?.id;
+
+  const { data: quote } = useQuery({
+    queryKey: ["client-vendor-quote", projectId, vendor?.id],
+    queryFn: () => getLatestProjectVendorQuote(projectId!, vendor!.id),
+    enabled: !!projectId && !!vendor?.id,
+  });
 
   if (!vendor) return null;
   const colors = CATEGORY_COLORS[vendor.category] ?? {
