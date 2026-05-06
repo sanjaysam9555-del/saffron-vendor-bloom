@@ -42,6 +42,24 @@ function RedirectingLogin() {
   const { session, role, initialized } = useAuth();
   const navigate = useNavigate();
 
+  // Synchronously check (at mount) whether this device has a previously
+  // signed-in user cached. If yes, we MUST keep the splash up — never flash
+  // the login form — until either the redirect fires or auth confirms the
+  // session is genuinely gone (token expired). This is the iOS PWA cold-boot
+  // path where Supabase's session restore from storage can take >1s and any
+  // transient session=null render would flash the login form.
+  const [hasCachedUser, setHasCachedUser] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const raw = window.localStorage.getItem("saffron.access.cache.v1");
+      if (!raw) return false;
+      const parsed = JSON.parse(raw) as { role?: string | null };
+      return Boolean(parsed?.role);
+    } catch {
+      return false;
+    }
+  });
+
   // Opening "splash plate" — held briefly so first-time visitors see brand,
   // not a sudden login form, while auth restores from localStorage.
   const [openingPlate, setOpeningPlate] = useState(true);
@@ -60,11 +78,33 @@ function RedirectingLogin() {
     }
   }, [initialized, session, role, navigate]);
 
+  // Safety: if we held the splash because of a cached user but auth has now
+  // confirmed there's no live session (token expired, signed out elsewhere),
+  // clear the stale cache after a short grace window so the user can sign in.
+  useEffect(() => {
+    if (!hasCachedUser) return;
+    if (!initialized) return;
+    if (session) return;
+    const t = window.setTimeout(() => {
+      try {
+        window.localStorage.removeItem("saffron.access.cache.v1");
+      } catch {
+        /* noop */
+      }
+      setHasCachedUser(false);
+    }, 2500);
+    return () => window.clearTimeout(t);
+  }, [hasCachedUser, initialized, session]);
+
   if (openingPlate || !initialized) return <BrandSplash showLoading={false} />;
   // Signed-in users: keep splash visible while the redirect effect fires.
   if (session) return <BrandSplash />;
+  // Cached user but session not (yet) restored — hold the splash. The
+  // safety effect above clears the cache after 2.5s if the session never
+  // materialises, so logged-out users aren't stuck here forever.
+  if (hasCachedUser) return <BrandSplash />;
 
-  // No session — safe to reveal marketing + login form.
+  // No session and no cached user — safe to reveal marketing + login form.
   return (
     <>
       <section className="mx-auto max-w-3xl px-6 pt-8 pb-2 text-center">
