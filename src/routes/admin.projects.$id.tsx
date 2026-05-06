@@ -308,7 +308,7 @@ function AssignedVendorsSection({
   onRemove: (id: string) => void;
 }) {
   const [view, setView] = useState<"list" | "grouped">("list");
-  const [quotesFor, setQuotesFor] = useState<{ id: string; name: string; category: string | null } | null>(null);
+  const [quotesFor, setQuotesFor] = useState<{ id: string; name: string; category: string | null; autoOpenForm?: boolean } | null>(null);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { like: 0, shortlisted: 0, finalised: 0, rejected: 0, thinking: 0 };
@@ -396,8 +396,8 @@ function AssignedVendorsSection({
                     <VendorQuotesPill
                       projectId={projectId}
                       vendorId={v.id}
-                      onOpen={() =>
-                        setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null })
+                      onOpen={(autoOpenForm) =>
+                        setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null, autoOpenForm })
                       }
                     />
                   </div>
@@ -454,6 +454,7 @@ function AssignedVendorsSection({
           vendorId={quotesFor.id}
           vendorName={quotesFor.name}
           vendorCategory={quotesFor.category}
+          autoOpenForm={quotesFor.autoOpenForm}
           onClose={() => setQuotesFor(null)}
         />
       )}
@@ -468,7 +469,7 @@ function VendorQuotesPill({
 }: {
   projectId: string;
   vendorId: string;
-  onOpen: () => void;
+  onOpen: (autoOpenForm: boolean) => void;
 }) {
   const { data: quotes = [] } = useQuery({
     queryKey: ["project-vendor-quotes", projectId, vendorId],
@@ -477,10 +478,11 @@ function VendorQuotesPill({
   });
   const closed = quotes.find((q) => q.is_final || q.status === "closed");
   const fileCount = quotes.reduce((n, q) => n + (q.files?.length ?? 0), 0);
+  const isEmpty = quotes.length === 0;
 
   return (
     <button
-      onClick={onOpen}
+      onClick={() => onOpen(isEmpty)}
       className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2.5 py-1 text-[11px] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
       title="Manage quotes for this vendor on this project"
     >
