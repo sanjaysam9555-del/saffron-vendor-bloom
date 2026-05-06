@@ -297,15 +297,18 @@ function pickPrimary(rows: Selection[] | undefined): Selection | null {
 }
 
 function AssignedVendorsSection({
+  projectId,
   vendors,
   selections,
   onRemove,
 }: {
+  projectId: string;
   vendors: any[];
   selections: Record<string, Selection[]>;
   onRemove: (id: string) => void;
 }) {
   const [view, setView] = useState<"list" | "grouped">("list");
+  const [quotesFor, setQuotesFor] = useState<{ id: string; name: string; category: string | null } | null>(null);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { like: 0, shortlisted: 0, finalised: 0, rejected: 0, thinking: 0 };
