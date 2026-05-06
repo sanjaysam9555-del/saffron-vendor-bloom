@@ -1,103 +1,48 @@
-## Problem
+# Client Comments + Email Notifications — IN PROGRESS
 
-The vendor card on the **client board** still shows "No documents" even after a quote is added — quotes never feed into the card footer (only `vendor.attachments`). When the user opens the detail drawer, the quote shows up correctly (already wired via `getLatestProjectVendorQuote`).
+## ✅ Completed in this turn
 
-The user also wants the **same treatment on the admin side** — but only inside the **Projects** area:
-- the Projects list (`/admin/projects`)
-- the specific project page (`/admin/projects/:id`)
+1. **Migration**: `project_vendor_comments` table created with RLS (clients insert/delete own, all clients on a project read, staff read/delete all). Added to `supabase_realtime` publication.
+2. **Email infrastructure**: Set up via Lovable Cloud. Domain `notify.planwithsaffron.in` is pending DNS verification (user can monitor in Cloud → Emails). Queue, cron, and tables are live.
+3. **Email packages installed**: `@lovable.dev/email-js`, `@lovable.dev/webhooks-js`, `@supabase/supabase-js`, `@react-email/components`, `react-email`.
+4. **Transactional send/preview/unsubscribe routes scaffolded** under `src/routes/lovable/email/` and `src/routes/email/`. Fixed `renderAsync` → `render` and minor TS typing on the queue dispatcher.
+5. **Two email templates created** with fixed recipient `info@saffronevents.in`:
+   - `src/lib/email-templates/client-comment-notification.tsx`
+   - `src/lib/email-templates/client-status-change-notification.tsx`
+   - Registered in `src/lib/email-templates/registry.ts`.
+6. **Server data**: `getProject` now returns `comment_count` per vendor.
 
-The admin **Dashboard** stays untouched.
+## ⏳ Remaining work (next turn)
 
-## Goal
+1. Apply the same `comment_count` aggregation to `getMyProject` (mirror the change made to `getProject`).
+2. Add new server fns to `src/server/projects.functions.ts`:
+   - `listProjectVendorComments({ project_id, vendor_id })` — staff or client w/ project access; returns rows + author display_name/email.
+   - `addProjectVendorComment({ vendor_id, body })` — client-only; inserts row, then **best-effort** fires the `client-comment-notification` email.
+   - `deleteProjectVendorComment({ id })` — client deletes own, staff deletes any.
+   - Update `setMyVendorStatus` to compute previous status, upsert, then fire `client-status-change-notification` (skip if unchanged). Wrap email calls in try/catch so the user-facing action never fails on email errors.
+3. Add `src/lib/email/notify-staff.ts` server-only helper that resolves project + client info and POSTs to `/lovable/email/transactional/send` with the user's JWT (already on the request).
+4. New client lib: `src/lib/comments-api.ts` (typed wrappers around server fns).
+5. New components:
+   - `src/components/client/VendorCommentsThread.tsx` — used inside `ClientVendorDetail.tsx`; chronological list, post box, delete on own.
+   - `src/components/admin/ProjectVendorCommentsPanel.tsx` — read-only drawer for admin (delete-any).
+6. UI wiring:
+   - `ClientVendorDetail.tsx`: render thread below quote/documents block.
+   - `ClientVendorCard.tsx`: small "💬 N" pill when `comment_count > 0`.
+   - `admin.projects.$id.tsx`: comments pill on each vendor row → opens admin panel.
+   - `client.index.tsx` & admin route: realtime subscription on `project_vendor_comments` to invalidate query keys.
+7. Add `comment_count?: number` to `ClientVendor` in `src/lib/project-types.ts`.
 
-Wherever a vendor appears in a project context, surface project-specific quote activity:
-- "1st Quote Received", "2nd Quote Received", "3rd Quote Received", …
-- "Revised (Nth Quote)" if the latest is a revision
-- "Closed" (with amount on admin side) when a quote is finalised
+## Notes / risks
 
-## Implementation
+- Emails won't actually deliver until DNS for `notify.planwithsaffron.in` is verified. The pending state is shown in Cloud → Emails. Templates and triggers will work end-to-end as soon as DNS turns green; no further code change needed at that point.
+- Recipient is hard-coded to `info@saffronevents.in` (per request). If multiple staff addresses are needed later, replace with a small `notification_recipients` config table.
+- Pre-existing security linter warnings on `has_role`/`has_project_access` are not introduced by this migration; leaving as-is.
 
-### 1. Server: include quote summary per vendor
+## Files changed so far
 
-`src/server/projects.functions.ts`
-
-- **`getMyProject`** (client) — also fetch `project_vendor_quotes` for the project, build a per-vendor summary, attach as `quote_summary` on each vendor:
-  ```ts
-  quote_summary: {
-    count: number,
-    latest_status: 'received' | 'revised' | 'closed' | 'withdrawn' | null,
-    has_closed: boolean,
-    closed_amount: number | null,
-  }
-  ```
-- **`getProject`** (admin specific project) — same addition on each vendor row.
-- **`listProjectsOverview`** (admin Projects list) — for each project, also return a small aggregate so the project card can show a meaningful summary:
-  ```ts
-  quotes_summary: {
-    total_quotes: number,
-    vendors_with_quotes: number,
-    closed_count: number,
-  }
-  ```
-
-All three use a single `select id, project_id, vendor_id, status, is_final, closed_amount, created_at` query per scope (no N+1).
-
-### 2. Types
-
-- `src/lib/project-types.ts` — add `quote_summary` to `ClientVendor`.
-- Inside `getProject` / `listProjectsOverview` the admin pages already use `any` typing for vendors / projects, so no breaking change; new fields just flow through.
-
-### 3. UI changes
-
-**Client vendor card** — `src/components/client/ClientVendorCard.tsx`
-- Replace the "No documents / N documents" footer with a **quote pill** built from `vendor.quote_summary`:
-  - 0 quotes → no pill (or faint "—"; drop the noisy "No documents").
-  - `has_closed` → green "Closed" pill.
-  - `latest_status === 'revised'` → "Revised · Nth Quote".
-  - else → "1st Quote Received", "2nd Quote Received", …
-- Keep a tiny doc indicator only if `vendor.attachments.length > 0` (icon + count, no "No documents" text).
-- Add an inline `ordinal(n)` helper.
-
-**Admin specific project (`/admin/projects/:id`) — list view card**
-`src/routes/admin.projects.$id.tsx`
-- The existing `VendorQuotesPill` already shows "N quotes" / "Closed". Update its label logic to match the new wording so both sides feel consistent:
-  - 0 → "Add quote" (unchanged, this is the action affordance).
-  - 1 → "1st Quote Received" · 2 → "2nd Quote Received" · …
-  - If latest is revised → "Revised · Nth Quote".
-  - Closed → green "Closed · ₹X" (keep amount on admin side).
-- Keep the small paperclip + file count badge on the right.
-- (No change to the grouped view for this turn.)
-
-**Admin Projects list (`/admin/projects`)**
-`src/routes/admin.projects.index.tsx`
-- Under the existing "N vendors · M client logins" line on each project card, add a small quote summary line driven by `quotes_summary`:
-  - "M / N vendors quoted · K closed" when `total_quotes > 0`.
-  - Hidden when `total_quotes === 0`.
-- Style: same tiny `text-[11px] text-[var(--charcoal)]/55` row, to keep the card calm.
-
-**Admin Dashboard** — untouched.
-
-### 4. Realtime — keep cards in sync
-
-- Migration: `ALTER PUBLICATION supabase_realtime ADD TABLE project_vendor_quotes;` (and `project_vendor_quote_files`).
-- Client board (`src/routes/client.index.tsx`): subscribe to `postgres_changes` on `project_vendor_quotes` filtered by current `project_id` and invalidate `["my-project"]` + `["client-vendor-quote", projectId, vendorId]`.
-- Admin specific project (`src/routes/admin.projects.$id.tsx`): subscribe to `postgres_changes` filtered by `project_id` and invalidate `["project", id]` + `["project-vendor-quotes", id, vendorId]`.
-- Admin Projects list (`src/routes/admin.projects.index.tsx`): subscribe to all `project_vendor_quotes` changes (no project filter) and invalidate `["projects"]`. This is fine — the query is small and the table is low-write.
-
-All three subscriptions clean up in `useEffect` return.
-
-## Files changed
-
-- `src/server/projects.functions.ts` — quote summaries on `getMyProject`, `getProject`, `listProjectsOverview`.
-- `src/lib/project-types.ts` — add `quote_summary` to `ClientVendor`.
-- `src/components/client/ClientVendorCard.tsx` — new quote pill, drop "No documents".
-- `src/routes/client.index.tsx` — realtime subscription + invalidation.
-- `src/routes/admin.projects.$id.tsx` — update `VendorQuotesPill` wording, realtime subscription.
-- `src/routes/admin.projects.index.tsx` — show quote summary line on project cards, realtime subscription.
-- New migration: enable realtime publication on quote tables.
-
-## Out of scope
-
-- Admin Dashboard (`/admin`) — explicitly unchanged per request.
-- Grouped view on the project page — no change this turn.
-- Closed amount on the **client** card — kept inside the drawer only; the card just says "Closed".
+- new: `supabase/migrations/<timestamp>_project_vendor_comments…sql` (via migration tool)
+- new: `supabase/migrations/<timestamp>_email_infra.sql` (via setup_email_infra)
+- new: `src/routes/lovable/email/queue/process.ts`, `src/routes/lovable/email/transactional/{send,preview}.ts`, `src/routes/lovable/email/suppression.ts`, `src/routes/email/unsubscribe.ts`
+- new: `src/lib/email-templates/{registry.ts,client-comment-notification.tsx,client-status-change-notification.tsx}`
+- edited: `src/server/projects.functions.ts` (only `getProject` so far — `getMyProject` still pending)
+- edited: `package.json` (new deps + pnpm.overrides.entities)

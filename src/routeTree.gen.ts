@@ -14,12 +14,17 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClientIndexRouteImport } from './routes/client.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as ClientLoginRouteImport } from './routes/client.login'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSubmissionsRouteImport } from './routes/admin.submissions'
 import { Route as AdminProjectsIndexRouteImport } from './routes/admin.projects.index'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicVendorSignupRouteImport } from './routes/api/public/vendor-signup'
 import { Route as AdminProjectsIdRouteImport } from './routes/admin.projects.$id'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicVendorSignupCheckRouteImport } from './routes/api/public/vendor-signup.check'
 
 const VendorSignupRoute = VendorSignupRouteImport.update({
@@ -47,6 +52,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClientLoginRoute = ClientLoginRouteImport.update({
   id: '/client/login',
   path: '/client/login',
@@ -67,6 +77,11 @@ const AdminProjectsIndexRoute = AdminProjectsIndexRouteImport.update({
   path: '/admin/projects/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicVendorSignupRoute = ApiPublicVendorSignupRouteImport.update({
   id: '/api/public/vendor-signup',
   path: '/api/public/vendor-signup',
@@ -77,6 +92,24 @@ const AdminProjectsIdRoute = AdminProjectsIdRouteImport.update({
   path: '/admin/projects/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicVendorSignupCheckRoute =
   ApiPublicVendorSignupCheckRouteImport.update({
     id: '/check',
@@ -91,12 +124,17 @@ export interface FileRoutesByFullPath {
   '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/client/login': typeof ClientLoginRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
   '/admin/projects/$id': typeof AdminProjectsIdRoute
   '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/projects/': typeof AdminProjectsIndexRoute
   '/api/public/vendor-signup/check': typeof ApiPublicVendorSignupCheckRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -105,12 +143,17 @@ export interface FileRoutesByTo {
   '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/client/login': typeof ClientLoginRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin': typeof AdminIndexRoute
   '/client': typeof ClientIndexRoute
   '/admin/projects/$id': typeof AdminProjectsIdRoute
   '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/projects': typeof AdminProjectsIndexRoute
   '/api/public/vendor-signup/check': typeof ApiPublicVendorSignupCheckRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -120,12 +163,17 @@ export interface FileRoutesById {
   '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/client/login': typeof ClientLoginRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
   '/admin/projects/$id': typeof AdminProjectsIdRoute
   '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/projects/': typeof AdminProjectsIndexRoute
   '/api/public/vendor-signup/check': typeof ApiPublicVendorSignupCheckRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -136,12 +184,17 @@ export interface FileRouteTypes {
     | '/admin/submissions'
     | '/admin/users'
     | '/client/login'
+    | '/email/unsubscribe'
     | '/admin/'
     | '/client/'
     | '/admin/projects/$id'
     | '/api/public/vendor-signup'
+    | '/lovable/email/suppression'
     | '/admin/projects/'
     | '/api/public/vendor-signup/check'
+    | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -150,12 +203,17 @@ export interface FileRouteTypes {
     | '/admin/submissions'
     | '/admin/users'
     | '/client/login'
+    | '/email/unsubscribe'
     | '/admin'
     | '/client'
     | '/admin/projects/$id'
     | '/api/public/vendor-signup'
+    | '/lovable/email/suppression'
     | '/admin/projects'
     | '/api/public/vendor-signup/check'
+    | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   id:
     | '__root__'
     | '/'
@@ -164,12 +222,17 @@ export interface FileRouteTypes {
     | '/admin/submissions'
     | '/admin/users'
     | '/client/login'
+    | '/email/unsubscribe'
     | '/admin/'
     | '/client/'
     | '/admin/projects/$id'
     | '/api/public/vendor-signup'
+    | '/lovable/email/suppression'
     | '/admin/projects/'
     | '/api/public/vendor-signup/check'
+    | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -179,11 +242,16 @@ export interface RootRouteChildren {
   AdminSubmissionsRoute: typeof AdminSubmissionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   ClientLoginRoute: typeof ClientLoginRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   AdminIndexRoute: typeof AdminIndexRoute
   ClientIndexRoute: typeof ClientIndexRoute
   AdminProjectsIdRoute: typeof AdminProjectsIdRoute
   ApiPublicVendorSignupRoute: typeof ApiPublicVendorSignupRouteWithChildren
+  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   AdminProjectsIndexRoute: typeof AdminProjectsIndexRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -223,6 +291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/client/login': {
       id: '/client/login'
       path: '/client/login'
@@ -251,6 +326,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProjectsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/vendor-signup': {
       id: '/api/public/vendor-signup'
       path: '/api/public/vendor-signup'
@@ -263,6 +345,27 @@ declare module '@tanstack/react-router' {
       path: '/admin/projects/$id'
       fullPath: '/admin/projects/$id'
       preLoaderRoute: typeof AdminProjectsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/vendor-signup/check': {
@@ -295,11 +398,16 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSubmissionsRoute: AdminSubmissionsRoute,
   AdminUsersRoute: AdminUsersRoute,
   ClientLoginRoute: ClientLoginRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   AdminIndexRoute: AdminIndexRoute,
   ClientIndexRoute: ClientIndexRoute,
   AdminProjectsIdRoute: AdminProjectsIdRoute,
   ApiPublicVendorSignupRoute: ApiPublicVendorSignupRouteWithChildren,
+  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   AdminProjectsIndexRoute: AdminProjectsIndexRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
