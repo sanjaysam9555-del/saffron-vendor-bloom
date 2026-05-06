@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck } from "lucide-react";
 import { ClientStatusPill, StatusCountsRow, CLIENT_STATUS_OPTIONS } from "@/components/admin/ClientStatusPill";
@@ -38,6 +39,21 @@ function ProjectDetailPage() {
   });
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["project", id] });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`project-quotes-${id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quotes", filter: `project_id=eq.${id}` }, () => {
+        qc.invalidateQueries({ queryKey: ["project", id] });
+        qc.invalidateQueries({ queryKey: ["project-vendor-quotes", id] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quote_files" }, () => {
+        qc.invalidateQueries({ queryKey: ["project-vendor-quotes", id] });
+        qc.invalidateQueries({ queryKey: ["project", id] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [id, qc]);
 
   const [showAddClient, setShowAddClient] = useState(false);
   const [cEmail, setCEmail] = useState("");
