@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter } from "lucide-react";
+import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck } from "lucide-react";
 import { ClientStatusPill, StatusCountsRow, CLIENT_STATUS_OPTIONS } from "@/components/admin/ClientStatusPill";
 import { AuthGate } from "@/components/AuthGate";
 import {
@@ -13,8 +13,10 @@ import {
   unassignVendorFromProject,
   deleteProject,
 } from "@/server/projects.functions";
-import { useVendors } from "@/hooks/useVendorData";
 import { useAuth } from "@/lib/auth";
+import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotesPanel";
+import { listProjectVendorQuotes } from "@/lib/quote-api";
+import { formatINR } from "@/lib/quote-types";
 
 export const Route = createFileRoute("/admin/projects/$id")({
   head: () => ({ meta: [{ title: "Project — Saffron Planning Studio" }] }),
