@@ -75,6 +75,48 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
           <ClientStatusSelect vendorId={vendor.id} status={liveStatus} />
         </div>
 
+        {quote && (
+          <div className="border-b border-[var(--border)] bg-white px-6 py-3">
+            <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+              {quote.status === "closed" || quote.is_final ? (
+                <><CircleCheck className="h-3 w-3 text-green-700" /> Your quote (closed)</>
+              ) : (
+                <>Latest quote</>
+              )}
+            </div>
+            {(() => {
+              const amt = quote.status === "closed" && quote.closed_amount != null ? quote.closed_amount : quote.quote_amount;
+              return amt != null ? (
+                <div className="text-xl font-semibold text-[var(--charcoal)]">{formatINR(amt)}</div>
+              ) : null;
+            })()}
+            {quote.quote_text && (
+              <div className="mt-2 whitespace-pre-wrap rounded-md bg-[var(--cream-deep)]/60 p-2 text-sm text-[var(--charcoal)]/85">
+                {quote.quote_text}
+              </div>
+            )}
+            {quote.files && quote.files.length > 0 && (
+              <ul className="mt-2 space-y-1">
+                {quote.files.map((f) => (
+                  <li key={f.id}>
+                    <button
+                      type="button"
+                      onClick={() => setViewingQuoteFile(f)}
+                      className="group flex w-full items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-[var(--cream)]/60 px-2.5 py-1.5 text-left text-xs hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)]"
+                    >
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <FileText className="h-3.5 w-3.5 shrink-0 text-[var(--terracotta)]" />
+                        <span className="truncate text-[var(--charcoal)] group-hover:text-[var(--terracotta)]">{f.file_name}</span>
+                      </div>
+                      <span className="shrink-0 text-[10px] text-[var(--charcoal)]/55">{formatFileSize(f.size_bytes)}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
         <div className="grid gap-3 p-6 sm:grid-cols-2">
           <Row icon={<MapPin />} label="Location" value={vendor.location} />
           <Row label="Price" value={vendor.price_text} />
