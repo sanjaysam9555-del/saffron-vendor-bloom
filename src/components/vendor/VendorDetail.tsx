@@ -14,6 +14,8 @@ import {
 import { SignedDocumentViewer } from "./SignedDocumentViewer";
 import { useAuth, useIsAdmin } from "@/lib/auth";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
+import { BookedBadge } from "./BookedBadge";
+import { VendorQuoteHistory } from "./VendorQuoteHistory";
 
 interface VendorDetailProps {
   vendor: Vendor | null;
@@ -110,6 +112,7 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
                   <Sparkles className="h-3.5 w-3.5" /> {Number(vendor.saffron_rating).toFixed(1)} Saffron Team
                 </span>
               )}
+              <BookedBadge vendorId={vendor.id} />
             </div>
           </div>
           <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]"><X className="h-5 w-5" /></button>
@@ -159,6 +162,8 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
           </div>
           <VendorProjectAssigner vendorId={vendor.id} />
         </div>
+
+        <VendorQuoteHistory vendorId={vendor.id} />
 
         {attachments.length > 0 && (
           <div className="border-t border-[var(--border)] px-6 py-4">

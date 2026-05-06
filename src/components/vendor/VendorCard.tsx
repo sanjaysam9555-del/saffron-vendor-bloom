@@ -3,6 +3,7 @@ import { CATEGORY_COLORS } from "@/lib/categories";
 import { MapPin, Phone, Star, Sparkles, Instagram, Copy, Check, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
+import { BookedBadge } from "./BookedBadge";
 
 interface VendorCardProps {
   vendor: Vendor;
@@ -97,6 +98,7 @@ export function VendorCard({
             ✦ Via Form
           </span>
         )}
+        <BookedBadge vendorId={vendor.id} compact />
       </div>
 
       <div className="min-w-0 space-y-1.5 text-sm text-[var(--charcoal)]/75">

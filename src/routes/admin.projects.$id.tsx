@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter } from "lucide-react";
+import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck } from "lucide-react";
 import { ClientStatusPill, StatusCountsRow, CLIENT_STATUS_OPTIONS } from "@/components/admin/ClientStatusPill";
 import { AuthGate } from "@/components/AuthGate";
 import {
@@ -13,8 +13,10 @@ import {
   unassignVendorFromProject,
   deleteProject,
 } from "@/server/projects.functions";
-import { useVendors } from "@/hooks/useVendorData";
 import { useAuth } from "@/lib/auth";
+import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotesPanel";
+import { listProjectVendorQuotes } from "@/lib/quote-api";
+import { formatINR } from "@/lib/quote-types";
 
 export const Route = createFileRoute("/admin/projects/$id")({
   head: () => ({ meta: [{ title: "Project — Saffron Planning Studio" }] }),
@@ -183,6 +185,7 @@ function ProjectDetailPage() {
 
         {/* Assigned vendors */}
         <AssignedVendorsSection
+          projectId={id}
           vendors={vendors}
           selections={selections}
           onRemove={removeVendor}
@@ -294,15 +297,18 @@ function pickPrimary(rows: Selection[] | undefined): Selection | null {
 }
 
 function AssignedVendorsSection({
+  projectId,
   vendors,
   selections,
   onRemove,
 }: {
+  projectId: string;
   vendors: any[];
   selections: Record<string, Selection[]>;
   onRemove: (id: string) => void;
 }) {
   const [view, setView] = useState<"list" | "grouped">("list");
+  const [quotesFor, setQuotesFor] = useState<{ id: string; name: string; category: string | null } | null>(null);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { like: 0, shortlisted: 0, finalised: 0, rejected: 0, thinking: 0 };
@@ -386,6 +392,15 @@ function AssignedVendorsSection({
                       </span>
                     )}
                   </div>
+                  <div className="mt-2">
+                    <VendorQuotesPill
+                      projectId={projectId}
+                      vendorId={v.id}
+                      onOpen={() =>
+                        setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null })
+                      }
+                    />
+                  </div>
                 </div>
                 <button
                   onClick={() => onRemove(v.id)}
@@ -432,6 +447,63 @@ function AssignedVendorsSection({
           })}
         </div>
       )}
+
+      {quotesFor && (
+        <ProjectVendorQuotesPanel
+          projectId={projectId}
+          vendorId={quotesFor.id}
+          vendorName={quotesFor.name}
+          vendorCategory={quotesFor.category}
+          onClose={() => setQuotesFor(null)}
+        />
+      )}
     </section>
+  );
+}
+
+function VendorQuotesPill({
+  projectId,
+  vendorId,
+  onOpen,
+}: {
+  projectId: string;
+  vendorId: string;
+  onOpen: () => void;
+}) {
+  const { data: quotes = [] } = useQuery({
+    queryKey: ["project-vendor-quotes", projectId, vendorId],
+    queryFn: () => listProjectVendorQuotes(projectId, vendorId),
+    staleTime: 30_000,
+  });
+  const closed = quotes.find((q) => q.is_final || q.status === "closed");
+  const fileCount = quotes.reduce((n, q) => n + (q.files?.length ?? 0), 0);
+
+  return (
+    <button
+      onClick={onOpen}
+      className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2.5 py-1 text-[11px] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
+      title="Manage quotes for this vendor on this project"
+    >
+      <FileText className="h-3 w-3" />
+      {quotes.length === 0 ? (
+        <span>Add quote</span>
+      ) : closed ? (
+        <>
+          <CircleCheck className="h-3 w-3 text-green-700" />
+          <span className="font-semibold text-green-800">
+            Closed{closed.closed_amount != null ? ` ${formatINR(closed.closed_amount)}` : ""}
+          </span>
+        </>
+      ) : (
+        <span>
+          {quotes.length} quote{quotes.length === 1 ? "" : "s"}
+        </span>
+      )}
+      {fileCount > 0 && (
+        <span className="inline-flex items-center gap-0.5 text-[10px] text-[var(--charcoal)]/55">
+          <Paperclip className="h-2.5 w-2.5" /> {fileCount}
+        </span>
+      )}
+    </button>
   );
 }
