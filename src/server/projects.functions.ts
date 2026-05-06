@@ -138,7 +138,32 @@ export const getProject = createServerFn({ method: "GET" })
       }
     }
 
-    return { project, clients: clientRows, vendors, selections };
+    // Per-vendor quote summary for this project
+    const quoteSummaryByVendor = new Map<string, { count: number; latest_status: string | null; has_closed: boolean; closed_amount: number | null }>();
+    if (vendorIds.length > 0) {
+      const { data: qrows } = await supabaseAdmin
+        .from("project_vendor_quotes")
+        .select("vendor_id, status, is_final, closed_amount, created_at")
+        .eq("project_id", data.id)
+        .in("vendor_id", vendorIds)
+        .order("created_at", { ascending: false });
+      for (const q of qrows ?? []) {
+        const s = quoteSummaryByVendor.get(q.vendor_id) ?? { count: 0, latest_status: null, has_closed: false, closed_amount: null };
+        s.count += 1;
+        if (s.latest_status === null) s.latest_status = q.status;
+        if (q.is_final || q.status === "closed") {
+          s.has_closed = true;
+          if (s.closed_amount == null) s.closed_amount = q.closed_amount;
+        }
+        quoteSummaryByVendor.set(q.vendor_id, s);
+      }
+    }
+    const vendorsWithQuotes = vendors.map((v) => ({
+      ...v,
+      quote_summary: quoteSummaryByVendor.get(v.id) ?? { count: 0, latest_status: null, has_closed: false, closed_amount: null },
+    }));
+
+    return { project, clients: clientRows, vendors: vendorsWithQuotes, selections };
   });
 
 // Returns all projects with per-status vendor counts (for the projects index page).
@@ -192,6 +217,20 @@ export const listProjectsOverview = createServerFn({ method: "GET" })
     const statusMap = new Map<string, string>();
     for (const s of statusRows) statusMap.set(statusKey(s.user_id, s.vendor_id), s.status);
 
+    // Quote aggregates per project
+    const { data: qAll } = await supabaseAdmin
+      .from("project_vendor_quotes")
+      .select("project_id, vendor_id, status, is_final")
+      .in("project_id", projectIds);
+    const quotesByProject = new Map<string, { total: number; vendors: Set<string>; closed: number }>();
+    for (const q of qAll ?? []) {
+      const s = quotesByProject.get(q.project_id) ?? { total: 0, vendors: new Set<string>(), closed: 0 };
+      s.total += 1;
+      s.vendors.add(q.vendor_id);
+      if (q.is_final || q.status === "closed") s.closed += 1;
+      quotesByProject.set(q.project_id, s);
+    }
+
     return projects.map((p) => {
       const counts: Record<string, number> = { like: 0, shortlisted: 0, finalised: 0, rejected: 0, thinking: 0 };
       const clientIds = clientsByProject.get(p.id) ?? [];
@@ -203,11 +242,17 @@ export const listProjectsOverview = createServerFn({ method: "GET" })
           if (st && st in counts) counts[st]++;
         }
       }
+      const qs = quotesByProject.get(p.id);
       return {
         ...p,
         vendor_count: vendorCount.get(p.id) ?? 0,
         client_count: clientIds.length,
         status_counts: counts,
+        quotes_summary: {
+          total_quotes: qs?.total ?? 0,
+          vendors_with_quotes: qs?.vendors.size ?? 0,
+          closed_count: qs?.closed ?? 0,
+        },
       };
     });
   });
@@ -522,6 +567,24 @@ export const getMyProject = createServerFn({ method: "GET" })
       (statuses ?? []).map((s) => [s.vendor_id, s.status]),
     );
 
+    const { data: qrows } = await supabaseAdmin
+      .from("project_vendor_quotes")
+      .select("vendor_id, status, is_final, closed_amount, created_at")
+      .eq("project_id", link.project_id)
+      .in("vendor_id", vendorIds)
+      .order("created_at", { ascending: false });
+    const quoteSummaryByVendor = new Map<string, { count: number; latest_status: string | null; has_closed: boolean; closed_amount: number | null }>();
+    for (const q of qrows ?? []) {
+      const s = quoteSummaryByVendor.get(q.vendor_id) ?? { count: 0, latest_status: null, has_closed: false, closed_amount: null };
+      s.count += 1;
+      if (s.latest_status === null) s.latest_status = q.status;
+      if (q.is_final || q.status === "closed") {
+        s.has_closed = true;
+        if (s.closed_amount == null) s.closed_amount = q.closed_amount;
+      }
+      quoteSummaryByVendor.set(q.vendor_id, s);
+    }
+
     const vendors = (vrows ?? []).map((v) => ({
       id: v.id,
       category: v.category,
@@ -535,6 +598,7 @@ export const getMyProject = createServerFn({ method: "GET" })
       google_rating: v.google_rating,
       client_status: statusMap.get(v.id) ?? null,
       attachments: attMap.get(v.id) ?? [],
+      quote_summary: quoteSummaryByVendor.get(v.id) ?? { count: 0, latest_status: null, has_closed: false, closed_amount: null },
     }));
 
     return { project, vendors };

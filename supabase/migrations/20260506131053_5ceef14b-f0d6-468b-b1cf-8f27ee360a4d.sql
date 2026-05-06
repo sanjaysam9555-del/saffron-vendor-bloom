@@ -1,0 +1,2 @@
+ALTER PUBLICATION supabase_realtime ADD TABLE public.project_vendor_quotes;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.project_vendor_quote_files;

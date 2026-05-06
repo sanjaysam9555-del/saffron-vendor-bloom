@@ -50,4 +50,10 @@ export interface ClientVendor {
     mime_type: string | null;
     size_bytes: number | null;
   }[];
+  quote_summary?: {
+    count: number;
+    latest_status: string | null;
+    has_closed: boolean;
+    closed_amount: number | null;
+  };
 }

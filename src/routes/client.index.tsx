@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Sparkles, LayoutGrid, Columns3, Filter as FilterIcon } from "lucide-react";
 import { ClientGate } from "@/components/ClientGate";
 import { BrandSplash } from "@/components/BrandSplash";
@@ -27,10 +28,28 @@ export const Route = createFileRoute("/client/")({
 
 function ClientPortalPage() {
   const { signOut } = useAuth();
+  const qc = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ["my-project"],
     queryFn: () => getMyProject(),
   });
+  const projectId = data?.project?.id;
+
+  useEffect(() => {
+    if (!projectId) return;
+    const channel = supabase
+      .channel(`client-quotes-${projectId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quotes", filter: `project_id=eq.${projectId}` }, () => {
+        qc.invalidateQueries({ queryKey: ["my-project"] });
+        qc.invalidateQueries({ queryKey: ["client-vendor-quote", projectId] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quote_files" }, () => {
+        qc.invalidateQueries({ queryKey: ["my-project"] });
+        qc.invalidateQueries({ queryKey: ["client-vendor-quote", projectId] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [projectId, qc]);
 
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<ClientFilterState>({ category: null, locations: [] });

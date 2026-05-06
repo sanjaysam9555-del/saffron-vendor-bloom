@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck } from "lucide-react";
 import { ClientStatusPill, StatusCountsRow, CLIENT_STATUS_OPTIONS } from "@/components/admin/ClientStatusPill";
@@ -17,6 +18,7 @@ import { useAuth } from "@/lib/auth";
 import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotesPanel";
 import { listProjectVendorQuotes } from "@/lib/quote-api";
 import { formatINR } from "@/lib/quote-types";
+import { ordinal } from "@/lib/quote-summary";
 
 export const Route = createFileRoute("/admin/projects/$id")({
   head: () => ({ meta: [{ title: "Project — Saffron Planning Studio" }] }),
@@ -37,6 +39,21 @@ function ProjectDetailPage() {
   });
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["project", id] });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`project-quotes-${id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quotes", filter: `project_id=eq.${id}` }, () => {
+        qc.invalidateQueries({ queryKey: ["project", id] });
+        qc.invalidateQueries({ queryKey: ["project-vendor-quotes", id] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quote_files" }, () => {
+        qc.invalidateQueries({ queryKey: ["project-vendor-quotes", id] });
+        qc.invalidateQueries({ queryKey: ["project", id] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [id, qc]);
 
   const [showAddClient, setShowAddClient] = useState(false);
   const [cEmail, setCEmail] = useState("");
@@ -493,13 +510,13 @@ function VendorQuotesPill({
         <>
           <CircleCheck className="h-3 w-3 text-green-700" />
           <span className="font-semibold text-green-800">
-            Closed{closed.closed_amount != null ? ` ${formatINR(closed.closed_amount)}` : ""}
+            Closed{closed.closed_amount != null ? ` · ${formatINR(closed.closed_amount)}` : ""}
           </span>
         </>
+      ) : quotes[0]?.status === "revised" ? (
+        <span>Revised · {ordinal(quotes.length)} Quote</span>
       ) : (
-        <span>
-          {quotes.length} quote{quotes.length === 1 ? "" : "s"}
-        </span>
+        <span>{ordinal(quotes.length)} Quote Received</span>
       )}
       {fileCount > 0 && (
         <span className="inline-flex items-center gap-0.5 text-[10px] text-[var(--charcoal)]/55">

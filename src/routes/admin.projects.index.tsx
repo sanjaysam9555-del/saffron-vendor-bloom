@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Plus, Calendar, Heart } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
@@ -21,6 +22,16 @@ function ProjectsListPage() {
     queryKey: ["projects"],
     queryFn: () => listProjectsOverview(),
   });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-projects-quotes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quotes" }, () => {
+        qc.invalidateQueries({ queryKey: ["projects"] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [qc]);
 
   const [showCreate, setShowCreate] = useState(false);
   const [bride, setBride] = useState("");
@@ -123,6 +134,14 @@ function ProjectsListPage() {
                 <div className="mt-2 text-[11px] text-[var(--charcoal)]/55">
                   {p.vendor_count ?? 0} vendor{(p.vendor_count ?? 0) === 1 ? "" : "s"} · {p.client_count ?? 0} client login{(p.client_count ?? 0) === 1 ? "" : "s"}
                 </div>
+                {p.quotes_summary && p.quotes_summary.total_quotes > 0 && (
+                  <div className="mt-1 text-[11px] text-[var(--charcoal)]/55">
+                    {p.quotes_summary.vendors_with_quotes} / {p.vendor_count ?? 0} vendor{(p.vendor_count ?? 0) === 1 ? "" : "s"} quoted
+                    {p.quotes_summary.closed_count > 0 && (
+                      <span className="font-medium text-green-800"> · {p.quotes_summary.closed_count} closed</span>
+                    )}
+                  </div>
+                )}
                 {p.status_counts && (p.vendor_count ?? 0) > 0 && (
                   <div className="mt-2">
                     <StatusCountsRow counts={p.status_counts} />
