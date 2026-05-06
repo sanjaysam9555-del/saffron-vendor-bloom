@@ -17,6 +17,7 @@ import { useAuth } from "@/lib/auth";
 import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotesPanel";
 import { listProjectVendorQuotes } from "@/lib/quote-api";
 import { formatINR } from "@/lib/quote-types";
+import { ordinal } from "@/lib/quote-summary";
 
 export const Route = createFileRoute("/admin/projects/$id")({
   head: () => ({ meta: [{ title: "Project — Saffron Planning Studio" }] }),
@@ -493,13 +494,13 @@ function VendorQuotesPill({
         <>
           <CircleCheck className="h-3 w-3 text-green-700" />
           <span className="font-semibold text-green-800">
-            Closed{closed.closed_amount != null ? ` ${formatINR(closed.closed_amount)}` : ""}
+            Closed{closed.closed_amount != null ? ` · ${formatINR(closed.closed_amount)}` : ""}
           </span>
         </>
+      ) : quotes[0]?.status === "revised" ? (
+        <span>Revised · {ordinal(quotes.length)} Quote</span>
       ) : (
-        <span>
-          {quotes.length} quote{quotes.length === 1 ? "" : "s"}
-        </span>
+        <span>{ordinal(quotes.length)} Quote Received</span>
       )}
       {fileCount > 0 && (
         <span className="inline-flex items-center gap-0.5 text-[10px] text-[var(--charcoal)]/55">
