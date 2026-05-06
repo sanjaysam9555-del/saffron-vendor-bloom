@@ -392,6 +392,15 @@ function AssignedVendorsSection({
                       </span>
                     )}
                   </div>
+                  <div className="mt-2">
+                    <VendorQuotesPill
+                      projectId={projectId}
+                      vendorId={v.id}
+                      onOpen={() =>
+                        setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null })
+                      }
+                    />
+                  </div>
                 </div>
                 <button
                   onClick={() => onRemove(v.id)}
