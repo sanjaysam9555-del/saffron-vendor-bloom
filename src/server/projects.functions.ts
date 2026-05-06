@@ -667,7 +667,7 @@ async function loadVendorContext(projectId: string, vendorId: string, userId: st
     clientName:
       profile?.display_name || userRow?.user?.email?.split("@")[0] || "Client",
     clientEmail: userRow?.user?.email ?? undefined,
-    adminUrl: project ? `https://planwithsaffront.in/admin/projects/${project.id}` : undefined,
+    adminUrl: project ? `https://planwithsaffron.in/admin/projects/${project.id}` : undefined,
   };
 }
 
