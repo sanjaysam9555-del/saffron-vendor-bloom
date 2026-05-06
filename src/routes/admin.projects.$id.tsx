@@ -185,6 +185,7 @@ function ProjectDetailPage() {
 
         {/* Assigned vendors */}
         <AssignedVendorsSection
+          projectId={id}
           vendors={vendors}
           selections={selections}
           onRemove={removeVendor}
