@@ -195,6 +195,15 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
           onClose={() => setViewing(null)}
         />
       )}
+
+      {viewingQuoteFile && (
+        <SignedQuoteFileViewer
+          filePath={viewingQuoteFile.file_path}
+          fileName={viewingQuoteFile.file_name}
+          mimeType={viewingQuoteFile.mime_type}
+          onClose={() => setViewingQuoteFile(null)}
+        />
+      )}
     </div>
   );
 }
