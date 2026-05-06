@@ -20,6 +20,7 @@ import { Route as AdminSubmissionsRouteImport } from './routes/admin.submissions
 import { Route as AdminProjectsIndexRouteImport } from './routes/admin.projects.index'
 import { Route as ApiPublicVendorSignupRouteImport } from './routes/api/public/vendor-signup'
 import { Route as AdminProjectsIdRouteImport } from './routes/admin.projects.$id'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicVendorSignupCheckRouteImport } from './routes/api/public/vendor-signup.check'
 
 const VendorSignupRoute = VendorSignupRouteImport.update({
@@ -77,6 +78,12 @@ const AdminProjectsIdRoute = AdminProjectsIdRouteImport.update({
   path: '/admin/projects/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicVendorSignupCheckRoute =
   ApiPublicVendorSignupCheckRouteImport.update({
     id: '/check',
@@ -97,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/admin/projects/': typeof AdminProjectsIndexRoute
   '/api/public/vendor-signup/check': typeof ApiPublicVendorSignupCheckRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -111,6 +119,7 @@ export interface FileRoutesByTo {
   '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/admin/projects': typeof AdminProjectsIndexRoute
   '/api/public/vendor-signup/check': typeof ApiPublicVendorSignupCheckRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -126,6 +135,7 @@ export interface FileRoutesById {
   '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/admin/projects/': typeof AdminProjectsIndexRoute
   '/api/public/vendor-signup/check': typeof ApiPublicVendorSignupCheckRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/api/public/vendor-signup'
     | '/admin/projects/'
     | '/api/public/vendor-signup/check'
+    | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/api/public/vendor-signup'
     | '/admin/projects'
     | '/api/public/vendor-signup/check'
+    | '/lovable/email/queue/process'
   id:
     | '__root__'
     | '/'
@@ -170,6 +182,7 @@ export interface FileRouteTypes {
     | '/api/public/vendor-signup'
     | '/admin/projects/'
     | '/api/public/vendor-signup/check'
+    | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,6 +197,7 @@ export interface RootRouteChildren {
   AdminProjectsIdRoute: typeof AdminProjectsIdRoute
   ApiPublicVendorSignupRoute: typeof ApiPublicVendorSignupRouteWithChildren
   AdminProjectsIndexRoute: typeof AdminProjectsIndexRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -265,6 +279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProjectsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/vendor-signup/check': {
       id: '/api/public/vendor-signup/check'
       path: '/check'
@@ -300,6 +321,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminProjectsIdRoute: AdminProjectsIdRoute,
   ApiPublicVendorSignupRoute: ApiPublicVendorSignupRouteWithChildren,
   AdminProjectsIndexRoute: AdminProjectsIndexRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
