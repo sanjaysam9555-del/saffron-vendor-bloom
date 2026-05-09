@@ -235,10 +235,12 @@ function ClientPortalPage() {
                 <ClientVendorCard key={v.id} vendor={v} onView={() => setDetail(v)} />
               ))}
             </div>
-          ) : (
+          ) : view === "board" ? (
             <div className="animate-fade-in">
               <ClientBoardView vendors={filtered} onView={(v) => setDetail(v)} />
             </div>
+          ) : (
+            <ClientVendorTable vendors={filtered} onView={(v) => setDetail(v)} />
           )}
         </main>
       </div>
