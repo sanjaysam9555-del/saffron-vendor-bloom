@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Eye, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, Inbox, Pencil } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { useVendors, useVendorMutations, useVendorModals } from "@/hooks/useVendorData";
 import { VendorDetail } from "@/components/vendor/VendorDetail";
 import { VendorForm } from "@/components/vendor/VendorForm";
-import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { notifySuccess } from "@/lib/ui/feedback";
 
 export const Route = createFileRoute("/admin/submissions")({
   head: () => ({
@@ -111,22 +113,23 @@ function SubmissionsPage() {
         </div>
 
         {isLoading ? (
-          <div className="rounded-lg border border-[var(--border)] bg-white p-12 text-center text-sm text-[var(--charcoal)]/50">
-            Loading…
+          <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-white">
+            <div className="space-y-2 p-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-[var(--border)] bg-white p-12 text-center">
-            <div className="text-sm text-[var(--charcoal)]/60">
-              {submissions.length === 0
-                ? "No vendor self-submissions yet."
-                : "No submissions match your search."}
-            </div>
-            {submissions.length === 0 && (
-              <div className="mt-2 text-xs text-[var(--charcoal)]/50">
-                Share <code className="rounded bg-[var(--cream-deep)] px-1.5 py-0.5">/vendor-signup</code> to start receiving submissions.
-              </div>
-            )}
-          </div>
+          <EmptyState
+            icon={Inbox}
+            title={submissions.length === 0 ? "No submissions yet" : "No matches"}
+            description={
+              submissions.length === 0
+                ? "Share your /vendor-signup link to start receiving submissions."
+                : "Try a different search."
+            }
+          />
         ) : (
           <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-white">
             <table className="w-full text-sm">
@@ -194,11 +197,11 @@ function SubmissionsPage() {
           onSubmit={async (input) => {
             if (modals.state.editing) {
               const v = await update.mutateAsync({ id: modals.state.editing.id, input });
-              toast.success("Vendor updated");
+              notifySuccess("Vendor updated");
               return v;
             }
             const v = await create.mutateAsync(input);
-            toast.success("Vendor added");
+            notifySuccess(`${v.vendor_name} added`);
             return v;
           }}
         />
