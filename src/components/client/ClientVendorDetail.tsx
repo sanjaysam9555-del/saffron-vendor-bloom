@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listProjectVendorQuotes } from "@/lib/quote-api";
 import { formatINR, type QuoteFile, type ProjectVendorQuote } from "@/lib/quote-types";
 import { VendorCommentsThread } from "./VendorCommentsThread";
+import { instagramDisplay, instagramUrl } from "@/lib/instagram";
 
 interface Props {
   vendor: ClientVendor | null;
@@ -147,8 +148,8 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
           <Row
             icon={<Instagram />}
             label="Instagram"
-            value={vendor.instagram_handle ? `@${vendor.instagram_handle}` : null}
-            link={vendor.instagram_handle ? `https://instagram.com/${vendor.instagram_handle}` : undefined}
+            value={instagramDisplay(vendor.instagram_handle)}
+            link={instagramUrl(vendor.instagram_handle) ?? undefined}
           />
           <Row
             icon={<LinkIcon />}

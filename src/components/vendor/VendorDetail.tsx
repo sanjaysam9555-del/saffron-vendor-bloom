@@ -13,6 +13,7 @@ import {
 } from "@/lib/vendor-files-api";
 import { SignedDocumentViewer } from "./SignedDocumentViewer";
 import { useAuth, useIsAdmin } from "@/lib/auth";
+import { instagramDisplay, instagramUrl } from "@/lib/instagram";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
 import { BookedBadge } from "./BookedBadge";
 import { VendorQuoteHistory } from "./VendorQuoteHistory";
@@ -76,7 +77,7 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
       vendor.vendor_name,
       vendor.category,
       vendor.contact_number ?? "",
-      vendor.instagram_handle ? `@${vendor.instagram_handle}` : "",
+      instagramDisplay(vendor.instagram_handle) ?? "",
       vendor.website ?? "",
       vendor.price_text ?? "",
     ].filter(Boolean);
@@ -131,7 +132,7 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
           <Row icon={<MapPin />} label="Location" value={vendor.location} />
           <Row icon={<Phone />} label="Phone" value={vendor.contact_number} copy />
           <Row icon={<Mail />} label="Email" value={vendor.email} copy />
-          <Row icon={<Instagram />} label="Instagram" value={vendor.instagram_handle ? `@${vendor.instagram_handle}` : null} link={vendor.instagram_handle ? `https://instagram.com/${vendor.instagram_handle}` : undefined} />
+          <Row icon={<Instagram />} label="Instagram" value={instagramDisplay(vendor.instagram_handle)} link={instagramUrl(vendor.instagram_handle) ?? undefined} />
           <Row icon={<Globe />} label="Website" value={vendor.website} link={vendor.website ? (vendor.website.startsWith("http") ? vendor.website : `https://${vendor.website}`) : undefined} />
           <Row icon={<LinkIcon />} label="Portfolio" value={vendor.portfolio_link} link={vendor.portfolio_link ?? undefined} />
 

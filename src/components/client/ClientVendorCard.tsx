@@ -3,6 +3,7 @@ import { CATEGORY_COLORS } from "@/lib/categories";
 import { getClientStatusOption } from "@/lib/client-status";
 import { ClientStatusSelect } from "./ClientStatusSelect";
 import { MapPin, Instagram, Link as LinkIcon, Paperclip, Globe, Star, FileText, CircleCheck, MessageSquare, Sparkles } from "lucide-react";
+import { instagramUrl } from "@/lib/instagram";
 import { formatINR, formatINRShort } from "@/lib/quote-types";
 
 interface Props {
@@ -57,12 +58,8 @@ export function ClientVendorCard({ vendor, onView }: Props) {
           </div>
         )}
         {vendor.instagram_handle && (() => {
-          const raw = vendor.instagram_handle.trim().replace(/^@+/, "");
-          const handle = raw
-            .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
-            .replace(/\/.*$/, "")
-            .replace(/\?.*$/, "");
-          const href = `https://www.instagram.com/${handle}/`;
+          const href = instagramUrl(vendor.instagram_handle);
+          if (!href) return null;
           return (
             <a
               href={href}

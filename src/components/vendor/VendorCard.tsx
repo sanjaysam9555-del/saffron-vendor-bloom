@@ -4,6 +4,7 @@ import { MapPin, Phone, Star, Sparkles, Instagram, Copy, Check, MessageCircle } 
 import { useState } from "react";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
 import { BookedBadge } from "./BookedBadge";
+import { instagramUrl } from "@/lib/instagram";
 
 interface VendorCardProps {
   vendor: Vendor;
@@ -152,12 +153,8 @@ export function VendorCard({
           );
         })()}
         {vendor.instagram_handle && (() => {
-          const raw = vendor.instagram_handle.trim().replace(/^@+/, "");
-          const handle = raw
-            .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
-            .replace(/\/.*$/, "")
-            .replace(/\?.*$/, "");
-          const href = `https://www.instagram.com/${handle}/`;
+          const href = instagramUrl(vendor.instagram_handle);
+          if (!href) return null;
           return (
             <a
               href={href}
