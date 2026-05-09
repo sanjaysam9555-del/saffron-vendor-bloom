@@ -385,18 +385,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_saffron_pick: boolean
           project_id: string
           vendor_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          is_saffron_pick?: boolean
           project_id: string
           vendor_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          is_saffron_pick?: boolean
           project_id?: string
           vendor_id?: string
         }

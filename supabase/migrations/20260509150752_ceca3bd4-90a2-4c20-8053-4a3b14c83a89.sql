@@ -1,0 +1,2 @@
+ALTER TABLE public.project_vendors ADD COLUMN IF NOT EXISTS is_saffron_pick boolean NOT NULL DEFAULT false;
+CREATE INDEX IF NOT EXISTS idx_project_vendors_saffron_pick ON public.project_vendors(project_id) WHERE is_saffron_pick = true;

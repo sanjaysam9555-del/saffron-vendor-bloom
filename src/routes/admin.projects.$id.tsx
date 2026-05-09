@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck, MessageSquare, Star, MapPin, Instagram, Phone, Globe, Plus } from "lucide-react";
+import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck, MessageSquare, Star, MapPin, Instagram, Phone, Globe, Plus, Sparkles } from "lucide-react";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { ClientStatusPill, StatusCountsRow, CLIENT_STATUS_OPTIONS } from "@/components/admin/ClientStatusPill";
 import { AuthGate } from "@/components/AuthGate";
@@ -13,6 +13,7 @@ import {
   removeProjectClient,
   unassignVendorFromProject,
   deleteProject,
+  setVendorSaffronPick,
 } from "@/server/projects.functions";
 import { useAuth } from "@/lib/auth";
 import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotesPanel";
@@ -371,6 +372,52 @@ function pickPrimary(rows: Selection[] | undefined): Selection | null {
   return [...rows].sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1))[0];
 }
 
+function SaffronPickToggle({
+  projectId,
+  vendorId,
+  vendorName,
+  isPicked,
+}: {
+  projectId: string;
+  vendorId: string;
+  vendorName: string;
+  isPicked: boolean;
+}) {
+  const qc = useQueryClient();
+  const [pending, setPending] = useState(false);
+  const onToggle = async () => {
+    if (pending) return;
+    setPending(true);
+    const next = !isPicked;
+    try {
+      await setVendorSaffronPick({ data: { project_id: projectId, vendor_id: vendorId, is_saffron_pick: next } });
+      qc.invalidateQueries({ queryKey: ["project", projectId] });
+      notifySuccess(next ? `Marked ${vendorName} as Saffron's Preference` : `Removed Saffron's Preference from ${vendorName}`);
+    } catch (e) {
+      notifyError(e, "Could not update Saffron's Preference");
+    } finally {
+      setPending(false);
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      disabled={pending}
+      title={isPicked ? "Saffron's Preference is on — click to remove" : "Mark as Saffron's Preference"}
+      aria-pressed={isPicked}
+      className={
+        isPicked
+          ? "inline-flex items-center gap-1 rounded-full border border-[var(--terracotta)] bg-gradient-to-r from-[var(--terracotta)] to-[var(--terracotta)]/80 px-2.5 py-1 text-[11px] font-semibold text-[var(--cream)] shadow-sm transition hover:opacity-90 disabled:opacity-60"
+          : "inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--terracotta)]/50 bg-white px-2.5 py-1 text-[11px] font-medium text-[var(--terracotta)]/80 transition hover:bg-[var(--terracotta-soft)] disabled:opacity-60"
+      }
+    >
+      <Sparkles className={isPicked ? "h-3 w-3 fill-current" : "h-3 w-3"} />
+      Saffron's Preference
+    </button>
+  );
+}
+
 function AssignedVendorsSection({
   projectId,
   vendors,
@@ -484,6 +531,12 @@ function AssignedVendorsSection({
                     >
                       <Plus className="h-3 w-3" /> Add quote
                     </button>
+                    <SaffronPickToggle
+                      projectId={projectId}
+                      vendorId={v.id}
+                      vendorName={v.vendor_name}
+                      isPicked={!!v.is_saffron_pick}
+                    />
                     <button
                       onClick={() => setCommentsFor({ id: v.id, name: v.vendor_name })}
                       className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2.5 py-1 text-[11px] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"

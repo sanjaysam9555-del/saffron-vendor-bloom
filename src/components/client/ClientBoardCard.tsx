@@ -1,6 +1,6 @@
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { MapPin, Star, GripVertical } from "lucide-react";
+import { MapPin, Star, GripVertical, Sparkles } from "lucide-react";
 import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 
@@ -25,14 +25,21 @@ export function ClientBoardCard({ vendor, onView }: Props) {
     opacity: isDragging ? 0.4 : 1,
   };
 
+  const isPick = !!vendor.is_saffron_pick;
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`group relative rounded-md border border-[var(--border)] bg-white p-2.5 text-[var(--charcoal)] shadow-sm transition-shadow ${
-        isDragging ? "shadow-lg" : "hover:shadow-md"
-      }`}
+      className={`group relative rounded-md border bg-white p-2.5 text-[var(--charcoal)] shadow-sm transition-shadow ${
+        isPick ? "border-[var(--terracotta)] ring-1 ring-[var(--terracotta)]/40" : "border-[var(--border)]"
+      } ${isDragging ? "shadow-lg" : "hover:shadow-md"}`}
     >
+      {isPick && (
+        <div className="pointer-events-none absolute -right-1 -top-1 inline-flex items-center gap-0.5 rounded-full bg-[var(--terracotta)] px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-[var(--cream)] shadow">
+          <Sparkles className="h-2.5 w-2.5 fill-current" /> Pick
+        </div>
+      )}
       <div className="flex items-start gap-1.5">
         <button
           {...attributes}

@@ -1,84 +1,57 @@
-## Goal
+## Saffron's Preference toggle
 
-A foundational UX polish pass across the whole app: every destructive action gets a confirm dialog, every successful action gets a toast plus a small inline animation, every async list/detail shows skeletons instead of blank flashes, lists with no data show friendly empty states, and forms get validation polish. Auth flows (login, signup, logout) get the same treatment.
+Add a per-project "Saffron's Preference" marker to vendor cards in the admin Project Detail page. When ON, the matching vendor card on the client's dashboard shows a clearly distinguishable badge so the client can spot the handful of vendors Saffron is recommending from their full pool.
 
-## What gets built
+The flag is **per project + vendor**, not global on the vendor — different couples can have different picks.
 
-### 1. Shared primitives (one-time)
+### Data model
 
-- **`<ConfirmDialog>`** — wrapper around the existing `AlertDialog` with `title`, `description`, `confirmLabel`, `destructive`, async `onConfirm` (handles loading + close). Replaces every `window.confirm(...)`.
-- **`useConfirm()`** hook — imperative API: `const confirm = useConfirm(); if (await confirm({...})) { ... }`. Keeps call sites clean.
-- **`<EmptyState>`** — icon + title + description + optional CTA. Reused across all empty lists.
-- **`<SectionSkeleton>` / `<RowSkeleton>` / `<CardSkeleton>`** — composed from existing `Skeleton` primitive for consistent loading states.
-- **`<SuccessFlash>`** — tiny inline check-mark + fade animation used after save/delete on the affected row, card, or button. Driven by a `flashId` prop.
-- **Animation utilities** in `src/styles.css` — `success-pop`, `flash-bg`, `fade-in`, `scale-in` keyframes. Used by `SuccessFlash` and applied via Tailwind `animate-*` classes.
-- **Toast helpers** in `src/lib/ui/feedback.ts` — `notifySuccess(msg)`, `notifyError(err, fallback)` to standardize wording (avoids the current ad-hoc `e instanceof Error ? ...` repetition).
+Add column to `project_vendors`:
+- `is_saffron_pick boolean not null default false`
 
-### 2. Replace every `window.confirm`
+RLS already allows clients SELECT and staff ALL on `project_vendors`, so no policy changes — clients can read the flag, only staff can flip it.
 
-Six current sites, all swapped to `ConfirmDialog`:
+### Server functions (`src/server/projects.functions.ts`)
 
-- `admin.users.tsx` — delete user
-- `admin.projects.$id.tsx` — delete project, remove client
-- `VendorCommentsThread.tsx` — delete comment
-- `ProjectVendorQuotesPanel.tsx` — delete quote, delete quote file
-- Plus add confirms where missing: vendor delete (`VendorDetail`), bulk vendor delete (`BulkActionBar` already has its own — verify), remove vendor from project, project-vendor unassign, attachment delete in `VendorForm`.
+1. **New:** `setVendorSaffronPick({ project_id, vendor_id, is_saffron_pick })` — staff only, updates the row in `project_vendors`.
+2. **`getProject`** (admin detail) — include `is_saffron_pick` on each vendor in the returned `vendors` array.
+3. **`getMyProject`** (client dashboard) — join the flag from `project_vendors` and include it on each vendor.
 
-### 3. Success feedback everywhere
+### Types
 
-For every mutation (create/update/delete/upload/status-change/comment/quote/login/signup/logout), wire:
+- `src/lib/project-types.ts` → add `is_saffron_pick: boolean` to `ClientVendor`.
+- Admin project detail vendor rows already use `any`; just read the new field.
 
-- `notifySuccess("X created")` toast
-- `SuccessFlash` on the affected row/card/button for ~800ms
-- Replace silent successes (e.g. status pill change, comment add, quote add, profile save) with the same pattern
+### Admin UI (`src/routes/admin.projects.$id.tsx`)
 
-Concrete files touched:
-- `lib/auth.tsx` — toast on login success ("Welcome back"), signup ("Account created"), logout ("Signed out").
-- `client.index.tsx`, `ClientTopNav.tsx`, `UserMenu.tsx` — confirm on logout, toast after.
-- `admin.index.tsx`, `admin.submissions.tsx`, `admin.projects.*`, `admin.users.tsx` — toasts on every save/add/edit/delete/assign/unassign.
-- `VendorForm`, `BulkEditDialog`, `ProjectVendorQuotesPanel`, `VendorCommentsThread`, `useSetVendorStatus`, `vendor-signup.tsx` — success toasts + inline flash on the row.
+On each row in the "Assigned vendors" list (around line 452), add a small toggle next to the existing actions:
+- shadcn `<Switch>` labelled "Saffron's Preference" with a subtle Sparkles icon.
+- Optimistic toggle → call `setVendorSaffronPick` → invalidate `["project", id]`.
+- `notifySuccess` / `notifyError` from existing feedback helpers.
+- Reuse `useConfirm` only when turning OFF (light confirmation is optional — default to no confirm, since toggling is cheap and reversible).
 
-### 4. Loading / skeleton states
+### Client UI
 
-Replace blank flashes with skeletons in:
-- Client dashboard grid, board, table views
-- Client vendor detail panel
-- Admin vendor list, vendor detail, submissions, users, projects index, project detail
-- Quote panels, comments thread
+Add a distinguishable badge to vendor cards when `is_saffron_pick === true`:
 
-Buttons that trigger async actions get a small spinner + disabled state while pending (use existing `Loader2` from lucide).
+1. **`ClientVendorCard.tsx`** (grid view) — top-right ribbon/badge: gradient terracotta pill with `Sparkles` icon + "Saffron's Pick". Also add a thin terracotta accent border / soft inner glow to the whole card so it stands out at a glance.
+2. **`ClientBoardCard.tsx`** (kanban) — small Sparkles icon chip next to the category pill.
+3. **`ClientVendorTable.tsx`** — Sparkles icon prefix on the vendor name cell.
+4. **`ClientVendorDetail.tsx`** — show the badge in the detail header.
 
-### 5. Empty states
+Optional polish: add a "Saffron's Picks" filter chip in the client dashboard toolbar to surface only preferred vendors.
 
-Friendly `EmptyState` for: client dashboard with no vendors, project with no vendors assigned, project with no clients, vendor with no quotes, vendor with no comments, admin users list empty, submissions list empty, search/filter returning zero results.
+### Out of scope
 
-### 6. Form validation polish
+- No email notification when a pick is toggled.
+- No analytics on pick views.
+- No vendor-side visibility (vendors do not see the flag).
+- No bulk-toggle UI (single toggle per row is enough for the handful-per-client use case).
 
-- Inline error messages under fields (not just toasts) in: `vendor-signup`, login, signup, project create, vendor create/edit, quote add/edit, client invite, password reset.
-- Disable submit button while invalid or pending; show spinner while submitting; show success state briefly after.
-- Use existing `react-hook-form` patterns where present; add lightweight inline error rendering otherwise.
+### Sequencing
 
-## Out of scope (explicit)
-
-- No design-system rework (colors, typography, layout stay as-is).
-- No new features or routes.
-- No backend / RLS / migration changes.
-- Email and other server-side flows untouched.
-
-## Technical notes
-
-- `sonner` is already wired — keep using `toast.success` / `toast.error` via the new `notifySuccess` / `notifyError` helpers for consistent copy.
-- `AlertDialog` primitive already present — `ConfirmDialog` is a thin wrapper, no new deps.
-- Animations live in `src/styles.css` as keyframes + Tailwind utility classes; no `framer-motion` dependency added (kept lightweight).
-- Skeletons reuse the existing `Skeleton` component; we just add composed variants.
-- All work is presentational — server functions, queries, RLS, schemas remain untouched.
-
-## Sequencing
-
-1. Build shared primitives (`ConfirmDialog`, `useConfirm`, `EmptyState`, skeleton variants, `SuccessFlash`, feedback helpers, animation keyframes).
-2. Sweep every `window.confirm` → `ConfirmDialog`.
-3. Sweep every mutation → toast + flash, including auth.
-4. Add skeletons to every async list / detail.
-5. Add empty states.
-6. Form validation polish pass.
-7. Spot-check the main flows in preview.
+1. Migration: add `is_saffron_pick` column.
+2. Server: extend `getProject` + `getMyProject`, add `setVendorSaffronPick`.
+3. Admin UI: toggle on each assigned-vendor row.
+4. Client UI: badge on `ClientVendorCard`, `ClientBoardCard`, `ClientVendorTable`, `ClientVendorDetail`.
+5. Verify in preview on both admin and client views.
