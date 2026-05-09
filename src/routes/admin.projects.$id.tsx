@@ -18,6 +18,9 @@ import { useAuth } from "@/lib/auth";
 import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotesPanel";
 import { listProjectVendorQuotes } from "@/lib/quote-api";
 import { formatINR, formatINRShort } from "@/lib/quote-types";
+import { useConfirm, useConfirmDelete } from "@/components/ui/confirm-dialog";
+import { notifySuccess, notifyError } from "@/lib/ui/feedback";
+import { EmptyState } from "@/components/ui/empty-state";
 
 import { VendorCommentsThread } from "@/components/client/VendorCommentsThread";
 
@@ -34,6 +37,7 @@ function ProjectDetailPage() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const { role } = useAuth();
+  const confirmDelete = useConfirmDelete();
   const { data, isLoading, error } = useQuery({
     queryKey: ["project", id],
     queryFn: () => getProject({ data: { id } }),
@@ -72,30 +76,55 @@ function ProjectDetailPage() {
           display_name: cName.trim() || cEmail.split("@")[0],
         },
       });
+      notifySuccess("Client login created");
       setCEmail("");
       setCName("");
       setCPwd("");
       setShowAddClient(false);
       await refresh();
     } catch (e) {
-      setCErr(e instanceof Error ? e.message : "Failed");
+      const msg = e instanceof Error ? e.message : "Failed";
+      setCErr(msg);
+      notifyError(e, msg);
     } finally {
       setCBusy(false);
     }
   };
 
-  const removeVendor = async (vendor_id: string) => {
-    await unassignVendorFromProject({ data: { project_id: id, vendor_id } });
-    await Promise.all([
-      qc.invalidateQueries({ queryKey: ["project", id] }),
-      qc.invalidateQueries({ queryKey: ["vendor-project-assignments"] }),
-    ]);
+  const removeVendor = async (vendor_id: string, vendor_name?: string) => {
+    const ok = await confirmDelete({
+      title: vendor_name ? `Remove ${vendor_name} from this project?` : "Remove this vendor?",
+      description: "The vendor stays in your library, but it will no longer be visible to this client.",
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
+    try {
+      await unassignVendorFromProject({ data: { project_id: id, vendor_id } });
+      notifySuccess("Vendor removed from project");
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["project", id] }),
+        qc.invalidateQueries({ queryKey: ["vendor-project-assignments"] }),
+      ]);
+    } catch (e) {
+      notifyError(e, "Could not remove vendor");
+    }
   };
 
   const handleDeleteProject = async () => {
-    if (!confirm("Delete this project? Client logins for this project will also be removed. This cannot be undone.")) return;
-    await deleteProject({ data: { id } });
-    window.location.href = "/admin/projects";
+    const ok = await confirmDelete({
+      title: "Delete this project?",
+      description:
+        "Client logins for this project will also be removed. This cannot be undone.",
+      confirmLabel: "Delete project",
+    });
+    if (!ok) return;
+    try {
+      await deleteProject({ data: { id } });
+      notifySuccess("Project deleted");
+      window.location.href = "/admin/projects";
+    } catch (e) {
+      notifyError(e, "Could not delete project");
+    }
   };
 
   if (isLoading) {
