@@ -57,16 +57,31 @@ function DashboardPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return vendors.filter((v) => {
+    const result = vendors.filter((v) => {
       if (filters.category && v.category !== filters.category) return false;
       if (filters.locations.length && !filters.locations.some((l) => v.location?.toLowerCase().includes(l.toLowerCase()))) return false;
+      if (filters.minGoogleRating != null && (v.google_rating ?? -1) < filters.minGoogleRating) return false;
+      if (filters.minSaffronRating != null && (v.saffron_rating ?? -1) < filters.minSaffronRating) return false;
+      if (filters.submittedViaForm === "yes" && !v.submitted_via_form) return false;
+      if (filters.submittedViaForm === "no" && v.submitted_via_form) return false;
       if (q) {
         const hay = [v.vendor_name, v.location, v.instagram_handle, v.remarks].filter(Boolean).join(" ").toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [vendors, filters, search]);
+    const sorted = [...result];
+    sorted.sort((a, b) => {
+      switch (sort) {
+        case "date_added_desc": return (b.date_added ?? "").localeCompare(a.date_added ?? "");
+        case "date_added_asc": return (a.date_added ?? "").localeCompare(b.date_added ?? "");
+        case "updated_desc": return (b.updated_at ?? "").localeCompare(a.updated_at ?? "");
+        case "name_asc": return a.vendor_name.localeCompare(b.vendor_name, undefined, { sensitivity: "base" });
+        case "name_desc": return b.vendor_name.localeCompare(a.vendor_name, undefined, { sensitivity: "base" });
+      }
+    });
+    return sorted;
+  }, [vendors, filters, search, sort]);
 
   // Clear selection when filters/search change so we don't accidentally edit hidden rows.
   useEffect(() => {
