@@ -58,13 +58,18 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
       >
         <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-[var(--border)] bg-[var(--cream)] px-6 py-4">
           <div>
-            <div className="mb-1 flex flex-wrap gap-1">
+            <div className="mb-1 flex flex-wrap items-center gap-1">
               <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text}`}>
                 {vendor.category}
               </span>
               {vendor.subcategory && (
                 <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/65">
                   {vendor.subcategory}
+                </span>
+              )}
+              {vendor.is_saffron_pick && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[var(--terracotta)] to-[var(--terracotta)]/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--cream)] shadow-sm">
+                  <Sparkles className="h-3 w-3 fill-current" /> Saffron's Pick
                 </span>
               )}
             </div>
