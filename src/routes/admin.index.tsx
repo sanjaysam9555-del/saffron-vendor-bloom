@@ -242,6 +242,15 @@ function DashboardPage() {
             </div>
           </div>
 
+          <ActiveFilterChips
+            filters={filters}
+            onChange={setFilters}
+            sort={sort}
+            onSortChange={setSort}
+            search={search}
+            onClearSearch={() => setSearch("")}
+          />
+
           {bulkMode && (
             <div className="mb-4 rounded-md border border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)] px-4 py-2 text-xs text-[var(--terracotta)] animate-fade-in">
               Bulk edit mode is on. Click any card or row to select it. Selection clears when you change filters or search.
