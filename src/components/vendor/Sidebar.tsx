@@ -7,7 +7,12 @@ import { CategoryManager } from "./CategoryManager";
 export interface FilterState {
   category: string | null;
   locations: string[];
+  minGoogleRating: number | null;
+  minSaffronRating: number | null;
+  submittedViaForm: "any" | "yes" | "no";
 }
+
+const RATING_OPTIONS = [3, 3.5, 4, 4.5] as const;
 
 interface SidebarProps {
   vendors: Vendor[];
