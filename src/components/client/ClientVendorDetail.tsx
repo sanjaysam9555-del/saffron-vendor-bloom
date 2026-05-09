@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listProjectVendorQuotes } from "@/lib/quote-api";
 import { formatINR, type QuoteFile, type ProjectVendorQuote } from "@/lib/quote-types";
 import { VendorCommentsThread } from "./VendorCommentsThread";
+import { instagramDisplay, instagramUrl } from "@/lib/instagram";
 
 interface Props {
   vendor: ClientVendor | null;
