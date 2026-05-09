@@ -177,9 +177,13 @@ export const getProject = createServerFn({ method: "GET" })
 
     const vendorsWithQuotes = vendors.map((v) => ({
       ...v,
+      is_saffron_pick: saffronPickMap.get(v.id) ?? false,
       quote_summary: quoteSummaryByVendor.get(v.id) ?? { count: 0, latest_status: null, latest_amount: null, has_closed: false, closed_amount: null },
       comment_count: commentCountByVendor.get(v.id) ?? 0,
     }));
+
+    return { project, clients: clientRows, vendors: vendorsWithQuotes, selections };
+  });
 
     return { project, clients: clientRows, vendors: vendorsWithQuotes, selections };
   });
