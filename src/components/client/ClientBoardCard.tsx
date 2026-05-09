@@ -1,6 +1,6 @@
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { MapPin, Star, GripVertical } from "lucide-react";
+import { MapPin, Star, GripVertical, Sparkles } from "lucide-react";
 import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 
