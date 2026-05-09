@@ -128,7 +128,6 @@ export function VendorQuoteHistory({ vendorId }: { vendorId: string }) {
             </ul>
           )}
         </div>
-      )}
 
       {viewing && (
         <SignedQuoteFileViewer
