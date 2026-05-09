@@ -544,14 +544,17 @@ function VendorQuotesPill({
     ...quotes.filter((q) => q.is_final || q.status === "closed"),
     ...quotes.filter((q) => !(q.is_final || q.status === "closed")),
   ];
-  const fmtINR = (n: number) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {ordered.map((q) => {
         const closed = q.is_final || q.status === "closed";
         const amt = closed && q.closed_amount != null ? q.closed_amount : q.quote_amount;
-        const label = amt != null ? fmtINR(amt) : "Quote";
+        const label = amt != null ? formatINRShort(amt) : "Quote";
+        const datePart = new Date(q.created_at).toLocaleDateString("en-IN");
+        const fullPart = amt != null ? ` · ${formatINR(amt)}` : "";
+        const tip = closed
+          ? `Closed quote${fullPart} — click to manage`
+          : `Quote · ${datePart}${fullPart} — click to manage`;
         return (
           <button
             key={q.id}
@@ -561,7 +564,7 @@ function VendorQuotesPill({
                 ? "inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-800 hover:border-green-400"
                 : "inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2.5 py-1 text-[11px] text-[var(--charcoal)]/80 hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
             }
-            title={closed ? "Closed quote — click to manage" : `Quote · ${new Date(q.created_at).toLocaleDateString("en-IN")} — click to manage`}
+            title={tip}
           >
             {closed ? <CircleCheck className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
             <span>{label}</span>
