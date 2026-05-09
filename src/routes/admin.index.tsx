@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon } from "lucide-react";
+import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 
 import { TopNav } from "@/components/vendor/TopNav";
