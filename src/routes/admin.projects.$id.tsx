@@ -385,37 +385,56 @@ function SaffronPickToggle({
   isPicked: boolean;
 }) {
   const qc = useQueryClient();
-  const [pending, setPending] = useState(false);
-  const onToggle = async () => {
-    if (pending) return;
-    setPending(true);
-    const next = !isPicked;
-    try {
-      await setVendorSaffronPick({ data: { project_id: projectId, vendor_id: vendorId, is_saffron_pick: next } });
-      qc.invalidateQueries({ queryKey: ["project", projectId] });
-      notifySuccess(next ? `Marked ${vendorName} as Saffron's Preference` : `Removed Saffron's Preference from ${vendorName}`);
-    } catch (e) {
+  const queryKey = ["project", projectId];
+
+  const mutation = useMutation({
+    mutationFn: (next: boolean) =>
+      setVendorSaffronPick({ data: { project_id: projectId, vendor_id: vendorId, is_saffron_pick: next } }),
+    onMutate: async (next: boolean) => {
+      await qc.cancelQueries({ queryKey });
+      const previous = qc.getQueryData<any>(queryKey);
+      qc.setQueryData<any>(queryKey, (old: any) => {
+        if (!old) return old;
+        const patch = (arr: any[] | undefined) =>
+          arr?.map((v) => (v.id === vendorId ? { ...v, is_saffron_pick: next } : v));
+        return {
+          ...old,
+          vendors: patch(old.vendors),
+          assigned_vendors: patch(old.assigned_vendors),
+        };
+      });
+      return { previous, next };
+    },
+    onError: (e, _next, ctx) => {
+      if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous);
       notifyError(e, "Could not update Saffron's Preference");
-    } finally {
-      setPending(false);
-    }
-  };
+    },
+    onSuccess: (_d, next) => {
+      notifySuccess(next ? `Marked ${vendorName} as Saffron's Preference` : `Removed Saffron's Preference from ${vendorName}`);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey });
+    },
+  });
+
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      disabled={pending}
-      title={isPicked ? "Saffron's Preference is on — click to remove" : "Mark as Saffron's Preference"}
-      aria-pressed={isPicked}
+    <label
       className={
-        isPicked
-          ? "inline-flex items-center gap-1 rounded-full border border-[var(--terracotta)] bg-gradient-to-r from-[var(--terracotta)] to-[var(--terracotta)]/80 px-2.5 py-1 text-[11px] font-semibold text-[var(--cream)] shadow-sm transition hover:opacity-90 disabled:opacity-60"
-          : "inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--terracotta)]/50 bg-white px-2.5 py-1 text-[11px] font-medium text-[var(--terracotta)]/80 transition hover:bg-[var(--terracotta-soft)] disabled:opacity-60"
+        "inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium transition cursor-pointer select-none " +
+        (isPicked
+          ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
+          : "border-dashed border-[var(--terracotta)]/40 bg-white text-[var(--terracotta)]/70 hover:bg-[var(--terracotta-soft)]/60")
       }
+      title={isPicked ? "Saffron's Preference is on — click to remove" : "Mark as Saffron's Preference"}
     >
+      <Switch
+        checked={isPicked}
+        onCheckedChange={(next) => mutation.mutate(next)}
+        className="data-[state=checked]:bg-[var(--terracotta)]"
+      />
       <Sparkles className={isPicked ? "h-3 w-3 fill-current" : "h-3 w-3"} />
-      Saffron's Preference
-    </button>
+      <span>Saffron's Pick</span>
+    </label>
   );
 }
 
