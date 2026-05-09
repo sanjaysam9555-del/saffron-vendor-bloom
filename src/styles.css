@@ -267,3 +267,27 @@ button:active, a:active, [role="button"]:active {
   20%      { opacity: 1; }
   40%      { opacity: 0.25; }
 }
+
+/* Success flash — small check-mark "pop" used after a mutation succeeds */
+@keyframes success-pop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  50%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.success-pop { animation: success-pop 480ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Background flash — a brief soft-green wash that highlights the affected
+ * row/card right after a mutation, then fades back to the original colour. */
+@keyframes flash-bg {
+  0%   { background-color: hsl(142 70% 88%); }
+  60%  { background-color: hsl(142 70% 94%); }
+  100% { background-color: transparent; }
+}
+.flash-bg { animation: flash-bg 900ms ease-out both; border-radius: inherit; }
+
+@media (prefers-reduced-motion: reduce) {
+  .success-pop,
+  .flash-bg {
+    animation: none !important;
+  }
+}

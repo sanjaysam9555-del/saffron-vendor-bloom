@@ -13,6 +13,7 @@ import {
   CircleCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useConfirmDelete } from "@/components/ui/confirm-dialog";
 import {
   listProjectVendorQuotes,
   createProjectVendorQuote,
@@ -52,6 +53,7 @@ export function ProjectVendorQuotesPanel({
   onClose,
 }: Props) {
   const qc = useQueryClient();
+  const confirmDelete = useConfirmDelete();
   const queryKey = ["project-vendor-quotes", projectId, vendorId];
 
   const { data: quotes = [], isLoading } = useQuery({
@@ -163,7 +165,12 @@ export function ProjectVendorQuotesPanel({
                       }
                     }}
                     onDelete={async () => {
-                      if (!confirm("Delete this quote and its files?")) return;
+                      const ok = await confirmDelete({
+                        title: "Delete this quote?",
+                        description: "The quote and all attached files will be removed.",
+                        confirmLabel: "Delete quote",
+                      });
+                      if (!ok) return;
                       try {
                         await deleteProjectVendorQuote(q);
                         toast.success("Quote deleted");
@@ -403,6 +410,7 @@ function QuoteForm({
   onSaved: () => void;
   onViewFile?: (f: QuoteFile) => void;
 }) {
+  const confirmDelete = useConfirmDelete();
   const isEdit = !!quote;
   const [amount, setAmount] = useState<string>(
     quote?.quote_amount != null ? String(quote.quote_amount) : "",
@@ -533,9 +541,15 @@ function QuoteForm({
                   <button
                     type="button"
                     onClick={async () => {
-                      if (!confirm(`Remove ${f.file_name}?`)) return;
+                      const ok = await confirmDelete({
+                        title: `Remove ${f.file_name}?`,
+                        description: "This file will be permanently removed from the quote.",
+                        confirmLabel: "Remove file",
+                      });
+                      if (!ok) return;
                       try {
                         await deleteQuoteFile(f);
+                        toast.success("File removed");
                         onSaved();
                       } catch (e) {
                         toast.error(e instanceof Error ? e.message : "Failed");

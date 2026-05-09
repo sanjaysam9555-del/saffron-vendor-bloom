@@ -6,6 +6,8 @@ import {
   postVendorComment,
   removeVendorComment,
 } from "@/lib/comments-api";
+import { useConfirmDelete } from "@/components/ui/confirm-dialog";
+import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 
 interface Props {
   projectId: string;
@@ -17,6 +19,7 @@ interface Props {
 
 export function VendorCommentsThread({ projectId, vendorId, readOnly = false, adminCanDelete = false }: Props) {
   const qc = useQueryClient();
+  const confirmDelete = useConfirmDelete();
   const [body, setBody] = useState("");
 
   const { data: comments = [], isLoading } = useQuery({
@@ -27,20 +30,24 @@ export function VendorCommentsThread({ projectId, vendorId, readOnly = false, ad
   const post = useMutation({
     mutationFn: (text: string) => postVendorComment(vendorId, text),
     onSuccess: () => {
+      notifySuccess("Comment posted");
       setBody("");
       qc.invalidateQueries({ queryKey: ["vendor-comments", projectId, vendorId] });
       qc.invalidateQueries({ queryKey: ["my-project"] });
       qc.invalidateQueries({ queryKey: ["project", projectId] });
     },
+    onError: (e) => notifyError(e, "Could not post comment"),
   });
 
   const del = useMutation({
     mutationFn: (id: string) => removeVendorComment(id),
     onSuccess: () => {
+      notifySuccess("Comment deleted");
       qc.invalidateQueries({ queryKey: ["vendor-comments", projectId, vendorId] });
       qc.invalidateQueries({ queryKey: ["my-project"] });
       qc.invalidateQueries({ queryKey: ["project", projectId] });
     },
+    onError: (e) => notifyError(e, "Could not delete comment"),
   });
 
   const submit = (e: React.FormEvent) => {
@@ -85,8 +92,12 @@ export function VendorCommentsThread({ projectId, vendorId, readOnly = false, ad
                   {canDelete && (
                     <button
                       type="button"
-                      onClick={() => {
-                        if (confirm("Delete this comment?")) del.mutate(c.id);
+                      onClick={async () => {
+                        const ok = await confirmDelete({
+                          title: "Delete this comment?",
+                          description: "This cannot be undone.",
+                        });
+                        if (ok) del.mutate(c.id);
                       }}
                       className="shrink-0 rounded p-1 text-red-600 hover:bg-red-50"
                       title="Delete comment"

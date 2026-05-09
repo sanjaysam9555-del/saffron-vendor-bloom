@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, KeyRound, Trash2, UserPlus, Pencil, Check, X } from "lucide-react";
+import { ArrowLeft, KeyRound, Trash2, UserPlus, Pencil, Check, X, Users } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { useAuth } from "@/lib/auth";
+import { useConfirmDelete } from "@/components/ui/confirm-dialog";
+import { notifySuccess, notifyError } from "@/lib/ui/feedback";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   listUsers,
   createEmployee,
@@ -66,13 +69,16 @@ function AdminUsersPage() {
     setCreating(true);
     try {
       await createEmployee({ data: { email: newEmail.trim(), password: newPwd, display_name: (newName.trim() || newEmail.split("@")[0]) } });
+      notifySuccess("Employee created");
       setNewEmail("");
       setNewPwd("");
       setNewName("");
       setShowCreate(false);
       await refresh();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Failed to create employee");
+      const msg = e instanceof Error ? e.message : "Failed to create employee";
+      setErr(msg);
+      notifyError(e, msg);
     } finally {
       setCreating(false);
     }
@@ -120,7 +126,21 @@ function AdminUsersPage() {
 
         <div className="mt-6 -mx-6 sm:mx-0 sm:rounded-lg sm:border sm:border-[var(--border)] bg-white">
           {loading ? (
-            <div className="p-6 text-sm text-[var(--charcoal)]/60">Loading…</div>
+            <div className="space-y-2 p-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-10 animate-pulse rounded-md bg-[var(--cream-deep)]/60"
+                />
+              ))}
+            </div>
+          ) : rows.length === 0 ? (
+            <EmptyState
+              compact
+              icon={<Users />}
+              title="No staff yet"
+              description="Create your first employee account above."
+            />
           ) : (
             <div
               className="overflow-x-auto touch-pan-x"
@@ -150,6 +170,7 @@ function AdminUsersPage() {
 }
 
 function UserRow({ row, isSelf, onChanged, onError }: { row: Row; isSelf: boolean; onChanged: () => void; onError: (m: string) => void }) {
+  const confirmDelete = useConfirmDelete();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(row.display_name);
   const [resetting, setResetting] = useState(false);
@@ -158,31 +179,45 @@ function UserRow({ row, isSelf, onChanged, onError }: { row: Row; isSelf: boolea
   const saveName = async () => {
     try {
       await setUserDisplayName({ data: { user_id: row.id, display_name: name } });
+      notifySuccess("Name updated");
       setEditing(false);
       onChanged();
     } catch (e) {
-      onError(e instanceof Error ? e.message : "Failed");
+      const msg = e instanceof Error ? e.message : "Failed";
+      onError(msg);
+      notifyError(e, msg);
     }
   };
 
   const savePwd = async () => {
     try {
       await setUserPassword({ data: { user_id: row.id, password: newPwd } });
+      notifySuccess("Password updated", { description: "User has been signed out of all sessions." });
       setNewPwd("");
       setResetting(false);
       onChanged();
     } catch (e) {
-      onError(e instanceof Error ? e.message : "Failed");
+      const msg = e instanceof Error ? e.message : "Failed";
+      onError(msg);
+      notifyError(e, msg);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Delete ${row.email}? This cannot be undone.`)) return;
+    const ok = await confirmDelete({
+      title: `Delete ${row.email}?`,
+      description: "Their account will be removed. This cannot be undone.",
+      confirmLabel: "Delete user",
+    });
+    if (!ok) return;
     try {
       await deleteUser({ data: { user_id: row.id } });
+      notifySuccess(`Deleted ${row.email}`);
       onChanged();
     } catch (e) {
-      onError(e instanceof Error ? e.message : "Failed");
+      const msg = e instanceof Error ? e.message : "Failed";
+      onError(msg);
+      notifyError(e, msg);
     }
   };
 

@@ -18,6 +18,9 @@ import { useAuth } from "@/lib/auth";
 import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotesPanel";
 import { listProjectVendorQuotes } from "@/lib/quote-api";
 import { formatINR, formatINRShort } from "@/lib/quote-types";
+import { useConfirm, useConfirmDelete } from "@/components/ui/confirm-dialog";
+import { notifySuccess, notifyError } from "@/lib/ui/feedback";
+import { EmptyState } from "@/components/ui/empty-state";
 
 import { VendorCommentsThread } from "@/components/client/VendorCommentsThread";
 
@@ -34,6 +37,7 @@ function ProjectDetailPage() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const { role } = useAuth();
+  const confirmDelete = useConfirmDelete();
   const { data, isLoading, error } = useQuery({
     queryKey: ["project", id],
     queryFn: () => getProject({ data: { id } }),
@@ -72,34 +76,72 @@ function ProjectDetailPage() {
           display_name: cName.trim() || cEmail.split("@")[0],
         },
       });
+      notifySuccess("Client login created");
       setCEmail("");
       setCName("");
       setCPwd("");
       setShowAddClient(false);
       await refresh();
     } catch (e) {
-      setCErr(e instanceof Error ? e.message : "Failed");
+      const msg = e instanceof Error ? e.message : "Failed";
+      setCErr(msg);
+      notifyError(e, msg);
     } finally {
       setCBusy(false);
     }
   };
 
-  const removeVendor = async (vendor_id: string) => {
-    await unassignVendorFromProject({ data: { project_id: id, vendor_id } });
-    await Promise.all([
-      qc.invalidateQueries({ queryKey: ["project", id] }),
-      qc.invalidateQueries({ queryKey: ["vendor-project-assignments"] }),
-    ]);
+  const removeVendor = async (vendor_id: string, vendor_name?: string) => {
+    const ok = await confirmDelete({
+      title: vendor_name ? `Remove ${vendor_name} from this project?` : "Remove this vendor?",
+      description: "The vendor stays in your library, but it will no longer be visible to this client.",
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
+    try {
+      await unassignVendorFromProject({ data: { project_id: id, vendor_id } });
+      notifySuccess("Vendor removed from project");
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["project", id] }),
+        qc.invalidateQueries({ queryKey: ["vendor-project-assignments"] }),
+      ]);
+    } catch (e) {
+      notifyError(e, "Could not remove vendor");
+    }
   };
 
   const handleDeleteProject = async () => {
-    if (!confirm("Delete this project? Client logins for this project will also be removed. This cannot be undone.")) return;
-    await deleteProject({ data: { id } });
-    window.location.href = "/admin/projects";
+    const ok = await confirmDelete({
+      title: "Delete this project?",
+      description:
+        "Client logins for this project will also be removed. This cannot be undone.",
+      confirmLabel: "Delete project",
+    });
+    if (!ok) return;
+    try {
+      await deleteProject({ data: { id } });
+      notifySuccess("Project deleted");
+      window.location.href = "/admin/projects";
+    } catch (e) {
+      notifyError(e, "Could not delete project");
+    }
   };
 
   if (isLoading) {
-    return <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] text-sm text-[var(--charcoal)]/60">Loading…</div>;
+    return (
+      <div className="min-h-screen bg-[var(--cream)] px-6 py-8">
+        <div className="mx-auto max-w-5xl space-y-4">
+          <div className="h-4 w-32 animate-pulse rounded bg-[var(--cream-deep)]" />
+          <div className="h-9 w-72 animate-pulse rounded bg-[var(--cream-deep)]" />
+          <div className="h-4 w-48 animate-pulse rounded bg-[var(--cream-deep)]/70" />
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-24 animate-pulse rounded-lg bg-white" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
   if (error || !data) {
     return (
@@ -210,6 +252,7 @@ function ProjectDetailPage() {
 }
 
 function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
+  const confirmDelete = useConfirmDelete();
   const [resetting, setResetting] = useState(false);
   const [pwd, setPwd] = useState("");
   const [editingEmail, setEditingEmail] = useState(false);
@@ -218,10 +261,15 @@ function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
   const [emailErr, setEmailErr] = useState<string | null>(null);
 
   const savePwd = async () => {
-    await resetProjectClientPassword({ data: { user_id: c.user_id, password: pwd } });
-    setPwd("");
-    setResetting(false);
-    onChanged();
+    try {
+      await resetProjectClientPassword({ data: { user_id: c.user_id, password: pwd } });
+      notifySuccess("Password updated", { description: "Client has been signed out of all sessions." });
+      setPwd("");
+      setResetting(false);
+      onChanged();
+    } catch (e) {
+      notifyError(e, "Could not update password");
+    }
   };
 
   const saveEmail = async () => {
@@ -229,19 +277,32 @@ function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
     setEmailBusy(true);
     try {
       await setProjectClientEmail({ data: { user_id: c.user_id, email: emailVal.trim() } });
+      notifySuccess("Email updated");
       setEditingEmail(false);
       onChanged();
     } catch (e) {
-      setEmailErr(e instanceof Error ? e.message : "Failed");
+      const msg = e instanceof Error ? e.message : "Failed";
+      setEmailErr(msg);
+      notifyError(e, msg);
     } finally {
       setEmailBusy(false);
     }
   };
 
   const handleRemove = async () => {
-    if (!confirm(`Remove ${c.email}? Their login will be deleted.`)) return;
-    await removeProjectClient({ data: { project_id: c.project_id ?? "", user_id: c.user_id } });
-    onChanged();
+    const ok = await confirmDelete({
+      title: `Remove ${c.email}?`,
+      description: "Their login will be deleted. This cannot be undone.",
+      confirmLabel: "Remove client",
+    });
+    if (!ok) return;
+    try {
+      await removeProjectClient({ data: { project_id: c.project_id ?? "", user_id: c.user_id } });
+      notifySuccess("Client removed");
+      onChanged();
+    } catch (e) {
+      notifyError(e, "Could not remove client");
+    }
   };
 
   return (
@@ -319,7 +380,7 @@ function AssignedVendorsSection({
   projectId: string;
   vendors: any[];
   selections: Record<string, Selection[]>;
-  onRemove: (id: string) => void;
+  onRemove: (id: string, name: string) => void;
 }) {
   const [view, setView] = useState<"list" | "grouped">("list");
   const [quotesFor, setQuotesFor] = useState<{ id: string; name: string; category: string | null; autoOpenForm?: boolean } | null>(null);
@@ -434,7 +495,7 @@ function AssignedVendorsSection({
                   </div>
                 </div>
                 <button
-                  onClick={() => onRemove(v.id)}
+                  onClick={() => onRemove(v.id, v.vendor_name)}
                   title="Remove from project"
                   className="rounded p-1.5 text-red-600 hover:bg-red-50"
                 >
