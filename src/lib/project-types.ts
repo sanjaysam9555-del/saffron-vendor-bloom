@@ -53,6 +53,7 @@ export interface ClientVendor {
   quote_summary?: {
     count: number;
     latest_status: string | null;
+    latest_amount: number | null;
     has_closed: boolean;
     closed_amount: number | null;
   };
