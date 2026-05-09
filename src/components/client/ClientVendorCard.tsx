@@ -57,12 +57,8 @@ export function ClientVendorCard({ vendor, onView }: Props) {
           </div>
         )}
         {vendor.instagram_handle && (() => {
-          const raw = vendor.instagram_handle.trim().replace(/^@+/, "");
-          const handle = raw
-            .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
-            .replace(/\/.*$/, "")
-            .replace(/\?.*$/, "");
-          const href = `https://www.instagram.com/${handle}/`;
+          const href = instagramUrl(vendor.instagram_handle);
+          if (!href) return null;
           return (
             <a
               href={href}
