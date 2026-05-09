@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Plus, Calendar, Heart } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { listProjectsOverview, createProject } from "@/server/projects.functions";
 import { StatusCountsRow } from "@/components/admin/ClientStatusPill";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 
 export const Route = createFileRoute("/admin/projects/")({
   head: () => ({ meta: [{ title: "Projects — Saffron Planning Studio" }] }),
