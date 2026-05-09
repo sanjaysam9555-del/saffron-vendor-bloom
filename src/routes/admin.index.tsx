@@ -176,20 +176,39 @@ function DashboardPage() {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setMobileFiltersOpen(true)}
-                className={`relative inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium lg:hidden ${
-                  filters.category || filters.locations.length
-                    ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
-                    : "border-[var(--border)] bg-white text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
-                }`}
-              >
-                <FilterIcon className="h-3.5 w-3.5" />
-                Filters
-                {(filters.category || filters.locations.length > 0) && (
-                  <span className="ml-0.5 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
-                )}
-              </button>
+              {(() => {
+                const filtersActive = !!(filters.category || filters.locations.length || filters.minGoogleRating != null || filters.minSaffronRating != null || filters.submittedViaForm !== "any");
+                return (
+                  <button
+                    onClick={() => setMobileFiltersOpen(true)}
+                    className={`relative inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium lg:hidden ${
+                      filtersActive
+                        ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
+                        : "border-[var(--border)] bg-white text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+                    }`}
+                  >
+                    <FilterIcon className="h-3.5 w-3.5" />
+                    Filters
+                    {filtersActive && (
+                      <span className="ml-0.5 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
+                    )}
+                  </button>
+                );
+              })()}
+              <label className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-xs text-[var(--charcoal)]/75">
+                <ArrowUpDown className="h-3.5 w-3.5" />
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as SortKey)}
+                  className="bg-transparent text-xs text-[var(--charcoal)] focus:outline-none"
+                >
+                  <option value="date_added_desc">Newest added</option>
+                  <option value="date_added_asc">Oldest added</option>
+                  <option value="updated_desc">Last modified</option>
+                  <option value="name_asc">Name A→Z</option>
+                  <option value="name_desc">Name Z→A</option>
+                </select>
+              </label>
               {isAdmin && (
                 <button
                   onClick={() => {
