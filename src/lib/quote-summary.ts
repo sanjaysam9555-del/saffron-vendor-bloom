@@ -30,9 +30,6 @@ export function quoteSummaryLabel(s: QuoteSummary | null | undefined): string | 
     return amt != null ? `Closed · ${formatINRCompact(Number(amt))}` : "Closed";
   }
   const amt = s.latest_amount;
-  const base =
-    s.latest_status === "revised"
-      ? `Revised · ${ordinal(s.count)} Quote`
-      : `${ordinal(s.count)} Quote`;
+  const base = `${ordinal(s.count)} Quote`;
   return amt != null ? `${base} · ${formatINRCompact(Number(amt))}` : base;
 }
