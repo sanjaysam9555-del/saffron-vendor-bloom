@@ -17,6 +17,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotesPanel";
 import { listProjectVendorQuotes } from "@/lib/quote-api";
+import { formatINR, formatINRShort } from "@/lib/quote-types";
 
 import { VendorCommentsThread } from "@/components/client/VendorCommentsThread";
 
