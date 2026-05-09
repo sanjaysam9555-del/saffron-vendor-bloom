@@ -46,7 +46,6 @@ function DashboardPage() {
     minSaffronRating: null,
     submittedViaForm: "any",
   });
-  type SortKey = "date_added_desc" | "date_added_asc" | "updated_desc" | "name_asc" | "name_desc";
   const [sort, setSort] = useState<SortKey>("date_added_desc");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
