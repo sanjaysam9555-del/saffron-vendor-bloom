@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon } from "lucide-react";
+import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 
 import { TopNav } from "@/components/vendor/TopNav";
@@ -40,8 +40,14 @@ function DashboardPage() {
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"cards" | "table">("cards");
   const [filters, setFilters] = useState<FilterState>({
-    category: null, locations: [],
+    category: null,
+    locations: [],
+    minGoogleRating: null,
+    minSaffronRating: null,
+    submittedViaForm: "any",
   });
+  type SortKey = "date_added_desc" | "date_added_asc" | "updated_desc" | "name_asc" | "name_desc";
+  const [sort, setSort] = useState<SortKey>("date_added_desc");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
@@ -51,16 +57,31 @@ function DashboardPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return vendors.filter((v) => {
+    const result = vendors.filter((v) => {
       if (filters.category && v.category !== filters.category) return false;
       if (filters.locations.length && !filters.locations.some((l) => v.location?.toLowerCase().includes(l.toLowerCase()))) return false;
+      if (filters.minGoogleRating != null && (v.google_rating ?? -1) < filters.minGoogleRating) return false;
+      if (filters.minSaffronRating != null && (v.saffron_rating ?? -1) < filters.minSaffronRating) return false;
+      if (filters.submittedViaForm === "yes" && !v.submitted_via_form) return false;
+      if (filters.submittedViaForm === "no" && v.submitted_via_form) return false;
       if (q) {
         const hay = [v.vendor_name, v.location, v.instagram_handle, v.remarks].filter(Boolean).join(" ").toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [vendors, filters, search]);
+    const sorted = [...result];
+    sorted.sort((a, b) => {
+      switch (sort) {
+        case "date_added_desc": return (b.date_added ?? "").localeCompare(a.date_added ?? "");
+        case "date_added_asc": return (a.date_added ?? "").localeCompare(b.date_added ?? "");
+        case "updated_desc": return (b.updated_at ?? "").localeCompare(a.updated_at ?? "");
+        case "name_asc": return a.vendor_name.localeCompare(b.vendor_name, undefined, { sensitivity: "base" });
+        case "name_desc": return b.vendor_name.localeCompare(a.vendor_name, undefined, { sensitivity: "base" });
+      }
+    });
+    return sorted;
+  }, [vendors, filters, search, sort]);
 
   // Clear selection when filters/search change so we don't accidentally edit hidden rows.
   useEffect(() => {
@@ -155,20 +176,39 @@ function DashboardPage() {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setMobileFiltersOpen(true)}
-                className={`relative inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium lg:hidden ${
-                  filters.category || filters.locations.length
-                    ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
-                    : "border-[var(--border)] bg-white text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
-                }`}
-              >
-                <FilterIcon className="h-3.5 w-3.5" />
-                Filters
-                {(filters.category || filters.locations.length > 0) && (
-                  <span className="ml-0.5 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
-                )}
-              </button>
+              {(() => {
+                const filtersActive = !!(filters.category || filters.locations.length || filters.minGoogleRating != null || filters.minSaffronRating != null || filters.submittedViaForm !== "any");
+                return (
+                  <button
+                    onClick={() => setMobileFiltersOpen(true)}
+                    className={`relative inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium lg:hidden ${
+                      filtersActive
+                        ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
+                        : "border-[var(--border)] bg-white text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+                    }`}
+                  >
+                    <FilterIcon className="h-3.5 w-3.5" />
+                    Filters
+                    {filtersActive && (
+                      <span className="ml-0.5 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
+                    )}
+                  </button>
+                );
+              })()}
+              <label className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-xs text-[var(--charcoal)]/75">
+                <ArrowUpDown className="h-3.5 w-3.5" />
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as SortKey)}
+                  className="bg-transparent text-xs text-[var(--charcoal)] focus:outline-none"
+                >
+                  <option value="date_added_desc">Newest added</option>
+                  <option value="date_added_asc">Oldest added</option>
+                  <option value="updated_desc">Last modified</option>
+                  <option value="name_asc">Name A→Z</option>
+                  <option value="name_desc">Name Z→A</option>
+                </select>
+              </label>
               {isAdmin && (
                 <button
                   onClick={() => {

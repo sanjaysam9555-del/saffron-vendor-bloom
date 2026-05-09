@@ -1,33 +1,52 @@
-# Admin project page — richer vendor cards + Add quote button
+# Admin dashboard — sort + extra filters
 
-## Problem
-On `/admin/projects/$id` the assigned-vendor cards only show category, vendor name, price, and a status pill. Details like Instagram, Google rating, location, contact, and website (which already come back from `getProject` because it `select("*")`s the vendors row) aren't rendered. The quotes pill doubles as both "Add quote" (when empty) and a summary chip (when not empty), so once a quote exists there's no obvious "Add quote" affordance.
+## Scope
+Frontend-only on `/admin/`. Extend `Sidebar` (`src/components/vendor/Sidebar.tsx`) and the dashboard page (`src/routes/admin.index.tsx`) — no DB / API changes; everything filters/sorts the already-fetched `vendors` array.
 
-## Changes — all in `src/routes/admin.projects.$id.tsx` (list view of `AssignedVendorsSection`)
+## 1. Extend `FilterState`
+```ts
+export interface FilterState {
+  category: string | null;
+  locations: string[];
+  minGoogleRating: number | null;     // 3 / 3.5 / 4 / 4.5
+  minSaffronRating: number | null;    // 3 / 3.5 / 4 / 4.5
+  submittedViaForm: "any" | "yes" | "no";
+}
+export type SortKey =
+  | "date_added_desc"   // Newest added (default)
+  | "date_added_asc"    // Oldest added
+  | "updated_desc"      // Last modified
+  | "name_asc"          // Alphabetical A→Z
+  | "name_desc";        // Alphabetical Z→A
+```
+Default: `{ category:null, locations:[], minGoogleRating:null, minSaffronRating:null, submittedViaForm:"any" }`, sort `date_added_desc`.
 
-### 1. Render vendor details on each card
-Under the vendor name, add a compact details block showing whichever of these fields are present on the vendor row:
-- Google rating (star icon + value, e.g. `★ 4.6`)
-- Location
-- Instagram handle (link to `https://instagram.com/<handle>` opens new tab)
-- Contact number (tel: link)
-- Website (external link)
+## 2. Sidebar — new sections (below Location)
+- **Google rating** — chip row "Any · 3+ · 3.5+ · 4+ · 4.5+". Filter keeps a vendor when `v.google_rating != null && v.google_rating >= min`. "Any" clears it.
+- **Saffron rating** — same shape, against `v.saffron_rating`.
+- **Source** — three chips "All · Form submissions · Manual entry" mapped to `submittedViaForm` ∈ `any|yes|no` (uses `v.submitted_via_form`).
 
-Layout: small wrap-row of muted text with icons (`Star`, `MapPin`, `Instagram`, `Phone`, `Globe` from lucide-react), each item only rendered when its field is non-null. Price stays where it is.
+Existing "Clear" button resets the new fields too. Mobile filter dot lights up if any new filter is active.
 
-### 2. Always-visible "Add quote" button
-Split today's combined `VendorQuotesPill`:
-- Keep the existing pill purely as a **summary chip** when there are quotes (e.g. `1st Quote · ₹X` / closed state with check). When there are no quotes, hide it.
-- Add a separate **`+ Add quote`** button (terracotta outline, `Plus` + `FileText` icon) on every card that opens `ProjectVendorQuotesPanel` with `autoOpenForm: true` so the new-quote form is pre-opened. This button is shown regardless of whether quotes already exist.
+## 3. Sort dropdown — page header
+Add a small `<select>` next to the Cards/Table toggle in `admin.index.tsx`:
+> Newest added · Oldest added · Last modified · Name A→Z · Name Z→A
 
-The comments button stays as-is.
+State `sort: SortKey` lives in the page (not the sidebar) — it's a view concern, not a filter.
 
-### Out of scope
-- Grouped view, client side, vendor management page — not touched.
-- No backend / data changes (fields already returned by `getProject`).
-- No type changes.
+## 4. Filter + sort pipeline
+In the existing `useMemo` after current filters:
+```ts
+.filter(v => filters.minGoogleRating == null || (v.google_rating ?? -1) >= filters.minGoogleRating)
+.filter(v => filters.minSaffronRating == null || (v.saffron_rating ?? -1) >= filters.minSaffronRating)
+.filter(v => filters.submittedViaForm === "any"
+   || (filters.submittedViaForm === "yes" ? v.submitted_via_form : !v.submitted_via_form))
+```
+Then sort a copy:
+- `date_added_*` → compare `date_added`
+- `updated_desc` → compare `updated_at`
+- `name_*` → `vendor_name.localeCompare(..., undefined, { sensitivity: "base" })`
 
-## Technical notes
-- All new icons come from `lucide-react` (already imported in the file — just extend the import).
-- Reuse existing tokens (`var(--charcoal)`, `var(--terracotta)`, `var(--cream)`, `var(--border)`).
-- The new "Add quote" button calls the same `setQuotesFor({ id, name, category, autoOpenForm: true })` flow already wired up.
+## Out of scope
+- Client-side dashboard, table column-header sorting, persisting sort in URL.
+- Backend — fields already exist on `vendors` (`google_rating`, `saffron_rating`, `submitted_via_form`, `date_added`, `updated_at`).

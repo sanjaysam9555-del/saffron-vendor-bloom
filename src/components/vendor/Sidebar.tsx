@@ -7,7 +7,12 @@ import { CategoryManager } from "./CategoryManager";
 export interface FilterState {
   category: string | null;
   locations: string[];
+  minGoogleRating: number | null;
+  minSaffronRating: number | null;
+  submittedViaForm: "any" | "yes" | "no";
 }
+
+const RATING_OPTIONS = [3, 3.5, 4, 4.5] as const;
 
 interface SidebarProps {
   vendors: Vendor[];
@@ -39,7 +44,21 @@ export function Sidebar({
   const toggle = (arr: string[], val: string): string[] =>
     arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
 
-  const hasActive = Boolean(filters.category || filters.locations.length);
+  const hasActive = Boolean(
+    filters.category ||
+    filters.locations.length ||
+    filters.minGoogleRating != null ||
+    filters.minSaffronRating != null ||
+    filters.submittedViaForm !== "any",
+  );
+
+  const clearAll = (): FilterState => ({
+    category: null,
+    locations: [],
+    minGoogleRating: null,
+    minSaffronRating: null,
+    submittedViaForm: "any",
+  });
 
   const chip = (active: boolean) =>
     `rounded-full border px-2.5 py-0.5 text-xs transition-colors ${
@@ -114,6 +133,70 @@ export function Sidebar({
           })}
         </div>
       </div>
+
+      {/* Google rating */}
+      <div className="mb-6">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Google rating</div>
+        <div className="flex flex-wrap gap-1">
+          <button
+            onClick={() => onChange({ ...filters, minGoogleRating: null })}
+            className={chip(filters.minGoogleRating == null)}
+          >
+            Any
+          </button>
+          {RATING_OPTIONS.map((r) => (
+            <button
+              key={r}
+              onClick={() => onChange({ ...filters, minGoogleRating: r })}
+              className={chip(filters.minGoogleRating === r)}
+            >
+              {r}+
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Saffron rating */}
+      <div className="mb-6">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Saffron rating</div>
+        <div className="flex flex-wrap gap-1">
+          <button
+            onClick={() => onChange({ ...filters, minSaffronRating: null })}
+            className={chip(filters.minSaffronRating == null)}
+          >
+            Any
+          </button>
+          {RATING_OPTIONS.map((r) => (
+            <button
+              key={r}
+              onClick={() => onChange({ ...filters, minSaffronRating: r })}
+              className={chip(filters.minSaffronRating === r)}
+            >
+              {r}+
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Source */}
+      <div className="mb-6">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Source</div>
+        <div className="flex flex-wrap gap-1">
+          {([
+            ["any", "All"],
+            ["yes", "Form submissions"],
+            ["no", "Manual entry"],
+          ] as const).map(([val, label]) => (
+            <button
+              key={val}
+              onClick={() => onChange({ ...filters, submittedViaForm: val })}
+              className={chip(filters.submittedViaForm === val)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
     </>
   );
 
@@ -128,7 +211,7 @@ export function Sidebar({
           <div className="flex items-center gap-2">
             {hasActive && (
               <button
-                onClick={() => onChange({ category: null, locations: [] })}
+                onClick={() => onChange(clearAll())}
                 className="flex items-center gap-1 text-xs text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"
               >
                 <X className="h-3 w-3" /> Clear
@@ -186,7 +269,7 @@ export function Sidebar({
           <div className="flex items-center gap-1">
             {hasActive ? (
               <button
-                onClick={() => onChange({ category: null, locations: [] })}
+                onClick={() => onChange(clearAll())}
                 className="flex items-center gap-1 text-xs text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"
               >
                 <X className="h-3 w-3" /> Clear
