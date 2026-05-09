@@ -57,5 +57,13 @@ export interface ClientVendor {
     has_closed: boolean;
     closed_amount: number | null;
   };
+  quotes?: {
+    id: string;
+    status: string;
+    is_final: boolean;
+    quote_amount: number | null;
+    closed_amount: number | null;
+    created_at: string;
+  }[];
   comment_count?: number;
 }

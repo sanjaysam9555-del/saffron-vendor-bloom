@@ -1,64 +1,60 @@
-## Diagnosis
+## Goal
 
-Comment notifications (and every other transactional email this app tries to send) never make it past the in-Worker self-fetch.
+Show **every** quote received for a vendor (not just the latest/closed one) in:
+1. The client portal — vendor card + vendor detail panel.
+2. The admin project page — the per-vendor row in `/admin/projects/$id`.
 
-What I found:
-- `email_send_log` is **empty** — zero rows, ever. Every successful or failed send path inserts a row, so this proves the `/lovable/email/transactional/send` route has never actually run a send. It's not a comment-specific bug; status-change emails hit the same dead end.
-- `addProjectVendorComment` (in `src/server/projects.functions.ts`) inserts the comment, then calls `notifyStaff(...)`.
-- `notifyStaff` (in `src/lib/notify-staff.server.ts`) does `fetch(new URL("/lovable/email/transactional/send", req.url), ...)` — i.e. it's a server function on Cloudflare Workers asking the same Worker to handle a second HTTP request.
-- That self-fetch is the failure: Cloudflare Workers cannot reliably `fetch()` their own deployment URL from inside a request handler. The call either errors or never resolves; either way the surrounding `try/catch` swallows it (`console.warn("comment email failed: …")`), so the user sees the comment saved but no email is sent and nothing useful surfaces in the UI.
-- Email infrastructure itself is healthy: `enqueue_email` RPC exists, `email_send_state` is configured, suppression list is empty, and the templates (`client-comment-notification`, `client-status-change-notification`) are registered with a fixed `to: 'info@saffronevents.in'`.
+So clients and staff can compare all quotes side by side without opening a separate panel.
 
-So: the wire to the email queue is broken, not the queue itself, and not the comment code path specifically.
+## Current behavior
+
+- **Client detail panel** (`src/components/client/ClientVendorDetail.tsx`): `getLatestProjectVendorQuote` → renders one quote.
+- **Client card** (`src/components/client/ClientVendorCard.tsx`): renders one summary chip from `vendor.quote_summary`.
+- **Admin project page vendor row** (`src/routes/admin.projects.$id.tsx`, `VendorQuotesPill`): already loads the full quote list via `listProjectVendorQuotes`, but renders a single collapsed pill (closed or "N quotes"). Detail still requires opening `ProjectVendorQuotesPanel`.
+- The full quote list already exists server-side (`listProjectVendorQuotes` in `src/lib/quote-api.ts`); the detail panels keep updating live via existing realtime subscriptions on `project_vendor_quotes` / `project_vendor_quote_files`.
 
 ## Plan
 
-Replace the Worker-internal HTTP hop with a direct in-process call so server functions enqueue emails the same way the route does.
+### 1. Client detail panel — render every quote
+In `ClientVendorDetail.tsx`:
+- Replace the `useQuery` that calls `getLatestProjectVendorQuote` with one that calls `listProjectVendorQuotes` (returns `ProjectVendorQuote[]`, newest-first, with `files`).
+- Replace the single quote block with a list, in this order:
+  1. Closed/final quote first (green "Closed quote" header, large amount).
+  2. All other quotes newest-first, header `Quote · <formatted date>`, amount, text, files.
+- Reuse the existing layout primitives (amount, `quote_text` block, file row with `SignedQuoteFileViewer`). The `viewingQuoteFile` state and modal are shared across all quotes.
+- Empty state: render nothing (same as today).
 
-### 1. Extract the send/enqueue logic into a shared server helper
+### 2. Client vendor card — show every quote as a chip
+a. **Server payload** in `src/server/projects.functions.ts` `getMyProject`:
+   - Keep `quote_summary` (still used for color/icon decisions).
+   - Add a sibling `quotes: { id; status; is_final; quote_amount; closed_amount; created_at }[]` per vendor, newest-first, derived from the `qrows` query already being run — no extra round-trip.
 
-New file: `src/lib/email/enqueue-transactional.server.ts`. Contents are exactly what the POST handler in `src/routes/lovable/email/transactional/send.ts` does today, minus the request parsing and JWT check:
-- Look up the template from `TEMPLATES`.
-- Resolve `effectiveRecipient` (template `to` overrides arg).
-- Suppression check against `suppressed_emails`.
-- Get-or-create unsubscribe token in `email_unsubscribe_tokens`.
-- Render the React Email component to HTML + plain text.
-- Insert `pending` row in `email_send_log`.
-- Call `enqueue_email` RPC with the same payload shape (sender_domain, from, subject, html, text, idempotency_key, unsubscribe_token, etc.).
-- Return `{ success, queued }` or `{ success: false, reason }`.
+b. **Types** in `src/lib/project-types.ts`:
+   - Add `quotes?: { id; status; is_final; quote_amount; closed_amount; created_at }[]` on `ClientVendor`.
 
-Export a single function, e.g.
-`enqueueTransactionalEmail({ templateName, recipientEmail?, idempotencyKey?, templateData? })`.
+c. **Render** in `ClientVendorCard.tsx`:
+   - Replace the single summary chip with a small wrap-flow row of chips, one per quote.
+   - Closed/final chip: green pill with `CircleCheck` and the closed amount (fallback to quote amount).
+   - Other chips: terracotta pill with the amount (fallback to "Quote").
+   - Keep existing `attachments` and `comment_count` indicators alongside, unchanged.
 
-It uses `supabaseAdmin` (service role) directly — no HTTP, no JWT — because every caller is already authenticated server-side.
-
-### 2. Rewrite `src/lib/notify-staff.server.ts` to call the helper
-
-Drop the `getRequestHeader` / `fetch` block entirely. The new body just delegates:
-
-```text
-notifyStaff({ templateName, templateData, idempotencyKey })
-  → enqueueTransactionalEmail({ templateName, templateData, idempotencyKey })
-```
-
-Same try/catch-friendly contract (still throws on failure so callers' `console.warn` works), but now failures are real errors with messages instead of silently lost.
-
-### 3. Make the HTTP route a thin wrapper around the helper
-
-`src/routes/lovable/email/transactional/send.ts` keeps its current responsibilities — parse JSON, verify the Bearer token via Supabase auth — and then calls the same `enqueueTransactionalEmail(...)`. This guarantees the route and the in-process callers behave identically and there's a single source of truth for the enqueue pipeline.
+### 3. Admin project page vendor row — show every quote inline
+In `src/routes/admin.projects.$id.tsx` `VendorQuotesPill`:
+- Keep the same `useQuery(listProjectVendorQuotes)` data; remove the single-pill rendering.
+- Replace with a wrap-flow row of compact chips (one per quote), styled to match the existing pill (border, rounded-full, terracotta hover):
+  - Closed/final chip first: green pill with `CircleCheck` and the closed amount.
+  - Other chips newest-first: neutral pill with amount (fallback to short "Quote").
+- Each chip is a button that opens `ProjectVendorQuotesPanel` for that vendor (same `onOpen(false)` callback). Optionally pass the quote id for future deep-link, but no behavior change required.
+- Keep the existing `Paperclip` + total file count indicator at the end of the row.
+- Keep the "+ Add quote" button next to the row, unchanged.
+- Empty state still renders nothing (the "+ Add quote" button stays separate, as today).
 
 ### 4. Verify
+- Client: vendor with multiple quotes → card shows one chip per quote (closed first), detail panel shows every quote with amount/text/files.
+- Admin `/admin/projects/$id`: vendor row shows one chip per quote inline; clicking any chip opens the existing quotes panel; "+ Add quote" still works.
+- Add/edit/close a quote from the admin side → both client UI and admin row update live (existing realtime invalidation already covers this).
+- Vendors with zero quotes show no chips on either side — same as today.
 
-- Post a comment as a client → check `email_send_log` for a `pending` row with `template_name = 'client-comment-notification'` and recipient `info@saffronevents.in`.
-- Watch the queue dispatcher log/email_send_log status flip from `pending` → `sent`.
-- Change a vendor status as a client → same row appears for `client-status-change-notification`.
-- Confirm the inbox actually receives both.
-
-### Out of scope
-
-- No template, recipient, or domain changes.
-- No change to the unsubscribe / suppression flow or the queue dispatcher.
-- No new env vars or secrets.
-
-## Summary
-Replace the Worker self-`fetch` in `notifyStaff` with a direct in-process enqueue helper that both the `send-transactional-email` route and server functions reuse. This unblocks comment emails (and all other transactional emails, which were silently failing for the same reason).
+## Out of scope
+- No changes to `ProjectVendorQuotesPanel` itself, the admin projects index, the vendor detail (admin) page, the quote summary helper, or the database schema.
+- No changes to sorting, filtering, comments, status select, or file viewer.

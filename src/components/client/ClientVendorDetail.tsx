@@ -7,8 +7,8 @@ import { SignedQuoteFileViewer } from "@/components/admin/SignedQuoteFileViewer"
 import { formatFileSize } from "@/lib/vendor-files-api";
 import { ClientStatusSelect } from "./ClientStatusSelect";
 import { useQuery } from "@tanstack/react-query";
-import { getLatestProjectVendorQuote } from "@/lib/quote-api";
-import { formatINR, type QuoteFile } from "@/lib/quote-types";
+import { listProjectVendorQuotes } from "@/lib/quote-api";
+import { formatINR, type QuoteFile, type ProjectVendorQuote } from "@/lib/quote-types";
 import { VendorCommentsThread } from "./VendorCommentsThread";
 
 interface Props {
@@ -29,9 +29,9 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
   const liveStatus = liveVendor?.client_status ?? vendor?.client_status ?? null;
   const projectId = project?.project?.id;
 
-  const { data: quote } = useQuery({
-    queryKey: ["client-vendor-quote", projectId, vendor?.id],
-    queryFn: () => getLatestProjectVendorQuote(projectId!, vendor!.id),
+  const { data: quotes = [] } = useQuery({
+    queryKey: ["client-vendor-quotes", projectId, vendor?.id],
+    queryFn: () => listProjectVendorQuotes(projectId!, vendor!.id),
     enabled: !!projectId && !!vendor?.id,
   });
 
@@ -40,6 +40,12 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
     bg: "bg-[var(--cream-deep)]",
     text: "text-[var(--charcoal)]",
   };
+
+  // Closed/final quotes first, then others newest-first (already newest-first from API).
+  const orderedQuotes: ProjectVendorQuote[] = [
+    ...quotes.filter((q) => q.is_final || q.status === "closed"),
+    ...quotes.filter((q) => !(q.is_final || q.status === "closed")),
+  ];
 
   return (
     <div
@@ -76,45 +82,58 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
           <ClientStatusSelect vendorId={vendor.id} status={liveStatus} />
         </div>
 
-        {quote && (
-          <div className="border-b border-[var(--border)] bg-white px-6 py-3">
-            <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
-              {quote.status === "closed" || quote.is_final ? (
-                <><CircleCheck className="h-3 w-3 text-green-700" /> Your quote (closed)</>
-              ) : (
-                <>Latest quote</>
-              )}
+        {orderedQuotes.length > 0 && (
+          <div className="border-b border-[var(--border)] bg-white px-6 py-3 space-y-3">
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+              Quotes ({orderedQuotes.length})
             </div>
-            {(() => {
-              const amt = quote.status === "closed" && quote.closed_amount != null ? quote.closed_amount : quote.quote_amount;
-              return amt != null ? (
-                <div className="text-xl font-semibold text-[var(--charcoal)]">{formatINR(amt)}</div>
-              ) : null;
-            })()}
-            {quote.quote_text && (
-              <div className="mt-2 whitespace-pre-wrap rounded-md bg-[var(--cream-deep)]/60 p-2 text-sm text-[var(--charcoal)]/85">
-                {quote.quote_text}
-              </div>
-            )}
-            {quote.files && quote.files.length > 0 && (
-              <ul className="mt-2 space-y-1">
-                {quote.files.map((f) => (
-                  <li key={f.id}>
-                    <button
-                      type="button"
-                      onClick={() => setViewingQuoteFile(f)}
-                      className="group flex w-full items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-[var(--cream)]/60 px-2.5 py-1.5 text-left text-xs hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)]"
-                    >
-                      <div className="flex min-w-0 items-center gap-1.5">
-                        <FileText className="h-3.5 w-3.5 shrink-0 text-[var(--terracotta)]" />
-                        <span className="truncate text-[var(--charcoal)] group-hover:text-[var(--terracotta)]">{f.file_name}</span>
-                      </div>
-                      <span className="shrink-0 text-[10px] text-[var(--charcoal)]/55">{formatFileSize(f.size_bytes)}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {orderedQuotes.map((quote) => {
+              const isClosed = quote.status === "closed" || quote.is_final;
+              const amt = isClosed && quote.closed_amount != null ? quote.closed_amount : quote.quote_amount;
+              return (
+                <div
+                  key={quote.id}
+                  className={`rounded-md border p-3 ${isClosed ? "border-green-200 bg-green-50/40" : "border-[var(--border)] bg-[var(--cream)]/40"}`}
+                >
+                  <div className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+                    {isClosed ? (
+                      <><CircleCheck className="h-3 w-3 text-green-700" /> <span className="text-green-800">Your quote (closed)</span></>
+                    ) : (
+                      <>Quote · {new Date(quote.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</>
+                    )}
+                  </div>
+                  {amt != null && (
+                    <div className={`text-lg font-semibold ${isClosed ? "text-green-900" : "text-[var(--charcoal)]"}`}>
+                      {formatINR(amt)}
+                    </div>
+                  )}
+                  {quote.quote_text && (
+                    <div className="mt-2 whitespace-pre-wrap rounded-md bg-[var(--cream-deep)]/60 p-2 text-sm text-[var(--charcoal)]/85">
+                      {quote.quote_text}
+                    </div>
+                  )}
+                  {quote.files && quote.files.length > 0 && (
+                    <ul className="mt-2 space-y-1">
+                      {quote.files.map((f: QuoteFile) => (
+                        <li key={f.id}>
+                          <button
+                            type="button"
+                            onClick={() => setViewingQuoteFile(f)}
+                            className="group flex w-full items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-[var(--cream)]/60 px-2.5 py-1.5 text-left text-xs hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)]"
+                          >
+                            <div className="flex min-w-0 items-center gap-1.5">
+                              <FileText className="h-3.5 w-3.5 shrink-0 text-[var(--terracotta)]" />
+                              <span className="truncate text-[var(--charcoal)] group-hover:text-[var(--terracotta)]">{f.file_name}</span>
+                            </div>
+                            <span className="shrink-0 text-[10px] text-[var(--charcoal)]/55">{formatFileSize(f.size_bytes)}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 

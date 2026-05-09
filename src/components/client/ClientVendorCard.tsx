@@ -3,7 +3,7 @@ import { CATEGORY_COLORS } from "@/lib/categories";
 import { getClientStatusOption } from "@/lib/client-status";
 import { ClientStatusSelect } from "./ClientStatusSelect";
 import { MapPin, Instagram, Link as LinkIcon, Paperclip, Globe, Star, FileText, CircleCheck, MessageSquare } from "lucide-react";
-import { quoteSummaryLabel } from "@/lib/quote-summary";
+
 
 interface Props {
   vendor: ClientVendor;
@@ -103,21 +103,33 @@ export function ClientVendorCard({ vendor, onView }: Props) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             {(() => {
-              const label = quoteSummaryLabel(vendor.quote_summary);
-              if (!label) return null;
-              const closed = vendor.quote_summary?.has_closed;
-              return (
-                <span
-                  className={
-                    closed
-                      ? "inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-800"
-                      : "inline-flex items-center gap-1 rounded-full border border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--terracotta)]"
-                  }
-                >
-                  {closed ? <CircleCheck className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
-                  {label}
-                </span>
-              );
+              const quotes = vendor.quotes ?? [];
+              if (quotes.length === 0) return null;
+              const ordered = [
+                ...quotes.filter((q) => q.is_final || q.status === "closed"),
+                ...quotes.filter((q) => !(q.is_final || q.status === "closed")),
+              ];
+              return ordered.map((q) => {
+                const closed = q.is_final || q.status === "closed";
+                const amt = closed && q.closed_amount != null ? q.closed_amount : q.quote_amount;
+                const label = amt != null
+                  ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amt)
+                  : "Quote";
+                return (
+                  <span
+                    key={q.id}
+                    className={
+                      closed
+                        ? "inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-800"
+                        : "inline-flex items-center gap-1 rounded-full border border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--terracotta)]"
+                    }
+                    title={closed ? "Closed quote" : "Quote received"}
+                  >
+                    {closed ? <CircleCheck className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
+                    {label}
+                  </span>
+                );
+              });
             })()}
             {vendor.attachments.length > 0 && (
               <span className="inline-flex items-center gap-1 text-[10px] text-[var(--charcoal)]/55">
