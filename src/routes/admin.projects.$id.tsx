@@ -252,6 +252,7 @@ function ProjectDetailPage() {
 }
 
 function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
+  const confirmDelete = useConfirmDelete();
   const [resetting, setResetting] = useState(false);
   const [pwd, setPwd] = useState("");
   const [editingEmail, setEditingEmail] = useState(false);
@@ -260,10 +261,15 @@ function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
   const [emailErr, setEmailErr] = useState<string | null>(null);
 
   const savePwd = async () => {
-    await resetProjectClientPassword({ data: { user_id: c.user_id, password: pwd } });
-    setPwd("");
-    setResetting(false);
-    onChanged();
+    try {
+      await resetProjectClientPassword({ data: { user_id: c.user_id, password: pwd } });
+      notifySuccess("Password updated", { description: "Client has been signed out of all sessions." });
+      setPwd("");
+      setResetting(false);
+      onChanged();
+    } catch (e) {
+      notifyError(e, "Could not update password");
+    }
   };
 
   const saveEmail = async () => {
@@ -271,19 +277,32 @@ function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
     setEmailBusy(true);
     try {
       await setProjectClientEmail({ data: { user_id: c.user_id, email: emailVal.trim() } });
+      notifySuccess("Email updated");
       setEditingEmail(false);
       onChanged();
     } catch (e) {
-      setEmailErr(e instanceof Error ? e.message : "Failed");
+      const msg = e instanceof Error ? e.message : "Failed";
+      setEmailErr(msg);
+      notifyError(e, msg);
     } finally {
       setEmailBusy(false);
     }
   };
 
   const handleRemove = async () => {
-    if (!confirm(`Remove ${c.email}? Their login will be deleted.`)) return;
-    await removeProjectClient({ data: { project_id: c.project_id ?? "", user_id: c.user_id } });
-    onChanged();
+    const ok = await confirmDelete({
+      title: `Remove ${c.email}?`,
+      description: "Their login will be deleted. This cannot be undone.",
+      confirmLabel: "Remove client",
+    });
+    if (!ok) return;
+    try {
+      await removeProjectClient({ data: { project_id: c.project_id ?? "", user_id: c.user_id } });
+      notifySuccess("Client removed");
+      onChanged();
+    } catch (e) {
+      notifyError(e, "Could not remove client");
+    }
   };
 
   return (
