@@ -122,7 +122,7 @@ function SubmissionsPage() {
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState
-            icon={Inbox}
+            icon={<Inbox />}
             title={submissions.length === 0 ? "No submissions yet" : "No matches"}
             description={
               submissions.length === 0
