@@ -209,6 +209,18 @@ function ClientPortalPage() {
                 >
                   <Columns3 className="h-3.5 w-3.5" /> Board
                 </button>
+                <button
+                  role="tab"
+                  aria-selected={view === "table"}
+                  onClick={() => setView("table")}
+                  className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 transition-colors ${
+                    view === "table"
+                      ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                      : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                  }`}
+                >
+                  <TableIcon className="h-3.5 w-3.5" /> Table
+                </button>
               </div>
             </div>
           </div>
