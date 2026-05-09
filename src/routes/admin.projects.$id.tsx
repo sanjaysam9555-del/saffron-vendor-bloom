@@ -561,16 +561,15 @@ function VendorQuotesPill({
   };
   const label = quoteSummaryLabel(summary);
 
+  if (isEmpty) return null;
   return (
     <button
-      onClick={() => onOpen(isEmpty)}
+      onClick={() => onOpen(false)}
       className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2.5 py-1 text-[11px] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
       title="Manage quotes for this vendor on this project"
     >
       <FileText className="h-3 w-3" />
-      {isEmpty ? (
-        <span>Add quote</span>
-      ) : closed ? (
+      {closed ? (
         <>
           <CircleCheck className="h-3 w-3 text-green-700" />
           <span className="font-semibold text-green-800">{label}</span>
@@ -585,4 +584,68 @@ function VendorQuotesPill({
       )}
     </button>
   );
+}
+
+function VendorMetaRow({ vendor: v }: { vendor: any }) {
+  const items: React.ReactNode[] = [];
+  if (v.google_rating != null) {
+    items.push(
+      <span key="rating" className="inline-flex items-center gap-0.5">
+        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+        {Number(v.google_rating).toFixed(1)}
+      </span>,
+    );
+  }
+  if (v.location) {
+    items.push(
+      <span key="loc" className="inline-flex items-center gap-0.5">
+        <MapPin className="h-3 w-3" />
+        {v.location}
+      </span>,
+    );
+  }
+  if (v.instagram_handle) {
+    const handle = v.instagram_handle.replace(/^@/, "");
+    items.push(
+      <a
+        key="ig"
+        href={`https://instagram.com/${handle}`}
+        target="_blank"
+        rel="noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center gap-0.5 hover:text-[var(--terracotta)]"
+      >
+        <Instagram className="h-3 w-3" />@{handle}
+      </a>,
+    );
+  }
+  if (v.contact_number) {
+    items.push(
+      <a
+        key="tel"
+        href={`tel:${v.contact_number}`}
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center gap-0.5 hover:text-[var(--terracotta)]"
+      >
+        <Phone className="h-3 w-3" />
+        {v.contact_number}
+      </a>,
+    );
+  }
+  if (v.website) {
+    items.push(
+      <a
+        key="web"
+        href={v.website}
+        target="_blank"
+        rel="noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center gap-0.5 hover:text-[var(--terracotta)]"
+      >
+        <Globe className="h-3 w-3" /> Website
+      </a>,
+    );
+  }
+  if (items.length === 0) return null;
+  return <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[var(--charcoal)]/65">{items}</div>;
 }
