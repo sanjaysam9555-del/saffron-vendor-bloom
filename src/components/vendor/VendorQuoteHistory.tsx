@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronRight, FileText, Paperclip, CircleCheck } from "lucide-react";
+import { FileText, Paperclip, CircleCheck } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { listVendorQuoteHistory } from "@/lib/quote-api";
 import { formatINR, QUOTE_STATUS_LABEL, type QuoteFile } from "@/lib/quote-types";
@@ -8,13 +8,11 @@ import { SignedQuoteFileViewer } from "@/components/admin/SignedQuoteFileViewer"
 import { supabase } from "@/integrations/supabase/client";
 
 export function VendorQuoteHistory({ vendorId }: { vendorId: string }) {
-  const [open, setOpen] = useState(false);
   const [viewing, setViewing] = useState<QuoteFile | null>(null);
 
   const { data: quotes = [], isLoading } = useQuery({
     queryKey: ["vendor-quote-history", vendorId],
     queryFn: () => listVendorQuoteHistory(vendorId),
-    enabled: open,
   });
 
   const projectIds = Array.from(new Set(quotes.map((q) => q.project_id)));
@@ -29,34 +27,23 @@ export function VendorQuoteHistory({ vendorId }: { vendorId: string }) {
       if (error) throw error;
       return data ?? [];
     },
-    enabled: open && projectIds.length > 0,
+    enabled: projectIds.length > 0,
   });
 
   const projectMap = Object.fromEntries(projects.map((p: any) => [p.id, p]));
 
   return (
     <div className="border-t border-[var(--border)] px-6 py-4">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between text-left"
-      >
-        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
-          <FileText className="h-3 w-3" /> Quote history
-          {quotes.length > 0 && (
-            <span className="rounded-full bg-[var(--cream-deep)] px-1.5 text-[10px] text-[var(--charcoal)]/65">
-              {quotes.length}
-            </span>
-          )}
-        </div>
-        {open ? (
-          <ChevronDown className="h-4 w-4 text-[var(--charcoal)]/55" />
-        ) : (
-          <ChevronRight className="h-4 w-4 text-[var(--charcoal)]/55" />
+      <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+        <FileText className="h-3 w-3" /> Quote history
+        {quotes.length > 0 && (
+          <span className="rounded-full bg-[var(--cream-deep)] px-1.5 text-[10px] text-[var(--charcoal)]/65">
+            {quotes.length}
+          </span>
         )}
-      </button>
+      </div>
 
-      {open && (
-        <div className="mt-3">
+      <div className="mt-3">
           {isLoading ? (
             <div className="text-xs text-[var(--charcoal)]/55">Loading…</div>
           ) : quotes.length === 0 ? (
@@ -141,7 +128,6 @@ export function VendorQuoteHistory({ vendorId }: { vendorId: string }) {
             </ul>
           )}
         </div>
-      )}
 
       {viewing && (
         <SignedQuoteFileViewer
