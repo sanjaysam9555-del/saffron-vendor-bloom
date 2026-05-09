@@ -51,3 +51,15 @@ export function formatINR(amount: number | null | undefined): string {
     maximumFractionDigits: 0,
   }).format(amount);
 }
+
+export function formatINRShort(amount: number | null | undefined): string {
+  if (amount == null) return "";
+  const abs = Math.abs(amount);
+  const sign = amount < 0 ? "-" : "";
+  const trim = (n: number, d: number) =>
+    n.toFixed(d).replace(/\.?0+$/, "");
+  if (abs >= 1_00_00_000) return `₹${sign}${trim(abs / 1_00_00_000, 2)}Cr`;
+  if (abs >= 1_00_000) return `₹${sign}${trim(abs / 1_00_000, 2)}L`;
+  if (abs >= 1_000) return `₹${sign}${Math.round(abs / 1_000)}K`;
+  return formatINR(amount);
+}

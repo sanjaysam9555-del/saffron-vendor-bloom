@@ -3,7 +3,7 @@ import { CATEGORY_COLORS } from "@/lib/categories";
 import { getClientStatusOption } from "@/lib/client-status";
 import { ClientStatusSelect } from "./ClientStatusSelect";
 import { MapPin, Instagram, Link as LinkIcon, Paperclip, Globe, Star, FileText, CircleCheck, MessageSquare } from "lucide-react";
-
+import { formatINR, formatINRShort } from "@/lib/quote-types";
 
 interface Props {
   vendor: ClientVendor;
@@ -112,9 +112,10 @@ export function ClientVendorCard({ vendor, onView }: Props) {
               return ordered.map((q) => {
                 const closed = q.is_final || q.status === "closed";
                 const amt = closed && q.closed_amount != null ? q.closed_amount : q.quote_amount;
-                const label = amt != null
-                  ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amt)
-                  : "Quote";
+                const label = amt != null ? formatINRShort(amt) : "Quote";
+                const fullTitle = amt != null
+                  ? `${closed ? "Closed quote" : "Quote received"} · ${formatINR(amt)}`
+                  : (closed ? "Closed quote" : "Quote received");
                 return (
                   <span
                     key={q.id}
@@ -123,7 +124,7 @@ export function ClientVendorCard({ vendor, onView }: Props) {
                         ? "inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-800"
                         : "inline-flex items-center gap-1 rounded-full border border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--terracotta)]"
                     }
-                    title={closed ? "Closed quote" : "Quote received"}
+                    title={fullTitle}
                   >
                     {closed ? <CircleCheck className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
                     {label}
