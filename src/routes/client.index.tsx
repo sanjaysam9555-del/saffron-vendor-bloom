@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, LayoutGrid, Columns3, Filter as FilterIcon } from "lucide-react";
+import { Sparkles, LayoutGrid, Columns3, Filter as FilterIcon, Table as TableIcon } from "lucide-react";
 import { ClientGate } from "@/components/ClientGate";
 import { BrandSplash } from "@/components/BrandSplash";
 import { useAuth } from "@/lib/auth";
@@ -12,9 +12,10 @@ import { ClientSidebar, type ClientFilterState } from "@/components/client/Clien
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
 import { ClientVendorDetail } from "@/components/client/ClientVendorDetail";
 import { ClientBoardView } from "@/components/client/ClientBoardView";
+import { ClientVendorTable } from "@/components/client/ClientVendorTable";
 import type { ClientVendor } from "@/lib/project-types";
 
-type ViewMode = "grid" | "board";
+type ViewMode = "grid" | "board" | "table";
 const VIEW_STORAGE_KEY = "saffron.client.viewMode";
 
 export const Route = createFileRoute("/client/")({
@@ -75,7 +76,7 @@ function ClientPortalPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
-    if (stored === "grid" || stored === "board") setView(stored);
+    if (stored === "grid" || stored === "board" || stored === "table") setView(stored);
   }, []);
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -208,6 +209,18 @@ function ClientPortalPage() {
                 >
                   <Columns3 className="h-3.5 w-3.5" /> Board
                 </button>
+                <button
+                  role="tab"
+                  aria-selected={view === "table"}
+                  onClick={() => setView("table")}
+                  className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 transition-colors ${
+                    view === "table"
+                      ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                      : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                  }`}
+                >
+                  <TableIcon className="h-3.5 w-3.5" /> Table
+                </button>
               </div>
             </div>
           </div>
@@ -222,10 +235,12 @@ function ClientPortalPage() {
                 <ClientVendorCard key={v.id} vendor={v} onView={() => setDetail(v)} />
               ))}
             </div>
-          ) : (
+          ) : view === "board" ? (
             <div className="animate-fade-in">
               <ClientBoardView vendors={filtered} onView={(v) => setDetail(v)} />
             </div>
+          ) : (
+            <ClientVendorTable vendors={filtered} onView={(v) => setDetail(v)} />
           )}
         </main>
       </div>
