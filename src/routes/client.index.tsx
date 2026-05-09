@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, LayoutGrid, Columns3, Filter as FilterIcon } from "lucide-react";
+import { Sparkles, LayoutGrid, Columns3, Filter as FilterIcon, Table as TableIcon } from "lucide-react";
 import { ClientGate } from "@/components/ClientGate";
 import { BrandSplash } from "@/components/BrandSplash";
 import { useAuth } from "@/lib/auth";
@@ -12,9 +12,10 @@ import { ClientSidebar, type ClientFilterState } from "@/components/client/Clien
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
 import { ClientVendorDetail } from "@/components/client/ClientVendorDetail";
 import { ClientBoardView } from "@/components/client/ClientBoardView";
+import { ClientVendorTable } from "@/components/client/ClientVendorTable";
 import type { ClientVendor } from "@/lib/project-types";
 
-type ViewMode = "grid" | "board";
+type ViewMode = "grid" | "board" | "table";
 const VIEW_STORAGE_KEY = "saffron.client.viewMode";
 
 export const Route = createFileRoute("/client/")({
