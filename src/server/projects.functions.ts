@@ -627,7 +627,7 @@ export const getMyProject = createServerFn({ method: "GET" })
       google_rating: v.google_rating,
       client_status: statusMap.get(v.id) ?? null,
       attachments: attMap.get(v.id) ?? [],
-      quote_summary: quoteSummaryByVendor.get(v.id) ?? { count: 0, latest_status: null, has_closed: false, closed_amount: null },
+      quote_summary: quoteSummaryByVendor.get(v.id) ?? { count: 0, latest_status: null, latest_amount: null, has_closed: false, closed_amount: null },
       comment_count: commentCountByVendor.get(v.id) ?? 0,
     }));
 
