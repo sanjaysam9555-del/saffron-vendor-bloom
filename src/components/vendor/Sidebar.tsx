@@ -44,7 +44,21 @@ export function Sidebar({
   const toggle = (arr: string[], val: string): string[] =>
     arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
 
-  const hasActive = Boolean(filters.category || filters.locations.length);
+  const hasActive = Boolean(
+    filters.category ||
+    filters.locations.length ||
+    filters.minGoogleRating != null ||
+    filters.minSaffronRating != null ||
+    filters.submittedViaForm !== "any",
+  );
+
+  const clearAll = (): FilterState => ({
+    category: null,
+    locations: [],
+    minGoogleRating: null,
+    minSaffronRating: null,
+    submittedViaForm: "any",
+  });
 
   const chip = (active: boolean) =>
     `rounded-full border px-2.5 py-0.5 text-xs transition-colors ${
