@@ -113,8 +113,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       if (!mounted) return;
+      // If a token refresh failed and Supabase signed the user out, make sure
+      // we surface that immediately instead of hanging on cached state.
+      if (event === "TOKEN_REFRESHED" && !s) {
+        writeCachedAccess(null);
+      }
       setSession(s);
       if (s?.user) {
         // Hydrate from cache immediately so admin-gated UI renders without waiting.
