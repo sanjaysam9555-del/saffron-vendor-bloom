@@ -174,7 +174,7 @@ export const getProject = createServerFn({ method: "GET" })
 
     const vendorsWithQuotes = vendors.map((v) => ({
       ...v,
-      quote_summary: quoteSummaryByVendor.get(v.id) ?? { count: 0, latest_status: null, has_closed: false, closed_amount: null },
+      quote_summary: quoteSummaryByVendor.get(v.id) ?? { count: 0, latest_status: null, latest_amount: null, has_closed: false, closed_amount: null },
       comment_count: commentCountByVendor.get(v.id) ?? 0,
     }));
 
