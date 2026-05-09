@@ -96,9 +96,6 @@ export function ClientVendorCard({ vendor, onView }: Props) {
             <span>{Number(vendor.google_rating).toFixed(1)}</span>
           </div>
         )}
-        {vendor.price_text && (
-          <div className="text-sm font-medium text-[var(--terracotta)]">{vendor.price_text}</div>
-        )}
       </div>
 
       <div className="mt-3 space-y-2 border-t border-[var(--border)] pt-3" style={{ marginTop: "auto" }}>

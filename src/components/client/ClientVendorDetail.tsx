@@ -120,7 +120,6 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
 
         <div className="grid gap-3 p-6 sm:grid-cols-2">
           <Row icon={<MapPin />} label="Location" value={vendor.location} />
-          <Row label="Price" value={vendor.price_text} />
           <Row
             icon={<Instagram />}
             label="Instagram"
