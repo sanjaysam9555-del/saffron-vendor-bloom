@@ -13,6 +13,7 @@ import {
 } from "@/lib/vendor-files-api";
 import { SignedDocumentViewer } from "./SignedDocumentViewer";
 import { useAuth, useIsAdmin } from "@/lib/auth";
+import { instagramDisplay, instagramUrl } from "@/lib/instagram";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
 import { BookedBadge } from "./BookedBadge";
 import { VendorQuoteHistory } from "./VendorQuoteHistory";
