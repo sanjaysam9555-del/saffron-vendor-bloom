@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { BrandSplash } from "@/components/BrandSplash";
 
 export function ClientGate({ children }: { children: ReactNode }) {
-  const { session, loading, role, initialized } = useAuth();
+  const { session, loading, role, initialized, signOut } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,15 +15,18 @@ export function ClientGate({ children }: { children: ReactNode }) {
     }
     if (role && role !== "client") {
       navigate({ to: "/admin" });
+      return;
     }
-  }, [initialized, loading, session, role, navigate]);
+    // Session exists but role failed to resolve — don't sit on the splash.
+    // Sign out and bounce home so the user can try again.
+    if (!role) {
+      void signOut().finally(() => navigate({ to: "/" }));
+    }
+  }, [initialized, loading, session, role, navigate, signOut]);
 
   if (session && role === "client") {
     return <>{children}</>;
   }
 
-  if (!initialized || loading || !session || !role || role !== "client") {
-    return <BrandSplash />;
-  }
-  return <>{children}</>;
+  return <BrandSplash />;
 }
