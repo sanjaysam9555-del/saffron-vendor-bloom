@@ -16,6 +16,17 @@ import { useAllCategories } from "@/lib/categories";
 import { AuthGate } from "@/components/AuthGate";
 import { useIsAdmin } from "@/lib/auth";
 
+type SortKey = "date_added_desc" | "date_added_asc" | "updated_desc" | "name_asc" | "name_desc";
+
+const SORT_LABEL: Record<SortKey, string> = {
+  date_added_desc: "Newest added",
+  date_added_asc: "Oldest added",
+  updated_desc: "Last modified",
+  name_asc: "Name A→Z",
+  name_desc: "Name Z→A",
+};
+const DEFAULT_SORT: SortKey = "date_added_desc";
+
 export const Route = createFileRoute("/admin/")({
   head: () => ({
     meta: [
