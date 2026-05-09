@@ -3,6 +3,7 @@ import { CATEGORY_COLORS } from "@/lib/categories";
 import { getClientStatusOption } from "@/lib/client-status";
 import { ClientStatusSelect } from "./ClientStatusSelect";
 import { MapPin, Instagram, Link as LinkIcon, Paperclip, Globe, Star, FileText, CircleCheck, MessageSquare, Sparkles } from "lucide-react";
+import { instagramUrl } from "@/lib/instagram";
 import { formatINR, formatINRShort } from "@/lib/quote-types";
 
 interface Props {
