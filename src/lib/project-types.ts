@@ -66,4 +66,5 @@ export interface ClientVendor {
     created_at: string;
   }[];
   comment_count?: number;
+  is_saffron_pick?: boolean;
 }
