@@ -1,6 +1,7 @@
 import { LogOut, Search } from "lucide-react";
 import logoLight from "@/assets/saffron-logo-transparent.png";
 import { useAuth } from "@/lib/auth";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 interface Props {
   search: string;
@@ -12,6 +13,15 @@ interface Props {
 
 export function ClientTopNav({ search, onSearchChange, brideName, groomName, weddingDate }: Props) {
   const { signOut } = useAuth();
+  const confirm = useConfirm();
+  const handleSignOut = async () => {
+    const ok = await confirm({
+      title: "Sign out?",
+      description: "You'll need to sign back in to view your vendor folio.",
+      confirmLabel: "Sign out",
+    });
+    if (ok) await signOut();
+  };
   const dateFmt = new Date(weddingDate).toLocaleDateString("en-IN", {
     day: "numeric",
     month: "long",
@@ -37,7 +47,7 @@ export function ClientTopNav({ search, onSearchChange, brideName, groomName, wed
             <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--charcoal)]/55">{dateFmt}</div>
           </div>
           <button
-            onClick={() => signOut()}
+            onClick={handleSignOut}
             title="Sign out"
             aria-label="Sign out"
             className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-xs text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:px-3"
