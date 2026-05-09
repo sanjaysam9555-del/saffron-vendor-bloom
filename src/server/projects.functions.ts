@@ -648,9 +648,32 @@ export const getMyProject = createServerFn({ method: "GET" })
       quote_summary: quoteSummaryByVendor.get(v.id) ?? { count: 0, latest_status: null, latest_amount: null, has_closed: false, closed_amount: null },
       quotes: quotesByVendor.get(v.id) ?? [],
       comment_count: commentCountByVendor.get(v.id) ?? 0,
+      is_saffron_pick: saffronPickMap.get(v.id) ?? false,
     }));
 
     return { project, vendors };
+  });
+
+export const setVendorSaffronPick = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        project_id: z.string().uuid(),
+        vendor_id: z.string().uuid(),
+        is_saffron_pick: z.boolean(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await assertStaff(context.userId);
+    const { error } = await supabaseAdmin
+      .from("project_vendors")
+      .update({ is_saffron_pick: data.is_saffron_pick })
+      .eq("project_id", data.project_id)
+      .eq("vendor_id", data.vendor_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 async function loadVendorContext(projectId: string, vendorId: string, userId: string) {
