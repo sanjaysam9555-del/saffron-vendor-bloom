@@ -16,12 +16,20 @@ export function ClientVendorCard({ vendor, onView }: Props) {
     text: "text-[var(--charcoal)]",
   };
   const statusOpt = getClientStatusOption(vendor.client_status);
+  const isPick = !!vendor.is_saffron_pick;
 
   return (
     <div
       onClick={onView}
-      className="vendor-card group flex h-full min-w-0 max-w-full cursor-pointer flex-col overflow-hidden rounded-lg bg-white p-4 text-[var(--charcoal)]"
+      className={`vendor-card group relative flex h-full min-w-0 max-w-full cursor-pointer flex-col overflow-hidden rounded-lg bg-white p-4 text-[var(--charcoal)] ${
+        isPick ? "ring-2 ring-[var(--terracotta)] shadow-[0_0_0_4px_var(--terracotta-soft)]" : ""
+      }`}
     >
+      {isPick && (
+        <div className="pointer-events-none absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[var(--terracotta)] to-[var(--terracotta)]/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--cream)] shadow-sm">
+          <Sparkles className="h-3 w-3 fill-current" /> Saffron's Pick
+        </div>
+      )}
       <h3 className="mb-2 font-display text-lg font-semibold leading-tight text-[var(--charcoal)]">
         {vendor.vendor_name}
       </h3>
