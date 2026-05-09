@@ -16,6 +16,7 @@ import { useAuth, useIsAdmin } from "@/lib/auth";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
 import { BookedBadge } from "./BookedBadge";
 import { VendorQuoteHistory } from "./VendorQuoteHistory";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 
 interface VendorDetailProps {
   vendor: Vendor | null;
