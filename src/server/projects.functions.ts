@@ -139,18 +139,19 @@ export const getProject = createServerFn({ method: "GET" })
     }
 
     // Per-vendor quote summary for this project
-    const quoteSummaryByVendor = new Map<string, { count: number; latest_status: string | null; has_closed: boolean; closed_amount: number | null }>();
+    const quoteSummaryByVendor = new Map<string, { count: number; latest_status: string | null; latest_amount: number | null; has_closed: boolean; closed_amount: number | null }>();
     if (vendorIds.length > 0) {
       const { data: qrows } = await supabaseAdmin
         .from("project_vendor_quotes")
-        .select("vendor_id, status, is_final, closed_amount, created_at")
+        .select("vendor_id, status, is_final, quote_amount, closed_amount, created_at")
         .eq("project_id", data.id)
         .in("vendor_id", vendorIds)
         .order("created_at", { ascending: false });
       for (const q of qrows ?? []) {
-        const s = quoteSummaryByVendor.get(q.vendor_id) ?? { count: 0, latest_status: null, has_closed: false, closed_amount: null };
+        const s = quoteSummaryByVendor.get(q.vendor_id) ?? { count: 0, latest_status: null, latest_amount: null, has_closed: false, closed_amount: null };
         s.count += 1;
         if (s.latest_status === null) s.latest_status = q.status;
+        if (s.latest_amount === null) s.latest_amount = q.quote_amount;
         if (q.is_final || q.status === "closed") {
           s.has_closed = true;
           if (s.closed_amount == null) s.closed_amount = q.closed_amount;
@@ -173,7 +174,7 @@ export const getProject = createServerFn({ method: "GET" })
 
     const vendorsWithQuotes = vendors.map((v) => ({
       ...v,
-      quote_summary: quoteSummaryByVendor.get(v.id) ?? { count: 0, latest_status: null, has_closed: false, closed_amount: null },
+      quote_summary: quoteSummaryByVendor.get(v.id) ?? { count: 0, latest_status: null, latest_amount: null, has_closed: false, closed_amount: null },
       comment_count: commentCountByVendor.get(v.id) ?? 0,
     }));
 
@@ -583,15 +584,16 @@ export const getMyProject = createServerFn({ method: "GET" })
 
     const { data: qrows } = await supabaseAdmin
       .from("project_vendor_quotes")
-      .select("vendor_id, status, is_final, closed_amount, created_at")
+      .select("vendor_id, status, is_final, quote_amount, closed_amount, created_at")
       .eq("project_id", link.project_id)
       .in("vendor_id", vendorIds)
       .order("created_at", { ascending: false });
-    const quoteSummaryByVendor = new Map<string, { count: number; latest_status: string | null; has_closed: boolean; closed_amount: number | null }>();
+    const quoteSummaryByVendor = new Map<string, { count: number; latest_status: string | null; latest_amount: number | null; has_closed: boolean; closed_amount: number | null }>();
     for (const q of qrows ?? []) {
-      const s = quoteSummaryByVendor.get(q.vendor_id) ?? { count: 0, latest_status: null, has_closed: false, closed_amount: null };
+      const s = quoteSummaryByVendor.get(q.vendor_id) ?? { count: 0, latest_status: null, latest_amount: null, has_closed: false, closed_amount: null };
       s.count += 1;
       if (s.latest_status === null) s.latest_status = q.status;
+      if (s.latest_amount === null) s.latest_amount = q.quote_amount;
       if (q.is_final || q.status === "closed") {
         s.has_closed = true;
         if (s.closed_amount == null) s.closed_amount = q.closed_amount;
@@ -625,7 +627,7 @@ export const getMyProject = createServerFn({ method: "GET" })
       google_rating: v.google_rating,
       client_status: statusMap.get(v.id) ?? null,
       attachments: attMap.get(v.id) ?? [],
-      quote_summary: quoteSummaryByVendor.get(v.id) ?? { count: 0, latest_status: null, has_closed: false, closed_amount: null },
+      quote_summary: quoteSummaryByVendor.get(v.id) ?? { count: 0, latest_status: null, latest_amount: null, has_closed: false, closed_amount: null },
       comment_count: commentCountByVendor.get(v.id) ?? 0,
     }));
 
