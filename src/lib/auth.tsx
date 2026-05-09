@@ -140,29 +140,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      if (!mounted) return;
-      setSession(s);
-      if (s?.user) {
-        const cached = readCachedAccess();
-        if (cached && cached.userId === s.user.id && cached.role) {
-          setRole(cached.role);
-          setDisplayName(cached.displayName);
-        }
-        if (loadedForUserRef.current === s.user.id) {
-          setLoading(false);
+    // Safety net: never let the app sit on the splash forever. If session
+    // restoration hasn't completed in 4s (e.g. network hang, bad refresh
+    // token, browser storage issue), unblock the gates so they can decide.
+    const safety = window.setTimeout(() => {
+      if (mounted) setInitialized(true);
+    }, 4000);
+
+    supabase.auth
+      .getSession()
+      .then(({ data: { session: s } }) => {
+        if (!mounted) return;
+        setSession(s);
+        if (s?.user) {
+          const cached = readCachedAccess();
+          if (cached && cached.userId === s.user.id && cached.role) {
+            setRole(cached.role);
+            setDisplayName(cached.displayName);
+          }
+          if (loadedForUserRef.current === s.user.id) {
+            setLoading(false);
+          } else {
+            setLoading(true);
+            void loadProfile(s.user.id);
+          }
         } else {
-          setLoading(true);
-          void loadProfile(s.user.id);
+          setLoading(false);
         }
-      } else {
+        setInitialized(true);
+      })
+      .catch(async (err) => {
+        console.error("getSession failed", err);
+        // Likely a corrupt/expired refresh token — clear it so a reload
+        // doesn't hit the same wall.
+        try {
+          await supabase.auth.signOut();
+        } catch {
+          /* noop */
+        }
+        if (!mounted) return;
+        writeCachedAccess(null);
+        setSession(null);
+        setRole(null);
+        setDisplayName(null);
         setLoading(false);
-      }
-      setInitialized(true);
-    });
+        setInitialized(true);
+      });
 
     return () => {
       mounted = false;
+      window.clearTimeout(safety);
       sub.subscription.unsubscribe();
     };
   }, []);
