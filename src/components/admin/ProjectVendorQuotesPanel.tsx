@@ -410,6 +410,7 @@ function QuoteForm({
   onSaved: () => void;
   onViewFile?: (f: QuoteFile) => void;
 }) {
+  const confirmDelete = useConfirmDelete();
   const isEdit = !!quote;
   const [amount, setAmount] = useState<string>(
     quote?.quote_amount != null ? String(quote.quote_amount) : "",
@@ -540,9 +541,15 @@ function QuoteForm({
                   <button
                     type="button"
                     onClick={async () => {
-                      if (!confirm(`Remove ${f.file_name}?`)) return;
+                      const ok = await confirmDelete({
+                        title: `Remove ${f.file_name}?`,
+                        description: "This file will be permanently removed from the quote.",
+                        confirmLabel: "Remove file",
+                      });
+                      if (!ok) return;
                       try {
                         await deleteQuoteFile(f);
+                        toast.success("File removed");
                         onSaved();
                       } catch (e) {
                         toast.error(e instanceof Error ? e.message : "Failed");
