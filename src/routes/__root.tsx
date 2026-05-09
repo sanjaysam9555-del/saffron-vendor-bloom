@@ -5,6 +5,7 @@ import { useState } from "react";
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
+import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { RouteProgress } from "@/components/RouteProgress";
 
 function NotFoundComponent() {
@@ -157,9 +158,11 @@ function RootComponent() {
   return (
     <QueryClientProvider client={client}>
       <AuthProvider>
-        <RouteProgress />
-        <Outlet />
-        <Toaster />
+        <ConfirmProvider>
+          <RouteProgress />
+          <Outlet />
+          <Toaster />
+        </ConfirmProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
