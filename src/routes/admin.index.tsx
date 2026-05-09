@@ -402,3 +402,109 @@ function EmptyState({
     </div>
   );
 }
+
+function ActiveFilterChips({
+  filters,
+  onChange,
+  sort,
+  onSortChange,
+  search,
+  onClearSearch,
+}: {
+  filters: FilterState;
+  onChange: (f: FilterState) => void;
+  sort: SortKey;
+  onSortChange: (s: SortKey) => void;
+  search: string;
+  onClearSearch: () => void;
+}) {
+  const chips: { key: string; label: string; onRemove: () => void }[] = [];
+
+  if (search.trim()) {
+    chips.push({ key: "search", label: `Search: "${search.trim()}"`, onRemove: onClearSearch });
+  }
+  if (filters.category) {
+    chips.push({ key: "cat", label: filters.category, onRemove: () => onChange({ ...filters, category: null }) });
+  }
+  for (const loc of filters.locations) {
+    chips.push({
+      key: `loc-${loc}`,
+      label: loc,
+      onRemove: () => onChange({ ...filters, locations: filters.locations.filter((l) => l !== loc) }),
+    });
+  }
+  if (filters.minGoogleRating != null) {
+    chips.push({
+      key: "google",
+      label: `Google ${filters.minGoogleRating}+`,
+      onRemove: () => onChange({ ...filters, minGoogleRating: null }),
+    });
+  }
+  if (filters.minSaffronRating != null) {
+    chips.push({
+      key: "saffron",
+      label: `Saffron ${filters.minSaffronRating}+`,
+      onRemove: () => onChange({ ...filters, minSaffronRating: null }),
+    });
+  }
+  if (filters.submittedViaForm !== "any") {
+    chips.push({
+      key: "src",
+      label: filters.submittedViaForm === "yes" ? "Form submissions" : "Manual entry",
+      onRemove: () => onChange({ ...filters, submittedViaForm: "any" }),
+    });
+  }
+  const sortChip =
+    sort !== DEFAULT_SORT
+      ? { key: "sort", label: `Sort: ${SORT_LABEL[sort]}`, onRemove: () => onSortChange(DEFAULT_SORT) }
+      : null;
+
+  if (chips.length === 0 && !sortChip) return null;
+
+  const clearAll = () => {
+    onChange({
+      category: null,
+      locations: [],
+      minGoogleRating: null,
+      minSaffronRating: null,
+      submittedViaForm: "any",
+    });
+    onClearSearch();
+    onSortChange(DEFAULT_SORT);
+  };
+
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-1.5">
+      {chips.map((c) => (
+        <button
+          key={c.key}
+          onClick={c.onRemove}
+          className="group inline-flex items-center gap-1 rounded-full border border-[var(--terracotta)]/40 bg-[var(--terracotta-soft)] px-2 py-0.5 text-[11px] text-[var(--terracotta)] hover:border-[var(--terracotta)]"
+          title={`Remove ${c.label}`}
+        >
+          <span>{c.label}</span>
+          <X className="h-3 w-3 opacity-70 group-hover:opacity-100" />
+        </button>
+      ))}
+      {sortChip && (
+        <button
+          onClick={sortChip.onRemove}
+          className="group inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-white px-2 py-0.5 text-[11px] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+          title="Reset sort"
+        >
+          <ArrowUpDown className="h-3 w-3" />
+          <span>{sortChip.label}</span>
+          <X className="h-3 w-3 opacity-70 group-hover:opacity-100" />
+        </button>
+      )}
+      {(chips.length + (sortChip ? 1 : 0)) > 1 && (
+        <button
+          onClick={clearAll}
+          className="ml-1 text-[11px] text-[var(--charcoal)]/55 underline-offset-2 hover:text-[var(--terracotta)] hover:underline"
+        >
+          Clear all
+        </button>
+      )}
+    </div>
+  );
+}
