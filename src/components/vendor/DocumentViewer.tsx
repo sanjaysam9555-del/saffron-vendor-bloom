@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, ZoomIn, ZoomOut, Download, FileText, Loader2 } from "lucide-react";
+import { X, ZoomIn, ZoomOut, Download, FileText, Loader2, ExternalLink, AlertTriangle } from "lucide-react";
 
 interface DocumentViewerProps {
   url: string;
@@ -17,6 +17,50 @@ function detectKind(name: string, mime: string | null): Kind {
   if (m.startsWith("image/") || /\.(jpe?g|png|webp|gif|bmp|svg)$/.test(lower)) return "image";
   if (/\.(docx?|pptx?|xlsx?)$/.test(lower) || m.includes("officedocument") || m.includes("msword") || m.includes("ms-excel") || m.includes("ms-powerpoint")) return "office";
   return "other";
+}
+
+/**
+ * Fetches a remote file and returns a same-origin blob: URL.
+ * Bypasses X-Frame-Options / CSP frame-ancestors restrictions imposed by
+ * the file host (Supabase storage, Cloudflare, etc.) and browser-level
+ * iframe blockers like Dia.
+ */
+function useBlobUrl(url: string, enabled: boolean) {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(enabled);
+
+  useEffect(() => {
+    if (!enabled) return;
+    let revoked: string | null = null;
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    (async () => {
+      try {
+        const res = await fetch(url, { credentials: "omit", mode: "cors" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        if (cancelled) return;
+        const objUrl = URL.createObjectURL(blob);
+        revoked = objUrl;
+        setBlobUrl(objUrl);
+        setLoading(false);
+      } catch (e: any) {
+        if (cancelled) return;
+        setError(e?.message ?? "Failed to load file");
+        setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (revoked) URL.revokeObjectURL(revoked);
+    };
+  }, [url, enabled]);
+
+  return { blobUrl, loading, error };
 }
 
 export function DocumentViewer({ url, fileName, mimeType, onClose }: DocumentViewerProps) {
@@ -37,10 +81,6 @@ export function DocumentViewer({ url, fileName, mimeType, onClose }: DocumentVie
   return (
     <div
       className="fixed inset-0 z-[60] flex flex-col bg-black/85 backdrop-blur-sm animate-fade-in"
-      // Stop clicks from bubbling to any backdrop-click handlers in parent
-      // modals (e.g. ClientVendorDetail). Without this, clicking the PDF
-      // toolbar or header controls can collapse the parent and crash the
-      // viewer mid-render.
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
     >
@@ -50,6 +90,15 @@ export function DocumentViewer({ url, fileName, mimeType, onClose }: DocumentVie
           <span className="truncate font-medium">{fileName}</span>
         </div>
         <div className="flex items-center gap-2">
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md border border-white/15 px-3 py-1.5 text-xs hover:bg-white/10"
+            title="Open in a new browser tab"
+          >
+            <ExternalLink className="h-3.5 w-3.5" /> Open in new tab
+          </a>
           <a
             href={url}
             download={fileName}
@@ -70,7 +119,7 @@ export function DocumentViewer({ url, fileName, mimeType, onClose }: DocumentVie
       </header>
 
       <div className="relative flex-1 overflow-hidden">
-        {kind === "pdf" && <PdfView url={url} />}
+        {kind === "pdf" && <PdfView url={url} fileName={fileName} />}
         {kind === "image" && <ImageView url={url} alt={fileName} />}
         {(kind === "office" || kind === "other") && <FallbackView url={url} fileName={fileName} kind={kind} />}
       </div>
@@ -78,24 +127,28 @@ export function DocumentViewer({ url, fileName, mimeType, onClose }: DocumentVie
   );
 }
 
-/* -------- PDF: native browser viewer via iframe (much faster than pdfjs) -------- */
-function PdfView({ url }: { url: string }) {
-  const [loading, setLoading] = useState(true);
+/* -------- PDF: fetch as blob, render via same-origin blob: URL -------- */
+function PdfView({ url, fileName }: { url: string; fileName: string }) {
+  const { blobUrl, loading, error } = useBlobUrl(url, true);
+
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center bg-neutral-800/40 text-[var(--cream)]/80">
+        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading document…
+      </div>
+    );
+  }
+
+  if (error || !blobUrl) {
+    return <BlockedFallback url={url} fileName={fileName} reason={error} />;
+  }
+
   return (
     <div className="relative h-full w-full bg-neutral-800/40">
-      {loading && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[var(--cream)]/80">
-          <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading document…
-        </div>
-      )}
       <iframe
         title="PDF preview"
-        src={url}
+        src={blobUrl}
         className="h-full w-full border-0 bg-white"
-        onLoad={() => setLoading(false)}
-        // Prevent PDF-embedded links from navigating the parent app away
-        // when a user clicks (e.g. Next-page bookmarks that target _top).
-        sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-downloads"
         referrerPolicy="no-referrer"
       />
     </div>
@@ -139,19 +192,62 @@ function FallbackView({ url, fileName, kind }: { url: string; fileName: string; 
         <h3 className="font-display text-2xl">Preview not available</h3>
         <p className="mt-2 text-sm text-[var(--cream)]/70">
           {kind === "office"
-            ? "Office documents (Word, Excel, PowerPoint) cannot be previewed in the browser."
-            : "This file type isn't supported for inline preview."}{" "}
-          Download the file to open it in your preferred application.
+            ? "Office documents (Word, Excel, PowerPoint) can't be previewed inline. Open them in a new tab or download to view."
+            : "This file type isn't supported for inline preview."}
         </p>
-        <a
-          href={url}
-          download={fileName}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-5 inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-4 py-2 text-sm font-medium hover:bg-[var(--terracotta)]/90"
-        >
-          <Download className="h-4 w-4" /> Download {fileName}
-        </a>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-4 py-2 text-sm font-medium hover:bg-[var(--terracotta)]/90"
+          >
+            <ExternalLink className="h-4 w-4" /> Open in new tab
+          </a>
+          <a
+            href={url}
+            download={fileName}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md border border-white/20 px-4 py-2 text-sm font-medium hover:bg-white/10"
+          >
+            <Download className="h-4 w-4" /> Download
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* -------- Shown when fetch/blob fails (CORS, network, browser block) -------- */
+function BlockedFallback({ url, fileName, reason }: { url: string; fileName: string; reason: string | null }) {
+  return (
+    <div className="flex h-full items-center justify-center p-8">
+      <div className="max-w-md rounded-xl border border-white/10 bg-[var(--charcoal)]/70 p-8 text-center text-[var(--cream)]">
+        <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-[var(--champagne)]" />
+        <h3 className="font-display text-2xl">Inline preview unavailable</h3>
+        <p className="mt-2 text-sm text-[var(--cream)]/70">
+          Your browser blocked the embedded preview{reason ? ` (${reason})` : ""}. You can still open the file directly.
+        </p>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-4 py-2 text-sm font-medium hover:bg-[var(--terracotta)]/90"
+          >
+            <ExternalLink className="h-4 w-4" /> Open in new tab
+          </a>
+          <a
+            href={url}
+            download={fileName}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md border border-white/20 px-4 py-2 text-sm font-medium hover:bg-white/10"
+          >
+            <Download className="h-4 w-4" /> Download
+          </a>
+        </div>
       </div>
     </div>
   );
