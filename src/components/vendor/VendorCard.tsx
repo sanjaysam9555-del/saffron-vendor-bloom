@@ -4,6 +4,7 @@ import { MapPin, Phone, Star, Sparkles, Instagram, Copy, Check, MessageCircle } 
 import { useState } from "react";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
 import { BookedBadge } from "./BookedBadge";
+import { instagramUrl } from "@/lib/instagram";
 
 interface VendorCardProps {
   vendor: Vendor;
