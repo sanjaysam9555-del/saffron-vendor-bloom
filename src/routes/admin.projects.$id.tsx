@@ -17,8 +17,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotesPanel";
 import { listProjectVendorQuotes } from "@/lib/quote-api";
-import { formatINR } from "@/lib/quote-types";
-import { ordinal } from "@/lib/quote-summary";
+import { quoteSummaryLabel } from "@/lib/quote-summary";
 import { VendorCommentsThread } from "@/components/client/VendorCommentsThread";
 
 export const Route = createFileRoute("/admin/projects/$id")({
@@ -545,6 +544,14 @@ function VendorQuotesPill({
   const closed = quotes.find((q) => q.is_final || q.status === "closed");
   const fileCount = quotes.reduce((n, q) => n + (q.files?.length ?? 0), 0);
   const isEmpty = quotes.length === 0;
+  const summary = {
+    count: quotes.length,
+    latest_status: quotes[0]?.status ?? null,
+    latest_amount: quotes[0]?.quote_amount ?? null,
+    has_closed: !!closed,
+    closed_amount: closed?.closed_amount ?? null,
+  };
+  const label = quoteSummaryLabel(summary);
 
   return (
     <button
@@ -553,19 +560,15 @@ function VendorQuotesPill({
       title="Manage quotes for this vendor on this project"
     >
       <FileText className="h-3 w-3" />
-      {quotes.length === 0 ? (
+      {isEmpty ? (
         <span>Add quote</span>
       ) : closed ? (
         <>
           <CircleCheck className="h-3 w-3 text-green-700" />
-          <span className="font-semibold text-green-800">
-            Closed{closed.closed_amount != null ? ` · ${formatINR(closed.closed_amount)}` : ""}
-          </span>
+          <span className="font-semibold text-green-800">{label}</span>
         </>
-      ) : quotes[0]?.status === "revised" ? (
-        <span>Revised · {ordinal(quotes.length)} Quote</span>
       ) : (
-        <span>{ordinal(quotes.length)} Quote Received</span>
+        <span>{label}</span>
       )}
       {fileCount > 0 && (
         <span className="inline-flex items-center gap-0.5 text-[10px] text-[var(--charcoal)]/55">
