@@ -485,6 +485,12 @@ function AssignedVendorsSection({
                     >
                       <Plus className="h-3 w-3" /> Add quote
                     </button>
+                    <SaffronPickToggle
+                      projectId={projectId}
+                      vendorId={v.id}
+                      vendorName={v.vendor_name}
+                      isPicked={!!v.is_saffron_pick}
+                    />
                     <button
                       onClick={() => setCommentsFor({ id: v.id, name: v.vendor_name })}
                       className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2.5 py-1 text-[11px] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
