@@ -23,15 +23,13 @@ function ProjectsListPage() {
     queryFn: () => listProjectsOverview(),
   });
 
-  useEffect(() => {
-    const channel = supabase
-      .channel("admin-projects-quotes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quotes" }, () => {
-        qc.invalidateQueries({ queryKey: ["projects"] });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [qc]);
+  useRealtimeInvalidate("admin-projects-live", [
+    { table: "projects", invalidate: [["projects"]] },
+    { table: "project_vendors", invalidate: [["projects"]] },
+    { table: "project_clients", invalidate: [["projects"]] },
+    { table: "project_vendor_quotes", invalidate: [["projects"]] },
+    { table: "client_vendor_status", invalidate: [["projects"]] },
+  ]);
 
   const [showCreate, setShowCreate] = useState(false);
   const [bride, setBride] = useState("");
