@@ -128,7 +128,20 @@ function ProjectDetailPage() {
   };
 
   if (isLoading) {
-    return <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] text-sm text-[var(--charcoal)]/60">Loading…</div>;
+    return (
+      <div className="min-h-screen bg-[var(--cream)] px-6 py-8">
+        <div className="mx-auto max-w-5xl space-y-4">
+          <div className="h-4 w-32 animate-pulse rounded bg-[var(--cream-deep)]" />
+          <div className="h-9 w-72 animate-pulse rounded bg-[var(--cream-deep)]" />
+          <div className="h-4 w-48 animate-pulse rounded bg-[var(--cream-deep)]/70" />
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-24 animate-pulse rounded-lg bg-white" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
   if (error || !data) {
     return (
@@ -348,7 +361,7 @@ function AssignedVendorsSection({
   projectId: string;
   vendors: any[];
   selections: Record<string, Selection[]>;
-  onRemove: (id: string) => void;
+  onRemove: (id: string, name: string) => void;
 }) {
   const [view, setView] = useState<"list" | "grouped">("list");
   const [quotesFor, setQuotesFor] = useState<{ id: string; name: string; category: string | null; autoOpenForm?: boolean } | null>(null);
@@ -463,7 +476,7 @@ function AssignedVendorsSection({
                   </div>
                 </div>
                 <button
-                  onClick={() => onRemove(v.id)}
+                  onClick={() => onRemove(v.id, v.vendor_name)}
                   title="Remove from project"
                   className="rounded p-1.5 text-red-600 hover:bg-red-50"
                 >
