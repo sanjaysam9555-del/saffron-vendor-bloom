@@ -40,8 +40,14 @@ function DashboardPage() {
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"cards" | "table">("cards");
   const [filters, setFilters] = useState<FilterState>({
-    category: null, locations: [],
+    category: null,
+    locations: [],
+    minGoogleRating: null,
+    minSaffronRating: null,
+    submittedViaForm: "any",
   });
+  type SortKey = "date_added_desc" | "date_added_asc" | "updated_desc" | "name_asc" | "name_desc";
+  const [sort, setSort] = useState<SortKey>("date_added_desc");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
