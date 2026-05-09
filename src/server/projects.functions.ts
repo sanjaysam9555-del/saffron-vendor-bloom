@@ -546,9 +546,12 @@ export const getMyProject = createServerFn({ method: "GET" })
 
     const { data: pv } = await supabaseAdmin
       .from("project_vendors")
-      .select("vendor_id")
+      .select("vendor_id, is_saffron_pick")
       .eq("project_id", link.project_id);
     const vendorIds = (pv ?? []).map((r) => r.vendor_id);
+    const saffronPickMap = new Map<string, boolean>(
+      (pv ?? []).map((r) => [r.vendor_id, !!r.is_saffron_pick]),
+    );
     if (vendorIds.length === 0) {
       return { project, vendors: [] };
     }
