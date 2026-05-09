@@ -355,9 +355,13 @@ function DashboardPage() {
         onClose={modals.closeForm}
         onSubmit={async (input) => {
           if (modals.state.editing) {
-            return await update.mutateAsync({ id: modals.state.editing.id, input });
+            const v = await update.mutateAsync({ id: modals.state.editing.id, input });
+            toast.success("Vendor updated");
+            return v;
           }
-          return await create.mutateAsync(input);
+          const v = await create.mutateAsync(input);
+          toast.success(`${v.vendor_name} added`);
+          return v;
         }}
       />
 

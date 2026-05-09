@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentUserAccess } from "@/server/auth.functions";
+import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 
 export type AppRole = "admin" | "employee" | "client";
 
@@ -215,20 +216,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         if (error) {
           setLoading(false);
+          notifyError(error.message, "Could not sign in.");
           return { error: error.message };
         }
         setSession(data?.session ?? null);
         if (data?.user) {
-          // Force-refresh access for this user.
           loadedForUserRef.current = null;
           void loadProfile(data.user.id);
         } else {
           setLoading(false);
         }
+        notifySuccess("Welcome back", { description: "Signed in successfully." });
         return { error: null };
       } catch (error) {
         console.error("Sign in failed", error);
         setLoading(false);
+        notifyError(error, "Could not complete sign in. Please try again.");
         return { error: "Could not complete sign in. Please try again." };
       }
     },
@@ -241,14 +244,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           data: { display_name: displayName },
         },
       });
+      if (error) {
+        notifyError(error.message, "Could not create your account.");
+      } else {
+        notifySuccess("Account created", { description: "Check your email to confirm." });
+      }
       return { error: error?.message ?? null };
     },
     signOut: async () => {
-      await supabase.auth.signOut();
-      loadedForUserRef.current = null;
-      writeCachedAccess(null);
-      setRole(null);
-      setDisplayName(null);
+      try {
+        await supabase.auth.signOut();
+        loadedForUserRef.current = null;
+        writeCachedAccess(null);
+        setRole(null);
+        setDisplayName(null);
+        notifySuccess("Signed out", { description: "See you again soon." });
+      } catch (e) {
+        notifyError(e, "Could not sign out.");
+      }
     },
     refresh: async () => {
       if (session?.user) {
