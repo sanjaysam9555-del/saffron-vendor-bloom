@@ -60,6 +60,14 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
     enabled: !!vendor?.id,
   });
 
+  useRealtimeInvalidate(
+    `vendor-attachments-${vendor?.id ?? "none"}`,
+    vendor?.id
+      ? [{ table: "vendor_attachments", filter: `vendor_id=eq.${vendor.id}`, invalidate: [["vendor-attachments", vendor.id]] }]
+      : [],
+    { enabled: !!vendor?.id },
+  );
+
   if (!vendor) return null;
   const colors = CATEGORY_COLORS[vendor.category] ?? { bg: "bg-[var(--cream-deep)]", text: "text-[var(--charcoal)]" };
 
