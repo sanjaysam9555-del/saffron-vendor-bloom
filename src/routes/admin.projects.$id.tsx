@@ -17,8 +17,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotesPanel";
 import { listProjectVendorQuotes } from "@/lib/quote-api";
-import { formatINR } from "@/lib/quote-types";
-import { ordinal } from "@/lib/quote-summary";
+import { quoteSummaryLabel } from "@/lib/quote-summary";
 import { VendorCommentsThread } from "@/components/client/VendorCommentsThread";
 
 export const Route = createFileRoute("/admin/projects/$id")({
