@@ -12,29 +12,27 @@ export function ordinal(n: number): string {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
-function formatINRShort(amount: number): string {
-  try {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  } catch {
-    return `₹${Math.round(amount).toLocaleString("en-IN")}`;
-  }
+function formatINRCompact(amount: number): string {
+  const n = Math.abs(Number(amount));
+  const trim = (v: number, d: number) =>
+    v.toFixed(d).replace(/\.?0+$/, "");
+  if (n >= 1_00_00_000) return `₹${trim(n / 1_00_00_000, 2)}Cr`;
+  if (n >= 1_00_000) return `₹${trim(n / 1_00_000, 2)}L`;
+  if (n >= 1_000) return `₹${Math.round(n / 1_000)}K`;
+  return `₹${Math.round(n)}`;
 }
 
-/** Returns a short human label like "1st Quote · ₹1,20,000", "Closed · ₹2,00,000", "Revised · 2nd Quote · ₹1,50,000", or null when there are no quotes. */
+/** Returns a short human label like "1st Quote · ₹2.96L", "Closed · ₹2L", "Revised · 2nd Quote · ₹1.5L", or null when there are no quotes. */
 export function quoteSummaryLabel(s: QuoteSummary | null | undefined): string | null {
   if (!s || s.count === 0) return null;
   if (s.has_closed) {
     const amt = s.closed_amount ?? s.latest_amount;
-    return amt != null ? `Closed · ${formatINRShort(Number(amt))}` : "Closed";
+    return amt != null ? `Closed · ${formatINRCompact(Number(amt))}` : "Closed";
   }
   const amt = s.latest_amount;
   const base =
     s.latest_status === "revised"
       ? `Revised · ${ordinal(s.count)} Quote`
-      : `${ordinal(s.count)} Quote Received`;
-  return amt != null ? `${base} · ${formatINRShort(Number(amt))}` : base;
+      : `${ordinal(s.count)} Quote`;
+  return amt != null ? `${base} · ${formatINRCompact(Number(amt))}` : base;
 }
