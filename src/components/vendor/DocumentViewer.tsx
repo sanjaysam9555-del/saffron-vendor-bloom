@@ -35,7 +35,15 @@ export function DocumentViewer({ url, fileName, mimeType, onClose }: DocumentVie
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col bg-black/85 backdrop-blur-sm animate-fade-in">
+    <div
+      className="fixed inset-0 z-[60] flex flex-col bg-black/85 backdrop-blur-sm animate-fade-in"
+      // Stop clicks from bubbling to any backdrop-click handlers in parent
+      // modals (e.g. ClientVendorDetail). Without this, clicking the PDF
+      // toolbar or header controls can collapse the parent and crash the
+      // viewer mid-render.
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
       <header className="flex items-center justify-between gap-3 border-b border-white/10 bg-[var(--charcoal)]/90 px-4 py-3 text-[var(--cream)]">
         <div className="flex min-w-0 items-center gap-2">
           <FileText className="h-4 w-4 shrink-0 text-[var(--champagne)]" />
@@ -85,6 +93,10 @@ function PdfView({ url }: { url: string }) {
         src={url}
         className="h-full w-full border-0 bg-white"
         onLoad={() => setLoading(false)}
+        // Prevent PDF-embedded links from navigating the parent app away
+        // when a user clicks (e.g. Next-page bookmarks that target _top).
+        sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-downloads"
+        referrerPolicy="no-referrer"
       />
     </div>
   );
