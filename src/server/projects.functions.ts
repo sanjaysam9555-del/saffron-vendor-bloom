@@ -185,9 +185,6 @@ export const getProject = createServerFn({ method: "GET" })
     return { project, clients: clientRows, vendors: vendorsWithQuotes, selections };
   });
 
-    return { project, clients: clientRows, vendors: vendorsWithQuotes, selections };
-  });
-
 // Returns all projects with per-status vendor counts (for the projects index page).
 export const listProjectsOverview = createServerFn({ method: "GET" })
   .middleware([attachAuthToken, requireSupabaseAuth])
