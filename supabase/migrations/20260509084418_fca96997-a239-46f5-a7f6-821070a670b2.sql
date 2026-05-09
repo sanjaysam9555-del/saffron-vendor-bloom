@@ -1,0 +1,10 @@
+ALTER TABLE public.projects REPLICA IDENTITY FULL;
+ALTER TABLE public.project_vendors REPLICA IDENTITY FULL;
+ALTER TABLE public.client_vendor_status REPLICA IDENTITY FULL;
+ALTER TABLE public.project_clients REPLICA IDENTITY FULL;
+ALTER TABLE public.vendor_attachments REPLICA IDENTITY FULL;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.projects;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.project_vendors;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.client_vendor_status;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.project_clients;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.vendor_attachments;

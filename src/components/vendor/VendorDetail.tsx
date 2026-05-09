@@ -16,6 +16,7 @@ import { useAuth, useIsAdmin } from "@/lib/auth";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
 import { BookedBadge } from "./BookedBadge";
 import { VendorQuoteHistory } from "./VendorQuoteHistory";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 
 interface VendorDetailProps {
   vendor: Vendor | null;
@@ -58,6 +59,14 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
     queryFn: () => listVendorAttachments(vendor!.id),
     enabled: !!vendor?.id,
   });
+
+  useRealtimeInvalidate(
+    `vendor-attachments-${vendor?.id ?? "none"}`,
+    vendor?.id
+      ? [{ table: "vendor_attachments", filter: `vendor_id=eq.${vendor.id}`, invalidate: [["vendor-attachments", vendor.id]] }]
+      : [],
+    { enabled: !!vendor?.id },
+  );
 
   if (!vendor) return null;
   const colors = CATEGORY_COLORS[vendor.category] ?? { bg: "bg-[var(--cream-deep)]", text: "text-[var(--charcoal)]" };

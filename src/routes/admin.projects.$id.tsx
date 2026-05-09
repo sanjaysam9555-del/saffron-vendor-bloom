@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useMemo, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck, MessageSquare, Star, MapPin, Instagram, Phone, Globe, Plus } from "lucide-react";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { ClientStatusPill, StatusCountsRow, CLIENT_STATUS_OPTIONS } from "@/components/admin/ClientStatusPill";
 import { AuthGate } from "@/components/AuthGate";
 import {
@@ -40,27 +40,16 @@ function ProjectDetailPage() {
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["project", id] });
 
-  useEffect(() => {
-    const channel = supabase
-      .channel(`project-quotes-${id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quotes", filter: `project_id=eq.${id}` }, () => {
-        qc.invalidateQueries({ queryKey: ["project", id] });
-        qc.invalidateQueries({ queryKey: ["project-vendor-quotes", id] });
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quote_files" }, () => {
-        qc.invalidateQueries({ queryKey: ["project-vendor-quotes", id] });
-        qc.invalidateQueries({ queryKey: ["project", id] });
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_comments", filter: `project_id=eq.${id}` }, () => {
-        qc.invalidateQueries({ queryKey: ["project", id] });
-        qc.invalidateQueries({ queryKey: ["vendor-comments"] });
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "client_vendor_status" }, () => {
-        qc.invalidateQueries({ queryKey: ["project", id] });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [id, qc]);
+  useRealtimeInvalidate(`admin-project-${id}`, [
+    { table: "projects", filter: `id=eq.${id}`, invalidate: [["project", id]] },
+    { table: "project_vendors", filter: `project_id=eq.${id}`, invalidate: [["project", id]] },
+    { table: "project_clients", filter: `project_id=eq.${id}`, invalidate: [["project", id]] },
+    { table: "project_vendor_quotes", filter: `project_id=eq.${id}`, invalidate: [["project", id], ["project-vendor-quotes", id]] },
+    { table: "project_vendor_quote_files", invalidate: [["project", id], ["project-vendor-quotes", id]] },
+    { table: "project_vendor_comments", filter: `project_id=eq.${id}`, invalidate: [["project", id], ["vendor-comments"]] },
+    { table: "client_vendor_status", invalidate: [["project", id]] },
+    { table: "vendors", invalidate: [["project", id]] },
+  ]);
 
   const [showAddClient, setShowAddClient] = useState(false);
   const [cEmail, setCEmail] = useState("");
