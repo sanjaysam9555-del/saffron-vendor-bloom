@@ -584,11 +584,12 @@ export const getMyProject = createServerFn({ method: "GET" })
 
     const { data: qrows } = await supabaseAdmin
       .from("project_vendor_quotes")
-      .select("vendor_id, status, is_final, quote_amount, closed_amount, created_at")
+      .select("id, vendor_id, status, is_final, quote_amount, closed_amount, created_at")
       .eq("project_id", link.project_id)
       .in("vendor_id", vendorIds)
       .order("created_at", { ascending: false });
     const quoteSummaryByVendor = new Map<string, { count: number; latest_status: string | null; latest_amount: number | null; has_closed: boolean; closed_amount: number | null }>();
+    const quotesByVendor = new Map<string, { id: string; status: string; is_final: boolean; quote_amount: number | null; closed_amount: number | null; created_at: string }[]>();
     for (const q of qrows ?? []) {
       const s = quoteSummaryByVendor.get(q.vendor_id) ?? { count: 0, latest_status: null, latest_amount: null, has_closed: false, closed_amount: null };
       s.count += 1;
@@ -599,6 +600,16 @@ export const getMyProject = createServerFn({ method: "GET" })
         if (s.closed_amount == null) s.closed_amount = q.closed_amount;
       }
       quoteSummaryByVendor.set(q.vendor_id, s);
+      const list = quotesByVendor.get(q.vendor_id) ?? [];
+      list.push({
+        id: q.id,
+        status: q.status,
+        is_final: q.is_final,
+        quote_amount: q.quote_amount,
+        closed_amount: q.closed_amount,
+        created_at: q.created_at,
+      });
+      quotesByVendor.set(q.vendor_id, list);
     }
 
     // Per-vendor comment counts (across all clients on this project)
@@ -628,6 +639,7 @@ export const getMyProject = createServerFn({ method: "GET" })
       client_status: statusMap.get(v.id) ?? null,
       attachments: attMap.get(v.id) ?? [],
       quote_summary: quoteSummaryByVendor.get(v.id) ?? { count: 0, latest_status: null, latest_amount: null, has_closed: false, closed_amount: null },
+      quotes: quotesByVendor.get(v.id) ?? [],
       comment_count: commentCountByVendor.get(v.id) ?? 0,
     }));
 
