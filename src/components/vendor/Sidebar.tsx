@@ -211,7 +211,7 @@ export function Sidebar({
           <div className="flex items-center gap-2">
             {hasActive && (
               <button
-                onClick={() => onChange({ category: null, locations: [] })}
+                onClick={() => onChange(clearAll())}
                 className="flex items-center gap-1 text-xs text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"
               >
                 <X className="h-3 w-3" /> Clear
@@ -269,7 +269,7 @@ export function Sidebar({
           <div className="flex items-center gap-1">
             {hasActive ? (
               <button
-                onClick={() => onChange({ category: null, locations: [] })}
+                onClick={() => onChange(clearAll())}
                 className="flex items-center gap-1 text-xs text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"
               >
                 <X className="h-3 w-3" /> Clear
