@@ -77,7 +77,7 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
       vendor.vendor_name,
       vendor.category,
       vendor.contact_number ?? "",
-      vendor.instagram_handle ? `@${vendor.instagram_handle}` : "",
+      instagramDisplay(vendor.instagram_handle) ?? "",
       vendor.website ?? "",
       vendor.price_text ?? "",
     ].filter(Boolean);
