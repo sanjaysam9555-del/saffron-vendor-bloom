@@ -13,6 +13,7 @@ import {
   CircleCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useConfirmDelete } from "@/components/ui/confirm-dialog";
 import {
   listProjectVendorQuotes,
   createProjectVendorQuote,
@@ -52,6 +53,7 @@ export function ProjectVendorQuotesPanel({
   onClose,
 }: Props) {
   const qc = useQueryClient();
+  const confirmDelete = useConfirmDelete();
   const queryKey = ["project-vendor-quotes", projectId, vendorId];
 
   const { data: quotes = [], isLoading } = useQuery({
@@ -163,7 +165,12 @@ export function ProjectVendorQuotesPanel({
                       }
                     }}
                     onDelete={async () => {
-                      if (!confirm("Delete this quote and its files?")) return;
+                      const ok = await confirmDelete({
+                        title: "Delete this quote?",
+                        description: "The quote and all attached files will be removed.",
+                        confirmLabel: "Delete quote",
+                      });
+                      if (!ok) return;
                       try {
                         await deleteProjectVendorQuote(q);
                         toast.success("Quote deleted");
