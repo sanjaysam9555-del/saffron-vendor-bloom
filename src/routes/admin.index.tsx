@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon, ArrowUpDown } from "lucide-react";
+import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon, ArrowUpDown, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { TopNav } from "@/components/vendor/TopNav";
@@ -15,6 +15,17 @@ import { useVendors, useVendorMutations, useVendorModals } from "@/hooks/useVend
 import { useAllCategories } from "@/lib/categories";
 import { AuthGate } from "@/components/AuthGate";
 import { useIsAdmin } from "@/lib/auth";
+
+type SortKey = "date_added_desc" | "date_added_asc" | "updated_desc" | "name_asc" | "name_desc";
+
+const SORT_LABEL: Record<SortKey, string> = {
+  date_added_desc: "Newest added",
+  date_added_asc: "Oldest added",
+  updated_desc: "Last modified",
+  name_asc: "Name A→Z",
+  name_desc: "Name Z→A",
+};
+const DEFAULT_SORT: SortKey = "date_added_desc";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({
@@ -46,7 +57,6 @@ function DashboardPage() {
     minSaffronRating: null,
     submittedViaForm: "any",
   });
-  type SortKey = "date_added_desc" | "date_added_asc" | "updated_desc" | "name_asc" | "name_desc";
   const [sort, setSort] = useState<SortKey>("date_added_desc");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -242,6 +252,15 @@ function DashboardPage() {
             </div>
           </div>
 
+          <ActiveFilterChips
+            filters={filters}
+            onChange={setFilters}
+            sort={sort}
+            onSortChange={setSort}
+            search={search}
+            onClearSearch={() => setSearch("")}
+          />
+
           {bulkMode && (
             <div className="mb-4 rounded-md border border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)] px-4 py-2 text-xs text-[var(--terracotta)] animate-fade-in">
               Bulk edit mode is on. Click any card or row to select it. Selection clears when you change filters or search.
@@ -380,6 +399,112 @@ function EmptyState({
           Add Vendor →
         </button>
       </div>
+    </div>
+  );
+}
+
+function ActiveFilterChips({
+  filters,
+  onChange,
+  sort,
+  onSortChange,
+  search,
+  onClearSearch,
+}: {
+  filters: FilterState;
+  onChange: (f: FilterState) => void;
+  sort: SortKey;
+  onSortChange: (s: SortKey) => void;
+  search: string;
+  onClearSearch: () => void;
+}) {
+  const chips: { key: string; label: string; onRemove: () => void }[] = [];
+
+  if (search.trim()) {
+    chips.push({ key: "search", label: `Search: "${search.trim()}"`, onRemove: onClearSearch });
+  }
+  if (filters.category) {
+    chips.push({ key: "cat", label: filters.category, onRemove: () => onChange({ ...filters, category: null }) });
+  }
+  for (const loc of filters.locations) {
+    chips.push({
+      key: `loc-${loc}`,
+      label: loc,
+      onRemove: () => onChange({ ...filters, locations: filters.locations.filter((l) => l !== loc) }),
+    });
+  }
+  if (filters.minGoogleRating != null) {
+    chips.push({
+      key: "google",
+      label: `Google ${filters.minGoogleRating}+`,
+      onRemove: () => onChange({ ...filters, minGoogleRating: null }),
+    });
+  }
+  if (filters.minSaffronRating != null) {
+    chips.push({
+      key: "saffron",
+      label: `Saffron ${filters.minSaffronRating}+`,
+      onRemove: () => onChange({ ...filters, minSaffronRating: null }),
+    });
+  }
+  if (filters.submittedViaForm !== "any") {
+    chips.push({
+      key: "src",
+      label: filters.submittedViaForm === "yes" ? "Form submissions" : "Manual entry",
+      onRemove: () => onChange({ ...filters, submittedViaForm: "any" }),
+    });
+  }
+  const sortChip =
+    sort !== DEFAULT_SORT
+      ? { key: "sort", label: `Sort: ${SORT_LABEL[sort]}`, onRemove: () => onSortChange(DEFAULT_SORT) }
+      : null;
+
+  if (chips.length === 0 && !sortChip) return null;
+
+  const clearAll = () => {
+    onChange({
+      category: null,
+      locations: [],
+      minGoogleRating: null,
+      minSaffronRating: null,
+      submittedViaForm: "any",
+    });
+    onClearSearch();
+    onSortChange(DEFAULT_SORT);
+  };
+
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-1.5">
+      {chips.map((c) => (
+        <button
+          key={c.key}
+          onClick={c.onRemove}
+          className="group inline-flex items-center gap-1 rounded-full border border-[var(--terracotta)]/40 bg-[var(--terracotta-soft)] px-2 py-0.5 text-[11px] text-[var(--terracotta)] hover:border-[var(--terracotta)]"
+          title={`Remove ${c.label}`}
+        >
+          <span>{c.label}</span>
+          <X className="h-3 w-3 opacity-70 group-hover:opacity-100" />
+        </button>
+      ))}
+      {sortChip && (
+        <button
+          onClick={sortChip.onRemove}
+          className="group inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-white px-2 py-0.5 text-[11px] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+          title="Reset sort"
+        >
+          <ArrowUpDown className="h-3 w-3" />
+          <span>{sortChip.label}</span>
+          <X className="h-3 w-3 opacity-70 group-hover:opacity-100" />
+        </button>
+      )}
+      {(chips.length + (sortChip ? 1 : 0)) > 1 && (
+        <button
+          onClick={clearAll}
+          className="ml-1 text-[11px] text-[var(--charcoal)]/55 underline-offset-2 hover:text-[var(--terracotta)] hover:underline"
+        >
+          Clear all
+        </button>
+      )}
     </div>
   );
 }
