@@ -409,6 +409,7 @@ function AssignedVendorsSection({
                   </div>
                   <div className="font-medium text-[var(--charcoal)]">{v.vendor_name}</div>
                   {v.price_text && <div className="text-xs text-[var(--terracotta)]">{v.price_text}</div>}
+                  <VendorMetaRow vendor={v} />
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     <ClientStatusPill status={primary?.status ?? null} />
                     {rows.length > 1 && (
@@ -421,10 +422,17 @@ function AssignedVendorsSection({
                     <VendorQuotesPill
                       projectId={projectId}
                       vendorId={v.id}
-                      onOpen={(autoOpenForm) =>
-                        setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null, autoOpenForm })
+                      onOpen={() =>
+                        setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null, autoOpenForm: false })
                       }
                     />
+                    <button
+                      onClick={() => setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null, autoOpenForm: true })}
+                      className="inline-flex items-center gap-1 rounded-full border border-[var(--terracotta)] bg-[var(--terracotta)] px-2.5 py-1 text-[11px] font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
+                      title="Add a new quote for this vendor"
+                    >
+                      <Plus className="h-3 w-3" /> Add quote
+                    </button>
                     <button
                       onClick={() => setCommentsFor({ id: v.id, name: v.vendor_name })}
                       className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2.5 py-1 text-[11px] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
