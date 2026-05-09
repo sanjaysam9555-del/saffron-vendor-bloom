@@ -105,9 +105,12 @@ export const getProject = createServerFn({ method: "GET" })
     // Assigned vendors (full rows for staff)
     const { data: pv } = await supabaseAdmin
       .from("project_vendors")
-      .select("vendor_id")
+      .select("vendor_id, is_saffron_pick")
       .eq("project_id", data.id);
     const vendorIds = (pv ?? []).map((r) => r.vendor_id);
+    const saffronPickMap = new Map<string, boolean>(
+      (pv ?? []).map((r) => [r.vendor_id, !!r.is_saffron_pick]),
+    );
     let vendors: any[] = [];
     let selections: Record<string, { user_id: string; display_name: string; email: string; status: string; updated_at: string }[]> = {};
     if (vendorIds.length > 0) {
