@@ -1,29 +1,29 @@
-## Quote pill: shorter label + compact amount
+## Apply pill changes to admin project detail page
 
-Tweak `src/lib/quote-summary.ts` only — this is the single source of truth for the pill label used on both client cards and admin views.
+The previous tweaks (drop "Received", compact `₹2.96L` / `₹65K` formatting) are already live everywhere that reads `quoteSummaryLabel()` — but the admin project detail page (`src/routes/admin.projects.$id.tsx`, the per-vendor quote pill around lines 549–576) hand-rolls its own label using `formatINR` and the literal string `"Quote Received"`. That's why it still shows e.g. `1st Quote Received · ₹1,20,000` while the client board shows `1st Quote · ₹1.2L`.
 
-### Changes
+### Change
 
-1. **Drop the word "Received"** from the unclosed-quote label.
-   - Before: `1st Quote Received · ₹1,20,000`
-   - After: `1st Quote · ₹1,20,000`
-   - Revised case stays as `Revised · 2nd Quote · ₹1,20,000`.
-   - Closed case stays as `Closed · ₹2,00,000`.
+In `src/routes/admin.projects.$id.tsx`, replace the inline label logic with the shared helper:
 
-2. **Compact Indian-style amount formatting** via a new `formatINRCompact(amount)` helper that replaces the current `formatINRShort` inside the label:
-   - `>= 1,00,00,000` → `₹X.XXCr` (crore, 2 decimals, trim trailing zeros)
-   - `>= 1,00,000` → `₹X.XXL` (lakh, 2 decimals, trim trailing zeros)
-   - `>= 1,000` → `₹XXK` (thousand, no decimals)
-   - `< 1,000` → `₹XXX`
+- Import `quoteSummaryLabel` from `@/lib/quote-summary`.
+- Build a `QuoteSummary` from the already-fetched `quotes` array:
+  - `count = quotes.length`
+  - `latest_status = quotes[0]?.status ?? null` (list is newest-first as today)
+  - `latest_amount = quotes[0]?.quote_amount ?? null`
+  - `has_closed = !!closed`
+  - `closed_amount = closed?.closed_amount ?? null`
+- Render `quoteSummaryLabel(summary)` for both the closed and unclosed cases. Keep:
+  - the "Add quote" state when `quotes.length === 0`,
+  - the green check icon + green text styling when closed,
+  - the paperclip + file count suffix.
+- Drop the now-unused `formatINR` import and the `ordinal` usage in this component if nothing else needs them.
 
-   Examples:
-   - `296000` → `₹2.96L`
-   - `65000` → `₹65K`
-   - `200000` → `₹2L`
-   - `12500000` → `₹1.25Cr`
-   - `850` → `₹850`
+### Result
 
-### Scope
+Admin project detail pill now reads identically to the client board — `1st Quote · ₹1.2L`, `Revised · 2nd Quote · ₹2.96L`, `Closed · ₹2L` — and any future tweak to the label only needs to happen in `quote-summary.ts`.
 
-- Single-file change: `src/lib/quote-summary.ts`.
-- No UI component edits, no server changes, no schema changes — every consumer (`ClientVendorCard`, admin project view, etc.) already calls `quoteSummaryLabel()` and will pick up both changes automatically.
+### Out of scope
+
+- Admin projects index page (`/admin/projects`) only shows aggregate counts ("3 / 5 vendors quoted · 1 closed"), not per-vendor pills, so nothing changes there.
+- No server, schema, or other UI changes.
