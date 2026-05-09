@@ -38,7 +38,7 @@ function ClientPortalPage() {
   useEffect(() => {
     if (!projectId) return;
     const channel = supabase
-      .channel(`client-quotes-${projectId}`)
+      .channel(`client-live-${projectId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quotes", filter: `project_id=eq.${projectId}` }, () => {
         qc.invalidateQueries({ queryKey: ["my-project"] });
         qc.invalidateQueries({ queryKey: ["client-vendor-quote", projectId] });
@@ -50,6 +50,15 @@ function ClientPortalPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_comments", filter: `project_id=eq.${projectId}` }, () => {
         qc.invalidateQueries({ queryKey: ["my-project"] });
         qc.invalidateQueries({ queryKey: ["vendor-comments"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendors", filter: `project_id=eq.${projectId}` }, () => {
+        qc.invalidateQueries({ queryKey: ["my-project"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "client_vendor_status" }, () => {
+        qc.invalidateQueries({ queryKey: ["my-project"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "vendors" }, () => {
+        qc.invalidateQueries({ queryKey: ["my-project"] });
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
