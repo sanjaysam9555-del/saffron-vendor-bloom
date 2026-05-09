@@ -1,72 +1,64 @@
-## Why things don't sync without reload
+## Diagnosis
 
-Realtime works on a per-table, per-screen basis. Two things must be true for a change made on device A to appear on device B without a refresh:
+Comment notifications (and every other transactional email this app tries to send) never make it past the in-Worker self-fetch.
 
-1. The table is in the `supabase_realtime` publication (so Postgres broadcasts changes).
-2. The screen subscribes to that table and invalidates the right React Query cache when an event arrives.
+What I found:
+- `email_send_log` is **empty** — zero rows, ever. Every successful or failed send path inserts a row, so this proves the `/lovable/email/transactional/send` route has never actually run a send. It's not a comment-specific bug; status-change emails hit the same dead end.
+- `addProjectVendorComment` (in `src/server/projects.functions.ts`) inserts the comment, then calls `notifyStaff(...)`.
+- `notifyStaff` (in `src/lib/notify-staff.server.ts`) does `fetch(new URL("/lovable/email/transactional/send", req.url), ...)` — i.e. it's a server function on Cloudflare Workers asking the same Worker to handle a second HTTP request.
+- That self-fetch is the failure: Cloudflare Workers cannot reliably `fetch()` their own deployment URL from inside a request handler. The call either errors or never resolves; either way the surrounding `try/catch` swallows it (`console.warn("comment email failed: …")`), so the user sees the comment saved but no email is sent and nothing useful surfaces in the UI.
+- Email infrastructure itself is healthy: `enqueue_email` RPC exists, `email_send_state` is configured, suppression list is empty, and the templates (`client-comment-notification`, `client-status-change-notification`) are registered with a fixed `to: 'info@saffronevents.in'`.
 
-Auditing the project, both pieces are partial today.
-
-### Tables currently broadcasting
-`vendors`, `categories`, `project_vendor_quotes`, `project_vendor_quote_files`, `project_vendor_comments`.
-
-### Tables NOT broadcasting (root cause of most "stale" bugs)
-- `projects` — new/edited projects don't appear in the admin list, project header doesn't update.
-- `project_vendors` — when an admin assigns or removes a vendor on a project, neither the admin project page nor the client portal updates.
-- `client_vendor_status` — when one client/admin changes a status, other open sessions don't see it.
-- `project_clients` — added/removed clients don't appear live.
-- `vendor_attachments` — newly uploaded vendor files don't appear in open detail panels.
-
-### Screens missing subscriptions even where the table broadcasts
-- `admin.projects.index` — only listens to quotes; needs `projects`, `project_vendors`, `project_clients`.
-- `admin.projects.$id` — only listens to quotes; needs `projects` (this row), `project_vendors`, `project_clients`, `client_vendor_status`, `vendors` (assigned vendor edits).
-- `client.index` — listens to quotes + comments; needs `project_vendors` (assignments) and `client_vendor_status` (other clients).
-- Vendor detail panels — no subscription to `vendor_attachments`.
+So: the wire to the email queue is broken, not the queue itself, and not the comment code path specifically.
 
 ## Plan
 
-### 1. Database migration — add missing tables to realtime
-```sql
-ALTER TABLE public.projects            REPLICA IDENTITY FULL;
-ALTER TABLE public.project_vendors     REPLICA IDENTITY FULL;
-ALTER TABLE public.client_vendor_status REPLICA IDENTITY FULL;
-ALTER TABLE public.project_clients     REPLICA IDENTITY FULL;
-ALTER TABLE public.vendor_attachments  REPLICA IDENTITY FULL;
-ALTER PUBLICATION supabase_realtime ADD TABLE
-  public.projects,
-  public.project_vendors,
-  public.client_vendor_status,
-  public.project_clients,
-  public.vendor_attachments;
+Replace the Worker-internal HTTP hop with a direct in-process call so server functions enqueue emails the same way the route does.
+
+### 1. Extract the send/enqueue logic into a shared server helper
+
+New file: `src/lib/email/enqueue-transactional.server.ts`. Contents are exactly what the POST handler in `src/routes/lovable/email/transactional/send.ts` does today, minus the request parsing and JWT check:
+- Look up the template from `TEMPLATES`.
+- Resolve `effectiveRecipient` (template `to` overrides arg).
+- Suppression check against `suppressed_emails`.
+- Get-or-create unsubscribe token in `email_unsubscribe_tokens`.
+- Render the React Email component to HTML + plain text.
+- Insert `pending` row in `email_send_log`.
+- Call `enqueue_email` RPC with the same payload shape (sender_domain, from, subject, html, text, idempotency_key, unsubscribe_token, etc.).
+- Return `{ success, queued }` or `{ success: false, reason }`.
+
+Export a single function, e.g.
+`enqueueTransactionalEmail({ templateName, recipientEmail?, idempotencyKey?, templateData? })`.
+
+It uses `supabaseAdmin` (service role) directly — no HTTP, no JWT — because every caller is already authenticated server-side.
+
+### 2. Rewrite `src/lib/notify-staff.server.ts` to call the helper
+
+Drop the `getRequestHeader` / `fetch` block entirely. The new body just delegates:
+
+```text
+notifyStaff({ templateName, templateData, idempotencyKey })
+  → enqueueTransactionalEmail({ templateName, templateData, idempotencyKey })
 ```
 
-### 2. Create a small reusable hook `useRealtimeInvalidate`
-`src/hooks/useRealtimeInvalidate.ts` — takes an array of `{ table, filter?, queryKeys: string[][] }` and wires up one Supabase channel that invalidates all listed query keys on any change. Replaces the ad-hoc `useEffect` blocks in each route, keeps subscription logic consistent, and prevents leaks.
+Same try/catch-friendly contract (still throws on failure so callers' `console.warn` works), but now failures are real errors with messages instead of silently lost.
 
-### 3. Wire subscriptions into the screens that need them
-- `src/routes/admin.projects.index.tsx` — subscribe to `projects`, `project_vendors`, `project_clients` → invalidate `["admin-projects"]` and the existing quote keys.
-- `src/routes/admin.projects.$id.tsx` — subscribe to `projects` (filter `id=eq.$id`), `project_vendors` (filter `project_id=eq.$id`), `project_clients` (same filter), `client_vendor_status`, plus `vendors` for inline vendor edits → invalidate `["admin-project", id]`.
-- `src/routes/client.index.tsx` — extend the existing channel with `project_vendors` (filter `project_id=eq.$projectId`) and `client_vendor_status` → invalidate `["my-project"]`.
-- `src/components/vendor/VendorDetail.tsx` — subscribe to `vendor_attachments` filtered by `vendor_id` while open → invalidate the file list query.
+### 3. Make the HTTP route a thin wrapper around the helper
 
-### 4. Tighten React Query freshness so refetches happen
-Currently several queries inherit defaults that may serve stale data even after invalidation if the tab is backgrounded. In `src/router.tsx` (or wherever the QueryClient is created), set:
-- `refetchOnWindowFocus: true`
-- `refetchOnReconnect: true`
-- `staleTime: 0` for the invalidation-driven queries (or rely solely on invalidate, which we already do).
+`src/routes/lovable/email/transactional/send.ts` keeps its current responsibilities — parse JSON, verify the Bearer token via Supabase auth — and then calls the same `enqueueTransactionalEmail(...)`. This guarantees the route and the in-process callers behave identically and there's a single source of truth for the enqueue pipeline.
 
-This catches the iPad-PWA-resume case in addition to live edits.
+### 4. Verify
 
-### 5. Verify
-- Open admin in one tab and client portal in another; assign a vendor → it appears live on client.
-- Change a client status from the client side → admin project page reflects it.
-- Edit a project name → admin list and detail header both update.
-- Upload a vendor attachment → open detail panel shows it without reload.
+- Post a comment as a client → check `email_send_log` for a `pending` row with `template_name = 'client-comment-notification'` and recipient `info@saffronevents.in`.
+- Watch the queue dispatcher log/email_send_log status flip from `pending` → `sent`.
+- Change a vendor status as a client → same row appears for `client-status-change-notification`.
+- Confirm the inbox actually receives both.
 
 ### Out of scope
-- Offline queueing of mutations.
-- Presence/typing indicators.
-- Reworking optimistic-update logic that already exists in `useSetVendorStatus`.
+
+- No template, recipient, or domain changes.
+- No change to the unsubscribe / suppression flow or the queue dispatcher.
+- No new env vars or secrets.
 
 ## Summary
-Add 5 tables to the realtime publication, introduce a shared `useRealtimeInvalidate` hook, wire missing subscriptions on the admin projects list, admin project detail, client portal, and vendor detail screens, and turn on focus/reconnect refetch on the QueryClient.
+Replace the Worker self-`fetch` in `notifyStaff` with a direct in-process enqueue helper that both the `send-transactional-email` route and server functions reuse. This unblocks comment emails (and all other transactional emails, which were silently failing for the same reason).
