@@ -133,6 +133,70 @@ export function Sidebar({
           })}
         </div>
       </div>
+
+      {/* Google rating */}
+      <div className="mb-6">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Google rating</div>
+        <div className="flex flex-wrap gap-1">
+          <button
+            onClick={() => onChange({ ...filters, minGoogleRating: null })}
+            className={chip(filters.minGoogleRating == null)}
+          >
+            Any
+          </button>
+          {RATING_OPTIONS.map((r) => (
+            <button
+              key={r}
+              onClick={() => onChange({ ...filters, minGoogleRating: r })}
+              className={chip(filters.minGoogleRating === r)}
+            >
+              {r}+
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Saffron rating */}
+      <div className="mb-6">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Saffron rating</div>
+        <div className="flex flex-wrap gap-1">
+          <button
+            onClick={() => onChange({ ...filters, minSaffronRating: null })}
+            className={chip(filters.minSaffronRating == null)}
+          >
+            Any
+          </button>
+          {RATING_OPTIONS.map((r) => (
+            <button
+              key={r}
+              onClick={() => onChange({ ...filters, minSaffronRating: r })}
+              className={chip(filters.minSaffronRating === r)}
+            >
+              {r}+
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Source */}
+      <div className="mb-6">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Source</div>
+        <div className="flex flex-wrap gap-1">
+          {([
+            ["any", "All"],
+            ["yes", "Form submissions"],
+            ["no", "Manual entry"],
+          ] as const).map(([val, label]) => (
+            <button
+              key={val}
+              onClick={() => onChange({ ...filters, submittedViaForm: val })}
+              className={chip(filters.submittedViaForm === val)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
     </>
   );
 
