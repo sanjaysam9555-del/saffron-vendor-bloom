@@ -84,11 +84,6 @@ export function ClientBoardCard({ vendor, onView }: Props) {
                 <span>{Number(vendor.google_rating).toFixed(1)}</span>
               </div>
             )}
-            {vendor.price_text && (
-              <div className="truncate font-medium text-[var(--terracotta)]">
-                {vendor.price_text}
-              </div>
-            )}
           </div>
           <button
             onClick={onView}
