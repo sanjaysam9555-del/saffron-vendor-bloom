@@ -76,9 +76,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Track which user we've already loaded so onAuthStateChange + getSession
   // don't trigger duplicate parallel server calls.
   const loadedForUserRef = useRef<string | null>(null);
-  const inFlightRef = useRef<Promise<void> | null>(null);
+  const inFlightRef = useRef<Promise<AppRole | null> | null>(null);
 
-  const loadProfile = async (userId: string): Promise<void> => {
+  const loadProfile = async (userId: string): Promise<AppRole | null> => {
     if (inFlightRef.current) return inFlightRef.current;
 
     const run = (async () => {
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setDisplayName(cached.displayName);
             loadedForUserRef.current = userId;
             setRoleResolutionFailed(false);
-            return;
+            return cached.role;
           }
           throw lastError ?? new Error("No role returned for current session");
         }
@@ -113,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loadedForUserRef.current = userId;
         writeCachedAccess({ userId, role: nextRole, displayName: access?.displayName ?? null });
         setRoleResolutionFailed(false);
+        return nextRole;
       } catch (error) {
         console.error("Unable to load access role", error);
         const cached = readCachedAccess();
@@ -121,10 +122,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setDisplayName(cached.displayName);
           loadedForUserRef.current = userId;
           setRoleResolutionFailed(false);
+          return cached.role;
         } else {
           setRole(null);
           setDisplayName(null);
           setRoleResolutionFailed(true);
+          return null;
         }
       } finally {
         setLoading(false);
@@ -251,7 +254,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(data?.session ?? null);
         if (data?.user) {
           loadedForUserRef.current = null;
-          void loadProfile(data.user.id);
+          const nextRole = await loadProfile(data.user.id);
+          if (!nextRole) {
+            return { error: "Signed in, but access is still loading. Please wait a moment and try again." };
+          }
         } else {
           setLoading(false);
         }
