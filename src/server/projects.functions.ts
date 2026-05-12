@@ -606,21 +606,11 @@ export const getMyProject = createServerFn({ method: "GET" })
       attMap.set(a.vendor_id, list);
     }
 
-    const { data: statuses } = await supabaseAdmin
-      .from("client_vendor_status")
-      .select("vendor_id, status")
-      .eq("user_id", userId)
-      .in("vendor_id", vendorIds);
     const statusMap = new Map<string, string>(
-      (statuses ?? []).map((s) => [s.vendor_id, s.status]),
+      (statusesRes.data ?? []).map((s) => [s.vendor_id, s.status]),
     );
 
-    const { data: qrows } = await supabaseAdmin
-      .from("project_vendor_quotes")
-      .select("id, vendor_id, status, is_final, quote_amount, closed_amount, created_at")
-      .eq("project_id", link.project_id)
-      .in("vendor_id", vendorIds)
-      .order("created_at", { ascending: false });
+    const qrows = quotesRes.data;
     const quoteSummaryByVendor = new Map<string, { count: number; latest_status: string | null; latest_amount: number | null; has_closed: boolean; closed_amount: number | null }>();
     const quotesByVendor = new Map<string, { id: string; status: string; is_final: boolean; quote_amount: number | null; closed_amount: number | null; created_at: string }[]>();
     for (const q of qrows ?? []) {
@@ -647,15 +637,8 @@ export const getMyProject = createServerFn({ method: "GET" })
 
     // Per-vendor comment counts (across all clients on this project)
     const commentCountByVendor = new Map<string, number>();
-    {
-      const { data: crows } = await supabaseAdmin
-        .from("project_vendor_comments")
-        .select("vendor_id")
-        .eq("project_id", link.project_id)
-        .in("vendor_id", vendorIds);
-      for (const c of crows ?? []) {
-        commentCountByVendor.set(c.vendor_id, (commentCountByVendor.get(c.vendor_id) ?? 0) + 1);
-      }
+    for (const c of commentsRes.data ?? []) {
+      commentCountByVendor.set(c.vendor_id, (commentCountByVendor.get(c.vendor_id) ?? 0) + 1);
     }
 
     const vendors = (vrows ?? []).map((v) => ({
