@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Sparkles, LayoutGrid, Columns3, Filter as FilterIcon, Table as TableIcon } from "lucide-react";
 import { ClientGate } from "@/components/ClientGate";
-import { BrandSplash } from "@/components/BrandSplash";
 import { useAuth } from "@/lib/auth";
 import { getMyProject } from "@/server/projects.functions";
 import { ClientTopNav } from "@/components/client/ClientTopNav";
@@ -29,12 +28,12 @@ export const Route = createFileRoute("/client/")({
 });
 
 function ClientPortalPage() {
-  const { signOut, initialized, session } = useAuth();
+  const { signOut, initialized, session, role } = useAuth();
   const qc = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ["my-project"],
     queryFn: () => getMyProject(),
-    enabled: initialized && !!session?.access_token,
+    enabled: initialized && !!session?.access_token && role === "client",
   });
   const projectId = data?.project?.id;
 
@@ -108,7 +107,14 @@ function ClientPortalPage() {
   }, [vendors, filters, search]);
 
   if (isLoading) {
-    return <BrandSplash />;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--cream)]">
+        <div className="flex items-center gap-3 text-sm text-[var(--charcoal)]/60">
+          <span className="h-3 w-3 animate-pulse rounded-full bg-[var(--terracotta)]" />
+          Loading your vendors…
+        </div>
+      </div>
+    );
   }
 
   if (error || !data) {
