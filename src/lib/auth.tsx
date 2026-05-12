@@ -74,19 +74,6 @@ async function resolveAccess(
   };
 }
 
-/** Background refresh of display name. Errors are non-fatal. */
-async function refreshDisplayName(userId: string): Promise<string | null> {
-  try {
-    const { data } = await supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("user_id", userId)
-      .maybeSingle();
-    return data?.display_name ?? null;
-  } catch {
-    return null;
-  }
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
