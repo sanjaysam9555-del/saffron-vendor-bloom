@@ -16,6 +16,7 @@ interface VendorCardProps {
   selected?: boolean;
   onToggleSelect?: () => void;
   instagramPreview?: VendorInstagramPreview | null;
+  bookedSummary?: import("@/lib/quote-types").VendorBookedSummary | null;
 }
 
 export function VendorCard({
@@ -26,6 +27,7 @@ export function VendorCard({
   selected = false,
   onToggleSelect,
   instagramPreview,
+  bookedSummary,
 }: VendorCardProps) {
   const [copied, setCopied] = useState(false);
   const colors = CATEGORY_COLORS[vendor.category] ?? { bg: "bg-[var(--cream-deep)]", text: "text-[var(--charcoal)]" };
