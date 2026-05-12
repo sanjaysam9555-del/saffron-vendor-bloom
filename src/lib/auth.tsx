@@ -203,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     displayName,
     loading,
     initialized,
+    roleResolutionFailed,
     signIn: async (email, password) => {
       try {
         setLoading(true);
