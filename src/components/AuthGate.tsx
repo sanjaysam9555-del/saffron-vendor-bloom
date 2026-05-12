@@ -10,7 +10,7 @@ export function AuthGate({
   children: ReactNode;
   requireAdmin?: boolean;
 }) {
-  const { session, loading, role, initialized, roleResolutionFailed, signOut } = useAuth();
+  const { session, loading, role, initialized, roleResolutionFailed } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,10 +19,10 @@ export function AuthGate({
       navigate({ to: "/" });
       return;
     }
-    // Role lookup definitively failed for this session — bounce to login
-    // instead of sitting on the splash forever.
+    // Role lookup failed for now — leave the valid session intact and show
+    // the login/home screen instead of sitting on the splash forever.
     if (!loading && !role && roleResolutionFailed) {
-      void signOut().finally(() => navigate({ to: "/" }));
+      navigate({ to: "/" });
       return;
     }
     if (role === "client") {
@@ -32,7 +32,7 @@ export function AuthGate({
     if (role && requireAdmin && role !== "admin") {
       navigate({ to: "/admin" });
     }
-  }, [initialized, loading, session, role, roleResolutionFailed, requireAdmin, navigate, signOut]);
+  }, [initialized, loading, session, role, roleResolutionFailed, requireAdmin, navigate]);
 
   const isStaff = role === "admin" || role === "employee";
   const passes = requireAdmin ? role === "admin" : isStaff;
