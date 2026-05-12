@@ -89,8 +89,9 @@ function RedirectingLogin() {
   if (openingPlate || !initialized) return <BrandSplash showLoading={false} />;
   // Signed-in users with a known role: keep splash visible until redirect fires.
   if (session && role) return <BrandSplash />;
-  // Cached user but session not (yet) restored — hold the splash briefly.
-  if (hasCachedUser && !roleResolutionFailed) return <BrandSplash />;
+  // Cached user but session not (yet) restored — hold the splash only during
+  // startup; after init, reveal the login form instead of trapping the page.
+  if (!initialized && hasCachedUser && !roleResolutionFailed) return <BrandSplash />;
 
   // No session and no cached user — safe to reveal marketing + login form.
   return (
