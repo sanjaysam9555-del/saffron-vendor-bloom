@@ -258,6 +258,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!opts?.silent) notifySuccess("Signed out", { description: "See you again soon." });
       } catch (e) {
         if (!opts?.silent) notifyError(e, "Could not sign out.");
+      } finally {
+        if (typeof window !== "undefined") {
+          window.location.href = "https://planwithsaffron.in";
+        }
       }
     },
     refresh: async () => {
