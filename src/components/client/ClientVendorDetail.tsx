@@ -11,6 +11,7 @@ import { listProjectVendorQuotes } from "@/lib/quote-api";
 import { formatINR, type QuoteFile, type ProjectVendorQuote } from "@/lib/quote-types";
 import { VendorCommentsThread } from "./VendorCommentsThread";
 import { instagramDisplay, instagramUrl } from "@/lib/instagram";
+import { VendorInstagramDetailBlock } from "@/components/vendor/VendorInstagramPreview";
 
 interface Props {
   vendor: ClientVendor | null;
