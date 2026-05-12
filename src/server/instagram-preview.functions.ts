@@ -76,12 +76,33 @@ export const getVendorInstagramPreviewsBulk = createServerFn({ method: "POST" })
     z.object({ vendorIds: z.array(z.string().uuid()).min(0).max(500) }).parse(d),
   )
   .handler(async ({ data }): Promise<VendorInstagramPreview[]> => {
-    await requireUser();
+    const { userId, isStaff } = await requireUser();
     if (data.vendorIds.length === 0) return [];
+
+    let allowedIds = data.vendorIds;
+    if (!isStaff) {
+      // Clients may only see Instagram previews for vendors attached to
+      // projects they're assigned to. Filter the requested IDs accordingly.
+      const { data: projectLinks } = await supabaseAdmin
+        .from("project_clients")
+        .select("project_id")
+        .eq("user_id", userId);
+      const projectIds = (projectLinks ?? []).map((r) => r.project_id as string);
+      if (projectIds.length === 0) return [];
+      const { data: pv } = await supabaseAdmin
+        .from("project_vendors")
+        .select("vendor_id")
+        .in("project_id", projectIds)
+        .in("vendor_id", data.vendorIds);
+      const allowed = new Set((pv ?? []).map((r) => r.vendor_id as string));
+      allowedIds = data.vendorIds.filter((id) => allowed.has(id));
+      if (allowedIds.length === 0) return [];
+    }
+
     const { data: rows, error } = await supabaseAdmin
       .from("vendor_instagram_previews" as never)
       .select("*")
-      .in("vendor_id", data.vendorIds);
+      .in("vendor_id", allowedIds);
     if (error) {
       console.error("[instagram-preview] bulk read failed", error.message);
       return [];
