@@ -5,13 +5,16 @@ import { ClientStatusSelect } from "./ClientStatusSelect";
 import { MapPin, Instagram, Link as LinkIcon, Paperclip, Globe, Star, FileText, CircleCheck, MessageSquare, Sparkles } from "lucide-react";
 import { instagramUrl } from "@/lib/instagram";
 import { formatINR, formatINRShort } from "@/lib/quote-types";
+import { VendorInstagramCardStrip } from "@/components/vendor/VendorInstagramPreview";
+import type { VendorInstagramPreview } from "@/server/instagram-preview.functions";
 
 interface Props {
   vendor: ClientVendor;
   onView: () => void;
+  instagramPreview?: VendorInstagramPreview | null;
 }
 
-export function ClientVendorCard({ vendor, onView }: Props) {
+export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
   const colors = CATEGORY_COLORS[vendor.category] ?? {
     bg: "bg-[var(--cream-deep)]",
     text: "text-[var(--charcoal)]",
@@ -102,6 +105,8 @@ export function ClientVendorCard({ vendor, onView }: Props) {
           </div>
         )}
       </div>
+
+      {instagramPreview && <VendorInstagramCardStrip preview={instagramPreview} />}
 
       <div className="mt-3 space-y-2 border-t border-[var(--border)] pt-3" style={{ marginTop: "auto" }}>
         <ClientStatusSelect vendorId={vendor.id} status={vendor.client_status} />
