@@ -63,7 +63,7 @@ export function VendorCard({
         </div>
       )}
       <div className="mb-2 flex items-start justify-between gap-2">
-        <h3 className={`line-clamp-2 min-h-[2.5rem] font-display text-lg font-semibold leading-tight text-[var(--charcoal)] ${selectMode ? "pl-6" : ""}`}>{vendor.vendor_name}</h3>
+        <h3 className={`line-clamp-1 min-w-0 font-display text-lg font-semibold leading-tight text-[var(--charcoal)] ${selectMode ? "pl-6" : ""}`}>{vendor.vendor_name}</h3>
         <div className="flex shrink-0 flex-col items-end gap-1">
           {vendor.google_rating != null && (
             <div

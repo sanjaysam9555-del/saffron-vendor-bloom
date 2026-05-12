@@ -42,14 +42,14 @@ export function VendorInstagramCardStrip({ preview }: CardProps) {
 
   if (!hasAnything) {
     return (
-      <div className="mt-2 flex h-[96px] items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-2 text-[10px] text-[var(--charcoal)]/40">
+      <div className="mt-2 flex min-h-[148px] items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-2 text-[10px] text-[var(--charcoal)]/40">
         No Instagram preview
       </div>
     );
   }
 
   return (
-    <div className="mt-2 h-[96px] overflow-hidden rounded-md border border-[var(--border)] bg-[var(--cream)]/40 p-2">
+    <div className="mt-2 min-h-[148px] rounded-md border border-[var(--border)] bg-[var(--cream)]/40 p-2">
       <div className="flex items-center gap-2">
         {preview.avatar_url && (
           <SafeImg
