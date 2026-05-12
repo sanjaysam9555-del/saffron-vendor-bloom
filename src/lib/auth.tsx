@@ -260,7 +260,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!opts?.silent) notifyError(e, "Could not sign out.");
       } finally {
         if (typeof window !== "undefined") {
-          window.location.href = "https://planwithsaffron.in";
+          const target = "https://planwithsaffron.in/";
+          const here = window.location.host.toLowerCase();
+          const sameSite = here === "planwithsaffron.in" || here === "www.planwithsaffron.in";
+          if (sameSite) {
+            // Already on the marketing domain — stay in-app, no full reload.
+            if (window.location.pathname !== "/") {
+              window.history.replaceState(null, "", "/");
+            }
+          } else {
+            window.location.replace(target);
+          }
         }
       }
     },
