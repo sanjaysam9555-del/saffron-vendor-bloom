@@ -9,13 +9,13 @@ export const Route = createFileRoute("/client/login")({
 });
 
 function ClientLoginPage() {
-  const { session, role, loading } = useAuth();
+  const { session, role } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (loading || !session || !role) return;
+    if (!session || !role) return;
     navigate({ to: role === "client" ? "/client" : "/admin" });
-  }, [loading, session, role, navigate]);
+  }, [session, role, navigate]);
 
   return <ClientLoginForm />;
 }
