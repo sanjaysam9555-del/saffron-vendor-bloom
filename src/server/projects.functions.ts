@@ -535,19 +535,25 @@ export const getMyProject = createServerFn({ method: "GET" })
       .eq("user_id", userId)
       .maybeSingle();
     if (!link) throw new Error("No project assigned to this account yet");
+    const projectId = link.project_id;
 
-    const { data: project, error: pe } = await supabaseAdmin
-      .from("projects")
-      .select("id, bride_name, groom_name, wedding_date")
-      .eq("id", link.project_id)
-      .maybeSingle();
-    if (pe) throw new Error(pe.message);
+    // Run project + project_vendors in parallel — neither depends on the other.
+    const [projectRes, pvRes] = await Promise.all([
+      supabaseAdmin
+        .from("projects")
+        .select("id, bride_name, groom_name, wedding_date")
+        .eq("id", projectId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("project_vendors")
+        .select("vendor_id, is_saffron_pick")
+        .eq("project_id", projectId),
+    ]);
+    if (projectRes.error) throw new Error(projectRes.error.message);
+    const project = projectRes.data;
     if (!project) throw new Error("Project not found");
 
-    const { data: pv } = await supabaseAdmin
-      .from("project_vendors")
-      .select("vendor_id, is_saffron_pick")
-      .eq("project_id", link.project_id);
+    const pv = pvRes.data;
     const vendorIds = (pv ?? []).map((r) => r.vendor_id);
     const saffronPickMap = new Map<string, boolean>(
       (pv ?? []).map((r) => [r.vendor_id, !!r.is_saffron_pick]),
@@ -556,16 +562,36 @@ export const getMyProject = createServerFn({ method: "GET" })
       return { project, vendors: [] };
     }
 
-    const { data: vrows, error: ve } = await supabaseAdmin
-      .from("vendors")
-      .select("id, category, subcategory, vendor_name, location, instagram_handle, price_text, portfolio_link, website, google_rating")
-      .in("id", vendorIds);
-    if (ve) throw new Error(ve.message);
-
-    const { data: atts } = await supabaseAdmin
-      .from("vendor_attachments")
-      .select("id, vendor_id, file_name, file_path, mime_type, size_bytes")
-      .in("vendor_id", vendorIds);
+    // Fan out all per-vendor queries in parallel.
+    const [vendorsRes, attsRes, statusesRes, quotesRes, commentsRes] = await Promise.all([
+      supabaseAdmin
+        .from("vendors")
+        .select("id, category, subcategory, vendor_name, location, instagram_handle, price_text, portfolio_link, website, google_rating")
+        .in("id", vendorIds),
+      supabaseAdmin
+        .from("vendor_attachments")
+        .select("id, vendor_id, file_name, file_path, mime_type, size_bytes")
+        .in("vendor_id", vendorIds),
+      supabaseAdmin
+        .from("client_vendor_status")
+        .select("vendor_id, status")
+        .eq("user_id", userId)
+        .in("vendor_id", vendorIds),
+      supabaseAdmin
+        .from("project_vendor_quotes")
+        .select("id, vendor_id, status, is_final, quote_amount, closed_amount, created_at")
+        .eq("project_id", projectId)
+        .in("vendor_id", vendorIds)
+        .order("created_at", { ascending: false }),
+      supabaseAdmin
+        .from("project_vendor_comments")
+        .select("vendor_id")
+        .eq("project_id", projectId)
+        .in("vendor_id", vendorIds),
+    ]);
+    if (vendorsRes.error) throw new Error(vendorsRes.error.message);
+    const vrows = vendorsRes.data;
+    const atts = attsRes.data;
 
     const attMap = new Map<string, any[]>();
     for (const a of atts ?? []) {
@@ -580,21 +606,11 @@ export const getMyProject = createServerFn({ method: "GET" })
       attMap.set(a.vendor_id, list);
     }
 
-    const { data: statuses } = await supabaseAdmin
-      .from("client_vendor_status")
-      .select("vendor_id, status")
-      .eq("user_id", userId)
-      .in("vendor_id", vendorIds);
     const statusMap = new Map<string, string>(
-      (statuses ?? []).map((s) => [s.vendor_id, s.status]),
+      (statusesRes.data ?? []).map((s) => [s.vendor_id, s.status]),
     );
 
-    const { data: qrows } = await supabaseAdmin
-      .from("project_vendor_quotes")
-      .select("id, vendor_id, status, is_final, quote_amount, closed_amount, created_at")
-      .eq("project_id", link.project_id)
-      .in("vendor_id", vendorIds)
-      .order("created_at", { ascending: false });
+    const qrows = quotesRes.data;
     const quoteSummaryByVendor = new Map<string, { count: number; latest_status: string | null; latest_amount: number | null; has_closed: boolean; closed_amount: number | null }>();
     const quotesByVendor = new Map<string, { id: string; status: string; is_final: boolean; quote_amount: number | null; closed_amount: number | null; created_at: string }[]>();
     for (const q of qrows ?? []) {
@@ -621,15 +637,8 @@ export const getMyProject = createServerFn({ method: "GET" })
 
     // Per-vendor comment counts (across all clients on this project)
     const commentCountByVendor = new Map<string, number>();
-    {
-      const { data: crows } = await supabaseAdmin
-        .from("project_vendor_comments")
-        .select("vendor_id")
-        .eq("project_id", link.project_id)
-        .in("vendor_id", vendorIds);
-      for (const c of crows ?? []) {
-        commentCountByVendor.set(c.vendor_id, (commentCountByVendor.get(c.vendor_id) ?? 0) + 1);
-      }
+    for (const c of commentsRes.data ?? []) {
+      commentCountByVendor.set(c.vendor_id, (commentCountByVendor.get(c.vendor_id) ?? 0) + 1);
     }
 
     const vendors = (vrows ?? []).map((v) => ({
