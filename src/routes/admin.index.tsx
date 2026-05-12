@@ -528,6 +528,13 @@ function VendorCardGrid({
     [vendors],
   );
   const { map: previewMap } = useInstagramPreviewsBulk(ids);
+
+  // One bulk booked-summary fetch for all visible vendors instead of one
+  // request per card (which previously caused 100+ network calls on load).
+  const allIds = useMemo(() => vendors.map((v) => v.id), [vendors]);
+  const idsKey = useMemo(() => allIds.slice().sort().join(","), [allIds]);
+  const { data: bookedMap } = useBookedSummaryBulk(allIds, idsKey);
+
   return (
     <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-fade-in">
       {vendors.map((v) => (
@@ -540,8 +547,18 @@ function VendorCardGrid({
           selected={selectedIds.has(v.id)}
           onToggleSelect={() => toggleSelect(v.id)}
           instagramPreview={previewMap.get(v.id) ?? null}
+          bookedSummary={bookedMap?.[v.id] ?? null}
         />
       ))}
     </div>
   );
+}
+
+function useBookedSummaryBulk(ids: string[], idsKey: string) {
+  return useQuery({
+    queryKey: ["vendor-booked-summary-bulk", idsKey],
+    queryFn: () => getVendorBookedSummary(ids),
+    enabled: ids.length > 0,
+    staleTime: 60_000,
+  });
 }
