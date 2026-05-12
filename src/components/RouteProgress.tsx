@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import { BrandSplash } from "./BrandSplash";
 
 /**
- * Full-screen branded splash shown while a route transition is in flight.
- * Debounced so instant transitions don't flash, with a 6s safety timeout.
+ * Lightweight top progress bar shown during route transitions.
+ * Never blocks the UI with a full-screen splash.
  */
 export function RouteProgress() {
   const isLoading = useRouterState({ select: (s) => s.isLoading });
@@ -12,19 +11,26 @@ export function RouteProgress() {
 
   useEffect(() => {
     let showTimer: number | undefined;
-    let safety: number | undefined;
+    let hideTimer: number | undefined;
     if (isLoading) {
       showTimer = window.setTimeout(() => setVisible(true), 120);
-      safety = window.setTimeout(() => setVisible(false), 6000);
     } else {
-      setVisible(false);
+      hideTimer = window.setTimeout(() => setVisible(false), 150);
     }
     return () => {
       if (showTimer) window.clearTimeout(showTimer);
-      if (safety) window.clearTimeout(safety);
+      if (hideTimer) window.clearTimeout(hideTimer);
     };
   }, [isLoading]);
 
   if (!visible) return null;
-  return <BrandSplash />;
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-x-0 top-0 z-[200] h-0.5 overflow-hidden bg-[var(--terracotta)]/15"
+    >
+      <div className="h-full w-1/3 animate-[route-progress_1.1s_ease-in-out_infinite] bg-[var(--terracotta)]" />
+      <style>{`@keyframes route-progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }`}</style>
+    </div>
+  );
 }
