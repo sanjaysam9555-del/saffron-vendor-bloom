@@ -13,9 +13,10 @@ export function RouteProgress() {
     let showTimer: number | undefined;
     let hideTimer: number | undefined;
     if (isLoading) {
-      showTimer = window.setTimeout(() => setVisible(true), 120);
+      // Only show the bar for transitions slower than 250ms — fast nav stays silent.
+      showTimer = window.setTimeout(() => setVisible(true), 250);
     } else {
-      hideTimer = window.setTimeout(() => setVisible(false), 150);
+      hideTimer = window.setTimeout(() => setVisible(false), 120);
     }
     return () => {
       if (showTimer) window.clearTimeout(showTimer);
