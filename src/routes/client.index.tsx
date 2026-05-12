@@ -14,7 +14,7 @@ import { ClientBoardView } from "@/components/client/ClientBoardView";
 import { ClientVendorTable } from "@/components/client/ClientVendorTable";
 import type { ClientVendor } from "@/lib/project-types";
 import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
-import { useIdleReady } from "@/hooks/useVendorData";
+
 
 type ViewMode = "grid" | "board" | "table";
 const VIEW_STORAGE_KEY = "saffron.client.viewMode";
