@@ -6,6 +6,7 @@ import {
   ensureVendorInstagramPreview,
   type VendorInstagramPreview,
 } from "@/server/instagram-preview.functions";
+import { normalizeInstagramHandle } from "@/lib/instagram";
 
 export function useInstagramPreviewsBulk(vendorIds: string[]) {
   const fn = useServerFn(getVendorInstagramPreviewsBulk);
