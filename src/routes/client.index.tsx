@@ -29,11 +29,12 @@ export const Route = createFileRoute("/client/")({
 });
 
 function ClientPortalPage() {
-  const { signOut } = useAuth();
+  const { signOut, initialized, session } = useAuth();
   const qc = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ["my-project"],
     queryFn: () => getMyProject(),
+    enabled: initialized && !!session?.access_token,
   });
   const projectId = data?.project?.id;
 
