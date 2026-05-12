@@ -1,14 +1,4 @@
-import Firecrawl from "@mendable/firecrawl-js";
-import { z } from "zod";
 import { normalizeInstagramHandle } from "@/lib/instagram";
-
-export const instagramPreviewSchema = z.object({
-  display_name: z.string().nullable().optional(),
-  bio: z.string().nullable().optional(),
-  followers_text: z.string().nullable().optional(),
-  avatar_url: z.string().url().nullable().optional(),
-  post_thumbnails: z.array(z.string().url()).nullable().optional(),
-});
 
 export type InstagramScrapeResult =
   | {
@@ -24,6 +14,25 @@ export type InstagramScrapeResult =
   | { status: "not_found"; handle: string; profile_url: string; error?: string }
   | { status: "error"; handle: string | null; profile_url: string | null; error: string };
 
+function formatFollowers(n: unknown): string | null {
+  if (typeof n !== "number" || !isFinite(n) || n < 0) return null;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)}M followers`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1)}K followers`;
+  return `${n} followers`;
+}
+
+type ApifyProfileItem = {
+  username?: string;
+  fullName?: string | null;
+  biography?: string | null;
+  followersCount?: number | null;
+  profilePicUrl?: string | null;
+  profilePicUrlHD?: string | null;
+  private?: boolean | null;
+  error?: string | null;
+  latestPosts?: Array<{ displayUrl?: string | null; type?: string | null }> | null;
+};
+
 export async function scrapeInstagramProfile(
   rawHandle: string | null | undefined,
 ): Promise<InstagramScrapeResult> {
@@ -33,53 +42,67 @@ export async function scrapeInstagramProfile(
   }
   const profileUrl = `https://www.instagram.com/${handle}/`;
 
-  const apiKey = process.env.FIRECRAWL_API_KEY;
-  if (!apiKey) {
-    return { status: "error", handle, profile_url: profileUrl, error: "FIRECRAWL_API_KEY not configured" };
+  const token = process.env.APIFY_API_TOKEN;
+  if (!token) {
+    return { status: "error", handle, profile_url: profileUrl, error: "APIFY_API_TOKEN not configured" };
   }
 
   try {
-    const firecrawl = new Firecrawl({ apiKey });
-    const result = await firecrawl.scrape(profileUrl, {
-      formats: [
-        {
-          type: "json",
-          prompt:
-            "Extract the public Instagram profile data. Return display_name (the name shown at the top, not the handle), bio (the profile bio text), followers_text (e.g. '12.4K followers' as displayed), avatar_url (the profile picture URL), and post_thumbnails as an array of the first 3 most recent post image URLs. If the profile is private, blocked, or unavailable, return null for all fields.",
-          schema: {
-            type: "object",
-            properties: {
-              display_name: { type: ["string", "null"] },
-              bio: { type: ["string", "null"] },
-              followers_text: { type: ["string", "null"] },
-              avatar_url: { type: ["string", "null"] },
-              post_thumbnails: { type: ["array", "null"], items: { type: "string" } },
-            },
-          },
-        },
-      ],
-      onlyMainContent: false,
-      waitFor: 2500,
+    const url = `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${encodeURIComponent(token)}&timeout=90`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ usernames: [handle] }),
     });
 
-    const raw = (result as { json?: unknown; data?: { json?: unknown } }).json
-      ?? (result as { data?: { json?: unknown } }).data?.json;
-
-    const parsed = instagramPreviewSchema.safeParse(raw);
-    if (!parsed.success) {
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
       return {
         status: "error",
         handle,
         profile_url: profileUrl,
-        error: `Invalid scrape payload: ${parsed.error.message.slice(0, 200)}`,
+        error: `Apify ${res.status}: ${body.slice(0, 250)}`,
       };
     }
 
-    const data = parsed.data;
-    const thumbs = (data.post_thumbnails ?? []).filter(Boolean).slice(0, 3);
+    const items = (await res.json()) as ApifyProfileItem[];
+    const item = Array.isArray(items) ? items[0] : null;
 
-    // If we got nothing useful, treat as not_found rather than ok
-    if (!data.avatar_url && !data.display_name && thumbs.length === 0) {
+    if (!item) {
+      return { status: "not_found", handle, profile_url: profileUrl, error: "No data returned" };
+    }
+
+    if (item.error) {
+      const msg = String(item.error).toLowerCase();
+      if (msg.includes("not found") || msg.includes("does not exist")) {
+        return { status: "not_found", handle, profile_url: profileUrl, error: item.error };
+      }
+      return { status: "error", handle, profile_url: profileUrl, error: String(item.error).slice(0, 300) };
+    }
+
+    const avatarUrl = item.profilePicUrlHD || item.profilePicUrl || null;
+    const displayName = item.fullName ?? null;
+    const bio = item.biography ?? null;
+    const followersText = formatFollowers(item.followersCount);
+    const thumbs = (item.latestPosts ?? [])
+      .map((p) => p?.displayUrl)
+      .filter((u): u is string => typeof u === "string" && u.length > 0)
+      .slice(0, 3);
+
+    if (item.private) {
+      return {
+        status: "ok",
+        handle,
+        profile_url: profileUrl,
+        avatar_url: avatarUrl,
+        display_name: displayName,
+        bio,
+        followers_text: followersText,
+        post_thumbnails: [],
+      };
+    }
+
+    if (!avatarUrl && !displayName && thumbs.length === 0) {
       return {
         status: "not_found",
         handle,
@@ -92,10 +115,10 @@ export async function scrapeInstagramProfile(
       status: "ok",
       handle,
       profile_url: profileUrl,
-      avatar_url: data.avatar_url ?? null,
-      display_name: data.display_name ?? null,
-      bio: data.bio ?? null,
-      followers_text: data.followers_text ?? null,
+      avatar_url: avatarUrl,
+      display_name: displayName,
+      bio,
+      followers_text: followersText,
       post_thumbnails: thumbs,
     };
   } catch (error) {
