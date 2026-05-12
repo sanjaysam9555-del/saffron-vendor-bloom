@@ -183,6 +183,8 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
           />
         </div>
 
+        <VendorInstagramDetailBlock vendorId={vendor.id} handle={vendor.instagram_handle} />
+
         {vendor.attachments.length > 0 && (
           <div className="border-t border-[var(--border)] px-6 py-4">
             <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
