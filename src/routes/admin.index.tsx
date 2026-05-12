@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon, ArrowUpDown, X } from "lucide-react";
+import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon, ArrowUpDown, X, Instagram } from "lucide-react";
 import { toast } from "sonner";
 
 import { TopNav } from "@/components/vendor/TopNav";
@@ -16,6 +16,7 @@ import { useAllCategories } from "@/lib/categories";
 import { AuthGate } from "@/components/AuthGate";
 import { useIsAdmin } from "@/lib/auth";
 import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
+import { BulkInstagramSyncDialog } from "@/components/vendor/BulkInstagramSyncDialog";
 
 type SortKey = "date_added_desc" | "date_added_asc" | "updated_desc" | "name_asc" | "name_desc";
 
@@ -65,6 +66,7 @@ function DashboardPage() {
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [igSyncOpen, setIgSyncOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
