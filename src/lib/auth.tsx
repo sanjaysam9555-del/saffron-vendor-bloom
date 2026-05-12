@@ -236,6 +236,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn: async (email, password) => {
       try {
         setLoading(true);
+        setRoleResolutionFailed(false);
+        setRole(null);
+        setDisplayName(null);
         const { data, error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password,
@@ -277,22 +280,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return { error: error?.message ?? null };
     },
-    signOut: async () => {
+    signOut: async (opts) => {
       try {
         await supabase.auth.signOut();
         loadedForUserRef.current = null;
         writeCachedAccess(null);
+        setSession(null);
         setRole(null);
         setDisplayName(null);
         setRoleResolutionFailed(false);
-        notifySuccess("Signed out", { description: "See you again soon." });
+        if (!opts?.silent) notifySuccess("Signed out", { description: "See you again soon." });
       } catch (e) {
-        notifyError(e, "Could not sign out.");
+        if (!opts?.silent) notifyError(e, "Could not sign out.");
       }
     },
     refresh: async () => {
       if (session?.user) {
         loadedForUserRef.current = null;
+        setRoleResolutionFailed(false);
         await loadProfile(session.user.id);
       }
     },
