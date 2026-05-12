@@ -20,7 +20,7 @@ export const getCurrentUserAccess = createServerFn({ method: "GET" })
     const email = userData.user.email?.toLowerCase() ?? "";
 
     try {
-      const [{ data: roleRow, error: roleError }, { data: profileRow, error: profileError }] = await Promise.all([
+      const [{ data: roleRow, error: roleError }, { data: profileRow, error: profileError }, { data: clientRow, error: clientError }] = await Promise.all([
         supabaseAdmin
           .from("user_roles")
           .select("role")
@@ -31,14 +31,24 @@ export const getCurrentUserAccess = createServerFn({ method: "GET" })
           .select("display_name")
           .eq("user_id", userId)
           .maybeSingle(),
+        supabaseAdmin
+          .from("project_clients")
+          .select("id")
+          .eq("user_id", userId)
+          .limit(1)
+          .maybeSingle(),
       ]);
 
       if (roleError) throw new Error(roleError.message);
       if (profileError) console.warn("Unable to load profile", profileError.message);
+      if (clientError) console.warn("Unable to load client access", clientError.message);
+
+      const fallback = knownStaffEmails.get(email);
+      const role = roleRow?.role ?? fallback?.role ?? (clientRow ? "client" : null);
 
       return {
-        role: roleRow?.role ?? knownStaffEmails.get(email)?.role ?? "employee",
-        displayName: profileRow?.display_name ?? knownStaffEmails.get(email)?.displayName ?? null,
+        role,
+        displayName: profileRow?.display_name ?? fallback?.displayName ?? null,
       };
     } catch (error) {
       const fallback = knownStaffEmails.get(email);
