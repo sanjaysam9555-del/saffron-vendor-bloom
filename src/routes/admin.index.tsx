@@ -15,6 +15,7 @@ import { useVendors, useVendorMutations, useVendorModals } from "@/hooks/useVend
 import { useAllCategories } from "@/lib/categories";
 import { AuthGate } from "@/components/AuthGate";
 import { useIsAdmin } from "@/lib/auth";
+import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
 
 type SortKey = "date_added_desc" | "date_added_asc" | "updated_desc" | "name_asc" | "name_desc";
 
