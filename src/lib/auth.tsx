@@ -68,6 +68,41 @@ function wait(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
+async function getAccessFromBrowserSession(session: Session): Promise<AccessResult> {
+  const userId = session.user.id;
+  const email = session.user.email?.toLowerCase() ?? "";
+  const fallback = knownStaffEmails.get(email);
+
+  const rolePromise = supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const profilePromise = supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const clientPromise = supabase
+    .from("project_clients")
+    .select("id")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
+
+  const [{ data: roleRow, error: roleError }, { data: profileRow }, { data: clientRow }] = await Promise.all([
+    rolePromise,
+    profilePromise,
+    clientPromise,
+  ]);
+  if (roleError) throw new Error(roleError.message);
+
+  return {
+    role: ((roleRow?.role as AppRole | undefined) ?? fallback?.role ?? (clientRow ? "client" : null)),
+    displayName: profileRow?.display_name ?? fallback?.displayName ?? null,
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
@@ -91,7 +126,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let access: { role?: string | null; displayName?: string | null } | null = null;
         for (let attempt = 0; attempt < 3; attempt++) {
           try {
-            access = await withTimeout(getCurrentUserAccess(), ACCESS_TIMEOUT_MS);
+            const currentSession = sessionRef.current;
+            if (!currentSession) throw new Error("No active session");
+            access = await withTimeout(getAccessFromBrowserSession(currentSession), ACCESS_TIMEOUT_MS);
             if (access?.role) break;
             lastError = new Error("No role returned for current session");
           } catch (error) {
