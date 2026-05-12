@@ -1,51 +1,26 @@
-# Uniform Vendor Cards (Admin + Client)
+# Card height polish
 
-Make every vendor card on `/admin` and `/client` render at the same height with the same internal section layout, regardless of which optional fields a vendor has.
+Two specific issues with the uniform-card layout:
 
-## Goals
+1. **Instagram strip is clipped** — the strip is locked to `h-[96px]` but the actual content (avatar row + 3 thumbnail squares) needs ~140–150px at the current card width, so the bottom of the thumbnails is cut off and the "No Instagram preview" placeholder makes the card slightly shorter than ones with real previews.
+2. **Empty space under the vendor name** — the title reserves `min-h-[2.5rem]` to allow 2 lines, so single-line names leave a visible gap above the badges.
 
-- All cards in the grid have identical overall height.
-- Title, badges row, info block, Instagram strip, and footer all line up across cards.
-- Long values truncate instead of pushing the layout.
+## Fixes
 
-## Section heights (both cards)
+### 1. Right-size the Instagram strip
+In `src/components/vendor/VendorInstagramPreview.tsx` → `VendorInstagramCardStrip`:
+- Replace `h-[96px] overflow-hidden` with `min-h-[148px]` (no overflow clip) on both the populated and placeholder branches so the 3-up thumbnail grid is fully visible and both states match in height.
+- Keep the placeholder branch (`No Instagram preview`) at the same `min-h-[148px]` so cards with and without previews stay equal.
 
-Each card becomes a vertical stack of fixed-height regions:
+### 2. Tighten the title block
+In `src/components/vendor/VendorCard.tsx` and `src/components/client/ClientVendorCard.tsx`:
+- Change the `<h3>` from `line-clamp-2 min-h-[2.5rem]` to `line-clamp-1` and drop the `min-h-*`. Single-line truncation removes the gap and still keeps every card's title row identical in height.
+- Add `truncate` semantics by relying on `line-clamp-1` (no extra wrappers needed).
 
-```text
-Title + ratings   ~48px (2 lines max, line-clamp-2)
-Badges row        ~28px (single line, overflow hidden)
-Info block        ~96px (location + phone/IG/etc, reserved)
-Instagram strip   ~96px (always rendered, empty placeholder when missing)
-Footer / actions  pinned to bottom (mt-auto)
-```
+That's it — no other layout changes, no token changes, no behavior changes.
 
-Implementation rules:
-- Title: `line-clamp-2 min-h-[2.5rem]`.
-- Badges row: `min-h-[1.75rem] flex-nowrap overflow-hidden`.
-- Info block: wrapped in `min-h-[6rem]` container; each row truncates.
-- Instagram strip: always-rendered wrapper with `min-h-[6rem]`. When no preview, render a muted placeholder (border + faint "No Instagram preview" hint) instead of `return null`.
-- Footer (`VendorProjectAssigner` + buttons on admin, `ClientStatusSelect` + quote pills on client) stays pinned via existing `mt-auto`.
+## Files
 
-## File changes
-
-1. `src/components/vendor/VendorCard.tsx` (admin)
-   - Add `line-clamp-2 min-h-[2.5rem]` to `<h3>`.
-   - Reserve `min-h-[1.75rem]` on the badges wrapper.
-   - Wrap the info block (`location / phone / instagram / price`) in a `min-h-[6rem]` container.
-   - Always render `<VendorInstagramCardStrip>` inside a `min-h-[6rem]` wrapper.
-
-2. `src/components/client/ClientVendorCard.tsx`
-   - Same title clamp.
-   - Reserve `min-h-[1.75rem]` on the badges wrapper.
-   - Wrap info block (`location / instagram / portfolio / website / rating`) in `min-h-[6rem]`.
-   - Always render Instagram strip in a `min-h-[6rem]` wrapper.
-
-3. `src/components/vendor/VendorInstagramPreview.tsx`
-   - `VendorInstagramCardStrip`: instead of `return null` when `preview` is missing/empty, render a placeholder block (`<div className="mt-2 rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-2 text-[10px] text-[var(--charcoal)]/40">No Instagram preview</div>`). Keep height consistent with the populated state.
-
-## Out of scope
-
-- No changes to data fetching, sorting, or grid container.
-- No table view changes.
-- No new design tokens.
+- `src/components/vendor/VendorInstagramPreview.tsx` — strip height + remove overflow clip.
+- `src/components/vendor/VendorCard.tsx` — title clamp.
+- `src/components/client/ClientVendorCard.tsx` — title clamp.
