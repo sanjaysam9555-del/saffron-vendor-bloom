@@ -12,7 +12,6 @@ function SafeImg({ src, alt, className }: { src: string; alt: string; className:
       alt={alt}
       loading="lazy"
       referrerPolicy="no-referrer"
-      crossOrigin="anonymous"
       className={className}
       onError={() => setOk(false)}
     />
