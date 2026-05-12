@@ -1,14 +1,25 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { useAuth } from "@/lib/auth";
+import { useNavigate } from "@tanstack/react-router";
+import { useAuth, type AppRole } from "@/lib/auth";
 import {
   SignInButton,
   SIGN_IN_ERROR_HOLD_MS,
   type SignInButtonState,
 } from "@/components/auth/SignInButton";
 
-export function ClientLoginForm({ embedded = false }: { embedded?: boolean } = {}) {
-  const { signIn, session, role } = useAuth();
+function destinationFor(role: AppRole | null): "/admin" | "/client" | null {
+  if (role === "admin" || role === "employee") return "/admin";
+  if (role === "client") return "/client";
+  return null;
+}
+
+/**
+ * One sign-in form for everyone. Awaits role resolution before navigating
+ * so the user never sees a "signed in" state without their dashboard.
+ */
+export function UnifiedLoginForm({ compact = false }: { compact?: boolean } = {}) {
+  const { signIn, session, role, initialized } = useAuth();
+  const navigate = useNavigate();
   const [err, setErr] = useState<string | null>(null);
   const [btnState, setBtnState] = useState<SignInButtonState>("idle");
   const [hydrated, setHydrated] = useState(false);
@@ -24,17 +35,18 @@ export function ClientLoginForm({ embedded = false }: { embedded?: boolean } = {
     }
   }, []);
 
+  // If already signed in (e.g. returning visitor), send straight to dashboard.
   useEffect(() => {
-    if (!session || !role) return;
-    setBtnState("success");
-  }, [session, role]);
+    if (!initialized || !session) return;
+    const dest = destinationFor(role);
+    if (dest) navigate({ to: dest, replace: true });
+  }, [initialized, session, role, navigate]);
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (btnState !== "idle") return;
-    const form = e.currentTarget;
-    const fd = new FormData(form);
+    if (btnState === "loading" || btnState === "success") return;
+    const fd = new FormData(e.currentTarget);
     const email = String(fd.get("email") ?? "").trim();
     const password = String(fd.get("password") ?? "");
     if (!email || !password) {
@@ -50,30 +62,24 @@ export function ClientLoginForm({ embedded = false }: { embedded?: boolean } = {
       setErr(res.error);
       setBtnState("error");
       setTimeout(() => setBtnState("idle"), SIGN_IN_ERROR_HOLD_MS);
-    } else {
-      setBtnState("success");
-      window.setTimeout(() => {
-        window.location.assign("/client");
-      }, 250);
+      return;
     }
+    setBtnState("success");
+    const dest = destinationFor(res.role);
+    if (dest) navigate({ to: dest, replace: true });
   };
 
   return (
-    <div className={embedded ? "flex justify-center my-[30px]" : "flex min-h-screen items-center justify-center bg-[var(--cream)] px-4"}>
-      <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-white p-8 shadow-sm">
-        <h1 className="font-display text-3xl text-[var(--terracotta)]">Saffron Planning Studio</h1>
-        <p className="mt-1 text-xs uppercase tracking-[0.22em] text-[var(--charcoal)]/55">
-          Client Portal
-        </p>
-
-        <h2 className="mt-6 text-lg font-semibold text-[var(--charcoal)]">Welcome — sign in</h2>
+    <div className={compact ? "w-full" : "w-full max-w-md mx-auto"}>
+      <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm sm:p-8">
+        <h2 className="text-lg font-semibold text-[var(--charcoal)]">Sign in</h2>
         <p className="mt-1 text-sm text-[var(--charcoal)]/60">
-          Use the email and password your Saffron Planning Studio planner shared with you.
+          Use the email and password shared by your Saffron planner.
         </p>
 
-        <form onSubmit={submit} method="post" action="/" className="mt-5 space-y-3" noValidate>
+        <form onSubmit={submit} method="post" action="/" className="mt-4 space-y-3" noValidate>
           <input
-            className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
+            className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--terracotta)] focus:outline-none"
             type="email"
             name="email"
             placeholder="Email"
@@ -81,7 +87,7 @@ export function ClientLoginForm({ embedded = false }: { embedded?: boolean } = {
             defaultValue=""
           />
           <input
-            className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
+            className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--terracotta)] focus:outline-none"
             type="password"
             name="password"
             placeholder="Password"
@@ -93,15 +99,6 @@ export function ClientLoginForm({ embedded = false }: { embedded?: boolean } = {
             <SignInButton state={hydrated ? btnState : "loading"} />
           </fieldset>
         </form>
-
-        <div className="mt-5 border-t border-[var(--border)] pt-4 text-center">
-          <Link
-            to="/login"
-            className="text-xs uppercase tracking-[0.18em] text-[var(--charcoal)]/55 hover:text-[var(--terracotta)] hover:underline"
-          >
-            Staff sign in →
-          </Link>
-        </div>
       </div>
     </div>
   );

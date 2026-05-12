@@ -1,8 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ClientOnly } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { useAuth } from "@/lib/auth";
-import { BrandSplash } from "@/components/BrandSplash";
+import { UnifiedLoginForm } from "@/components/auth/UnifiedLoginForm";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -11,7 +9,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Saffron Planning Studio is a boutique wedding & event planning studio in India. We craft unforgettable celebrations — from intimate gatherings to grand weddings. Plan with us today.",
+          "Saffron Planning Studio is a boutique wedding & event planning studio in India. We craft unforgettable celebrations — from intimate gatherings to grand weddings.",
       },
       { property: "og:title", content: "Wedding & Event Planning Studio | Saffron Planning Studio" },
       {
@@ -27,63 +25,51 @@ export const Route = createFileRoute("/")({
 function RootIndex() {
   return (
     <main className="min-h-screen bg-[var(--cream)]">
-      <ClientOnly fallback={<BrandSplash showLoading={false} />}>
-        <Marketing />
-      </ClientOnly>
+      <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-12 lg:grid-cols-2 lg:gap-16 lg:py-20">
+        <section className="flex flex-col justify-center">
+          <p className="text-xs uppercase tracking-[0.28em] text-[var(--terracotta)]">
+            Saffron Planning Studio
+          </p>
+          <h1 className="mt-3 font-display text-3xl text-[var(--charcoal)] sm:text-4xl lg:text-5xl">
+            Wedding & Event Planning Studio in India
+          </h1>
+          <p className="mt-4 max-w-lg text-sm text-[var(--charcoal)]/70 sm:text-base">
+            We curate vendors, manage logistics and design weddings end-to-end across
+            Delhi NCR and destinations across India. Couples we work with use this portal
+            to view their shortlist, share feedback and finalise decisions with their planner.
+          </p>
+          <div className="mt-6">
+            <Link
+              to="/vendor-signup"
+              className="inline-flex items-center gap-2 text-sm font-medium text-[var(--terracotta)] hover:underline"
+            >
+              Are you a vendor? Sign up here →
+            </Link>
+          </div>
+        </section>
+
+        <section className="flex flex-col justify-center">
+          <ClientOnly fallback={<LoginSkeleton />}>
+            <UnifiedLoginForm />
+          </ClientOnly>
+        </section>
+      </div>
     </main>
   );
 }
 
-function Marketing() {
-  const { session, role } = useAuth();
-  const navigate = useNavigate();
-
-  // Cap the opening splash at 600ms — never block longer than this.
-  const [openingPlate, setOpeningPlate] = useState(true);
-  useEffect(() => {
-    const t = window.setTimeout(() => setOpeningPlate(false), 600);
-    return () => window.clearTimeout(t);
-  }, []);
-
-  // If a signed-in user lands on /, send them to their dashboard.
-  useEffect(() => {
-    if (!session) return;
-    if (role === "client") navigate({ to: "/client", replace: true });
-    else if (role === "admin" || role === "employee") navigate({ to: "/admin", replace: true });
-  }, [session, role, navigate]);
-
-  if (openingPlate) return <BrandSplash showLoading={false} />;
-
+function LoginSkeleton() {
   return (
-    <>
-      <section className="mx-auto max-w-3xl px-6 pt-16 pb-10 text-center">
-        <p className="text-xs uppercase tracking-[0.28em] text-[var(--terracotta)]">
-          Saffron Planning Studio
-        </p>
-        <h1 className="mt-3 font-display text-3xl text-[var(--charcoal)] sm:text-4xl">
-          Wedding & Event Planning Studio in India
-        </h1>
-        <p className="mx-auto mt-4 max-w-xl text-sm text-[var(--charcoal)]/70 sm:text-base">
-          We curate vendors, manage logistics and design weddings end-to-end across
-          Delhi NCR and destinations across India. Couples we work with use this
-          portal to view their shortlist, share feedback and finalise decisions
-          with their planner.
-        </p>
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link
-            to="/login"
-            className="rounded-md bg-[var(--terracotta)] px-6 py-2.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
-          >
-            Sign in
-          </Link>
-          <Link
-            to="/vendor-signup"
-            className="rounded-md border border-[var(--border)] bg-white px-6 py-2.5 text-sm font-medium text-[var(--charcoal)] hover:border-[var(--terracotta)]/40"
-          >
-            Vendor sign up
-          </Link>
+    <div className="w-full max-w-md mx-auto">
+      <div className="rounded-xl border border-[var(--border)] bg-white p-8 shadow-sm">
+        <div className="h-5 w-24 animate-pulse rounded bg-[var(--cream)]" />
+        <div className="mt-3 h-3 w-3/4 animate-pulse rounded bg-[var(--cream)]" />
+        <div className="mt-6 space-y-3">
+          <div className="h-9 animate-pulse rounded bg-[var(--cream)]" />
+          <div className="h-9 animate-pulse rounded bg-[var(--cream)]" />
+          <div className="h-9 animate-pulse rounded bg-[var(--cream)]" />
         </div>
-      </section>
-    </>
+      </div>
+    </div>
   );
 }
