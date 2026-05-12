@@ -179,6 +179,10 @@ export function VendorCard({
         )}
       </div>
 
+      {!selectMode && instagramPreview && (
+        <VendorInstagramCardStrip preview={instagramPreview} />
+      )}
+
       {!selectMode && (
         <>
           <div className="mt-3 border-t border-[var(--border)] pt-3" style={{ marginTop: 'auto' }}>
