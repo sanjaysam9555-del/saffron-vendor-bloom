@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ClientOnly } from "@tanstack/react-router";
 import { UnifiedLoginForm } from "@/components/auth/UnifiedLoginForm";
 
 export const Route = createFileRoute("/")({
@@ -49,27 +48,9 @@ function RootIndex() {
         </section>
 
         <section className="flex flex-col justify-center">
-          <ClientOnly fallback={<LoginSkeleton />}>
-            <UnifiedLoginForm />
-          </ClientOnly>
+          <UnifiedLoginForm />
         </section>
       </div>
     </main>
-  );
-}
-
-function LoginSkeleton() {
-  return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="rounded-xl border border-[var(--border)] bg-white p-8 shadow-sm">
-        <div className="h-5 w-24 animate-pulse rounded bg-[var(--cream)]" />
-        <div className="mt-3 h-3 w-3/4 animate-pulse rounded bg-[var(--cream)]" />
-        <div className="mt-6 space-y-3">
-          <div className="h-9 animate-pulse rounded bg-[var(--cream)]" />
-          <div className="h-9 animate-pulse rounded bg-[var(--cream)]" />
-          <div className="h-9 animate-pulse rounded bg-[var(--cream)]" />
-        </div>
-      </div>
-    </div>
   );
 }
