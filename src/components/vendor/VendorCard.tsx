@@ -63,7 +63,7 @@ export function VendorCard({
         </div>
       )}
       <div className="mb-2 flex items-start justify-between gap-2">
-        <h3 className={`font-display text-lg font-semibold leading-tight text-[var(--charcoal)] ${selectMode ? "pl-6" : ""}`}>{vendor.vendor_name}</h3>
+        <h3 className={`line-clamp-2 min-h-[2.5rem] font-display text-lg font-semibold leading-tight text-[var(--charcoal)] ${selectMode ? "pl-6" : ""}`}>{vendor.vendor_name}</h3>
         <div className="flex shrink-0 flex-col items-end gap-1">
           {vendor.google_rating != null && (
             <div
@@ -86,18 +86,18 @@ export function VendorCard({
         </div>
       </div>
 
-      <div className="mb-2 flex flex-wrap gap-1">
-        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text}`}>
+      <div className="mb-2 flex min-h-[1.75rem] flex-nowrap gap-1 overflow-hidden">
+        <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text}`}>
           {vendor.category}
         </span>
         {vendor.subcategory && (
-          <span className="inline-flex items-center rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/65">
+          <span className="inline-flex shrink-0 items-center rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/65">
             {vendor.subcategory}
           </span>
         )}
         {vendor.submitted_via_form && (
           <span
-            className="inline-flex items-center gap-0.5 rounded-full border border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--terracotta)]"
+            className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--terracotta)]"
             title="Vendor self-registered via the public signup form"
           >
             ✦ Via Form
@@ -106,10 +106,10 @@ export function VendorCard({
         <BookedBadge vendorId={vendor.id} compact />
       </div>
 
-      <div className="min-w-0 space-y-1.5 text-sm text-[var(--charcoal)]/75">
+      <div className="min-h-[6rem] min-w-0 space-y-1.5 overflow-hidden text-sm text-[var(--charcoal)]/75">
         {vendor.location && (
           <div className="flex items-center gap-1.5">
-            <MapPin className="h-3.5 w-3.5" /> {vendor.location}
+            <MapPin className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{vendor.location}</span>
           </div>
         )}
         {vendor.contact_number && (() => {
@@ -173,14 +173,14 @@ export function VendorCard({
           );
         })()}
         {vendor.price_text && (
-          <div className="text-sm font-medium text-[var(--terracotta)]">
+          <div className="truncate text-sm font-medium text-[var(--terracotta)]">
             {vendor.price_text}
           </div>
         )}
       </div>
 
-      {!selectMode && instagramPreview && (
-        <VendorInstagramCardStrip preview={instagramPreview} />
+      {!selectMode && (
+        <VendorInstagramCardStrip preview={instagramPreview ?? null} />
       )}
 
       {!selectMode && (
