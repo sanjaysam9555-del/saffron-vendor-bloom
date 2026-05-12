@@ -194,7 +194,7 @@ function ProjectDetailPage() {
             </button>
           </div>
           <p className="text-xs text-[var(--charcoal)]/55">
-            Share these credentials with the client. They sign in at <code>/client/login</code>.
+            Share these credentials with the client. They sign in at <code>/login</code>.
           </p>
 
           {showAddClient && (
