@@ -6,15 +6,22 @@ import {
   ensureVendorInstagramPreview,
   type VendorInstagramPreview,
 } from "@/server/instagram-preview.functions";
+import { normalizeInstagramHandle } from "@/lib/instagram";
 
 export function useInstagramPreviewsBulk(vendorIds: string[]) {
   const fn = useServerFn(getVendorInstagramPreviewsBulk);
+  const qc = useQueryClient();
   const sortedKey = [...vendorIds].sort().join(",");
   const query = useQuery({
     queryKey: ["instagram-previews-bulk", sortedKey],
     queryFn: async () => {
       if (vendorIds.length === 0) return [];
-      return fn({ data: { vendorIds } });
+      const rows = await fn({ data: { vendorIds } });
+      // Seed per-vendor cache so the detail drawer renders instantly.
+      rows.forEach((p) => {
+        qc.setQueryData(["instagram-preview", p.vendor_id, normalizeInstagramHandle(p.handle)], p);
+      });
+      return rows;
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -25,8 +32,9 @@ export function useInstagramPreviewsBulk(vendorIds: string[]) {
 
 export function useEnsureInstagramPreview(vendorId: string, handle: string | null | undefined) {
   const fn = useServerFn(ensureVendorInstagramPreview);
+  const normalized = normalizeInstagramHandle(handle);
   return useQuery({
-    queryKey: ["instagram-preview", vendorId, handle],
+    queryKey: ["instagram-preview", vendorId, normalized],
     queryFn: async () => {
       if (!handle) return null;
       return fn({ data: { vendorId, handle } });
