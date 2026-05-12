@@ -14,6 +14,7 @@ import { ClientVendorDetail } from "@/components/client/ClientVendorDetail";
 import { ClientBoardView } from "@/components/client/ClientBoardView";
 import { ClientVendorTable } from "@/components/client/ClientVendorTable";
 import type { ClientVendor } from "@/lib/project-types";
+import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
 
 type ViewMode = "grid" | "board" | "table";
 const VIEW_STORAGE_KEY = "saffron.client.viewMode";
@@ -230,11 +231,7 @@ function ClientPortalPage() {
           ) : filtered.length === 0 ? (
             <EmptyState message="No vendors match your filters." />
           ) : view === "grid" ? (
-            <div className="grid gap-3 sm:gap-4 animate-fade-in sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filtered.map((v) => (
-                <ClientVendorCard key={v.id} vendor={v} onView={() => setDetail(v)} />
-              ))}
-            </div>
+            <ClientVendorGrid vendors={filtered} onView={(v) => setDetail(v)} />
           ) : view === "board" ? (
             <div className="animate-fade-in">
               <ClientBoardView vendors={filtered} onView={(v) => setDetail(v)} />
@@ -255,6 +252,23 @@ function EmptyState({ message }: { message: string }) {
     <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--champagne)] bg-white py-20 text-center animate-fade-up">
       <Sparkles className="mb-3 h-8 w-8 text-[var(--terracotta)] animate-pulse-subtle" />
       <p className="text-sm text-[var(--charcoal)]/60">{message}</p>
+    </div>
+  );
+}
+
+function ClientVendorGrid({ vendors, onView }: { vendors: ClientVendor[]; onView: (v: ClientVendor) => void }) {
+  const ids = useMemo(() => vendors.filter((v) => v.instagram_handle).map((v) => v.id), [vendors]);
+  const { map: previewMap } = useInstagramPreviewsBulk(ids);
+  return (
+    <div className="grid gap-3 sm:gap-4 animate-fade-in sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {vendors.map((v) => (
+        <ClientVendorCard
+          key={v.id}
+          vendor={v}
+          onView={() => onView(v)}
+          instagramPreview={previewMap.get(v.id) ?? null}
+        />
+      ))}
     </div>
   );
 }

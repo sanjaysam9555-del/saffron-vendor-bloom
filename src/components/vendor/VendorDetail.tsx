@@ -18,6 +18,7 @@ import { VendorProjectAssigner } from "./VendorProjectAssigner";
 import { BookedBadge } from "./BookedBadge";
 import { VendorQuoteHistory } from "./VendorQuoteHistory";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
+import { VendorInstagramDetailBlock } from "./VendorInstagramPreview";
 
 interface VendorDetailProps {
   vendor: Vendor | null;
@@ -165,6 +166,12 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
           )}
 
         </div>
+
+        <VendorInstagramDetailBlock
+          vendorId={vendor.id}
+          handle={vendor.instagram_handle}
+          canRefresh
+        />
 
         <div className="border-t border-[var(--border)] px-6 py-4">
           <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">

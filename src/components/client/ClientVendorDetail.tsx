@@ -11,6 +11,7 @@ import { listProjectVendorQuotes } from "@/lib/quote-api";
 import { formatINR, type QuoteFile, type ProjectVendorQuote } from "@/lib/quote-types";
 import { VendorCommentsThread } from "./VendorCommentsThread";
 import { instagramDisplay, instagramUrl } from "@/lib/instagram";
+import { VendorInstagramDetailBlock } from "@/components/vendor/VendorInstagramPreview";
 
 interface Props {
   vendor: ClientVendor | null;
@@ -181,6 +182,8 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
             value={vendor.google_rating != null ? `${Number(vendor.google_rating).toFixed(1)} ★` : null}
           />
         </div>
+
+        <VendorInstagramDetailBlock vendorId={vendor.id} handle={vendor.instagram_handle} />
 
         {vendor.attachments.length > 0 && (
           <div className="border-t border-[var(--border)] px-6 py-4">

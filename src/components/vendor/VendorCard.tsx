@@ -5,6 +5,8 @@ import { useState } from "react";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
 import { BookedBadge } from "./BookedBadge";
 import { instagramUrl } from "@/lib/instagram";
+import { VendorInstagramCardStrip } from "./VendorInstagramPreview";
+import type { VendorInstagramPreview } from "@/server/instagram-preview.functions";
 
 interface VendorCardProps {
   vendor: Vendor;
@@ -13,6 +15,7 @@ interface VendorCardProps {
   selectMode?: boolean;
   selected?: boolean;
   onToggleSelect?: () => void;
+  instagramPreview?: VendorInstagramPreview | null;
 }
 
 export function VendorCard({
@@ -22,6 +25,7 @@ export function VendorCard({
   selectMode = false,
   selected = false,
   onToggleSelect,
+  instagramPreview,
 }: VendorCardProps) {
   const [copied, setCopied] = useState(false);
   const colors = CATEGORY_COLORS[vendor.category] ?? { bg: "bg-[var(--cream-deep)]", text: "text-[var(--charcoal)]" };
@@ -174,6 +178,10 @@ export function VendorCard({
           </div>
         )}
       </div>
+
+      {!selectMode && instagramPreview && (
+        <VendorInstagramCardStrip preview={instagramPreview} />
+      )}
 
       {!selectMode && (
         <>
