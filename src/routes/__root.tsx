@@ -1,12 +1,13 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { RouteProgress } from "@/components/RouteProgress";
+import { installChunkRecovery } from "@/lib/chunk-recover";
 
 function NotFoundComponent() {
   return (
@@ -141,6 +142,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  useEffect(() => { installChunkRecovery(); }, []);
   const [client] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {

@@ -10,13 +10,19 @@ export function AuthGate({
   children: ReactNode;
   requireAdmin?: boolean;
 }) {
-  const { session, loading, role, initialized } = useAuth();
+  const { session, loading, role, initialized, roleResolutionFailed, signOut } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!initialized || loading) return;
+    if (!initialized) return;
     if (!session) {
       navigate({ to: "/" });
+      return;
+    }
+    // Role lookup definitively failed for this session — bounce to login
+    // instead of sitting on the splash forever.
+    if (!loading && !role && roleResolutionFailed) {
+      void signOut().finally(() => navigate({ to: "/" }));
       return;
     }
     if (role === "client") {
@@ -26,14 +32,12 @@ export function AuthGate({
     if (role && requireAdmin && role !== "admin") {
       navigate({ to: "/admin" });
     }
-  }, [initialized, loading, session, role, requireAdmin, navigate]);
+  }, [initialized, loading, session, role, roleResolutionFailed, requireAdmin, navigate, signOut]);
 
   const isStaff = role === "admin" || role === "employee";
   const passes = requireAdmin ? role === "admin" : isStaff;
 
-  // If we already have a session + matching cached role, render immediately
-  // even while a background re-check is in flight. This prevents the
-  // full-screen "Loading…" flash on every cold boot (especially on iOS PWA).
+  // Fast path: cached role matches → render immediately.
   if (session && role && passes) {
     return <>{children}</>;
   }

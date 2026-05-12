@@ -14,6 +14,8 @@ interface AuthState {
   loading: boolean;
   /** True once the initial Supabase session restore has completed (client-side). */
   initialized: boolean;
+  /** True when we tried to fetch role for the current session and failed with no usable cache. */
+  roleResolutionFailed: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -63,15 +65,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
-  // `loading` only flips true while we're actively fetching the role for a
-  // known user. SSR and the very first paint render with loading=false so
-  // public pages (login, marketing) emit real content for SEO.
   const [loading, setLoading] = useState(false);
-  // `initialized` is false until the initial getSession() has resolved on the
-  // client. Auth gates use THIS (not `loading`) to know whether to wait
-  // before redirecting — this prevents a logged-in user from being bounced
-  // to "/" during the brief window before the session is restored.
   const [initialized, setInitialized] = useState(false);
+  const [roleResolutionFailed, setRoleResolutionFailed] = useState(false);
 
   // Track which user we've already loaded so onAuthStateChange + getSession
   // don't trigger duplicate parallel server calls.
@@ -89,16 +85,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setDisplayName(access?.displayName ?? null);
         loadedForUserRef.current = userId;
         writeCachedAccess({ userId, role: nextRole, displayName: access?.displayName ?? null });
+        setRoleResolutionFailed(!nextRole);
       } catch (error) {
         console.error("Unable to load access role", error);
-        // If we have a cached role for this user, keep it instead of dumping to null.
         const cached = readCachedAccess();
         if (cached && cached.userId === userId && cached.role) {
           setRole(cached.role);
           setDisplayName(cached.displayName);
+          setRoleResolutionFailed(false);
         } else {
           setRole(null);
           setDisplayName(null);
+          setRoleResolutionFailed(true);
         }
         loadedForUserRef.current = userId;
       } finally {
@@ -143,15 +141,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRole(null);
         setDisplayName(null);
         setLoading(false);
+        setRoleResolutionFailed(false);
       }
     });
 
-    // Safety net: never let the app sit on the splash forever. If session
-    // restoration hasn't completed in 4s (e.g. network hang, bad refresh
-    // token, browser storage issue), unblock the gates so they can decide.
+    // Safety net: never let the app sit on the splash forever.
     const safety = window.setTimeout(() => {
       if (mounted) setInitialized(true);
-    }, 4000);
+    }, 2500);
 
     supabase.auth
       .getSession()
@@ -191,6 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setDisplayName(null);
         setLoading(false);
         setInitialized(true);
+        setRoleResolutionFailed(false);
       });
 
     return () => {
@@ -207,6 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     displayName,
     loading,
     initialized,
+    roleResolutionFailed,
     signIn: async (email, password) => {
       try {
         setLoading(true);
@@ -258,6 +257,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         writeCachedAccess(null);
         setRole(null);
         setDisplayName(null);
+        setRoleResolutionFailed(false);
         notifySuccess("Signed out", { description: "See you again soon." });
       } catch (e) {
         notifyError(e, "Could not sign out.");
