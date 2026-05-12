@@ -14,14 +14,14 @@ import { useAuth } from "@/lib/auth";
 
 export function useVendors() {
   const qc = useQueryClient();
-  const { session, initialized } = useAuth();
+  const { session, initialized, role } = useAuth();
+  const isStaff = role === "admin" || role === "employee";
   const query = useQuery({
     queryKey: ["vendors", session?.user?.id ?? null],
     queryFn: listVendors,
-    // Wait until Supabase has restored the session from storage AND we have
-    // a valid bearer token. Prevents the "session expired" race on cold loads
-    // (especially the iPad PWA reopening after being backgrounded).
-    enabled: initialized && !!session?.access_token,
+    // Only fetch once auth is initialized and the user has a staff role —
+    // prevents 403/race traffic during sign-in and on cold loads.
+    enabled: initialized && !!session?.access_token && isStaff,
   });
 
   // Live updates: subscribe to any change on the vendors table and
