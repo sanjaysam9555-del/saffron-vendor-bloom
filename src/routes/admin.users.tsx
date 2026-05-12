@@ -46,6 +46,23 @@ function AdminUsersPage() {
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
 
+  // Submissions stats
+  const { data: vendors = [] } = useVendors();
+  const submissionStats = useMemo(() => {
+    const subs = vendors.filter((v) => v.submitted_via_form);
+    const now = Date.now();
+    const weekMs = 7 * 24 * 60 * 60 * 1000;
+    const monthMs = 30 * 24 * 60 * 60 * 1000;
+    return {
+      total: subs.length,
+      week: subs.filter((v) => now - new Date(v.date_added).getTime() < weekMs).length,
+      month: subs.filter((v) => now - new Date(v.date_added).getTime() < monthMs).length,
+    };
+  }, [vendors]);
+
+  // Instagram sync dialog
+  const [igSyncOpen, setIgSyncOpen] = useState(false);
+
   const refresh = async () => {
     setLoading(true);
     setErr(null);
