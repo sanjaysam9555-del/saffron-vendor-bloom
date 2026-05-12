@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Track which user we've already loaded so onAuthStateChange + getSession
   // don't trigger duplicate parallel server calls.
   const loadedForUserRef = useRef<string | null>(null);
-  const inFlightRef = useRef<Promise<void> | null>(null);
+  const inFlightRef = useRef<Promise<AppRole | null> | null>(null);
 
   const loadProfile = async (userId: string): Promise<AppRole | null> => {
     if (inFlightRef.current) return inFlightRef.current;
