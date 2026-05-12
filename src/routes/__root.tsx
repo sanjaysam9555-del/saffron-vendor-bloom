@@ -94,7 +94,6 @@ export const Route = createRootRoute({
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Jost:wght@300;400;500;600&display=swap",
         media: "print",
-        onLoad: "this.media='all'",
       },
     ],
     scripts: [
@@ -163,7 +162,7 @@ function RootComponent() {
         gcTime: 10 * 60_000,
         refetchOnWindowFocus: false,
         refetchOnReconnect: true,
-        retry: 1,
+        retry: 0,
       },
     },
   }));
