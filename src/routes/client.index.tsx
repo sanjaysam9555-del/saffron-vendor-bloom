@@ -255,3 +255,20 @@ function EmptyState({ message }: { message: string }) {
     </div>
   );
 }
+
+function ClientVendorGrid({ vendors, onView }: { vendors: ClientVendor[]; onView: (v: ClientVendor) => void }) {
+  const ids = useMemo(() => vendors.filter((v) => v.instagram_handle).map((v) => v.id), [vendors]);
+  const { map: previewMap } = useInstagramPreviewsBulk(ids);
+  return (
+    <div className="grid gap-3 sm:gap-4 animate-fade-in sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {vendors.map((v) => (
+        <ClientVendorCard
+          key={v.id}
+          vendor={v}
+          onView={() => onView(v)}
+          instagramPreview={previewMap.get(v.id) ?? null}
+        />
+      ))}
+    </div>
+  );
+}
