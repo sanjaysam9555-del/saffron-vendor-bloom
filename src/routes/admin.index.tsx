@@ -11,7 +11,7 @@ import { VendorForm } from "@/components/vendor/VendorForm";
 import { VendorDetail } from "@/components/vendor/VendorDetail";
 import { BulkActionBar } from "@/components/vendor/BulkActionBar";
 import { BulkEditDialog } from "@/components/vendor/BulkEditDialog";
-import { useVendors, useVendorMutations, useVendorModals, useIdleReady } from "@/hooks/useVendorData";
+import { useVendors, useVendorMutations, useVendorModals } from "@/hooks/useVendorData";
 import { useAllCategories } from "@/lib/categories";
 import { AuthGate } from "@/components/AuthGate";
 import { useIsAdmin } from "@/lib/auth";
