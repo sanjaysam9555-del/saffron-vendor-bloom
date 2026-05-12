@@ -122,16 +122,7 @@ export function UnifiedLoginForm({ compact = false }: { compact?: boolean } = {}
             onKeyDown={onKeyDown}
           />
           {err && <div className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{err}</div>}
-          {/* type=button so the browser never natively submits the form even
-              if React handlers fail to attach; we drive submission ourselves. */}
-          <button
-            type="button"
-            onClick={() => void doSubmit()}
-            disabled={btnState === "loading" || btnState === "success"}
-            className="w-full"
-          >
-            <SignInButton state={btnState} />
-          </button>
+          <SignInButton state={btnState} onClick={() => void doSubmit()} />
         </form>
       </div>
     </div>
