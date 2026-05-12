@@ -39,7 +39,7 @@ function RootIndex() {
 }
 
 function RedirectingLogin() {
-  const { session, role, initialized, roleResolutionFailed, signOut } = useAuth();
+  const { session, role, initialized, roleResolutionFailed } = useAuth();
   const navigate = useNavigate();
 
   const [hasCachedUser, setHasCachedUser] = useState<boolean>(() => {
@@ -69,13 +69,6 @@ function RedirectingLogin() {
       navigate({ to: "/admin", replace: true });
     }
   }, [initialized, session, role, navigate]);
-
-  // Role resolution definitively failed for the current session — sign out
-  // so we don't sit on the splash and fall through to the login form.
-  useEffect(() => {
-    if (!initialized || !session || role || !roleResolutionFailed) return;
-    void signOut();
-  }, [initialized, session, role, roleResolutionFailed, signOut]);
 
   // Clear stale cache shortly after init if no live session materialised.
   useEffect(() => {

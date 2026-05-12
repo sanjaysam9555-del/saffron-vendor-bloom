@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { BrandSplash } from "@/components/BrandSplash";
 
 export function ClientGate({ children }: { children: ReactNode }) {
-  const { session, role, initialized, roleResolutionFailed, signOut } = useAuth();
+  const { session, role, initialized, roleResolutionFailed } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,12 +17,12 @@ export function ClientGate({ children }: { children: ReactNode }) {
       navigate({ to: "/admin" });
       return;
     }
-    // Session exists but role lookup failed — sign out and bounce home so
-    // the user can try again instead of being stranded on the splash.
+    // Session exists but role lookup failed for now — preserve the session
+    // and bounce home instead of logging the user out.
     if (!role && roleResolutionFailed) {
-      void signOut().finally(() => navigate({ to: "/" }));
+      navigate({ to: "/" });
     }
-  }, [initialized, session, role, roleResolutionFailed, navigate, signOut]);
+  }, [initialized, session, role, roleResolutionFailed, navigate]);
 
   if (session && role === "client") {
     return <>{children}</>;
