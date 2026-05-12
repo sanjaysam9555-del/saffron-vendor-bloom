@@ -31,6 +31,18 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           return Response.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
+        // Restrict to staff (admin/employee). Clients must not be able to
+        // enqueue transactional emails with arbitrary template data.
+        const { data: roleRow } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .in('role', ['admin', 'employee'])
+          .maybeSingle()
+        if (!roleRow) {
+          return Response.json({ error: 'Forbidden' }, { status: 403 })
+        }
+
         // Parse request body
         let templateName: string
         let recipientEmail: string | undefined
