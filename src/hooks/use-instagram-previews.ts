@@ -19,7 +19,7 @@ export function useInstagramPreviewsBulk(vendorIds: string[]) {
       const rows = await fn({ data: { vendorIds } });
       // Seed per-vendor cache so the detail drawer renders instantly.
       rows.forEach((p) => {
-        qc.setQueryData(["instagram-preview", p.vendor_id, p.handle], p);
+        qc.setQueryData(["instagram-preview", p.vendor_id, normalizeInstagramHandle(p.handle)], p);
       });
       return rows;
     },
