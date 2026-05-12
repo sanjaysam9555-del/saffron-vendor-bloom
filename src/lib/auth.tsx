@@ -105,18 +105,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fallbackName = fallbackDisplayName(s);
     const promise = (async () => {
       try {
-        const resolved = await resolveRole(s);
+        const { role: resolved, displayName: resolvedName } = await resolveAccess(s);
         setRole(resolved);
-        setDisplayName((prev) => prev ?? fallbackName);
+        setDisplayName(resolvedName ?? fallbackName);
         loadedForRef.current = s.user.id;
-        writeCache({ userId: s.user.id, role: resolved, displayName: fallbackName });
-        // Background: upgrade display name from profiles table.
-        void refreshDisplayName(s.user.id).then((name) => {
-          if (name) {
-            setDisplayName(name);
-            writeCache({ userId: s.user.id, role: resolved, displayName: name });
-          }
-        });
+        writeCache({ userId: s.user.id, role: resolved, displayName: resolvedName ?? fallbackName });
         return resolved;
       } catch (err) {
         console.error("Access resolution failed", err);
