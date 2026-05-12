@@ -142,6 +142,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  useEffect(() => { installChunkRecovery(); }, []);
   const [client] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
