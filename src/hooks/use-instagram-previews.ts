@@ -32,8 +32,9 @@ export function useInstagramPreviewsBulk(vendorIds: string[]) {
 
 export function useEnsureInstagramPreview(vendorId: string, handle: string | null | undefined) {
   const fn = useServerFn(ensureVendorInstagramPreview);
+  const normalized = normalizeInstagramHandle(handle);
   return useQuery({
-    queryKey: ["instagram-preview", vendorId, handle],
+    queryKey: ["instagram-preview", vendorId, normalized],
     queryFn: async () => {
       if (!handle) return null;
       return fn({ data: { vendorId, handle } });
