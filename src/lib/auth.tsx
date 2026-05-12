@@ -141,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRole(null);
         setDisplayName(null);
         setLoading(false);
+        setRoleResolutionFailed(false);
       }
     });
 
