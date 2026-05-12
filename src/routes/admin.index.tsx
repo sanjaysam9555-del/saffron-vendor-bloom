@@ -527,8 +527,7 @@ function VendorCardGrid({
     () => vendors.filter((v) => v.instagram_handle).map((v) => v.id),
     [vendors],
   );
-  const idle = useIdleReady();
-  const { map: previewMap } = useInstagramPreviewsBulk(ids, { enabled: idle });
+  const { map: previewMap } = useInstagramPreviewsBulk(ids);
   return (
     <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-fade-in">
       {vendors.map((v) => (
