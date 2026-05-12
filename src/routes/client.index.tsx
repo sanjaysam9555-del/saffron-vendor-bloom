@@ -14,6 +14,7 @@ import { ClientVendorDetail } from "@/components/client/ClientVendorDetail";
 import { ClientBoardView } from "@/components/client/ClientBoardView";
 import { ClientVendorTable } from "@/components/client/ClientVendorTable";
 import type { ClientVendor } from "@/lib/project-types";
+import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
 
 type ViewMode = "grid" | "board" | "table";
 const VIEW_STORAGE_KEY = "saffron.client.viewMode";
@@ -230,11 +231,7 @@ function ClientPortalPage() {
           ) : filtered.length === 0 ? (
             <EmptyState message="No vendors match your filters." />
           ) : view === "grid" ? (
-            <div className="grid gap-3 sm:gap-4 animate-fade-in sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filtered.map((v) => (
-                <ClientVendorCard key={v.id} vendor={v} onView={() => setDetail(v)} />
-              ))}
-            </div>
+            <ClientVendorGrid vendors={filtered} onView={(v) => setDetail(v)} />
           ) : view === "board" ? (
             <div className="animate-fade-in">
               <ClientBoardView vendors={filtered} onView={(v) => setDetail(v)} />
