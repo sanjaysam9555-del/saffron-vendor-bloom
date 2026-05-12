@@ -19,7 +19,7 @@ export function ClientGate({ children }: { children: ReactNode }) {
     }
   }, [initialized, session, role, roleResolutionFailed, navigate]);
 
-  if (session && role === "client") {
+  if (session && (role === "client" || !roleResolutionFailed)) {
     return <>{children}</>;
   }
 
