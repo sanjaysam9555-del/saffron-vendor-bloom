@@ -10,61 +10,28 @@ export function AuthGate({
   children: ReactNode;
   requireAdmin?: boolean;
 }) {
-  const { session, role, initialized, roleResolutionFailed, refresh } = useAuth();
+  const { session, role, initialized } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!initialized) return;
     if (!session) {
-      navigate({ to: "/" });
+      navigate({ to: "/login", replace: true });
       return;
     }
-    if (!role && roleResolutionFailed) return;
     if (role === "client") {
-      navigate({ to: "/client" });
+      navigate({ to: "/client", replace: true });
       return;
     }
     if (role && requireAdmin && role !== "admin") {
-      navigate({ to: "/admin" });
+      navigate({ to: "/admin", replace: true });
     }
-  }, [initialized, session, role, roleResolutionFailed, requireAdmin, navigate]);
+  }, [initialized, session, role, requireAdmin, navigate]);
 
   const isStaff = role === "admin" || role === "employee";
   const passes = requireAdmin ? role === "admin" : isStaff;
 
-  // Fast path: any active staff session can render immediately. Admin-only
-  // pages still wait for the admin role below.
-  if (session && !requireAdmin && !roleResolutionFailed) {
-    return <>{children}</>;
-  }
-
   if (session && role && passes) return <>{children}</>;
 
-  if (initialized && session && roleResolutionFailed) {
-    return <AccessRetry onRetry={() => void refresh()} />;
-  }
-
-  if (!initialized || !session || !role || !passes) {
-    return <BrandSplash />;
-  }
-  return <>{children}</>;
-}
-
-function AccessRetry({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] px-6">
-      <div className="max-w-md rounded-xl border border-[var(--border)] bg-white p-6 text-center shadow-sm">
-        <h1 className="font-display text-2xl text-[var(--charcoal)]">Access is still loading</h1>
-        <p className="mt-2 text-sm text-[var(--charcoal)]/65">
-          Your sign-in worked, but we couldn't load your dashboard access yet.
-        </p>
-        <button
-          onClick={onRetry}
-          className="mt-5 rounded-md bg-[var(--terracotta)] px-4 py-2 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
-        >
-          Try again
-        </button>
-      </div>
-    </div>
-  );
+  return <BrandSplash />;
 }

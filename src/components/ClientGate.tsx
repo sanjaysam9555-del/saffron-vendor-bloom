@@ -4,47 +4,21 @@ import { useAuth } from "@/lib/auth";
 import { BrandSplash } from "@/components/BrandSplash";
 
 export function ClientGate({ children }: { children: ReactNode }) {
-  const { session, role, initialized, roleResolutionFailed, refresh } = useAuth();
+  const { session, role, initialized } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!initialized) return;
     if (!session) {
-      navigate({ to: "/" });
+      navigate({ to: "/login", replace: true });
       return;
     }
     if (role && role !== "client") {
-      navigate({ to: "/admin" });
-      return;
+      navigate({ to: "/admin", replace: true });
     }
-  }, [initialized, session, role, roleResolutionFailed, navigate]);
+  }, [initialized, session, role, navigate]);
 
-  if (session && (role === "client" || !roleResolutionFailed)) {
-    return <>{children}</>;
-  }
-
-  if (initialized && session && roleResolutionFailed) {
-    return <AccessRetry onRetry={() => void refresh()} />;
-  }
+  if (session && role === "client") return <>{children}</>;
 
   return <BrandSplash />;
-}
-
-function AccessRetry({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] px-6">
-      <div className="max-w-md rounded-xl border border-[var(--border)] bg-white p-6 text-center shadow-sm">
-        <h1 className="font-display text-2xl text-[var(--charcoal)]">Access is still loading</h1>
-        <p className="mt-2 text-sm text-[var(--charcoal)]/65">
-          Your sign-in worked, but we couldn't load your client portal access yet.
-        </p>
-        <button
-          onClick={onRetry}
-          className="mt-5 rounded-md bg-[var(--terracotta)] px-4 py-2 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
-        >
-          Try again
-        </button>
-      </div>
-    </div>
-  );
 }

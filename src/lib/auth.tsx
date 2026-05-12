@@ -15,7 +15,7 @@ interface AuthState {
   initialized: boolean;
   /** True when we tried to fetch role for the current session and failed with no usable cache. */
   roleResolutionFailed: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: string | null; role: AppRole | null }>;
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: string | null }>;
   signOut: (opts?: { silent?: boolean }) => Promise<void>;
   refresh: () => Promise<void>;
@@ -299,22 +299,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error) {
           setLoading(false);
           notifyError(error.message, "Could not sign in.");
-          return { error: error.message };
+          return { error: error.message, role: null };
         }
         applySession(data?.session ?? null);
+        let resolvedRole: AppRole | null = null;
         if (data?.user) {
           loadedForUserRef.current = null;
-          void loadProfile(data.user.id);
+          resolvedRole = await loadProfile(data.user.id);
         } else {
           setLoading(false);
         }
         notifySuccess("Welcome back", { description: "Signed in successfully." });
-        return { error: null };
+        return { error: null, role: resolvedRole };
       } catch (error) {
         console.error("Sign in failed", error);
         setLoading(false);
         notifyError(error, "Could not complete sign in. Please try again.");
-        return { error: "Could not complete sign in. Please try again." };
+        return { error: "Could not complete sign in. Please try again.", role: null };
       }
     },
     signUp: async (email, password, displayName) => {
