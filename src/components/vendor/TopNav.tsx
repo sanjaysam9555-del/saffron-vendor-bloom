@@ -48,13 +48,6 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
             <span className="hidden sm:inline">Add Vendor</span>
           </button>
 
-          <Link
-            to="/admin/submissions"
-            className="inline-flex items-center rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:order-1"
-          >
-            Submissions
-          </Link>
-
           <div className="sm:order-3">
             <UserMenu />
           </div>
