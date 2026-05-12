@@ -62,7 +62,7 @@ export const markNotificationRead = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .maybeSingle();
     if (readErr) throw new Error(readErr.message);
-    const next = { ...(row?.read_by ?? {}), [userId]: new Date().toISOString() };
+    const next = { ...((row?.read_by as Record<string, string> | null) ?? {}), [userId]: new Date().toISOString() };
     const { error } = await supabaseAdmin
       .from("staff_notifications")
       .update({ read_by: next })
@@ -84,7 +84,7 @@ export const markAllNotificationsRead = createServerFn({ method: "POST" })
     const stamp = new Date().toISOString();
     const updates = (rows ?? []).filter((r: any) => !r.read_by || !r.read_by[userId]);
     for (const r of updates) {
-      const next = { ...(r.read_by ?? {}), [userId]: stamp };
+      const next = { ...((r.read_by as Record<string, string> | null) ?? {}), [userId]: stamp };
       await supabaseAdmin.from("staff_notifications").update({ read_by: next }).eq("id", r.id);
     }
     return { ok: true, updated: updates.length };
