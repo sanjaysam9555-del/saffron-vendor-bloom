@@ -224,16 +224,6 @@ function DashboardPage() {
               </label>
               {isAdmin && (
                 <button
-                  onClick={() => setIgSyncOpen(true)}
-                  className="hidden items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--charcoal)]/75 transition-colors hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:inline-flex"
-                  title="Fetch Instagram previews for vendors that are missing or stale"
-                >
-                  <Instagram className="h-3.5 w-3.5" />
-                  Sync Instagram
-                </button>
-              )}
-              {isAdmin && (
-                <button
                   onClick={() => {
                     if (bulkMode) exitBulkMode();
                     else setBulkMode(true);
