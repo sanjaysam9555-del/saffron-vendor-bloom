@@ -3,9 +3,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 
 /**
- * Gates staff routes. While auth is initializing or access is being
- * resolved, shows a small inline loader (never a full-screen splash that
- * can hang the entire app). When access is denied, redirects to "/".
+ * Gates staff routes. Renders children optimistically as soon as we have a
+ * session + staff role (even from cache) so navigations don't flash a loader.
+ * Background revalidation in AuthProvider keeps the role fresh.
  */
 export function AuthGate({
   children,

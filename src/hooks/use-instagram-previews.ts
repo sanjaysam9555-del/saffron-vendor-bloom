@@ -12,10 +12,11 @@ import {
 } from "@/server/instagram-preview.functions";
 import { normalizeInstagramHandle } from "@/lib/instagram";
 
-export function useInstagramPreviewsBulk(vendorIds: string[]) {
+export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enabled?: boolean }) {
   const fn = useServerFn(getVendorInstagramPreviewsBulk);
   const qc = useQueryClient();
   const sortedKey = [...vendorIds].sort().join(",");
+  const enabled = (options?.enabled ?? true) && vendorIds.length > 0;
   const query = useQuery({
     queryKey: ["instagram-previews-bulk", sortedKey],
     queryFn: async () => {
@@ -27,7 +28,9 @@ export function useInstagramPreviewsBulk(vendorIds: string[]) {
       });
       return rows;
     },
-    staleTime: 5 * 60 * 1000,
+    enabled,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
   });
   const map = new Map<string, VendorInstagramPreview>();
   (query.data ?? []).forEach((p) => map.set(p.vendor_id, p));

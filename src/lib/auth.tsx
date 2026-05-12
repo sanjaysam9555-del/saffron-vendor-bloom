@@ -50,37 +50,56 @@ function isStaffEmail(email: string | null | undefined): boolean {
   return !!email && email.toLowerCase().endsWith("@" + STAFF_DOMAIN);
 }
 
+function fallbackDisplayName(session: Session): string | null {
+  const meta = (session.user.user_metadata ?? {}) as Record<string, unknown>;
+  const fromMeta = typeof meta.display_name === "string" ? meta.display_name : null;
+  if (fromMeta) return fromMeta;
+  const email = session.user.email ?? "";
+  return email ? email.split("@")[0] : null;
+}
+
 /**
- * Fast access resolution:
- * - Staff-domain email → only check user_roles for admin/employee.
- * - Other email → only check project_clients to confirm client access.
- * Single attempt, fails fast — callers handle retry via UI.
+ * Resolve role only — single round-trip. Display name comes from cache or
+ * user_metadata so we don't pay for a profiles lookup on the hot login path.
  */
-async function resolveAccess(session: Session): Promise<{ role: AppRole | null; displayName: string | null }> {
+async function resolveRole(session: Session): Promise<AppRole | null> {
   const userId = session.user.id;
   const email = session.user.email ?? "";
   const staff = isStaffEmail(email);
 
   if (staff) {
-    const [{ data: roleRow, error: roleError }, { data: profileRow }] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", userId).in("role", ["admin", "employee"]).maybeSingle(),
-      supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle(),
-    ]);
-    if (roleError) throw new Error(roleError.message);
-    const role = (roleRow?.role as AppRole | undefined) ?? null;
-    return { role, displayName: profileRow?.display_name ?? null };
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .in("role", ["admin", "employee"])
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data?.role as AppRole | undefined) ?? null;
   }
 
-  // Non-staff: client.
-  const [{ data: clientRow, error: clientError }, { data: profileRow }] = await Promise.all([
-    supabase.from("project_clients").select("id").eq("user_id", userId).limit(1).maybeSingle(),
-    supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle(),
-  ]);
-  if (clientError) throw new Error(clientError.message);
-  return {
-    role: clientRow ? ("client" as AppRole) : null,
-    displayName: profileRow?.display_name ?? null,
-  };
+  const { data, error } = await supabase
+    .from("project_clients")
+    .select("id")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? ("client" as AppRole) : null;
+}
+
+/** Background refresh of display name. Errors are non-fatal. */
+async function refreshDisplayName(userId: string): Promise<string | null> {
+  try {
+    const { data } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", userId)
+      .maybeSingle();
+    return data?.display_name ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -90,32 +109,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const loadedForRef = useRef<string | null>(null);
+  const inflightRef = useRef<Promise<AppRole | null> | null>(null);
 
-  const loadAccess = async (s: Session): Promise<AppRole | null> => {
-    setLoading(true);
-    try {
-      const access = await resolveAccess(s);
-      setRole(access.role);
-      setDisplayName(access.displayName);
-      loadedForRef.current = s.user.id;
-      writeCache({ userId: s.user.id, role: access.role, displayName: access.displayName });
-      return access.role;
-    } catch (err) {
-      console.error("Access resolution failed", err);
-      // Fall back to cache so the user isn't stranded on a transient error.
-      const cached = readCache();
-      if (cached && cached.userId === s.user.id && cached.role) {
-        setRole(cached.role);
-        setDisplayName(cached.displayName);
-        loadedForRef.current = s.user.id;
-        return cached.role;
-      }
-      setRole(null);
-      setDisplayName(null);
-      return null;
-    } finally {
-      setLoading(false);
+  const loadAccess = (s: Session): Promise<AppRole | null> => {
+    if (inflightRef.current && loadedForRef.current === s.user.id) {
+      return inflightRef.current;
     }
+    setLoading(true);
+    const fallbackName = fallbackDisplayName(s);
+    const promise = (async () => {
+      try {
+        const resolved = await resolveRole(s);
+        setRole(resolved);
+        setDisplayName((prev) => prev ?? fallbackName);
+        loadedForRef.current = s.user.id;
+        writeCache({ userId: s.user.id, role: resolved, displayName: fallbackName });
+        // Background: upgrade display name from profiles table.
+        void refreshDisplayName(s.user.id).then((name) => {
+          if (name) {
+            setDisplayName(name);
+            writeCache({ userId: s.user.id, role: resolved, displayName: name });
+          }
+        });
+        return resolved;
+      } catch (err) {
+        console.error("Access resolution failed", err);
+        const cached = readCache();
+        if (cached && cached.userId === s.user.id && cached.role) {
+          setRole(cached.role);
+          setDisplayName(cached.displayName);
+          loadedForRef.current = s.user.id;
+          return cached.role;
+        }
+        setRole(null);
+        return null;
+      } finally {
+        setLoading(false);
+        inflightRef.current = null;
+      }
+    })();
+    inflightRef.current = promise;
+    return promise;
   };
 
   useEffect(() => {
@@ -125,15 +159,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!mounted) return;
       setSession(s);
       if (s?.user) {
-        // Hydrate from cache for instant UI; still revalidate in background.
         const cached = readCache();
         if (cached && cached.userId === s.user.id && cached.role) {
           setRole(cached.role);
           setDisplayName(cached.displayName);
         }
         if (loadedForRef.current !== s.user.id) {
-          // Defer to next tick to avoid running inside the auth callback.
-          setTimeout(() => { if (mounted) void loadAccess(s); }, 0);
+          void loadAccess(s);
         }
       } else {
         loadedForRef.current = null;
@@ -197,13 +229,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
           return { error: "Sign in failed. Please try again.", role: null };
         }
+        // Mark this user as "being loaded by signIn" so the auth listener
+        // skips its own duplicate loadAccess() call.
+        loadedForRef.current = data.session.user.id;
         setSession(data.session);
-        loadedForRef.current = null;
+        // Seed display name immediately from metadata to avoid a flash.
+        setDisplayName((prev) => prev ?? fallbackDisplayName(data.session));
+
         const resolvedRole = await loadAccess(data.session);
 
         if (!resolvedRole) {
-          // Account exists but has no access role assigned. Sign them out so
-          // they don't sit on a half-authenticated state.
           await supabase.auth.signOut();
           return {
             error:
@@ -212,7 +247,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           };
         }
 
-        // Enforce: staff roles must use a saffronevents.in email.
         if ((resolvedRole === "admin" || resolvedRole === "employee") && !isStaffEmail(trimmed)) {
           await supabase.auth.signOut();
           return {

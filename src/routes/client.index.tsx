@@ -14,6 +14,7 @@ import { ClientBoardView } from "@/components/client/ClientBoardView";
 import { ClientVendorTable } from "@/components/client/ClientVendorTable";
 import type { ClientVendor } from "@/lib/project-types";
 import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
+import { useIdleReady } from "@/hooks/useVendorData";
 
 type ViewMode = "grid" | "board" | "table";
 const VIEW_STORAGE_KEY = "saffron.client.viewMode";
@@ -39,31 +40,32 @@ function ClientPortalPage() {
 
   useEffect(() => {
     if (!projectId) return;
+    let timer: number | undefined;
+    const queue = (keys: string[][]) => {
+      if (timer) window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        for (const k of keys) qc.invalidateQueries({ queryKey: k });
+      }, 250);
+    };
+    const invalidateProject = () => queue([["my-project"]]);
+    const invalidateProjectAndQuotes = () =>
+      queue([["my-project"], ["client-vendor-quote", projectId]]);
+    const invalidateProjectAndComments = () =>
+      queue([["my-project"], ["vendor-comments"]]);
+
     const channel = supabase
       .channel(`client-live-${projectId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quotes", filter: `project_id=eq.${projectId}` }, () => {
-        qc.invalidateQueries({ queryKey: ["my-project"] });
-        qc.invalidateQueries({ queryKey: ["client-vendor-quote", projectId] });
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quote_files" }, () => {
-        qc.invalidateQueries({ queryKey: ["my-project"] });
-        qc.invalidateQueries({ queryKey: ["client-vendor-quote", projectId] });
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_comments", filter: `project_id=eq.${projectId}` }, () => {
-        qc.invalidateQueries({ queryKey: ["my-project"] });
-        qc.invalidateQueries({ queryKey: ["vendor-comments"] });
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendors", filter: `project_id=eq.${projectId}` }, () => {
-        qc.invalidateQueries({ queryKey: ["my-project"] });
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "client_vendor_status" }, () => {
-        qc.invalidateQueries({ queryKey: ["my-project"] });
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "vendors" }, () => {
-        qc.invalidateQueries({ queryKey: ["my-project"] });
-      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quotes", filter: `project_id=eq.${projectId}` }, invalidateProjectAndQuotes)
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quote_files" }, invalidateProjectAndQuotes)
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_comments", filter: `project_id=eq.${projectId}` }, invalidateProjectAndComments)
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendors", filter: `project_id=eq.${projectId}` }, invalidateProject)
+      .on("postgres_changes", { event: "*", schema: "public", table: "client_vendor_status" }, invalidateProject)
+      .on("postgres_changes", { event: "*", schema: "public", table: "vendors" }, invalidateProject)
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (timer) window.clearTimeout(timer);
+      supabase.removeChannel(channel);
+    };
   }, [projectId, qc]);
 
   const [search, setSearch] = useState("");
@@ -265,7 +267,8 @@ function EmptyState({ message }: { message: string }) {
 
 function ClientVendorGrid({ vendors, onView }: { vendors: ClientVendor[]; onView: (v: ClientVendor) => void }) {
   const ids = useMemo(() => vendors.filter((v) => v.instagram_handle).map((v) => v.id), [vendors]);
-  const { map: previewMap } = useInstagramPreviewsBulk(ids);
+  const idle = useIdleReady();
+  const { map: previewMap } = useInstagramPreviewsBulk(ids, { enabled: idle });
   return (
     <div className="grid gap-3 sm:gap-4 animate-fade-in sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {vendors.map((v) => (

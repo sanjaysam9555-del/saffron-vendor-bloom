@@ -22,10 +22,9 @@ export function UnifiedLoginForm({ compact = false }: { compact?: boolean } = {}
   const navigate = useNavigate();
   const [err, setErr] = useState<string | null>(null);
   const [btnState, setBtnState] = useState<SignInButtonState>("idle");
-  const [hydrated, setHydrated] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    setHydrated(true);
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
     if (url.searchParams.has("email") || url.searchParams.has("password")) {
@@ -35,12 +34,14 @@ export function UnifiedLoginForm({ compact = false }: { compact?: boolean } = {}
     }
   }, []);
 
-  // If already signed in (e.g. returning visitor), send straight to dashboard.
+  // If a returning visitor lands here already signed in, send straight to dashboard.
+  // Skip while we're actively submitting so the explicit navigate after signIn wins.
   useEffect(() => {
+    if (submitting) return;
     if (!initialized || !session) return;
     const dest = destinationFor(role);
     if (dest) navigate({ to: dest, replace: true });
-  }, [initialized, session, role, navigate]);
+  }, [initialized, session, role, navigate, submitting]);
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -57,8 +58,10 @@ export function UnifiedLoginForm({ compact = false }: { compact?: boolean } = {}
     }
     setErr(null);
     setBtnState("loading");
+    setSubmitting(true);
     const res = await signIn(email, password);
     if (res.error) {
+      setSubmitting(false);
       setErr(res.error);
       setBtnState("error");
       setTimeout(() => setBtnState("idle"), SIGN_IN_ERROR_HOLD_MS);
@@ -67,6 +70,7 @@ export function UnifiedLoginForm({ compact = false }: { compact?: boolean } = {}
     setBtnState("success");
     const dest = destinationFor(res.role);
     if (dest) navigate({ to: dest, replace: true });
+    // Leave submitting=true; component will unmount on navigate.
   };
 
   return (
@@ -95,9 +99,7 @@ export function UnifiedLoginForm({ compact = false }: { compact?: boolean } = {}
             defaultValue=""
           />
           {err && <div className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{err}</div>}
-          <fieldset disabled={!hydrated} className="contents">
-            <SignInButton state={hydrated ? btnState : "loading"} />
-          </fieldset>
+          <SignInButton state={btnState} />
         </form>
       </div>
     </div>
