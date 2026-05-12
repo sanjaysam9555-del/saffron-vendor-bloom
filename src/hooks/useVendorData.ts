@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listVendors,
@@ -24,25 +24,32 @@ export function useVendors() {
     enabled: initialized && !!session?.access_token && isStaff,
   });
 
-  // Live updates: subscribe to any change on the vendors table and
-  // invalidate the cache so the dashboard reflects edits/adds/deletes
-  // made from any device without a manual refresh.
+  // Live updates: subscribe AFTER the first vendor load completes, and
+  // debounce invalidations so a burst of edits causes one refetch.
+  const ready = isStaff && !!query.data;
   useEffect(() => {
+    if (!ready) return;
+    let timer: number | undefined;
+    const invalidate = () => {
+      if (timer) window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        qc.invalidateQueries({ queryKey: ["vendors"] });
+      }, 250);
+    };
     const channel = supabase
       .channel("vendors-live")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "vendors" },
-        () => {
-          qc.invalidateQueries({ queryKey: ["vendors"] });
-        },
+        invalidate,
       )
       .subscribe();
 
     return () => {
+      if (timer) window.clearTimeout(timer);
       supabase.removeChannel(channel);
     };
-  }, [qc]);
+  }, [qc, ready]);
 
   return query;
 }
@@ -91,4 +98,28 @@ export function useVendorModals() {
     openEdit: (v: Vendor) => setState({ detail: null, formOpen: true, editing: v, prefill: null }),
     closeForm: () => setState((s) => ({ ...s, formOpen: false, editing: null, prefill: null })),
   };
+}
+
+// Defers a heavy effect to browser idle time (or a 400ms fallback) so the
+// initial paint isn't blocked by decorative work like Instagram previews.
+export function useIdleReady(): boolean {
+  const [ready, setReady] = useState(false);
+  const doneRef = useRef(false);
+  useEffect(() => {
+    if (doneRef.current) return;
+    const win = window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    };
+    const mark = () => {
+      if (doneRef.current) return;
+      doneRef.current = true;
+      setReady(true);
+    };
+    if (typeof win.requestIdleCallback === "function") {
+      win.requestIdleCallback(mark, { timeout: 1200 });
+    } else {
+      window.setTimeout(mark, 400);
+    }
+  }, []);
+  return ready;
 }
