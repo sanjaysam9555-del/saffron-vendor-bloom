@@ -144,12 +144,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Safety net: never let the app sit on the splash forever. If session
-    // restoration hasn't completed in 4s (e.g. network hang, bad refresh
-    // token, browser storage issue), unblock the gates so they can decide.
+    // Safety net: never let the app sit on the splash forever.
     const safety = window.setTimeout(() => {
       if (mounted) setInitialized(true);
-    }, 4000);
+    }, 2500);
 
     supabase.auth
       .getSession()
