@@ -32,10 +32,13 @@ export function AuthGate({
   const isStaff = role === "admin" || role === "employee";
   const passes = requireAdmin ? role === "admin" : isStaff;
 
-  // Fast path: cached role matches → render immediately.
-  if (session && role && passes) {
+  // Fast path: any active staff session can render immediately. Admin-only
+  // pages still wait for the admin role below.
+  if (session && !requireAdmin && !roleResolutionFailed) {
     return <>{children}</>;
   }
+
+  if (session && role && passes) return <>{children}</>;
 
   if (initialized && session && roleResolutionFailed) {
     return <AccessRetry onRetry={() => void refresh()} />;
