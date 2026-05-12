@@ -105,7 +105,7 @@ export function VendorCard({
             ✦ Via Form
           </span>
         )}
-        <BookedBadge vendorId={vendor.id} compact />
+        <BookedBadge vendorId={vendor.id} compact summary={bookedSummary} />
       </div>
 
       <div className="min-h-[6rem] min-w-0 space-y-1.5 overflow-hidden text-sm text-[var(--charcoal)]/75">
