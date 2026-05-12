@@ -4,11 +4,11 @@ import { useAuth } from "@/lib/auth";
 import { BrandSplash } from "@/components/BrandSplash";
 
 export function ClientGate({ children }: { children: ReactNode }) {
-  const { session, loading, role, initialized, signOut } = useAuth();
+  const { session, role, initialized, roleResolutionFailed, signOut } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!initialized || loading) return;
+    if (!initialized) return;
     if (!session) {
       navigate({ to: "/" });
       return;
@@ -17,12 +17,12 @@ export function ClientGate({ children }: { children: ReactNode }) {
       navigate({ to: "/admin" });
       return;
     }
-    // Session exists but role failed to resolve — don't sit on the splash.
-    // Sign out and bounce home so the user can try again.
-    if (!role) {
+    // Session exists but role lookup failed — sign out and bounce home so
+    // the user can try again instead of being stranded on the splash.
+    if (!role && roleResolutionFailed) {
       void signOut().finally(() => navigate({ to: "/" }));
     }
-  }, [initialized, loading, session, role, navigate, signOut]);
+  }, [initialized, session, role, roleResolutionFailed, navigate, signOut]);
 
   if (session && role === "client") {
     return <>{children}</>;
