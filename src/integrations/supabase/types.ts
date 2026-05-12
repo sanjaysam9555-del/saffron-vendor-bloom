@@ -194,6 +194,48 @@ export type Database = {
         }
         Relationships: []
       }
+      instagram_backfill_jobs: {
+        Row: {
+          errors: number
+          id: string
+          last_error: string | null
+          ok: number
+          pending_vendor_ids: string[]
+          processed: number
+          started_at: string
+          started_by: string | null
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          errors?: number
+          id?: string
+          last_error?: string | null
+          ok?: number
+          pending_vendor_ids?: string[]
+          processed?: number
+          started_at?: string
+          started_by?: string | null
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          errors?: number
+          id?: string
+          last_error?: string | null
+          ok?: number
+          pending_vendor_ids?: string[]
+          processed?: number
+          started_at?: string
+          started_by?: string | null
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon, ArrowUpDown, X } from "lucide-react";
+import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon, ArrowUpDown, X, Instagram } from "lucide-react";
 import { toast } from "sonner";
 
 import { TopNav } from "@/components/vendor/TopNav";
@@ -16,6 +16,7 @@ import { useAllCategories } from "@/lib/categories";
 import { AuthGate } from "@/components/AuthGate";
 import { useIsAdmin } from "@/lib/auth";
 import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
+import { BulkInstagramSyncDialog } from "@/components/vendor/BulkInstagramSyncDialog";
 
 type SortKey = "date_added_desc" | "date_added_asc" | "updated_desc" | "name_asc" | "name_desc";
 
@@ -65,6 +66,7 @@ function DashboardPage() {
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [igSyncOpen, setIgSyncOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -222,6 +224,16 @@ function DashboardPage() {
               </label>
               {isAdmin && (
                 <button
+                  onClick={() => setIgSyncOpen(true)}
+                  className="hidden items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--charcoal)]/75 transition-colors hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:inline-flex"
+                  title="Fetch Instagram previews for vendors that are missing or stale"
+                >
+                  <Instagram className="h-3.5 w-3.5" />
+                  Sync Instagram
+                </button>
+              )}
+              {isAdmin && (
+                <button
                   onClick={() => {
                     if (bulkMode) exitBulkMode();
                     else setBulkMode(true);
@@ -343,6 +355,8 @@ function DashboardPage() {
           exitBulkMode();
         }}
       />
+
+      <BulkInstagramSyncDialog open={igSyncOpen} onOpenChange={setIgSyncOpen} />
 
       <VendorForm
         open={modals.state.formOpen}
