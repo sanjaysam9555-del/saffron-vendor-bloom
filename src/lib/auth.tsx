@@ -184,6 +184,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return run;
   };
 
+  const applySession = (s: Session | null) => {
+    sessionRef.current = s;
+    setSession(s);
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -194,7 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === "TOKEN_REFRESHED" && !s) {
         writeCachedAccess(null);
       }
-      setSession(s);
+      applySession(s);
       if (s?.user) {
         // Hydrate from cache immediately so admin-gated UI renders without waiting.
         const cached = readCachedAccess();
@@ -229,7 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .getSession()
       .then(({ data: { session: s } }) => {
         if (!mounted) return;
-        setSession(s);
+        applySession(s);
         if (s?.user) {
           const cached = readCachedAccess();
           if (cached && cached.userId === s.user.id && cached.role) {
@@ -258,7 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         if (!mounted) return;
         writeCachedAccess(null);
-        setSession(null);
+        applySession(null);
         setRole(null);
         setDisplayName(null);
         setLoading(false);
@@ -296,7 +301,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           notifyError(error.message, "Could not sign in.");
           return { error: error.message };
         }
-        setSession(data?.session ?? null);
+        applySession(data?.session ?? null);
         if (data?.user) {
           loadedForUserRef.current = null;
           const nextRole = await loadProfile(data.user.id);
@@ -336,7 +341,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await supabase.auth.signOut();
         loadedForUserRef.current = null;
         writeCachedAccess(null);
-        setSession(null);
+        applySession(null);
         setRole(null);
         setDisplayName(null);
         setRoleResolutionFailed(false);
