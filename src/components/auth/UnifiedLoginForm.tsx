@@ -43,14 +43,14 @@ export function UnifiedLoginForm({ compact = false }: { compact?: boolean } = {}
     if (dest) navigate({ to: dest, replace: true });
   }, [initialized, session, role, navigate, submitting]);
 
-  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const doSubmit = async () => {
     if (btnState === "loading" || btnState === "success") return;
-    const fd = new FormData(e.currentTarget);
-    const email = String(fd.get("email") ?? "").trim();
-    const password = String(fd.get("password") ?? "");
-    if (!email || !password) {
+    const e = email.trim();
+    const p = password;
+    if (!e || !p) {
       setErr("Please enter your email and password.");
       setBtnState("error");
       setTimeout(() => setBtnState("idle"), SIGN_IN_ERROR_HOLD_MS);
@@ -59,18 +59,37 @@ export function UnifiedLoginForm({ compact = false }: { compact?: boolean } = {}
     setErr(null);
     setBtnState("loading");
     setSubmitting(true);
-    const res = await signIn(email, password);
-    if (res.error) {
+    try {
+      const res = await signIn(e, p);
+      if (res.error) {
+        setSubmitting(false);
+        setErr(res.error);
+        setBtnState("error");
+        setTimeout(() => setBtnState("idle"), SIGN_IN_ERROR_HOLD_MS);
+        return;
+      }
+      setBtnState("success");
+      const dest = destinationFor(res.role);
+      if (dest) navigate({ to: dest, replace: true });
+    } catch (err) {
       setSubmitting(false);
-      setErr(res.error);
+      setErr(err instanceof Error ? err.message : "Sign in failed. Please try again.");
       setBtnState("error");
       setTimeout(() => setBtnState("idle"), SIGN_IN_ERROR_HOLD_MS);
-      return;
     }
-    setBtnState("success");
-    const dest = destinationFor(res.role);
-    if (dest) navigate({ to: dest, replace: true });
-    // Leave submitting=true; component will unmount on navigate.
+  };
+
+  const onFormSubmit = (ev: React.FormEvent<HTMLFormElement>) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    void doSubmit();
+  };
+
+  const onKeyDown = (ev: React.KeyboardEvent<HTMLInputElement>) => {
+    if (ev.key === "Enter") {
+      ev.preventDefault();
+      void doSubmit();
+    }
   };
 
   return (
@@ -81,14 +100,16 @@ export function UnifiedLoginForm({ compact = false }: { compact?: boolean } = {}
           Use the email and password shared by your Saffron planner.
         </p>
 
-        <form onSubmit={submit} method="post" action="/" className="mt-4 space-y-3" noValidate>
+        <form onSubmit={onFormSubmit} className="mt-4 space-y-3" noValidate>
           <input
             className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--terracotta)] focus:outline-none"
             type="email"
             name="email"
             placeholder="Email"
             autoComplete="username"
-            defaultValue=""
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={onKeyDown}
           />
           <input
             className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--terracotta)] focus:outline-none"
@@ -96,10 +117,12 @@ export function UnifiedLoginForm({ compact = false }: { compact?: boolean } = {}
             name="password"
             placeholder="Password"
             autoComplete="current-password"
-            defaultValue=""
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={onKeyDown}
           />
           {err && <div className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{err}</div>}
-          <SignInButton state={btnState} />
+          <SignInButton state={btnState} onClick={() => void doSubmit()} />
         </form>
       </div>
     </div>

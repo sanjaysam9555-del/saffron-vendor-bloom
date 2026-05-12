@@ -164,8 +164,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRole(cached.role);
           setDisplayName(cached.displayName);
         }
+        // Defer Supabase queries OUT of the auth callback to avoid the
+        // gotrue-js internal lock deadlocking on nested supabase calls.
         if (loadedForRef.current !== s.user.id) {
-          void loadAccess(s);
+          setTimeout(() => {
+            if (!mounted) return;
+            if (loadedForRef.current !== s.user.id) void loadAccess(s);
+          }, 0);
         }
       } else {
         loadedForRef.current = null;

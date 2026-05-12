@@ -7,11 +7,20 @@ export type SignInButtonState = "idle" | "loading" | "success" | "error";
 export const SIGN_IN_SUCCESS_HOLD_MS = 700;
 export const SIGN_IN_ERROR_HOLD_MS = 1600;
 
-export function SignInButton({ state }: { state: SignInButtonState }) {
+export function SignInButton({
+  state,
+  onClick,
+}: {
+  state: SignInButtonState;
+  onClick?: () => void;
+}) {
   const disabled = state === "loading" || state === "success";
   return (
     <button
-      type="submit"
+      // type=button + explicit onClick so submission never depends on the
+      // browser's native form-submit fallback (which would refresh the page).
+      type="button"
+      onClick={onClick}
       disabled={disabled}
       data-state={state}
       className={`relative w-full overflow-hidden rounded-md px-4 py-2 text-sm font-medium text-[var(--cream)] transition-colors duration-300 disabled:opacity-100 ${
