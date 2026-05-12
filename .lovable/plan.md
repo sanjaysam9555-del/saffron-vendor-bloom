@@ -1,26 +1,52 @@
-# Card height polish
+# Move admin actions onto the /admin/users page
 
-Two specific issues with the uniform-card layout:
+Today the admin "Admin" link goes to `/admin/users`, which only has the **User Management** section. Add two more sections to that page so it becomes the single home for admin tasks. **Bulk Edit** stays on the vendor list (it only makes sense in that context).
 
-1. **Instagram strip is clipped** — the strip is locked to `h-[96px]` but the actual content (avatar row + 3 thumbnail squares) needs ~140–150px at the current card width, so the bottom of the thumbnails is cut off and the "No Instagram preview" placeholder makes the card slightly shorter than ones with real previews.
-2. **Empty space under the vendor name** — the title reserves `min-h-[2.5rem]` to allow 2 lines, so single-line names leave a visible gap above the badges.
+## Page layout (`/admin/users`)
 
-## Fixes
+Three stacked sections, each with the same header style as today's "User Management":
 
-### 1. Right-size the Instagram strip
-In `src/components/vendor/VendorInstagramPreview.tsx` → `VendorInstagramCardStrip`:
-- Replace `h-[96px] overflow-hidden` with `min-h-[148px]` (no overflow clip) on both the populated and placeholder branches so the 3-up thumbnail grid is fully visible and both states match in height.
-- Keep the placeholder branch (`No Instagram preview`) at the same `min-h-[148px]` so cards with and without previews stay equal.
+```text
+User Management              [Create Employee]
+  (existing table)
 
-### 2. Tighten the title block
-In `src/components/vendor/VendorCard.tsx` and `src/components/client/ClientVendorCard.tsx`:
-- Change the `<h3>` from `line-clamp-2 min-h-[2.5rem]` to `line-clamp-1` and drop the `min-h-*`. Single-line truncation removes the gap and still keeps every card's title row identical in height.
-- Add `truncate` semantics by relying on `line-clamp-1` (no extra wrappers needed).
+Vendor Submissions           [View all submissions →]
+  Quick stats: total / this week / this month
+  Link to /admin/submissions
 
-That's it — no other layout changes, no token changes, no behavior changes.
+Instagram Sync               [Sync now]
+  Short description of what the sync does
+  Opens BulkInstagramSyncDialog inline
+```
+
+## Changes
+
+### 1. `src/routes/admin.users.tsx`
+- Wrap each section in a consistent `<section>` block reusing the existing header pattern (`font-display text-3xl` title + muted description + right-aligned action button).
+- Rename the page title to **Admin** (keep `User Management` as the first section heading). Update `head().meta.title` accordingly.
+- Add **Vendor Submissions** section:
+  - Fetch via existing `useVendors()` and filter `submitted_via_form` (same logic used in `admin.submissions.tsx`).
+  - Show three small stat tiles: Total / This week / This month.
+  - "View all submissions →" links to `/admin/submissions` (page stays as-is).
+- Add **Instagram Sync** section:
+  - Short copy explaining what it does.
+  - "Sync now" button opens `BulkInstagramSyncDialog` (admin-only; gated by `useAuth().role === "admin"`).
+  - Mount the dialog at the bottom of the page with local `open` state.
+
+### 2. `src/components/vendor/TopNav.tsx`
+- Remove the standalone `Submissions` link from the top header. (It is now reachable from the Admin page.)
+
+### 3. `src/routes/admin.index.tsx`
+- Remove the **Sync Instagram** button from the toolbar above the vendor list (lines ~225–234).
+- Keep the **Bulk Edit** button exactly where it is — Bulk Edit is a vendor-list interaction.
+- Keep `BulkInstagramSyncDialog` import + state out of this file (no longer needed); the dialog lives on `/admin/users` now.
+
+### 4. No changes
+- `admin.submissions.tsx` keeps working unchanged — it is still the destination for the new "View all submissions" link.
+- `BulkInstagramSyncDialog`, `BulkEditDialog`, `BulkActionBar` are untouched.
+- No backend, schema, or routing changes.
 
 ## Files
-
-- `src/components/vendor/VendorInstagramPreview.tsx` — strip height + remove overflow clip.
-- `src/components/vendor/VendorCard.tsx` — title clamp.
-- `src/components/client/ClientVendorCard.tsx` — title clamp.
+- `src/routes/admin.users.tsx` — add Submissions and Instagram Sync sections.
+- `src/components/vendor/TopNav.tsx` — remove Submissions link.
+- `src/routes/admin.index.tsx` — remove Sync Instagram button (keep Bulk Edit).
