@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
+import { getCurrentUserAccess } from "@/server/auth.functions";
 
 export type AppRole = "admin" | "employee" | "client";
 
@@ -59,48 +60,20 @@ function fallbackDisplayName(session: Session): string | null {
 }
 
 /**
- * Resolve role only — single round-trip. Display name comes from cache or
- * user_metadata so we don't pay for a profiles lookup on the hot login path.
+ * Resolve role + display name via the server-side admin resolver. This
+ * bypasses browser RLS timing/race issues and works the same for staff
+ * and clients.
  */
-async function resolveRole(session: Session): Promise<AppRole | null> {
-  const userId = session.user.id;
-  const email = session.user.email ?? "";
-  const staff = isStaffEmail(email);
-
-  if (staff) {
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .in("role", ["admin", "employee"])
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    return (data?.role as AppRole | undefined) ?? null;
-  }
-
-  const { data, error } = await supabase
-    .from("project_clients")
-    .select("id")
-    .eq("user_id", userId)
-    .limit(1)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return data ? ("client" as AppRole) : null;
+async function resolveAccess(
+  session: Session,
+): Promise<{ role: AppRole | null; displayName: string | null }> {
+  const access = await getCurrentUserAccess();
+  return {
+    role: (access?.role as AppRole | null) ?? null,
+    displayName: access?.displayName ?? fallbackDisplayName(session),
+  };
 }
 
-/** Background refresh of display name. Errors are non-fatal. */
-async function refreshDisplayName(userId: string): Promise<string | null> {
-  try {
-    const { data } = await supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("user_id", userId)
-      .maybeSingle();
-    return data?.display_name ?? null;
-  } catch {
-    return null;
-  }
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -119,18 +92,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fallbackName = fallbackDisplayName(s);
     const promise = (async () => {
       try {
-        const resolved = await resolveRole(s);
+        const { role: resolved, displayName: resolvedName } = await resolveAccess(s);
         setRole(resolved);
-        setDisplayName((prev) => prev ?? fallbackName);
+        setDisplayName(resolvedName ?? fallbackName);
         loadedForRef.current = s.user.id;
-        writeCache({ userId: s.user.id, role: resolved, displayName: fallbackName });
-        // Background: upgrade display name from profiles table.
-        void refreshDisplayName(s.user.id).then((name) => {
-          if (name) {
-            setDisplayName(name);
-            writeCache({ userId: s.user.id, role: resolved, displayName: name });
-          }
-        });
+        writeCache({ userId: s.user.id, role: resolved, displayName: resolvedName ?? fallbackName });
         return resolved;
       } catch (err) {
         console.error("Access resolution failed", err);

@@ -20,12 +20,11 @@ export const getCurrentUserAccess = createServerFn({ method: "GET" })
     const email = userData.user.email?.toLowerCase() ?? "";
 
     try {
-      const [{ data: roleRow, error: roleError }, { data: profileRow, error: profileError }, { data: clientRow, error: clientError }] = await Promise.all([
+      const [{ data: roleRows, error: roleError }, { data: profileRow, error: profileError }, { data: clientRow, error: clientError }] = await Promise.all([
         supabaseAdmin
           .from("user_roles")
           .select("role")
-          .eq("user_id", userId)
-          .maybeSingle(),
+          .eq("user_id", userId),
         supabaseAdmin
           .from("profiles")
           .select("display_name")
@@ -44,7 +43,21 @@ export const getCurrentUserAccess = createServerFn({ method: "GET" })
       if (clientError) console.warn("Unable to load client access", clientError.message);
 
       const fallback = knownStaffEmails.get(email);
-      const role = roleRow?.role ?? fallback?.role ?? (clientRow ? "client" : null);
+      const roles = new Set((roleRows ?? []).map((r) => r.role));
+      // Staff emails (saffronevents.in) prefer their staff role; everyone
+      // else prefers the client role so the client portal opens.
+      const isStaffEmail = email.endsWith("@saffronevents.in");
+      let role: "admin" | "employee" | "client" | null = null;
+      if (isStaffEmail) {
+        if (roles.has("admin")) role = "admin";
+        else if (roles.has("employee")) role = "employee";
+        else if (roles.has("client")) role = "client";
+      } else {
+        if (roles.has("client") || clientRow) role = "client";
+        else if (roles.has("admin")) role = "admin";
+        else if (roles.has("employee")) role = "employee";
+      }
+      if (!role) role = fallback?.role ?? (clientRow ? "client" : null);
 
       return {
         role,
