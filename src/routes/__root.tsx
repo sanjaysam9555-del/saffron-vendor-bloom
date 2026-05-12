@@ -162,7 +162,8 @@ function RootComponent() {
         gcTime: 10 * 60_000,
         refetchOnWindowFocus: false,
         refetchOnReconnect: true,
-        retry: 0,
+        retry: 1,
+        retryDelay: 400,
       },
     },
   }));
