@@ -257,6 +257,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         writeCachedAccess(null);
         setRole(null);
         setDisplayName(null);
+        setRoleResolutionFailed(false);
         notifySuccess("Signed out", { description: "See you again soon." });
       } catch (e) {
         notifyError(e, "Could not sign out.");
