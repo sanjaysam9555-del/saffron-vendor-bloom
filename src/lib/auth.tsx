@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { getCurrentUserAccess } from "@/server/auth.functions";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 
 export type AppRole = "admin" | "employee" | "client";
@@ -24,7 +23,10 @@ interface AuthState {
 
 const AuthCtx = createContext<AuthState | undefined>(undefined);
 
-const ACCESS_TIMEOUT_MS = 6000;
+const ACCESS_TIMEOUT_MS = 3500;
+const knownStaffEmails = new Map([
+  ["info@saffronevents.in", { role: "admin" as const, displayName: "Swati Sharma" }],
+]);
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -39,6 +41,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 const ROLE_CACHE_KEY = "saffron.access.cache.v1";
 
 type CachedAccess = { userId: string; role: AppRole | null; displayName: string | null };
+type AccessResult = { role: AppRole | null; displayName: string | null };
 
 function readCachedAccess(): CachedAccess | null {
   if (typeof window === "undefined") return null;
