@@ -54,8 +54,12 @@ async function upsertPreview(
     fetched_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
-  const { data, error } = await supabaseAdmin
-    .from("vendor_instagram_previews" as never)
+  const { data, error } = await (supabaseAdmin
+    .from("vendor_instagram_previews" as never) as unknown as {
+      upsert: (r: unknown, opts: { onConflict: string }) => {
+        select: () => { single: () => Promise<{ data: unknown; error: { message: string } | null }> };
+      };
+    })
     .upsert(row, { onConflict: "vendor_id" })
     .select()
     .single();
