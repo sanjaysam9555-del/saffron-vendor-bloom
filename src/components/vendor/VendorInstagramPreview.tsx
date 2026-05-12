@@ -35,13 +35,21 @@ interface CardProps {
  * a successfully cached preview. Never blocks the rest of the card.
  */
 export function VendorInstagramCardStrip({ preview }: CardProps) {
-  if (!preview || preview.status !== "ok") return null;
-  const thumbs = preview.post_thumbnails ?? [];
-  const hasAnything = preview.avatar_url || thumbs.length > 0 || preview.display_name;
-  if (!hasAnything) return null;
+  const thumbs = preview?.post_thumbnails ?? [];
+  const hasAnything =
+    preview?.status === "ok" &&
+    (preview.avatar_url || thumbs.length > 0 || preview.display_name);
+
+  if (!hasAnything) {
+    return (
+      <div className="mt-2 flex h-[96px] items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-2 text-[10px] text-[var(--charcoal)]/40">
+        No Instagram preview
+      </div>
+    );
+  }
 
   return (
-    <div className="mt-2 rounded-md border border-[var(--border)] bg-[var(--cream)]/40 p-2">
+    <div className="mt-2 h-[96px] overflow-hidden rounded-md border border-[var(--border)] bg-[var(--cream)]/40 p-2">
       <div className="flex items-center gap-2">
         {preview.avatar_url && (
           <SafeImg

@@ -34,30 +34,30 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
           <Sparkles className="h-3 w-3 fill-current" /> Saffron's Pick
         </div>
       )}
-      <h3 className="mb-2 font-display text-lg font-semibold leading-tight text-[var(--charcoal)]">
+      <h3 className="mb-2 line-clamp-2 min-h-[2.5rem] font-display text-lg font-semibold leading-tight text-[var(--charcoal)]">
         {vendor.vendor_name}
       </h3>
 
-      <div className="mb-2 flex flex-wrap gap-1">
-        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text}`}>
+      <div className="mb-2 flex min-h-[1.75rem] flex-nowrap gap-1 overflow-hidden">
+        <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text}`}>
           {vendor.category}
         </span>
         {vendor.subcategory && (
-          <span className="inline-flex items-center rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/65">
+          <span className="inline-flex shrink-0 items-center rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/65">
             {vendor.subcategory}
           </span>
         )}
         {statusOpt && (
-          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${statusOpt.pill}`}>
+          <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${statusOpt.pill}`}>
             {statusOpt.label}
           </span>
         )}
       </div>
 
-      <div className="min-w-0 space-y-1.5 text-sm text-[var(--charcoal)]/75">
+      <div className="min-h-[6rem] min-w-0 space-y-1.5 overflow-hidden text-sm text-[var(--charcoal)]/75">
         {vendor.location && (
           <div className="flex items-center gap-1.5">
-            <MapPin className="h-3.5 w-3.5" /> {vendor.location}
+            <MapPin className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{vendor.location}</span>
           </div>
         )}
         {vendor.instagram_handle && (() => {
@@ -84,7 +84,7 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
             onClick={(e) => e.stopPropagation()}
             className="flex items-center gap-1.5 hover:text-[var(--terracotta)]"
           >
-            <LinkIcon className="h-3.5 w-3.5" /> Portfolio
+            <LinkIcon className="h-3.5 w-3.5 shrink-0" /> Portfolio
           </a>
         )}
         {vendor.website && (
@@ -95,7 +95,7 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
             onClick={(e) => e.stopPropagation()}
             className="flex items-center gap-1.5 hover:text-[var(--terracotta)]"
           >
-            <Globe className="h-3.5 w-3.5" /> Website
+            <Globe className="h-3.5 w-3.5 shrink-0" /> Website
           </a>
         )}
         {vendor.google_rating != null && (
@@ -106,7 +106,7 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
         )}
       </div>
 
-      {instagramPreview && <VendorInstagramCardStrip preview={instagramPreview} />}
+      <VendorInstagramCardStrip preview={instagramPreview ?? null} />
 
       <div className="mt-3 space-y-2 border-t border-[var(--border)] pt-3" style={{ marginTop: "auto" }}>
         <ClientStatusSelect vendorId={vendor.id} status={vendor.client_status} />
