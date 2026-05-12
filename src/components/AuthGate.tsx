@@ -19,12 +19,7 @@ export function AuthGate({
       navigate({ to: "/" });
       return;
     }
-    // Role lookup failed for now — leave the valid session intact and show
-    // the login/home screen instead of sitting on the splash forever.
-    if (!loading && !role && roleResolutionFailed) {
-      navigate({ to: "/" });
-      return;
-    }
+    if (!loading && !role && roleResolutionFailed) return;
     if (role === "client") {
       navigate({ to: "/client" });
       return;
