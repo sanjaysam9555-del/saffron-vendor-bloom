@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon, ArrowUpDown, X } from "lucide-react";
 import { toast } from "sonner";
+import { getVendorBookedSummary } from "@/lib/quote-api";
 
 import { TopNav } from "@/components/vendor/TopNav";
 import { Sidebar, type FilterState } from "@/components/vendor/Sidebar";
