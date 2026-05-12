@@ -515,7 +515,7 @@ function VendorCardGrid({
   selectedIds,
   toggleSelect,
 }: {
-  vendors: ReturnType<typeof useVendors>["vendors"];
+  vendors: import("@/lib/vendor-types").Vendor[];
   modals: ReturnType<typeof useVendorModals>;
   bulkMode: boolean;
   selectedIds: Set<string>;
