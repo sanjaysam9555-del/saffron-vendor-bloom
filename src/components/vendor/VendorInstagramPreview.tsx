@@ -3,12 +3,20 @@ import { useState } from "react";
 import type { VendorInstagramPreview as PreviewData } from "@/server/instagram-preview.functions";
 import { useEnsureInstagramPreview, useRefreshInstagramPreview } from "@/hooks/use-instagram-previews";
 
+function proxiedSrc(src: string): string {
+  if (!src) return src;
+  if (/^https?:\/\/[^/]*(cdninstagram\.com|fbcdn\.net)/i.test(src)) {
+    return `/api/public/instagram-image?url=${encodeURIComponent(src)}`;
+  }
+  return src;
+}
+
 function SafeImg({ src, alt, className }: { src: string; alt: string; className: string }) {
   const [ok, setOk] = useState(true);
   if (!ok) return null;
   return (
     <img
-      src={src}
+      src={proxiedSrc(src)}
       alt={alt}
       loading="lazy"
       referrerPolicy="no-referrer"
