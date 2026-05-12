@@ -536,6 +536,59 @@ export type Database = {
           },
         ]
       }
+      vendor_instagram_previews: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          display_name: string | null
+          fetched_at: string
+          followers_text: string | null
+          handle: string | null
+          last_error: string | null
+          post_thumbnails: string[] | null
+          profile_url: string | null
+          status: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          display_name?: string | null
+          fetched_at?: string
+          followers_text?: string | null
+          handle?: string | null
+          last_error?: string | null
+          post_thumbnails?: string[] | null
+          profile_url?: string | null
+          status?: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          display_name?: string | null
+          fetched_at?: string
+          followers_text?: string | null
+          handle?: string | null
+          last_error?: string | null
+          post_thumbnails?: string[] | null
+          profile_url?: string | null
+          status?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_instagram_previews_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: true
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendors: {
         Row: {
           category: string
