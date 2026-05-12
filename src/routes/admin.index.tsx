@@ -507,3 +507,39 @@ function ActiveFilterChips({
     </div>
   );
 }
+
+function VendorCardGrid({
+  vendors,
+  modals,
+  bulkMode,
+  selectedIds,
+  toggleSelect,
+}: {
+  vendors: ReturnType<typeof useVendors>["vendors"];
+  modals: ReturnType<typeof useVendorModals>;
+  bulkMode: boolean;
+  selectedIds: Set<string>;
+  toggleSelect: (id: string) => void;
+}) {
+  const ids = useMemo(
+    () => vendors.filter((v) => v.instagram_handle).map((v) => v.id),
+    [vendors],
+  );
+  const { map: previewMap } = useInstagramPreviewsBulk(ids);
+  return (
+    <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-fade-in">
+      {vendors.map((v) => (
+        <VendorCard
+          key={v.id}
+          vendor={v}
+          onView={() => modals.openDetail(v)}
+          onEdit={() => modals.openEdit(v)}
+          selectMode={bulkMode}
+          selected={selectedIds.has(v.id)}
+          onToggleSelect={() => toggleSelect(v.id)}
+          instagramPreview={previewMap.get(v.id) ?? null}
+        />
+      ))}
+    </div>
+  );
+}
