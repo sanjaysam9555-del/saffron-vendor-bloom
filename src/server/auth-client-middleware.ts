@@ -10,12 +10,8 @@ async function readToken(): Promise<string | undefined> {
  * Client-side middleware that attaches the current Supabase session's
  * bearer token to outgoing server function requests.
  *
- * Robust against the initial-load race where a request can fire before
- * the session has hydrated from storage:
- *   1. Try getSession() — fast path when session is already in memory.
- *   2. Try refreshSession() — recovers from an expired access token.
- *   3. Poll getSession() briefly (up to ~2s) — covers the initial
- *      hydration window after a hard reload.
+  * Keep this fast: auth gates and query `enabled` flags wait for session
+  * hydration, so middleware should not add extra multi-second polling.
  */
 export const attachAuthToken = createMiddleware({ type: "function" }).client(
   async ({ next }) => {
@@ -27,13 +23,6 @@ export const attachAuthToken = createMiddleware({ type: "function" }).client(
         token = refreshed.data.session?.access_token;
       } catch {
         // ignore — fall through to polling
-      }
-    }
-
-    if (!token) {
-      for (let i = 0; i < 5 && !token; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 400));
-        token = await readToken();
       }
     }
 
