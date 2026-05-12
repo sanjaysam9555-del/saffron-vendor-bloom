@@ -495,6 +495,45 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_notifications: {
+        Row: {
+          actor_user_id: string | null
+          body: string | null
+          created_at: string
+          id: string
+          kind: string
+          metadata: Json
+          project_id: string | null
+          read_by: Json
+          title: string
+          vendor_id: string | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          metadata?: Json
+          project_id?: string | null
+          read_by?: Json
+          title: string
+          vendor_id?: string | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          metadata?: Json
+          project_id?: string | null
+          read_by?: Json
+          title?: string
+          vendor_id?: string | null
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string

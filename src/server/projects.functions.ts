@@ -781,22 +781,22 @@ export const setMyVendorStatus = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     }
 
-    // Fire email if the status actually changed
+    // Notify staff in-app if the status actually changed
     if (previousStatus !== data.status) {
       try {
-        const { notifyStaff } = await import("@/lib/notify-staff.server");
+        const { insertStaffNotification } = await import("@/lib/notify-staff.server");
         const ctx = await loadVendorContext(pv.project_id, data.vendor_id, userId);
-        await notifyStaff({
-          templateName: "client-status-change-notification",
-          idempotencyKey: `status-${userId}-${data.vendor_id}-${Date.now()}`,
-          templateData: {
-            ...ctx,
-            previousStatus,
-            newStatus: data.status,
-          },
+        await insertStaffNotification({
+          kind: "status_change",
+          project_id: pv.project_id,
+          vendor_id: data.vendor_id,
+          actor_user_id: userId,
+          title: `${ctx.clientName} marked ${ctx.vendorName} as ${data.status ?? "—"}`,
+          body: previousStatus ? `Previously: ${previousStatus}` : null,
+          metadata: { ...ctx, previousStatus, newStatus: data.status },
         });
       } catch (e) {
-        console.warn("status change email failed:", e);
+        console.warn("status change notification failed:", e);
       }
     }
 
@@ -910,20 +910,21 @@ export const addProjectVendorComment = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    // Fire email — best-effort
+    // Notify staff in-app — best-effort
     try {
-      const { notifyStaff } = await import("@/lib/notify-staff.server");
+      const { insertStaffNotification } = await import("@/lib/notify-staff.server");
       const ctx = await loadVendorContext(pv.project_id, data.vendor_id, userId);
-      await notifyStaff({
-        templateName: "client-comment-notification",
-        idempotencyKey: `comment-${inserted.id}`,
-        templateData: {
-          ...ctx,
-          commentBody: inserted.body,
-        },
+      await insertStaffNotification({
+        kind: "comment",
+        project_id: pv.project_id,
+        vendor_id: data.vendor_id,
+        actor_user_id: userId,
+        title: `${ctx.clientName} commented on ${ctx.vendorName}`,
+        body: inserted.body.slice(0, 500),
+        metadata: { ...ctx, commentBody: inserted.body },
       });
     } catch (e) {
-      console.warn("comment email failed:", e);
+      console.warn("comment notification failed:", e);
     }
 
     return inserted;

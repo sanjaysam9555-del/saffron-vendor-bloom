@@ -3,6 +3,7 @@ import { Search, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import logoLight from "@/assets/saffron-logo-transparent.png";
 import { UserMenu } from "@/components/UserMenu";
+import { NotificationsBell } from "@/components/admin/NotificationsBell";
 
 interface TopNavProps {
   search: string;
@@ -48,7 +49,8 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
             <span className="hidden sm:inline">Add Vendor</span>
           </button>
 
-          <div className="sm:order-3">
+          <div className="sm:order-3 flex items-center gap-1">
+            <NotificationsBell />
             <UserMenu />
           </div>
         </div>
