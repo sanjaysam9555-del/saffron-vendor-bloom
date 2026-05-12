@@ -85,16 +85,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setDisplayName(access?.displayName ?? null);
         loadedForUserRef.current = userId;
         writeCachedAccess({ userId, role: nextRole, displayName: access?.displayName ?? null });
+        setRoleResolutionFailed(!nextRole);
       } catch (error) {
         console.error("Unable to load access role", error);
-        // If we have a cached role for this user, keep it instead of dumping to null.
         const cached = readCachedAccess();
         if (cached && cached.userId === userId && cached.role) {
           setRole(cached.role);
           setDisplayName(cached.displayName);
+          setRoleResolutionFailed(false);
         } else {
           setRole(null);
           setDisplayName(null);
+          setRoleResolutionFailed(true);
         }
         loadedForUserRef.current = userId;
       } finally {
