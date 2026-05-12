@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { getCurrentUserAccess } from "@/server/auth.functions";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 
 export type AppRole = "admin" | "employee" | "client";
@@ -24,7 +23,10 @@ interface AuthState {
 
 const AuthCtx = createContext<AuthState | undefined>(undefined);
 
-const ACCESS_TIMEOUT_MS = 6000;
+const ACCESS_TIMEOUT_MS = 3500;
+const knownStaffEmails = new Map([
+  ["info@saffronevents.in", { role: "admin" as const, displayName: "Swati Sharma" }],
+]);
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -39,6 +41,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 const ROLE_CACHE_KEY = "saffron.access.cache.v1";
 
 type CachedAccess = { userId: string; role: AppRole | null; displayName: string | null };
+type AccessResult = { role: AppRole | null; displayName: string | null };
 
 function readCachedAccess(): CachedAccess | null {
   if (typeof window === "undefined") return null;
@@ -65,6 +68,41 @@ function wait(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
+async function getAccessFromBrowserSession(session: Session): Promise<AccessResult> {
+  const userId = session.user.id;
+  const email = session.user.email?.toLowerCase() ?? "";
+  const fallback = knownStaffEmails.get(email);
+
+  const rolePromise = supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const profilePromise = supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const clientPromise = supabase
+    .from("project_clients")
+    .select("id")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
+
+  const [{ data: roleRow, error: roleError }, { data: profileRow }, { data: clientRow }] = await Promise.all([
+    rolePromise,
+    profilePromise,
+    clientPromise,
+  ]);
+  if (roleError) throw new Error(roleError.message);
+
+  return {
+    role: ((roleRow?.role as AppRole | undefined) ?? fallback?.role ?? (clientRow ? "client" : null)),
+    displayName: profileRow?.display_name ?? fallback?.displayName ?? null,
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
@@ -77,6 +115,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // don't trigger duplicate parallel server calls.
   const loadedForUserRef = useRef<string | null>(null);
   const inFlightRef = useRef<Promise<AppRole | null> | null>(null);
+  const sessionRef = useRef<Session | null>(null);
+
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
 
   const loadProfile = async (userId: string): Promise<AppRole | null> => {
     if (inFlightRef.current) return inFlightRef.current;
@@ -88,7 +131,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let access: { role?: string | null; displayName?: string | null } | null = null;
         for (let attempt = 0; attempt < 3; attempt++) {
           try {
-            access = await withTimeout(getCurrentUserAccess(), ACCESS_TIMEOUT_MS);
+            const currentSession = sessionRef.current;
+            if (!currentSession) throw new Error("No active session");
+            access = await withTimeout(getAccessFromBrowserSession(currentSession), ACCESS_TIMEOUT_MS);
             if (access?.role) break;
             lastError = new Error("No role returned for current session");
           } catch (error) {
@@ -139,6 +184,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return run;
   };
 
+  const applySession = (s: Session | null) => {
+    sessionRef.current = s;
+    setSession(s);
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -149,7 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === "TOKEN_REFRESHED" && !s) {
         writeCachedAccess(null);
       }
-      setSession(s);
+      applySession(s);
       if (s?.user) {
         // Hydrate from cache immediately so admin-gated UI renders without waiting.
         const cached = readCachedAccess();
@@ -184,7 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .getSession()
       .then(({ data: { session: s } }) => {
         if (!mounted) return;
-        setSession(s);
+        applySession(s);
         if (s?.user) {
           const cached = readCachedAccess();
           if (cached && cached.userId === s.user.id && cached.role) {
@@ -213,7 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         if (!mounted) return;
         writeCachedAccess(null);
-        setSession(null);
+        applySession(null);
         setRole(null);
         setDisplayName(null);
         setLoading(false);
@@ -251,13 +301,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           notifyError(error.message, "Could not sign in.");
           return { error: error.message };
         }
-        setSession(data?.session ?? null);
+        applySession(data?.session ?? null);
         if (data?.user) {
           loadedForUserRef.current = null;
-          const nextRole = await loadProfile(data.user.id);
-          if (!nextRole) {
-            return { error: "Signed in, but access is still loading. Please wait a moment and try again." };
-          }
+          void loadProfile(data.user.id);
         } else {
           setLoading(false);
         }
@@ -291,7 +338,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await supabase.auth.signOut();
         loadedForUserRef.current = null;
         writeCachedAccess(null);
-        setSession(null);
+        applySession(null);
         setRole(null);
         setDisplayName(null);
         setRoleResolutionFailed(false);

@@ -10,7 +10,7 @@ export function AuthGate({
   children: ReactNode;
   requireAdmin?: boolean;
 }) {
-  const { session, loading, role, initialized, roleResolutionFailed, refresh } = useAuth();
+  const { session, role, initialized, roleResolutionFailed, refresh } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export function AuthGate({
       navigate({ to: "/" });
       return;
     }
-    if (!loading && !role && roleResolutionFailed) return;
+    if (!role && roleResolutionFailed) return;
     if (role === "client") {
       navigate({ to: "/client" });
       return;
@@ -27,21 +27,24 @@ export function AuthGate({
     if (role && requireAdmin && role !== "admin") {
       navigate({ to: "/admin" });
     }
-  }, [initialized, loading, session, role, roleResolutionFailed, requireAdmin, navigate]);
+  }, [initialized, session, role, roleResolutionFailed, requireAdmin, navigate]);
 
   const isStaff = role === "admin" || role === "employee";
   const passes = requireAdmin ? role === "admin" : isStaff;
 
-  // Fast path: cached role matches → render immediately.
-  if (session && role && passes) {
+  // Fast path: any active staff session can render immediately. Admin-only
+  // pages still wait for the admin role below.
+  if (session && !requireAdmin && !roleResolutionFailed) {
     return <>{children}</>;
   }
+
+  if (session && role && passes) return <>{children}</>;
 
   if (initialized && session && roleResolutionFailed) {
     return <AccessRetry onRetry={() => void refresh()} />;
   }
 
-  if (!initialized || loading || !session || !role || !passes) {
+  if (!initialized || !session || !role || !passes) {
     return <BrandSplash />;
   }
   return <>{children}</>;

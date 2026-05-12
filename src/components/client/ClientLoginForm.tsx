@@ -8,7 +8,7 @@ import {
 } from "@/components/auth/SignInButton";
 
 export function ClientLoginForm({ embedded = false }: { embedded?: boolean } = {}) {
-  const { signIn, session, role, loading } = useAuth();
+  const { signIn, session, role } = useAuth();
   const [err, setErr] = useState<string | null>(null);
   const [btnState, setBtnState] = useState<SignInButtonState>("idle");
   const [hydrated, setHydrated] = useState(false);
@@ -25,9 +25,9 @@ export function ClientLoginForm({ embedded = false }: { embedded?: boolean } = {
   }, []);
 
   useEffect(() => {
-    if (loading || !session || !role) return;
+    if (!session || !role) return;
     setBtnState("success");
-  }, [loading, session, role]);
+  }, [session, role]);
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -52,6 +52,9 @@ export function ClientLoginForm({ embedded = false }: { embedded?: boolean } = {
       setTimeout(() => setBtnState("idle"), SIGN_IN_ERROR_HOLD_MS);
     } else {
       setBtnState("success");
+      window.setTimeout(() => {
+        window.location.assign("/client");
+      }, 250);
     }
   };
 

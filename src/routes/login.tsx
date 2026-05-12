@@ -13,7 +13,7 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const { signIn, session, role, loading } = useAuth();
+  const { signIn, session, role } = useAuth();
   const navigate = useNavigate();
   const [err, setErr] = useState<string | null>(null);
   const [btnState, setBtnState] = useState<SignInButtonState>("idle");
@@ -34,10 +34,10 @@ function LoginPage() {
   }, []);
 
   useEffect(() => {
-    if (loading || !session || !role) return;
+    if (!session || !role) return;
     setBtnState("success");
     navigate({ to: role === "client" ? "/client" : "/admin" });
-  }, [loading, session, role, navigate]);
+  }, [session, role, navigate]);
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -62,7 +62,9 @@ function LoginPage() {
       setTimeout(() => setBtnState("idle"), SIGN_IN_ERROR_HOLD_MS);
     } else {
       setBtnState("success");
-      // Actual navigation happens in the useEffect above once role resolves.
+      window.setTimeout(() => {
+        navigate({ to: "/admin" });
+      }, 250);
     }
   };
 
