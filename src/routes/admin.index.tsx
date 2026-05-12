@@ -346,8 +346,6 @@ function DashboardPage() {
         }}
       />
 
-      <BulkInstagramSyncDialog open={igSyncOpen} onOpenChange={setIgSyncOpen} />
-
       <VendorForm
         open={modals.state.formOpen}
         initial={modals.state.editing ?? modals.state.prefill}
