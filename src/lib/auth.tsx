@@ -115,6 +115,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // don't trigger duplicate parallel server calls.
   const loadedForUserRef = useRef<string | null>(null);
   const inFlightRef = useRef<Promise<AppRole | null> | null>(null);
+  const sessionRef = useRef<Session | null>(null);
+
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
 
   const loadProfile = async (userId: string): Promise<AppRole | null> => {
     if (inFlightRef.current) return inFlightRef.current;
