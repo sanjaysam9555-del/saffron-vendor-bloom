@@ -183,7 +183,54 @@ function AdminUsersPage() {
             </div>
           )}
         </div>
+
+        {/* Vendor Submissions */}
+        <div className="mt-12 flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-3xl text-[var(--charcoal)]">Vendor Submissions</h2>
+            <p className="text-sm text-[var(--charcoal)]/60">Vendors who registered through the public signup form.</p>
+          </div>
+          <Link
+            to="/admin/submissions"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3.5 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
+          >
+            View all <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <StatTile label="Total submissions" value={submissionStats.total} />
+          <StatTile label="This week" value={submissionStats.week} />
+          <StatTile label="This month" value={submissionStats.month} />
+        </div>
+
+        {/* Instagram Sync */}
+        <div className="mt-12 flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-3xl text-[var(--charcoal)]">Instagram Sync</h2>
+            <p className="text-sm text-[var(--charcoal)]/60">Fetch Instagram previews for vendors that are missing or stale.</p>
+          </div>
+          <button
+            onClick={() => setIgSyncOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3.5 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
+          >
+            <Instagram className="h-4 w-4" /> Sync now
+          </button>
+        </div>
+        <div className="mt-4 rounded-lg border border-[var(--border)] bg-white p-4 text-sm text-[var(--charcoal)]/70">
+          Runs in the background and refreshes profile photos and recent posts for vendors with an Instagram handle.
+        </div>
       </div>
+
+      <BulkInstagramSyncDialog open={igSyncOpen} onOpenChange={setIgSyncOpen} />
+    </div>
+  );
+}
+
+function StatTile({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border border-[var(--border)] bg-white p-4">
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">{label}</div>
+      <div className="mt-1 font-display text-3xl font-semibold text-[var(--terracotta)]">{value}</div>
     </div>
   );
 }
