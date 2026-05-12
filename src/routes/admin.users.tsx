@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { ArrowLeft, KeyRound, Trash2, UserPlus, Pencil, Check, X, Users } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, KeyRound, Trash2, UserPlus, Pencil, Check, X, Users, ArrowRight, Instagram } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { useAuth } from "@/lib/auth";
 import { useConfirmDelete } from "@/components/ui/confirm-dialog";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useVendors } from "@/hooks/useVendorData";
+import { BulkInstagramSyncDialog } from "@/components/vendor/BulkInstagramSyncDialog";
 import {
   listUsers,
   createEmployee,
@@ -15,7 +17,7 @@ import {
 } from "@/server/admin-users.functions";
 
 export const Route = createFileRoute("/admin/users")({
-  head: () => ({ meta: [{ title: "User Management — Saffron Planning Studio" }] }),
+  head: () => ({ meta: [{ title: "Admin — Saffron Planning Studio" }] }),
   component: () => (
     <AuthGate requireAdmin>
       <AdminUsersPage />
