@@ -9,12 +9,18 @@ import {
 
 export function useInstagramPreviewsBulk(vendorIds: string[]) {
   const fn = useServerFn(getVendorInstagramPreviewsBulk);
+  const qc = useQueryClient();
   const sortedKey = [...vendorIds].sort().join(",");
   const query = useQuery({
     queryKey: ["instagram-previews-bulk", sortedKey],
     queryFn: async () => {
       if (vendorIds.length === 0) return [];
-      return fn({ data: { vendorIds } });
+      const rows = await fn({ data: { vendorIds } });
+      // Seed per-vendor cache so the detail drawer renders instantly.
+      rows.forEach((p) => {
+        qc.setQueryData(["instagram-preview", p.vendor_id, p.handle], p);
+      });
+      return rows;
     },
     staleTime: 5 * 60 * 1000,
   });
