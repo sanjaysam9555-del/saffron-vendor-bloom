@@ -18,7 +18,7 @@ interface AuthState {
   roleResolutionFailed: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: string | null }>;
-  signOut: () => Promise<void>;
+  signOut: (opts?: { silent?: boolean }) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -61,6 +61,10 @@ function writeCachedAccess(value: CachedAccess | null) {
   }
 }
 
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
@@ -78,27 +82,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (inFlightRef.current) return inFlightRef.current;
 
     const run = (async () => {
+      setRoleResolutionFailed(false);
+      let lastError: unknown = null;
       try {
-        const access = await withTimeout(getCurrentUserAccess(), ACCESS_TIMEOUT_MS);
+        let access: { role?: string | null; displayName?: string | null } | null = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            access = await withTimeout(getCurrentUserAccess(), ACCESS_TIMEOUT_MS);
+            if (access?.role) break;
+            lastError = new Error("No role returned for current session");
+          } catch (error) {
+            lastError = error;
+          }
+          if (attempt < 2) await wait(500 * (attempt + 1));
+        }
         const nextRole = (access?.role as AppRole) ?? null;
+        if (!nextRole) {
+          const cached = readCachedAccess();
+          if (cached && cached.userId === userId && cached.role) {
+            setRole(cached.role);
+            setDisplayName(cached.displayName);
+            loadedForUserRef.current = userId;
+            setRoleResolutionFailed(false);
+            return;
+          }
+          throw lastError ?? new Error("No role returned for current session");
+        }
         setRole(nextRole);
         setDisplayName(access?.displayName ?? null);
         loadedForUserRef.current = userId;
         writeCachedAccess({ userId, role: nextRole, displayName: access?.displayName ?? null });
-        setRoleResolutionFailed(!nextRole);
+        setRoleResolutionFailed(false);
       } catch (error) {
         console.error("Unable to load access role", error);
         const cached = readCachedAccess();
         if (cached && cached.userId === userId && cached.role) {
           setRole(cached.role);
           setDisplayName(cached.displayName);
+          loadedForUserRef.current = userId;
           setRoleResolutionFailed(false);
         } else {
           setRole(null);
           setDisplayName(null);
           setRoleResolutionFailed(true);
         }
-        loadedForUserRef.current = userId;
       } finally {
         setLoading(false);
         inFlightRef.current = null;
