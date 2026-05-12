@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
+import { getCurrentUserAccess } from "@/server/auth.functions";
 
 export type AppRole = "admin" | "employee" | "client";
 
