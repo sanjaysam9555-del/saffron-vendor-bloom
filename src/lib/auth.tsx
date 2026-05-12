@@ -65,15 +65,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
-  // `loading` only flips true while we're actively fetching the role for a
-  // known user. SSR and the very first paint render with loading=false so
-  // public pages (login, marketing) emit real content for SEO.
   const [loading, setLoading] = useState(false);
-  // `initialized` is false until the initial getSession() has resolved on the
-  // client. Auth gates use THIS (not `loading`) to know whether to wait
-  // before redirecting — this prevents a logged-in user from being bounced
-  // to "/" during the brief window before the session is restored.
   const [initialized, setInitialized] = useState(false);
+  const [roleResolutionFailed, setRoleResolutionFailed] = useState(false);
 
   // Track which user we've already loaded so onAuthStateChange + getSession
   // don't trigger duplicate parallel server calls.
