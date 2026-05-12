@@ -188,6 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setDisplayName(null);
         setLoading(false);
         setInitialized(true);
+        setRoleResolutionFailed(false);
       });
 
     return () => {
