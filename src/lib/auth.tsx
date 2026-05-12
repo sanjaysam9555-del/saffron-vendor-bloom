@@ -14,6 +14,8 @@ interface AuthState {
   loading: boolean;
   /** True once the initial Supabase session restore has completed (client-side). */
   initialized: boolean;
+  /** True when we tried to fetch role for the current session and failed with no usable cache. */
+  roleResolutionFailed: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
