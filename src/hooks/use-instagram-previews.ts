@@ -59,3 +59,29 @@ export function useRefreshInstagramPreview() {
     },
   });
 }
+
+export function useStartInstagramBackfill() {
+  const fn = useServerFn(startInstagramBackfill);
+  return useMutation({
+    mutationFn: (input: { mode: "missing_or_stale" | "all" }) => fn({ data: input }),
+  });
+}
+
+export function useProcessInstagramBackfillBatch() {
+  const fn = useServerFn(processInstagramBackfillBatch);
+  return useMutation({
+    mutationFn: (input: { jobId: string }) => fn({ data: input }),
+  });
+}
+
+export function useInstagramBackfillStatus(jobId: string | null) {
+  const fn = useServerFn(getInstagramBackfillStatus);
+  return useQuery({
+    queryKey: ["instagram-backfill-status", jobId],
+    queryFn: () => (jobId ? fn({ data: { jobId } }) : Promise.resolve(null)),
+    enabled: !!jobId,
+    refetchInterval: 2000,
+  });
+}
+
+export type { InstagramBackfillJob };
