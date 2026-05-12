@@ -60,33 +60,18 @@ function fallbackDisplayName(session: Session): string | null {
 }
 
 /**
- * Resolve role only — single round-trip. Display name comes from cache or
- * user_metadata so we don't pay for a profiles lookup on the hot login path.
+ * Resolve role + display name via the server-side admin resolver. This
+ * bypasses browser RLS timing/race issues and works the same for staff
+ * and clients.
  */
-async function resolveRole(session: Session): Promise<AppRole | null> {
-  const userId = session.user.id;
-  const email = session.user.email ?? "";
-  const staff = isStaffEmail(email);
-
-  if (staff) {
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .in("role", ["admin", "employee"])
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    return (data?.role as AppRole | undefined) ?? null;
-  }
-
-  const { data, error } = await supabase
-    .from("project_clients")
-    .select("id")
-    .eq("user_id", userId)
-    .limit(1)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return data ? ("client" as AppRole) : null;
+async function resolveAccess(
+  session: Session,
+): Promise<{ role: AppRole | null; displayName: string | null }> {
+  const access = await getCurrentUserAccess();
+  return {
+    role: (access?.role as AppRole | null) ?? null,
+    displayName: access?.displayName ?? fallbackDisplayName(session),
+  };
 }
 
 /** Background refresh of display name. Errors are non-fatal. */
