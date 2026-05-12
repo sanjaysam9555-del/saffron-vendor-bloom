@@ -304,10 +304,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         applySession(data?.session ?? null);
         if (data?.user) {
           loadedForUserRef.current = null;
-          const nextRole = await loadProfile(data.user.id);
-          if (!nextRole) {
-            return { error: "Signed in, but access is still loading. Please wait a moment and try again." };
-          }
+          void loadProfile(data.user.id);
         } else {
           setLoading(false);
         }
