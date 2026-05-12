@@ -4,7 +4,11 @@ import {
   getVendorInstagramPreviewsBulk,
   refreshVendorInstagramPreview,
   ensureVendorInstagramPreview,
+  startInstagramBackfill,
+  processInstagramBackfillBatch,
+  getInstagramBackfillStatus,
   type VendorInstagramPreview,
+  type InstagramBackfillJob,
 } from "@/server/instagram-preview.functions";
 import { normalizeInstagramHandle } from "@/lib/instagram";
 
