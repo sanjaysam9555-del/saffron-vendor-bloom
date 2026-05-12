@@ -314,13 +314,22 @@ export const getInstagramBackfillStatus = createServerFn({ method: "POST" })
   .middleware([attachAuthToken])
   .inputValidator((d) => z.object({ jobId: z.string().uuid() }).parse(d))
   .handler(async ({ data }): Promise<InstagramBackfillJob | null> => {
-    const { isStaff } = await requireUser();
-    if (!isStaff) throw new Error("Forbidden: staff only");
-    const { data: row, error } = await supabaseAdmin
-      .from("instagram_backfill_jobs" as never)
-      .select("*")
-      .eq("id", data.jobId)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    return row ? toPublicJob(row as unknown as JobRow) : null;
+    try {
+      const { isStaff } = await requireUser();
+      if (!isStaff) throw new Error("Forbidden: staff only");
+      const { data: row, error } = await supabaseAdmin
+        .from("instagram_backfill_jobs" as never)
+        .select("*")
+        .eq("id", data.jobId)
+        .maybeSingle();
+      if (error) {
+        console.error("[instagram-backfill] status read failed", error.message?.slice(0, 200));
+        return null;
+      }
+      return row ? toPublicJob(row as unknown as JobRow) : null;
+    } catch (e) {
+      // Transient upstream errors (e.g. Cloudflare 522) — let the client keep polling.
+      console.error("[instagram-backfill] status handler error", e instanceof Error ? e.message.slice(0, 200) : e);
+      return null;
+    }
   });
