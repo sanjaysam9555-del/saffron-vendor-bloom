@@ -262,10 +262,16 @@ button:active, a:active, [role="button"]:active {
   50%      { transform: scale(1.04); opacity: 1; }
 }
 
-@keyframes saffron-dot-cycle {
-  0%, 100% { opacity: 0.25; }
-  20%      { opacity: 1; }
-  40%      { opacity: 0.25; }
+@keyframes saffron-wordmark-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.99); }
+  50%      { opacity: 1;    transform: scale(1.02); }
+}
+.saffron-wordmark-pulse {
+  animation: saffron-wordmark-pulse 1.8s ease-in-out infinite;
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .saffron-wordmark-pulse { animation: none !important; opacity: 1 !important; }
 }
 
 /* Success flash — small check-mark "pop" used after a mutation succeeds */
