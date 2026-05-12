@@ -281,19 +281,13 @@ function DashboardPage() {
               onAdd={() => modals.openCreate(filters.category ? { category: filters.category } : undefined)}
             />
           ) : view === "cards" ? (
-            <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-fade-in">
-              {filtered.map((v) => (
-                <VendorCard
-                  key={v.id}
-                  vendor={v}
-                  onView={() => modals.openDetail(v)}
-                  onEdit={() => modals.openEdit(v)}
-                  selectMode={bulkMode}
-                  selected={selectedIds.has(v.id)}
-                  onToggleSelect={() => toggleSelect(v.id)}
-                />
-              ))}
-            </div>
+            <VendorCardGrid
+              vendors={filtered}
+              modals={modals}
+              bulkMode={bulkMode}
+              selectedIds={selectedIds}
+              toggleSelect={toggleSelect}
+            />
           ) : (
             <VendorTable
               vendors={filtered}
