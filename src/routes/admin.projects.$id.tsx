@@ -15,6 +15,7 @@ import {
   unassignVendorFromProject,
   deleteProject,
   setVendorSaffronPick,
+  updateProject,
 } from "@/server/projects.functions";
 import { useAuth } from "@/lib/auth";
 import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotesPanel";
@@ -164,23 +165,12 @@ function ProjectDetailPage() {
           <ArrowLeft className="h-4 w-4" /> All projects
         </Link>
 
-        <div className="mt-4 flex items-start justify-between gap-4">
-          <div>
-            <h1 className="font-display text-3xl text-[var(--charcoal)]">
-              {project.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {project.groom_name}
-            </h1>
-            <div className="mt-1 flex items-center gap-1.5 text-sm text-[var(--charcoal)]/65">
-              <Calendar className="h-3.5 w-3.5" />
-              {new Date(project.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
-            </div>
-            {project.notes && <p className="mt-2 text-sm text-[var(--charcoal)]/70 whitespace-pre-wrap">{project.notes}</p>}
-          </div>
-          {role === "admin" && (
-            <button onClick={handleDeleteProject} className="inline-flex items-center gap-1.5 rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50">
-              <Trash2 className="h-4 w-4" /> Delete
-            </button>
-          )}
-        </div>
+        <ProjectHeader
+          project={project}
+          canDelete={role === "admin"}
+          onDelete={handleDeleteProject}
+          onSaved={refresh}
+        />
 
         {/* Client logins */}
         <section className="mt-8">
@@ -777,4 +767,134 @@ function VendorMetaRow({ vendor: v }: { vendor: any }) {
   }
   if (items.length === 0) return null;
   return <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[var(--charcoal)]/65">{items}</div>;
+}
+
+interface ProjectHeaderProps {
+  project: { id: string; bride_name: string; groom_name: string; wedding_date: string; notes: string | null };
+  canDelete: boolean;
+  onDelete: () => void;
+  onSaved: () => void;
+}
+
+function ProjectHeader({ project, canDelete, onDelete, onSaved }: ProjectHeaderProps) {
+  const [editing, setEditing] = useState(false);
+  const [bride, setBride] = useState(project.bride_name);
+  const [groom, setGroom] = useState(project.groom_name);
+  const [date, setDate] = useState(project.wedding_date?.slice(0, 10) ?? "");
+  const [busy, setBusy] = useState(false);
+
+  const startEdit = () => {
+    setBride(project.bride_name);
+    setGroom(project.groom_name);
+    setDate(project.wedding_date?.slice(0, 10) ?? "");
+    setEditing(true);
+  };
+
+  const save = async () => {
+    if (!bride.trim() || !groom.trim() || !date) {
+      notifyError(null, "Bride name, groom name and wedding date are required");
+      return;
+    }
+    setBusy(true);
+    try {
+      await updateProject({
+        data: {
+          id: project.id,
+          bride_name: bride.trim(),
+          groom_name: groom.trim(),
+          wedding_date: date,
+        },
+      });
+      notifySuccess("Project updated");
+      setEditing(false);
+      onSaved();
+    } catch (e) {
+      notifyError(e, "Could not update project");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (editing) {
+    return (
+      <div className="mt-4 rounded-lg border border-[var(--border)] bg-white p-4">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <label className="text-xs text-[var(--charcoal)]/70">
+            Bride name
+            <input
+              className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
+              value={bride}
+              onChange={(e) => setBride(e.target.value)}
+            />
+          </label>
+          <label className="text-xs text-[var(--charcoal)]/70">
+            Groom name
+            <input
+              className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
+              value={groom}
+              onChange={(e) => setGroom(e.target.value)}
+            />
+          </label>
+          <label className="text-xs text-[var(--charcoal)]/70">
+            Wedding date
+            <input
+              type="date"
+              className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </label>
+        </div>
+        <div className="mt-3 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            disabled={busy}
+            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--cream)]"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={save}
+            disabled={busy}
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 disabled:opacity-50"
+          >
+            <Check className="h-4 w-4" /> {busy ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 flex items-start justify-between gap-4">
+      <div>
+        <h1 className="font-display text-3xl text-[var(--charcoal)]">
+          {project.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {project.groom_name}
+        </h1>
+        <div className="mt-1 flex items-center gap-1.5 text-sm text-[var(--charcoal)]/65">
+          <Calendar className="h-3.5 w-3.5" />
+          {new Date(project.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+        </div>
+        {project.notes && <p className="mt-2 text-sm text-[var(--charcoal)]/70 whitespace-pre-wrap">{project.notes}</p>}
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={startEdit}
+          className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+        >
+          <Pencil className="h-4 w-4" /> Edit
+        </button>
+        {canDelete && (
+          <button
+            onClick={onDelete}
+            className="inline-flex items-center gap-1.5 rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+          >
+            <Trash2 className="h-4 w-4" /> Delete
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
