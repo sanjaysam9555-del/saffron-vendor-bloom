@@ -192,6 +192,7 @@ export function ClientSidebar({
             <button
               onClick={onToggle}
               title="Collapse filters"
+              aria-label="Collapse filters"
               className="ml-1 rounded-md p-1 text-[var(--charcoal)]/55 hover:bg-white hover:text-[var(--terracotta)]"
             >
               <ChevronLeft className="h-4 w-4" />
