@@ -596,6 +596,7 @@ function VendorSignupPage() {
                       <button
                         type="button"
                         onClick={() => removeFile(i)}
+                        aria-label={`Remove file ${f.name}`}
                         className="rounded p-1 text-[var(--charcoal)]/55 hover:bg-red-50 hover:text-red-600"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
