@@ -43,7 +43,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Saffron Planning Studio is a boutique wedding & event planning studio in India. We craft unforgettable celebrations — from intimate gatherings to grand weddings. Plan with us today.",
+          "Boutique wedding & event planning studio in India crafting unforgettable celebrations — from intimate gatherings to grand destination weddings.",
       },
       {
         name: "keywords",
