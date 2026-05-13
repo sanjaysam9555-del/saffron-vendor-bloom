@@ -106,7 +106,7 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
         )}
       </div>
 
-      <VendorInstagramCardStrip preview={instagramPreview ?? null} />
+      <VendorInstagramCardStrip preview={instagramPreview} hasHandle={!!vendor.instagram_handle} />
 
       <div className="mt-3 space-y-2 border-t border-[var(--border)] pt-3" style={{ marginTop: "auto" }}>
         <ClientStatusSelect vendorId={vendor.id} status={vendor.client_status} />

@@ -182,7 +182,7 @@ export function VendorCard({
       </div>
 
       {!selectMode && (
-        <VendorInstagramCardStrip preview={instagramPreview ?? null} />
+        <VendorInstagramCardStrip preview={instagramPreview} hasHandle={!!vendor.instagram_handle} />
       )}
 
       {!selectMode && (
