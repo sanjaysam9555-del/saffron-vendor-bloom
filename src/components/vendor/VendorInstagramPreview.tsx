@@ -28,13 +28,39 @@ function SafeImg({ src, alt, className }: { src: string; alt: string; className:
 
 interface CardProps {
   preview: PreviewData | null | undefined;
+  /** Whether the vendor has an Instagram handle at all. */
+  hasHandle?: boolean;
 }
 
 /**
- * Small additive strip for vendor cards. Renders nothing unless we have
- * a successfully cached preview. Never blocks the rest of the card.
+ * Small additive strip for vendor cards. Renders a skeleton while the
+ * preview is loading (vendor has a handle but no cached row yet), the real
+ * preview when available, and a friendly fallback otherwise.
  */
-export function VendorInstagramCardStrip({ preview }: CardProps) {
+export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProps) {
+  // Vendor has no Instagram handle — render nothing.
+  if (!hasHandle && preview == null) return null;
+
+  // Loading: handle exists but we don't have a cached row yet.
+  if (preview === undefined) {
+    return (
+      <div className="mt-2 min-h-[148px] animate-pulse rounded-md border border-[var(--border)] bg-[var(--cream)]/40 p-2">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-full bg-[var(--cream-deep)]" />
+          <div className="flex-1 space-y-1.5">
+            <div className="h-2.5 w-2/3 rounded bg-[var(--cream-deep)]" />
+            <div className="h-2 w-1/2 rounded bg-[var(--cream-deep)]/70" />
+          </div>
+        </div>
+        <div className="mt-2 grid grid-cols-3 gap-1">
+          <div className="aspect-square rounded-sm bg-[var(--cream-deep)]" />
+          <div className="aspect-square rounded-sm bg-[var(--cream-deep)]" />
+          <div className="aspect-square rounded-sm bg-[var(--cream-deep)]" />
+        </div>
+      </div>
+    );
+  }
+
   const thumbs = preview?.post_thumbnails ?? [];
   const hasAnything =
     preview?.status === "ok" &&
