@@ -7,9 +7,14 @@ const FADE_MS = 350;
 
 export function SplashScreen() {
   const { initialized } = useAuth();
-  const [mounted, setMounted] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(true);
   const [fading, setFading] = useState(false);
   const [minElapsed, setMinElapsed] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const minT = setTimeout(() => setMinElapsed(true), MIN_MS);
@@ -26,11 +31,11 @@ export function SplashScreen() {
 
   useEffect(() => {
     if (!fading) return;
-    const t = setTimeout(() => setMounted(false), FADE_MS);
+    const t = setTimeout(() => setVisible(false), FADE_MS);
     return () => clearTimeout(t);
   }, [fading]);
 
-  if (!mounted) return null;
+  if (!mounted || !visible) return null;
 
   return (
     <div
