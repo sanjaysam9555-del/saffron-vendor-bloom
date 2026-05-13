@@ -91,6 +91,14 @@ export const Route = createRootRoute({
       { rel: "manifest", href: "/site.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      // Eagerly load the display font used by the splash screen so the
+      // welcome plate renders in brand typography on first paint.
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap",
+      },
+      // Body font (Jost) loads non-blocking; promoted to "all" by the
+      // inline script below once the stylesheet is ready.
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Jost:wght@300;400;500;600&display=swap",
