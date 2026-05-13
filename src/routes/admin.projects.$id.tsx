@@ -15,6 +15,7 @@ import {
   unassignVendorFromProject,
   deleteProject,
   setVendorSaffronPick,
+  updateProject,
 } from "@/server/projects.functions";
 import { useAuth } from "@/lib/auth";
 import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotesPanel";
