@@ -8,14 +8,12 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Saffron Planning Studio is a boutique wedding & event planning studio in India. We craft unforgettable celebrations — from intimate gatherings to grand weddings.",
+          "Boutique wedding & event planning studio in India crafting unforgettable celebrations — from intimate gatherings to grand destination weddings.",
       },
-      { property: "og:title", content: "Wedding & Event Planning Studio | Saffron Planning Studio" },
-      {
-        property: "og:description",
-        content:
-          "Boutique wedding & event planning studio in India. We craft unforgettable celebrations for every occasion.",
-      },
+      { property: "og:url", content: "https://planwithsaffron.in/" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://planwithsaffron.in/" },
     ],
   }),
   component: RootIndex,
