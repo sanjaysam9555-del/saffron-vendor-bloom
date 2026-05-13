@@ -20,7 +20,11 @@ export const Route = createFileRoute("/vendor-signup")({
         property: "og:description",
         content: "Vendors — register your business with Saffron Planning Studio.",
       },
+      { property: "og:url", content: "https://planwithsaffron.in/vendor-signup" },
       { name: "robots", content: "index, follow" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://planwithsaffron.in/vendor-signup" },
     ],
   }),
   component: VendorSignupPage,
