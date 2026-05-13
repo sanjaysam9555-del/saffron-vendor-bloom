@@ -62,6 +62,7 @@ export function ClientTopNav({ search, onSearchChange, brideName, groomName, wed
           <input
             type="text"
             placeholder="Search your vendors…"
+            aria-label="Search your vendors"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full rounded-md border border-[var(--border)] bg-white py-1.5 pl-8 pr-2 text-sm text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/40 focus:border-[var(--terracotta)] focus:outline-none focus:ring-2 focus:ring-[var(--terracotta-soft)]"

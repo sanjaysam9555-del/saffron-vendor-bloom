@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /client
+Disallow: /login
+Disallow: /api/
+Disallow: /lovable/
+
+Sitemap: https://planwithsaffron.in/sitemap.xml

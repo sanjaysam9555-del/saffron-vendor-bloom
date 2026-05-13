@@ -43,7 +43,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Saffron Planning Studio is a boutique wedding & event planning studio in India. We craft unforgettable celebrations — from intimate gatherings to grand weddings. Plan with us today.",
+          "Boutique wedding & event planning studio in India crafting unforgettable celebrations — from intimate gatherings to grand destination weddings.",
       },
       {
         name: "keywords",
@@ -59,13 +59,6 @@ export const Route = createRootRoute({
 
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Saffron Planning Studio" },
-      { property: "og:title", content: "Wedding & Event Planning Studio | Saffron Planning Studio" },
-      {
-        property: "og:description",
-        content:
-          "Boutique wedding & event planning studio in India. We craft unforgettable celebrations for every occasion.",
-      },
-      { property: "og:url", content: "https://planwithsaffron.in/" },
       { property: "og:image", content: "https://planwithsaffron.in/images/og-cover.jpg" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
@@ -83,7 +76,6 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "canonical", href: "https://planwithsaffron.in/" },
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
       { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32.png" },
       { rel: "icon", type: "image/png", sizes: "16x16", href: "/favicon-16x16.png" },

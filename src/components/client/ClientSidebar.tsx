@@ -133,6 +133,7 @@ export function ClientSidebar({
             <button
               onClick={onMobileClose}
               title="Close"
+              aria-label="Close filters"
               className="rounded-md p-1 text-[var(--charcoal)]/55 hover:bg-white hover:text-[var(--terracotta)]"
             >
               <X className="h-4 w-4" />
@@ -151,6 +152,7 @@ export function ClientSidebar({
           <button
             onClick={onToggle}
             title="Expand filters"
+            aria-label="Expand filters"
             className="mx-auto flex h-9 w-9 items-center justify-center rounded-md text-[var(--terracotta)] hover:bg-white"
           >
             <ChevronRight className="h-4 w-4" />
@@ -190,6 +192,7 @@ export function ClientSidebar({
             <button
               onClick={onToggle}
               title="Collapse filters"
+              aria-label="Collapse filters"
               className="ml-1 rounded-md p-1 text-[var(--charcoal)]/55 hover:bg-white hover:text-[var(--terracotta)]"
             >
               <ChevronLeft className="h-4 w-4" />
