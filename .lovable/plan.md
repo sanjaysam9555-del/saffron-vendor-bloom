@@ -1,55 +1,41 @@
-## In-app notifications for client comments & status changes
+## Add a branded splash screen on app open
 
-Replace the broken email pipeline with an in-app notification center for staff (admin/employee). Triggered by the same events that currently call `notifyStaff` — new client comment, client status change.
+When returning users open the PWA / mobile web app, the screen is briefly black before the dashboard renders. Replace that with a branded splash plate.
 
-### 1. Database
+### What the user sees
 
-New table `staff_notifications`:
-- `id uuid pk`
-- `kind text` ('comment' | 'status_change')
-- `project_id uuid`, `vendor_id uuid` (nullable for safety)
-- `actor_user_id uuid` (the client who acted)
-- `title text`, `body text` (denormalized snapshot: client name, vendor name, comment excerpt / old→new status)
-- `metadata jsonb` (project name, wedding date, vendor category, etc. for rendering)
-- `read_by jsonb` default `'{}'` — map of `user_id -> read_at` so each staff member tracks their own read state on a shared row
-- `created_at timestamptz default now()`
+A full-screen plate in brand tones (cream background, terracotta + charcoal text, Cormorant Garamond display font) showing:
 
-RLS:
-- Staff (admin/employee) SELECT all
-- Staff UPDATE only the `read_by` field (or simpler: any update allowed for staff)
-- INSERT only via SECURITY DEFINER server functions (no client-side insert policy)
+- Heading: "Welcome to Saffron Planning Studio"
+- Quote: "Extraordinary weddings don't just happen, they are planned."
+- Subtle fade-in, then fade-out
 
-Realtime: add `staff_notifications` to `supabase_realtime` publication so the bell badge updates live.
+Visible for up to 3 seconds, then dismissed. Also dismissed earlier if auth + first route are ready and at least a minimum (~1.2s) has elapsed, so it never feels stuck.
 
-### 2. Server functions
+### Where it lives
 
-In `src/server/projects.functions.ts`:
-- Replace the `notifyStaff(...)` calls inside `addProjectVendorComment` and the client status change handler with a new internal helper `insertStaffNotification(...)` that uses `supabaseAdmin` to insert a row into `staff_notifications`.
-- Remove (or keep but no-op) the email enqueue path for these two events. Auth/transactional infra stays in place for future use; we just stop calling it for comments/status.
+1. New component `src/components/SplashScreen.tsx` — full-viewport overlay using existing CSS tokens (`--cream`, `--terracotta`, `--charcoal`, `--champagne`) and the Cormorant Garamond display font already loaded in `__root.tsx`. Uses `position: fixed; inset: 0; z-index: 9999` with a fade-out transition.
 
-New server functions in `src/server/notifications.functions.ts`:
-- `listStaffNotifications({ limit, before })` — staff only, paginated, newest first
-- `markNotificationRead({ id })` / `markAllRead()` — updates `read_by[auth.uid()]`
-- `getUnreadCount()` — fast count for the bell badge
+2. Mount inside `RootComponent` in `src/routes/__root.tsx`, above `<Outlet />`, so it covers the very first paint regardless of route (logged-in users land on `/client` or `/admin`, logged-out on `/`).
 
-### 3. UI
+3. Show logic:
+   - Show on every fresh app load (mount of root). This naturally covers the PWA "tap icon → launch" case, where the web app boots from scratch.
+   - Hide when: `min 1.2s elapsed` AND `auth.initialized === true`, OR a hard cap of 3000ms — whichever comes first.
+   - Use a small `useState(visible)` + `useEffect` with timers; consume `useAuth().initialized` to know when the app is ready.
+   - Add a 250ms opacity fade-out so the handoff to the dashboard isn't abrupt.
 
-- New `NotificationsBell` component in `src/components/admin/` — bell icon + unread count, opens a popover/sheet listing recent notifications. Each item links to `/admin/projects/{project_id}` (anchored to the vendor where applicable).
-- Mount it in the admin top nav (alongside `UserMenu`) on every `/admin/*` route.
-- Subscribe to `postgres_changes` on `staff_notifications` (INSERT) to bump the unread count and prepend new items in real time. Also `toast.info(...)` on new arrivals while a staff member has the admin open.
-- "Mark all read" button at the top of the list.
-
-### 4. Cleanup
-
-- Leave Lovable Cloud email infrastructure (queue, templates, send log) untouched — it's still wired for other uses.
-- Update `src/lib/notify-staff.server.ts` to be a thin wrapper that calls `insertStaffNotification` (so existing call sites keep working without touching every file).
+4. Eliminate the black flash:
+   - Set `<body>` background to `var(--cream)` in `src/styles.css` (currently relying on per-page backgrounds, which is why the gap renders black on mobile Safari/Chrome before React mounts).
+   - Update `public/site.webmanifest` `background_color` to `#F5F0E8` (the cream tone) and `theme_color` to `#C96F4A` (terracotta) so the OS-level PWA splash that shows before JS loads also matches the brand instead of white/black.
+   - Fill in `name` ("Saffron Planning Studio") and `short_name` ("Saffron") in the manifest while we're there.
 
 ### Out of scope
 
-- Email delivery for these events (explicitly removed per user choice).
-- Notifications for non-staff users.
+- No changes to auth flow, routing, or data loading.
+- No new images/illustrations — pure type + color, matching the rest of the app.
 
 ### Technical notes
 
-- Why `read_by` jsonb instead of a per-user `notification_reads` table: there are only a handful of staff users; jsonb keeps it simple and avoids an extra join. Easy to migrate later if staff count grows.
-- Realtime subscription should be scoped on the client to `event: 'INSERT'` only to avoid noise from read-state updates.
+- Component is presentational only; no network calls.
+- SSR-safe: timers run inside `useEffect`, initial `visible` state is `true` so SSR markup includes the splash and there is no flash of unsplashed content.
+- Respects `prefers-reduced-motion` by skipping the fade animation (still uses the timer).

@@ -7,6 +7,7 @@ import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { RouteProgress } from "@/components/RouteProgress";
+import { SplashScreen } from "@/components/SplashScreen";
 import { installChunkRecovery } from "@/lib/chunk-recover";
 
 function NotFoundComponent() {
@@ -54,7 +55,7 @@ export const Route = createRootRoute({
         name: "robots",
         content: "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
       },
-      { name: "theme-color", content: "#F5F0E8" },
+      { name: "theme-color", content: "#9F3822" },
 
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Saffron Planning Studio" },
@@ -172,6 +173,7 @@ function RootComponent() {
       <AuthProvider>
         <ConfirmProvider>
           <RouteProgress />
+          <SplashScreen />
           <Outlet />
           <Toaster />
         </ConfirmProvider>
