@@ -152,6 +152,7 @@ export function ClientSidebar({
           <button
             onClick={onToggle}
             title="Expand filters"
+            aria-label="Expand filters"
             className="mx-auto flex h-9 w-9 items-center justify-center rounded-md text-[var(--terracotta)] hover:bg-white"
           >
             <ChevronRight className="h-4 w-4" />
