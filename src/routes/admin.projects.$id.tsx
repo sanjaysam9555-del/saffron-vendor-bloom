@@ -165,23 +165,12 @@ function ProjectDetailPage() {
           <ArrowLeft className="h-4 w-4" /> All projects
         </Link>
 
-        <div className="mt-4 flex items-start justify-between gap-4">
-          <div>
-            <h1 className="font-display text-3xl text-[var(--charcoal)]">
-              {project.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {project.groom_name}
-            </h1>
-            <div className="mt-1 flex items-center gap-1.5 text-sm text-[var(--charcoal)]/65">
-              <Calendar className="h-3.5 w-3.5" />
-              {new Date(project.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
-            </div>
-            {project.notes && <p className="mt-2 text-sm text-[var(--charcoal)]/70 whitespace-pre-wrap">{project.notes}</p>}
-          </div>
-          {role === "admin" && (
-            <button onClick={handleDeleteProject} className="inline-flex items-center gap-1.5 rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50">
-              <Trash2 className="h-4 w-4" /> Delete
-            </button>
-          )}
-        </div>
+        <ProjectHeader
+          project={project}
+          canDelete={role === "admin"}
+          onDelete={handleDeleteProject}
+          onSaved={refresh}
+        />
 
         {/* Client logins */}
         <section className="mt-8">
