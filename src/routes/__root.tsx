@@ -7,6 +7,7 @@ import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { RouteProgress } from "@/components/RouteProgress";
+import { SplashScreen } from "@/components/SplashScreen";
 import { installChunkRecovery } from "@/lib/chunk-recover";
 
 function NotFoundComponent() {
