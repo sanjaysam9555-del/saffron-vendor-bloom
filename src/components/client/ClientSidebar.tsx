@@ -133,6 +133,7 @@ export function ClientSidebar({
             <button
               onClick={onMobileClose}
               title="Close"
+              aria-label="Close filters"
               className="rounded-md p-1 text-[var(--charcoal)]/55 hover:bg-white hover:text-[var(--terracotta)]"
             >
               <X className="h-4 w-4" />
