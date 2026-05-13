@@ -59,13 +59,6 @@ export const Route = createRootRoute({
 
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Saffron Planning Studio" },
-      { property: "og:title", content: "Wedding & Event Planning Studio | Saffron Planning Studio" },
-      {
-        property: "og:description",
-        content:
-          "Boutique wedding & event planning studio in India. We craft unforgettable celebrations for every occasion.",
-      },
-      { property: "og:url", content: "https://planwithsaffron.in/" },
       { property: "og:image", content: "https://planwithsaffron.in/images/og-cover.jpg" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
