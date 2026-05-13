@@ -106,6 +106,7 @@ export function UnifiedLoginForm({ compact = false }: { compact?: boolean } = {}
             type="email"
             name="email"
             placeholder="Email"
+            aria-label="Email"
             autoComplete="username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -116,6 +117,7 @@ export function UnifiedLoginForm({ compact = false }: { compact?: boolean } = {}
             type="password"
             name="password"
             placeholder="Password"
+            aria-label="Password"
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
