@@ -1,41 +1,42 @@
-## Add a branded splash screen on app open
+## Show stale Instagram previews in parallel, no empty boxes
 
-When returning users open the PWA / mobile web app, the screen is briefly black before the dashboard renders. Replace that with a branded splash plate.
+### Today
+- `admin.index.tsx` and `client.index.tsx` call `useInstagramPreviewsBulk(ids)` after vendors render. The bulk fetch waits for the vendor list, then runs as a second roundtrip. Until it resolves, `VendorCard` / `ClientVendorCard` get `instagramPreview = undefined` and the IG strip area renders an empty container (or nothing), which "pops in" later.
+- `VendorInstagramDetailBlock` (drawer) uses `useEnsureInstagramPreview`, same story.
+- Cache freshness is already 30 days server-side, so almost every preview in the DB is "good enough" to show immediately. The latency is purely network + render-order.
 
-### What the user sees
+### Goal
+Cached previews appear at the same time as the rest of the card content, with zero empty placeholders. Refreshes still happen, but only behind the scenes.
 
-A full-screen plate in brand tones (cream background, terracotta + charcoal text, Cormorant Garamond display font) showing:
+### Approach
 
-- Heading: "Welcome to Saffron Planning Studio"
-- Quote: "Extraordinary weddings don't just happen, they are planned."
-- Subtle fade-in, then fade-out
+1. **Persist previews on the client for instant first paint**
+   - Add a tiny `localStorage` cache (`saffron.ig.previews.v1`) keyed by `vendor_id` containing the last successful `VendorInstagramPreview` rows.
+   - In `useInstagramPreviewsBulk`, hydrate the React Query cache from `localStorage` synchronously before the network call resolves (use `initialData` / `placeholderData`). The `map` returned to consumers is populated on first render, so `VendorCard` receives a real `instagramPreview` immediately.
+   - On every successful bulk fetch, write the rows back to `localStorage` (capped, e.g. 500 most recent).
 
-Visible for up to 3 seconds, then dismissed. Also dismissed earlier if auth + first route are ready and at least a minimum (~1.2s) has elapsed, so it never feels stuck.
+2. **Fetch previews in parallel with the vendor list, not after it**
+   - Extract the vendor ID list as soon as the vendor query has any data (including previously-cached data from React Query). It already does this; no loader change needed since both queries live in the same component and React Query will fire them concurrently once the vendor list is known. The fix is just (1) — the bulk request stops being a blocker because cached data fills in instantly.
+   - In `useInstagramPreviewsBulk`, set `keepPreviousData`/`placeholderData: (prev) => prev` so navigating between pages never blanks the strip while a refetch runs.
 
-### Where it lives
+3. **Render-side: never show an empty container**
+   - In `VendorInstagramCardStrip` (and the client equivalent), when `instagramPreview` is `undefined` (no cache yet) **and** the vendor has an `instagram_handle`, render a lightweight skeleton (3 thumb placeholders + avatar shimmer) using the existing `Skeleton` component instead of an empty div.
+   - When `instagramPreview` exists but `status !== "ok"` (private/error), keep the current friendly fallback.
+   - When the vendor has no handle, render nothing (unchanged).
 
-1. New component `src/components/SplashScreen.tsx` — full-viewport overlay using existing CSS tokens (`--cream`, `--terracotta`, `--charcoal`, `--champagne`) and the Cormorant Garamond display font already loaded in `__root.tsx`. Uses `position: fixed; inset: 0; z-index: 9999` with a fade-out transition.
+4. **Drawer (detail) parity**
+   - In `VendorInstagramDetailBlock`, seed `useEnsureInstagramPreview`'s query with the value already in the bulk cache via `queryClient.getQueryData(["instagram-preview", vendorId, normalizedHandle])` as `initialData`. The bulk hook already seeds this cache; this just makes the drawer use it without a flash.
+   - Treat any cached row (even `stale`) as "show now"; the server function already returns the cached row immediately and only re-scrapes for staff. No server change needed.
 
-2. Mount inside `RootComponent` in `src/routes/__root.tsx`, above `<Outlet />`, so it covers the very first paint regardless of route (logged-in users land on `/client` or `/admin`, logged-out on `/`).
+5. **Background refresh stays as-is**
+   - The bulk server function still runs and updates the React Query cache; if any preview changed, the strip re-renders silently.
+   - Staff "Refresh" button behavior unchanged.
 
-3. Show logic:
-   - Show on every fresh app load (mount of root). This naturally covers the PWA "tap icon → launch" case, where the web app boots from scratch.
-   - Hide when: `min 1.2s elapsed` AND `auth.initialized === true`, OR a hard cap of 3000ms — whichever comes first.
-   - Use a small `useState(visible)` + `useEffect` with timers; consume `useAuth().initialized` to know when the app is ready.
-   - Add a 250ms opacity fade-out so the handoff to the dashboard isn't abrupt.
-
-4. Eliminate the black flash:
-   - Set `<body>` background to `var(--cream)` in `src/styles.css` (currently relying on per-page backgrounds, which is why the gap renders black on mobile Safari/Chrome before React mounts).
-   - Update `public/site.webmanifest` `background_color` to `#F5F0E8` (the cream tone) and `theme_color` to `#C96F4A` (terracotta) so the OS-level PWA splash that shows before JS loads also matches the brand instead of white/black.
-   - Fill in `name` ("Saffron Planning Studio") and `short_name` ("Saffron") in the manifest while we're there.
+### Files touched
+- `src/hooks/use-instagram-previews.ts` — add localStorage hydrate/persist, `placeholderData`, seed detail-cache `initialData`.
+- `src/components/vendor/VendorInstagramPreview.tsx` — add skeleton state for "no cache yet but handle exists".
+- (No server, schema, or route-loader changes.)
 
 ### Out of scope
-
-- No changes to auth flow, routing, or data loading.
-- No new images/illustrations — pure type + color, matching the rest of the app.
-
-### Technical notes
-
-- Component is presentational only; no network calls.
-- SSR-safe: timers run inside `useEffect`, initial `visible` state is `true` so SSR markup includes the splash and there is no flash of unsplashed content.
-- Respects `prefers-reduced-motion` by skipping the fade animation (still uses the timer).
+- Changing scrape cadence, queue architecture, or DB schema.
+- Server-side rendering of previews (would require auth-aware SSR; bigger change).
