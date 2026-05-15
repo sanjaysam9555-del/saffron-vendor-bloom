@@ -26,6 +26,7 @@ import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { EmptyState } from "@/components/ui/empty-state";
 
 import { VendorCommentsThread } from "@/components/client/VendorCommentsThread";
+import { instagramUrl, normalizeInstagramHandle } from "@/lib/instagram";
 
 export const Route = createFileRoute("/admin/projects/$id")({
   head: () => ({ meta: [{ title: "Project — Saffron Planning Studio" }] }),
@@ -724,19 +725,22 @@ function VendorMetaRow({ vendor: v }: { vendor: any }) {
     );
   }
   if (v.instagram_handle) {
-    const handle = v.instagram_handle.replace(/^@/, "");
-    items.push(
-      <a
-        key="ig"
-        href={`https://instagram.com/${handle}`}
-        target="_blank"
-        rel="noreferrer"
-        onClick={(e) => e.stopPropagation()}
-        className="inline-flex items-center gap-0.5 hover:text-[var(--terracotta)]"
-      >
-        <Instagram className="h-3 w-3" />@{handle}
-      </a>,
-    );
+    const handle = normalizeInstagramHandle(v.instagram_handle);
+    const href = instagramUrl(v.instagram_handle);
+    if (handle && href) {
+      items.push(
+        <a
+          key="ig"
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex items-center gap-0.5 hover:text-[var(--terracotta)]"
+        >
+          <Instagram className="h-3 w-3" />@{handle}
+        </a>,
+      );
+    }
   }
   if (v.contact_number) {
     items.push(
