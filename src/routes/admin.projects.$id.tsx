@@ -26,6 +26,7 @@ import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { EmptyState } from "@/components/ui/empty-state";
 
 import { VendorCommentsThread } from "@/components/client/VendorCommentsThread";
+import { instagramUrl, normalizeInstagramHandle } from "@/lib/instagram";
 
 export const Route = createFileRoute("/admin/projects/$id")({
   head: () => ({ meta: [{ title: "Project — Saffron Planning Studio" }] }),
