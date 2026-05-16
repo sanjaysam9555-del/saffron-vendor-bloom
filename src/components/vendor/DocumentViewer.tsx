@@ -122,7 +122,7 @@ export function DocumentViewer({ url, fileName, mimeType, onClose }: DocumentVie
       <div className="relative flex-1 overflow-hidden">
         {kind === "pdf" && <PdfView url={url} fileName={fileName} />}
         {kind === "image" && <ImageView url={url} alt={fileName} />}
-        {kind === "video" && <VideoView url={url} mimeType={mimeType} />}
+        {kind === "video" && <VideoView url={url} fileName={fileName} mimeType={mimeType} />}
         {(kind === "office" || kind === "other") && <FallbackView url={url} fileName={fileName} kind={kind} />}
       </div>
     </div>
@@ -130,18 +130,43 @@ export function DocumentViewer({ url, fileName, mimeType, onClose }: DocumentVie
 }
 
 /* -------- Video: stream signed URL directly (supports Range/seek) -------- */
-function VideoView({ url, mimeType }: { url: string; mimeType: string | null }) {
+function VideoView({ url, fileName, mimeType }: { url: string; fileName: string; mimeType: string | null }) {
+  const [failed, setFailed] = useState(false);
+  const lower = fileName.toLowerCase();
+  // Guess a playable type when the stored mime is missing/generic.
+  const typeHint =
+    mimeType && mimeType.startsWith("video/")
+      ? mimeType
+      : lower.endsWith(".mp4") || lower.endsWith(".m4v")
+        ? "video/mp4"
+        : lower.endsWith(".webm")
+          ? "video/webm"
+          : lower.endsWith(".mov")
+            ? "video/quicktime"
+            : undefined;
+
+  if (failed) {
+    return (
+      <BlockedFallback
+        url={url}
+        fileName={fileName}
+        reason="Your browser can't play this video format inline (often .mov / HEVC). Download it or open in a new tab to view."
+      />
+    );
+  }
+
   return (
     <div className="flex h-full items-center justify-center bg-black">
       <video
-        src={url}
         controls
         autoPlay
         playsInline
         preload="metadata"
+        crossOrigin="anonymous"
         className="max-h-full max-w-full"
+        onError={() => setFailed(true)}
       >
-        {mimeType ? <source src={url} type={mimeType} /> : null}
+        <source src={url} type={typeHint} />
         Your browser does not support inline video playback.
       </video>
     </div>
