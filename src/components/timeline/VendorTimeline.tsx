@@ -266,8 +266,17 @@ function DeadlineEditor({
   const [crit, setCrit] = useState<Criticality>(item.criticality);
   const [notes, setNotes] = useState<string>(item.notes ?? "");
 
-  const invalidate = () =>
-    qc.invalidateQueries({ queryKey: ["project-deadlines", projectId] });
+  const queryKey = ["project-deadlines", projectId] as const;
+
+  type DeadlineRow = {
+    id: string;
+    project_id: string;
+    category: string;
+    due_date: string | null;
+    criticality: Criticality;
+    notes: string | null;
+    updated_at: string;
+  };
 
   const saveM = useMutation({
     mutationFn: () =>
@@ -280,23 +289,58 @@ function DeadlineEditor({
           notes: notes.trim() ? notes.trim() : null,
         },
       }),
-    onSuccess: () => {
-      invalidate();
-      notifySuccess("Deadline saved");
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey });
+      const prev = qc.getQueryData<DeadlineRow[]>(queryKey) ?? [];
+      const next: DeadlineRow[] = (() => {
+        const optimistic: DeadlineRow = {
+          id: prev.find((r) => r.category === item.category)?.id ?? `optimistic-${item.category}`,
+          project_id: projectId,
+          category: item.category,
+          due_date: due ? due : null,
+          criticality: crit,
+          notes: notes.trim() ? notes.trim() : null,
+          updated_at: new Date().toISOString(),
+        };
+        const idx = prev.findIndex((r) => r.category === item.category);
+        if (idx >= 0) {
+          const copy = prev.slice();
+          copy[idx] = optimistic;
+          return copy;
+        }
+        return [...prev, optimistic];
+      })();
+      qc.setQueryData<DeadlineRow[]>(queryKey, next);
       onDone();
+      return { prev };
     },
-    onError: (e: unknown) => notifyError(e, "Could not save"),
+    onError: (e: unknown, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(queryKey, ctx.prev);
+      notifyError(e, "Could not save");
+    },
+    onSuccess: () => notifySuccess("Deadline saved"),
+    onSettled: () => qc.invalidateQueries({ queryKey }),
   });
 
   const clearM = useMutation({
     mutationFn: () =>
       remove({ data: { project_id: projectId, category: item.category } }),
-    onSuccess: () => {
-      invalidate();
-      notifySuccess("Deadline cleared");
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey });
+      const prev = qc.getQueryData<DeadlineRow[]>(queryKey) ?? [];
+      qc.setQueryData<DeadlineRow[]>(
+        queryKey,
+        prev.filter((r) => r.category !== item.category),
+      );
       onDone();
+      return { prev };
     },
-    onError: (e: unknown) => notifyError(e, "Could not clear"),
+    onError: (e: unknown, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(queryKey, ctx.prev);
+      notifyError(e, "Could not clear");
+    },
+    onSuccess: () => notifySuccess("Deadline cleared"),
+    onSettled: () => qc.invalidateQueries({ queryKey }),
   });
 
   return (
