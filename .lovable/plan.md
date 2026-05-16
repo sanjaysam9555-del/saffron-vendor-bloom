@@ -1,36 +1,54 @@
-## Goal
-Mobile-only polish for `/admin/projects/$id`. Two issues:
-1. Edit & Delete sit below the title as full-width buttons, eating vertical space and breaking symmetry.
-2. The Client login table card uses `-mx-6` on mobile, but the page container is now `px-4` — so the card overshoots the viewport by 2px on each side, causing the table to be clipped left & right.
+Mobile-focused fixes for `src/routes/admin.projects.$id.tsx` and `src/components/timeline/VendorTimeline.tsx`. Desktop layout stays intact.
 
-Pure presentation changes, no logic/data.
+## 1. Booking Timeline section spacing
 
-## Changes
+Right now `VendorTimeline`'s root wrapper carries leftover utility classes from a prior edit:
+`"text-xs text-[var(--charcoal)]/55 my-[10px] text-center"` — this shrinks/center-aligns the whole timeline and gives it almost no top spacing from the section above.
 
-### `src/routes/admin.projects.$id.tsx`
+Fix in `VendorTimeline.tsx`: replace that root wrapper className with proper section styling, e.g.
+`"mt-8 sm:mt-10"` (plus restoring normal text color/size inheritance). This adds clear breathing room above "Booking Timeline" on mobile and stops the contents from being centered/tiny.
 
-**1. `ProjectHeader` (lines ~893–921) — icon-only actions in top-right on mobile**
-- Place Edit & Delete absolutely in the top-right corner of the header on mobile, anchored next to the "All projects" back link area.
-- Render as 36×36 square icon buttons (no label) below `sm`, restore the labeled pill style at `sm` and up.
-- Drop the `flex-1` stretching and the stacked column layout that pushed buttons under the title.
-- Result on mobile: title + date sit in a clean single column; two small icon buttons hover top-right; meaningful breathing room below before the "Client login" section.
+## 2. Client login table being clipped left & right on mobile
 
-Concretely:
-- Wrap the header in `relative`.
-- Title block stays `min-w-0`.
-- Actions container becomes `absolute right-0 top-0 flex items-center gap-1.5 sm:static`.
-- Edit button: `h-9 w-9 p-0 justify-center sm:h-auto sm:w-auto sm:px-3 sm:py-1.5`, hide the "Edit" text with `hidden sm:inline`.
-- Delete button: same treatment, hide "Delete" text below `sm`. Use `aria-label` + `title` for accessibility.
-- Add `mt-5 sm:mt-4` so the title clears the floating icon row visually, and keep the existing `mt-8` gap to the next section (already fine).
+In `admin.projects.$id.tsx` line ~217 the wrapper is `-mx-4 sm:mx-0` which pulls the scroll container outside the page's `px-4` padding. On a 390px viewport the table edges sit flush to the screen and look cut off; the right edge especially gets clipped because of the inset scroll shadow + min-width 560px.
 
-**2. Client login table clipping (line ~217)**
-- Change `-mx-6 sm:mx-0` → `-mx-4 sm:mx-0` so the bleed exactly matches the new `px-4` page padding. The horizontal scroller (`overflow-x-auto`) keeps long emails accessible without clipping the card edges.
-- Keep `sm:rounded-lg sm:border` so the desktop card look is preserved.
+Fix: drop the negative margin on mobile so the scroller lives inside the page padding. Use `mx-0` on mobile (keep `sm:mx-0`), add `rounded-lg border border-[var(--border)]` at all sizes (currently only `sm:`), and keep `overflow-x-auto` so long emails still scroll horizontally inside the card instead of bleeding off-screen.
 
-**3. Spacing tidy under header**
-- The "Client login" section currently uses `mt-8`. With the icons floating top-right and a shorter header on mobile, bump to `mt-6 sm:mt-8` so mobile feels tighter without crowding desktop.
+## 3. "Booking Timeline" heading colour — make it feel like a new section
+
+In `VendorTimeline.tsx` the `<h2>` uses `text-[var(--charcoal)]`. Change it to the brand accent `text-[var(--terracotta)]` (same colour family already used for primary buttons / "Saffron's Pick"), and bump weight/size slightly on mobile (`text-2xl sm:text-xl`) so it reads as a clear section break rather than blending into the cream background.
+
+The "Assigned vendors" heading will get the same treatment for visual parity (both become tab labels in step 4, so they should match).
+
+## 4. Tabs: Assigned vendors (default) ↔ Booking Timeline
+
+Replace the current vertical stack of `<VendorTimeline />` followed by `<AssignedVendorsSection />` (lines ~244–258) with a single tabbed container:
+
+```text
+┌─────────────────────────────────────┐
+│  [ Assigned vendors ] [ Timeline ]  │  ← segmented control
+├─────────────────────────────────────┤
+│  <active panel>                     │
+└─────────────────────────────────────┘
+```
+
+- Default active tab: **Assigned vendors**.
+- Reuse the existing segmented-button styling pattern already used inside `VendorTimeline` (Timeline/Table toggle) and `AssignedVendorsSection` (List/Grouped toggle) so it feels native.
+- Tabs render full-width on mobile (`w-full`), inline on `sm:`+.
+- Only the active panel is mounted to keep DOM light and prevent the inactive section's local state (sub-view, edit modals) from staying alive in the background.
+- Tab labels show a small icon + text: `Users` for Assigned vendors, `CalendarDays` for Booking Timeline.
+
+Inside the new tab strip, the existing inner toggles inside each section (Timeline/Table; List/Grouped) remain unchanged — only the outer page-level switching is new.
+
+## Technical notes
+
+- All changes are JSX + Tailwind class edits in two files: `src/routes/admin.projects.$id.tsx` and `src/components/timeline/VendorTimeline.tsx`.
+- No data, server functions, RLS, or routing changes.
+- New local state: `const [section, setSection] = useState<"vendors" | "timeline">("vendors")` in the admin project route.
+- Desktop (`sm:`+) preserves current spacing and uses the same tabs (single source of truth — simpler than branching layouts).
 
 ## Out of scope
-- Desktop layout (unchanged above `sm`).
-- Vendor cards, timeline, quotes panel, comments modal.
-- Any backend / data shape / RLS.
+
+- Client-side route page (`/client.*`), vendor list cards internal layout, quotes panel, comments modal.
+- Any backend, auth, or schema changes.
+- Desktop redesign beyond inheriting the new tab control.

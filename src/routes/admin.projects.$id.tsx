@@ -214,7 +214,7 @@ function ProjectDetailPage() {
             </form>
           )}
 
-          <div className="mt-3 -mx-4 sm:mx-0 sm:rounded-lg sm:border sm:border-[var(--border)] bg-white">
+          <div className="mt-3 rounded-lg border border-[var(--border)] bg-white overflow-hidden">
             {clients.length === 0 ? (
               <div className="p-6 text-sm text-[var(--charcoal)]/60">No client login yet.</div>
             ) : (
@@ -241,23 +241,85 @@ function ProjectDetailPage() {
           </div>
         </section>
 
-        {/* Booking timeline */}
-        <VendorTimeline
-          projectId={id}
-          weddingDate={project.wedding_date}
-          items={buildTimelineItems(vendors, deadlines)}
-          mode="admin"
-        />
-
-        {/* Assigned vendors */}
-        <AssignedVendorsSection
+        <ProjectSectionTabs
           projectId={id}
           vendors={vendors}
           selections={selections}
-          onRemove={removeVendor}
+          deadlines={deadlines}
+          weddingDate={project.wedding_date}
+          onRemoveVendor={removeVendor}
         />
       </div>
     </div>
+  );
+}
+
+function ProjectSectionTabs({
+  projectId,
+  vendors,
+  selections,
+  deadlines,
+  weddingDate,
+  onRemoveVendor,
+}: {
+  projectId: string;
+  vendors: any[];
+  selections: Record<string, Selection[]>;
+  deadlines: any[];
+  weddingDate: string;
+  onRemoveVendor: (id: string, name: string) => void;
+}) {
+  const [tab, setTab] = useState<"vendors" | "timeline">("vendors");
+  return (
+    <section className="mt-10">
+      <div
+        role="tablist"
+        className="inline-flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-sm sm:w-auto"
+      >
+        <button
+          role="tab"
+          aria-selected={tab === "vendors"}
+          onClick={() => setTab("vendors")}
+          className={`inline-flex flex-1 items-center justify-center gap-1.5 px-4 py-2 sm:flex-none ${
+            tab === "vendors"
+              ? "bg-[var(--terracotta)] text-[var(--cream)]"
+              : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
+          }`}
+        >
+          <LayoutGrid className="h-4 w-4" /> Assigned vendors
+        </button>
+        <button
+          role="tab"
+          aria-selected={tab === "timeline"}
+          onClick={() => setTab("timeline")}
+          className={`inline-flex flex-1 items-center justify-center gap-1.5 border-l border-[var(--border)] px-4 py-2 sm:flex-none ${
+            tab === "timeline"
+              ? "bg-[var(--terracotta)] text-[var(--cream)]"
+              : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
+          }`}
+        >
+          <Calendar className="h-4 w-4" /> Booking Timeline
+        </button>
+      </div>
+
+      <div className="mt-4">
+        {tab === "vendors" ? (
+          <AssignedVendorsSection
+            projectId={projectId}
+            vendors={vendors}
+            selections={selections}
+            onRemove={onRemoveVendor}
+          />
+        ) : (
+          <VendorTimeline
+            projectId={projectId}
+            weddingDate={weddingDate}
+            items={buildTimelineItems(vendors, deadlines)}
+            mode="admin"
+          />
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -491,7 +553,7 @@ function AssignedVendorsSection({
     <section className="mt-10">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div>
-          <h2 className="font-display text-xl text-[var(--charcoal)]">Assigned vendors ({vendors.length})</h2>
+          <h2 className="font-display text-2xl text-[var(--terracotta)] sm:text-xl">Assigned vendors ({vendors.length})</h2>
           <p className="text-xs text-[var(--charcoal)]/55 my-[10px]">
             What the client has marked appears next to each vendor.
           </p>
