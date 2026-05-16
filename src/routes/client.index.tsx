@@ -201,18 +201,18 @@ function ClientPortalPage() {
         />
 
         <main className="min-w-0 flex-1 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
-          <div className="mb-5 flex flex-nowrap items-end justify-between gap-2 animate-fade-up sm:gap-3">
-            <div className="min-w-0">
+          <div className="mb-5 flex flex-col items-start gap-3 animate-fade-up sm:flex-row sm:flex-nowrap sm:items-end sm:justify-between sm:gap-3">
+            <div className="min-w-0 w-full sm:w-auto">
               <h1 className="brand-line truncate font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
                 {filters.category ?? "Welcome"}
               </h1>
-              <p className="mt-1 truncate text-sm text-[var(--charcoal)]/65">
+              <p className="mt-1 text-sm text-[var(--charcoal)]/65 sm:truncate">
                 {filters.category
                   ? `${filtered.length} of ${vendors.length} vendor${vendors.length === 1 ? "" : "s"}`
                   : "Here are the vendors we think will be perfect for your wedding."}
               </p>
             </div>
-            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <div className="flex w-full shrink-0 items-center gap-1.5 sm:w-auto sm:gap-2">
               <button
                 onClick={() => setMobileFiltersOpen(true)}
                 aria-label="Filters"

@@ -49,7 +49,7 @@ export function UrgencyStrip({ items, onChipClick, onViewAll, maxChips = 6 }: Pr
         boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.02), 0 1px 0 rgba(0,0,0,0.02)",
       }}
     >
-      <div className="mx-auto flex w-full max-w-[1600px] items-center gap-3 px-3 py-2.5 sm:px-6">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:gap-3 sm:px-6">
         {/* Label */}
         <div className="flex shrink-0 items-center gap-2">
           <span className="relative inline-flex h-5 w-5 items-center justify-center">
@@ -57,7 +57,7 @@ export function UrgencyStrip({ items, onChipClick, onViewAll, maxChips = 6 }: Pr
               className="absolute inline-flex h-3.5 w-3.5 animate-ping rounded-full opacity-40"
               style={{ background: pulseColor }}
             />
-            <AlarmClock className="relative h-4 w-4 text-[var(--terracotta)]" />
+            <AlarmClock className="relative h-4 w-4 text-[var(--terracotta)] animate-buzz" />
           </span>
           <span className="font-display text-[13px] font-medium text-[var(--charcoal)]">
             Needs your attention
