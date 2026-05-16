@@ -96,8 +96,10 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
     const incoming = Array.from(files);
     const accepted: File[] = [];
     for (const f of incoming) {
-      if (f.size > MAX_FILE_SIZE) {
-        setError(`"${f.name}" exceeds 20 MB limit`);
+      const limit = maxFileSizeFor(f);
+      if (f.size > limit) {
+        const limitMb = Math.round(limit / (1024 * 1024));
+        setError(`"${f.name}" exceeds ${limitMb} MB limit`);
         continue;
       }
       accepted.push(f);
