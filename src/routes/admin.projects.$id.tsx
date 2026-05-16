@@ -169,7 +169,7 @@ function ProjectDetailPage() {
   const { project, clients, vendors, selections = {} as Record<string, { user_id: string; display_name: string; email: string; status: string; updated_at: string }[]> } = data as any;
 
   return (
-    <div className="min-h-screen bg-[var(--cream)] px-6 py-8">
+    <div className="min-h-screen bg-[var(--cream)] px-4 py-6 sm:px-6 sm:py-8">
       <div className="mx-auto max-w-5xl">
         <Link to="/admin/projects" className="inline-flex items-center gap-1 text-sm text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]">
           <ArrowLeft className="h-4 w-4" /> All projects
@@ -184,11 +184,11 @@ function ProjectDetailPage() {
 
         {/* Client logins */}
         <section className="mt-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-display text-xl text-[var(--charcoal)]">Client login</h2>
             <button
               onClick={() => setShowAddClient((s) => !s)}
-              className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 sm:w-auto"
             >
               <UserPlus className="h-4 w-4" /> Add Client Login
             </button>
@@ -364,7 +364,7 @@ function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
             <button onClick={() => setResetting(true)} title="Change password" className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
               <KeyRound className="h-4 w-4" />
             </button>
-            <button onClick={handleRemove} title="Remove client" className="rounded p-1.5 text-red-600 hover:bg-red-50">
+            <button onClick={handleRemove} title="Remove client" className="rounded p-1.5 text-[var(--charcoal)]/55 hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]">
               <Trash2 className="h-4 w-4" />
             </button>
           </div>
@@ -489,25 +489,27 @@ function AssignedVendorsSection({
 
   return (
     <section className="mt-10">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div>
           <h2 className="font-display text-xl text-[var(--charcoal)]">Assigned vendors ({vendors.length})</h2>
           <p className="text-xs text-[var(--charcoal)]/55">
             What the client has marked appears next to each vendor.
           </p>
         </div>
-        <div className="inline-flex overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs">
+        <div className="inline-flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs sm:w-auto">
           <button
             onClick={() => setView("list")}
-            className={`inline-flex items-center gap-1 px-2.5 py-1.5 ${view === "list" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"}`}
+            className={`inline-flex flex-1 items-center justify-center gap-1 px-2.5 py-1.5 sm:flex-none ${view === "list" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"}`}
           >
             <LayoutGrid className="h-3.5 w-3.5" /> List
           </button>
           <button
             onClick={() => setView("grouped")}
-            className={`inline-flex items-center gap-1 border-l border-[var(--border)] px-2.5 py-1.5 ${view === "grouped" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"}`}
+            className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-2.5 py-1.5 sm:flex-none ${view === "grouped" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"}`}
           >
-            <ListFilter className="h-3.5 w-3.5" /> Group by client status
+            <ListFilter className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Group by client status</span>
+            <span className="sm:hidden">Grouped</span>
           </button>
         </div>
       </div>
@@ -528,7 +530,7 @@ function AssignedVendorsSection({
             const rows = selections[v.id] ?? [];
             const primary = pickPrimary(rows);
             return (
-              <div key={v.id} className="flex items-start justify-between gap-3 rounded-lg border border-[var(--border)] bg-white p-3">
+              <div key={v.id} className="relative flex items-start justify-between gap-3 rounded-lg border border-[var(--border)] bg-white p-3 pr-10 sm:pr-3">
                 <div className="min-w-0 flex-1">
                   <div className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
                     {v.category}{v.subcategory ? ` · ${v.subcategory}` : ""}
@@ -578,7 +580,7 @@ function AssignedVendorsSection({
                 <button
                   onClick={() => onRemove(v.id, v.vendor_name)}
                   title="Remove from project"
-                  className="rounded p-1.5 text-red-600 hover:bg-red-50"
+                  className="absolute right-2 top-2 rounded p-1.5 text-[var(--charcoal)]/55 hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)] sm:static"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -704,7 +706,7 @@ function VendorQuotesPill({
             onClick={() => onOpen(false)}
             className={
               closed
-                ? "inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-800 hover:border-green-400"
+                ? "inline-flex items-center gap-1 rounded-full border border-[var(--sage)] bg-[var(--sage)]/40 px-2.5 py-1 text-[11px] font-semibold text-[var(--terracotta)] hover:border-[var(--terracotta)]"
                 : "inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2.5 py-1 text-[11px] text-[var(--charcoal)]/80 hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
             }
             title={tip}
@@ -889,9 +891,9 @@ function ProjectHeader({ project, canDelete, onDelete, onSaved }: ProjectHeaderP
   }
 
   return (
-    <div className="mt-4 flex items-start justify-between gap-4">
-      <div>
-        <h1 className="font-display text-3xl text-[var(--charcoal)]">
+    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+      <div className="min-w-0">
+        <h1 className="font-display text-2xl text-[var(--charcoal)] sm:text-3xl">
           {project.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {project.groom_name}
         </h1>
         <div className="mt-1 flex items-center gap-1.5 text-sm text-[var(--charcoal)]/65">
@@ -903,14 +905,14 @@ function ProjectHeader({ project, canDelete, onDelete, onSaved }: ProjectHeaderP
       <div className="flex items-center gap-2">
         <button
           onClick={startEdit}
-          className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:flex-none"
         >
           <Pencil className="h-4 w-4" /> Edit
         </button>
         {canDelete && (
           <button
             onClick={onDelete}
-            className="inline-flex items-center gap-1.5 rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-[var(--terracotta)]/30 px-3 py-1.5 text-sm text-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] sm:flex-none"
           >
             <Trash2 className="h-4 w-4" /> Delete
           </button>

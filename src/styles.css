@@ -98,6 +98,11 @@
   --urgency-upcoming: hsl(20 8% 55%);
   --urgency-unset: hsl(36 65% 55%);
   --urgency-booked: hsl(142 55% 38%);
+
+  /* Criticality chip tints (brand-aligned) */
+  --criticality-low-bg: var(--cream-deep);
+  --criticality-med-bg: hsl(30 50% 70% / 0.4);
+  --criticality-high-bg: var(--terracotta-soft);
 }
 
 @layer base {
