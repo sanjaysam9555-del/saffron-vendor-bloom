@@ -204,7 +204,11 @@ function ClientPortalPage() {
           <div className="mb-5 flex flex-col items-start gap-3 animate-fade-up sm:flex-row sm:flex-nowrap sm:items-end sm:justify-between sm:gap-3">
             <div className="min-w-0 w-full sm:w-auto">
               <h1 className="brand-line truncate font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
-                {filters.category ?? "Welcome"}
+                {filters.category ?? (
+                  <>
+                    Welcome, {project.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {project.groom_name}
+                  </>
+                )}
               </h1>
               <p className="mt-1 text-sm text-[var(--charcoal)]/65 sm:truncate">
                 {filters.category
@@ -216,7 +220,7 @@ function ClientPortalPage() {
               <button
                 onClick={() => setMobileFiltersOpen(true)}
                 aria-label="Filters"
-                className={`relative inline-flex flex-1 items-center justify-center gap-1 rounded-md border px-1.5 py-1 text-[10px] font-medium leading-none sm:flex-none sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs lg:hidden ${
+                className={`relative inline-flex shrink-0 items-center justify-center gap-1 rounded-md border px-2 py-1 text-[10px] font-medium leading-none sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs lg:hidden ${
                   filters.category || filters.locations.length
                     ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
                     : "border-[var(--border)] bg-white text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
