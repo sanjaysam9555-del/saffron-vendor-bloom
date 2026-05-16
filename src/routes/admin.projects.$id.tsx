@@ -891,7 +891,7 @@ function ProjectHeader({ project, canDelete, onDelete, onSaved }: ProjectHeaderP
   }
 
   return (
-    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+    <div className="relative mt-4 flex flex-col gap-3 pr-20 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:pr-0">
       <div className="min-w-0">
         <h1 className="font-display text-2xl text-[var(--charcoal)] sm:text-3xl">
           {project.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {project.groom_name}
@@ -902,19 +902,23 @@ function ProjectHeader({ project, canDelete, onDelete, onSaved }: ProjectHeaderP
         </div>
         {project.notes && <p className="mt-2 text-sm text-[var(--charcoal)]/70 whitespace-pre-wrap">{project.notes}</p>}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="absolute right-0 top-0 flex items-center gap-1.5 sm:static">
         <button
           onClick={startEdit}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:flex-none"
+          aria-label="Edit project"
+          title="Edit project"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--border)] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:h-auto sm:w-auto sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-sm"
         >
-          <Pencil className="h-4 w-4" /> Edit
+          <Pencil className="h-4 w-4" /> <span className="hidden sm:inline">Edit</span>
         </button>
         {canDelete && (
           <button
             onClick={onDelete}
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-[var(--terracotta)]/30 px-3 py-1.5 text-sm text-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] sm:flex-none"
+            aria-label="Delete project"
+            title="Delete project"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--terracotta)]/30 text-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] sm:h-auto sm:w-auto sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-sm"
           >
-            <Trash2 className="h-4 w-4" /> Delete
+            <Trash2 className="h-4 w-4" /> <span className="hidden sm:inline">Delete</span>
           </button>
         )}
       </div>
