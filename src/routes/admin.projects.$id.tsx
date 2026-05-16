@@ -241,6 +241,14 @@ function ProjectDetailPage() {
           </div>
         </section>
 
+        {/* Booking timeline */}
+        <VendorTimeline
+          projectId={id}
+          weddingDate={project.wedding_date}
+          items={buildTimelineItems(vendors, deadlines)}
+          mode="admin"
+        />
+
         {/* Assigned vendors */}
         <AssignedVendorsSection
           projectId={id}
