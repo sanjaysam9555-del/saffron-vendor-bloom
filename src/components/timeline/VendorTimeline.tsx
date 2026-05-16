@@ -285,8 +285,7 @@ function DeadlineEditor({
       notifySuccess("Deadline saved");
       onDone();
     },
-    onError: (e: unknown) =>
-      notifyError("Could not save", { description: (e as Error).message }),
+    onError: (e: unknown) => notifyError(e, "Could not save"),
   });
 
   const clearM = useMutation({
@@ -297,8 +296,7 @@ function DeadlineEditor({
       notifySuccess("Deadline cleared");
       onDone();
     },
-    onError: (e: unknown) =>
-      notifyError("Could not clear", { description: (e as Error).message }),
+    onError: (e: unknown) => notifyError(e, "Could not clear"),
   });
 
   return (
