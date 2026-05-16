@@ -65,6 +65,7 @@ function ClientPortalPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "project_vendors", filter: `project_id=eq.${projectId}` }, invalidateProject)
       .on("postgres_changes", { event: "*", schema: "public", table: "client_vendor_status" }, invalidateProject)
       .on("postgres_changes", { event: "*", schema: "public", table: "vendors" }, invalidateProject)
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_category_deadlines", filter: `project_id=eq.${projectId}` }, () => queue([["project-deadlines", projectId]]))
       .subscribe();
     return () => {
       if (timer) window.clearTimeout(timer);
@@ -83,12 +84,38 @@ function ClientPortalPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
-    if (stored === "grid" || stored === "board" || stored === "table") setView(stored);
+    if (stored === "grid" || stored === "board" || stored === "table" || stored === "timeline") setView(stored);
   }, []);
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(VIEW_STORAGE_KEY, view);
   }, [view]);
+
+  // Booking-timeline data
+  const { data: deadlines = [] } = useQuery({
+    queryKey: ["project-deadlines", projectId],
+    queryFn: () => listProjectCategoryDeadlines({ data: { project_id: projectId! } }),
+    enabled: !!projectId,
+  });
+  const timelineItems = useMemo(
+    () => buildTimelineItems((data?.vendors ?? []) as ClientVendor[], deadlines),
+    [data?.vendors, deadlines],
+  );
+
+  // Refs to category rows so the urgency strip can scroll to them.
+  const rowRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const registerRowRef = (category: string, el: HTMLDivElement | null) => {
+    if (el) rowRefs.current.set(category, el);
+    else rowRefs.current.delete(category);
+  };
+  const jumpToCategory = (category: string) => {
+    setView("timeline");
+    // wait for the timeline to mount
+    requestAnimationFrame(() => {
+      const el = rowRefs.current.get(category);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  };
 
   const vendors = (data?.vendors ?? []) as ClientVendor[];
 
