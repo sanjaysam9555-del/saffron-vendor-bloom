@@ -33,9 +33,9 @@ export function ClientTopNav({ search, onSearchChange, brideName, groomName, wed
       <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-2 gap-y-2 px-3 py-2.5 sm:flex-nowrap sm:gap-4 sm:px-6">
         <div className="flex shrink-0 items-center gap-2.5">
           <img src={logoLight} alt="Saffron Planning Studio" className="h-8 w-auto object-contain sm:h-9" />
-          <div className="hidden leading-tight sm:block">
-            <div className="font-display text-lg font-semibold text-[var(--terracotta)]">Saffron Planning Studio</div>
-            <div className="text-[9px] uppercase tracking-[0.22em] text-[var(--charcoal)]/55">Your Vendor Folio</div>
+          <div className="leading-tight">
+            <div className="font-display text-sm font-semibold text-[var(--terracotta)] sm:text-lg">Saffron Planning Studio</div>
+            <div className="text-[8px] uppercase tracking-[0.18em] text-[var(--charcoal)]/55 sm:text-[9px] sm:tracking-[0.22em]">Your Vendor Folio</div>
           </div>
         </div>
 
