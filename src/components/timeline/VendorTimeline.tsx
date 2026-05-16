@@ -380,7 +380,7 @@ function DeadlineEditor({
           className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
         />
       </label>
-      <div className="flex items-end gap-2">
+      <div className="flex w-full items-end justify-end gap-2 sm:w-auto">
         <button
           onClick={() => saveM.mutate()}
           disabled={saveM.isPending}
@@ -392,7 +392,7 @@ function DeadlineEditor({
           <button
             onClick={() => clearM.mutate()}
             disabled={clearM.isPending}
-            className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1.5 text-xs hover:border-red-400 hover:text-red-600 disabled:opacity-60"
+            className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1.5 text-xs hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] disabled:opacity-60"
           >
             Clear
           </button>
