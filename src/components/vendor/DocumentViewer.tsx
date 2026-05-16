@@ -122,7 +122,7 @@ export function DocumentViewer({ url, fileName, mimeType, onClose }: DocumentVie
       <div className="relative flex-1 overflow-hidden">
         {kind === "pdf" && <PdfView url={url} fileName={fileName} />}
         {kind === "image" && <ImageView url={url} alt={fileName} />}
-        {kind === "video" && <VideoView url={url} mimeType={mimeType} />}
+        {kind === "video" && <VideoView url={url} fileName={fileName} mimeType={mimeType} />}
         {(kind === "office" || kind === "other") && <FallbackView url={url} fileName={fileName} kind={kind} />}
       </div>
     </div>
