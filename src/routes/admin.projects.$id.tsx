@@ -254,6 +254,75 @@ function ProjectDetailPage() {
   );
 }
 
+function ProjectSectionTabs({
+  projectId,
+  vendors,
+  selections,
+  deadlines,
+  weddingDate,
+  onRemoveVendor,
+}: {
+  projectId: string;
+  vendors: any[];
+  selections: Record<string, Selection[]>;
+  deadlines: any[];
+  weddingDate: string;
+  onRemoveVendor: (id: string, name: string) => void;
+}) {
+  const [tab, setTab] = useState<"vendors" | "timeline">("vendors");
+  return (
+    <section className="mt-10">
+      <div
+        role="tablist"
+        className="inline-flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-sm sm:w-auto"
+      >
+        <button
+          role="tab"
+          aria-selected={tab === "vendors"}
+          onClick={() => setTab("vendors")}
+          className={`inline-flex flex-1 items-center justify-center gap-1.5 px-4 py-2 sm:flex-none ${
+            tab === "vendors"
+              ? "bg-[var(--terracotta)] text-[var(--cream)]"
+              : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
+          }`}
+        >
+          <LayoutGrid className="h-4 w-4" /> Assigned vendors
+        </button>
+        <button
+          role="tab"
+          aria-selected={tab === "timeline"}
+          onClick={() => setTab("timeline")}
+          className={`inline-flex flex-1 items-center justify-center gap-1.5 border-l border-[var(--border)] px-4 py-2 sm:flex-none ${
+            tab === "timeline"
+              ? "bg-[var(--terracotta)] text-[var(--cream)]"
+              : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
+          }`}
+        >
+          <Calendar className="h-4 w-4" /> Booking Timeline
+        </button>
+      </div>
+
+      <div className="mt-4">
+        {tab === "vendors" ? (
+          <AssignedVendorsSection
+            projectId={projectId}
+            vendors={vendors}
+            selections={selections}
+            onRemove={onRemoveVendor}
+          />
+        ) : (
+          <VendorTimeline
+            projectId={projectId}
+            weddingDate={weddingDate}
+            items={buildTimelineItems(vendors, deadlines)}
+            mode="admin"
+          />
+        )}
+      </div>
+    </section>
+  );
+}
+
 function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
   const confirmDelete = useConfirmDelete();
   const [resetting, setResetting] = useState(false);
