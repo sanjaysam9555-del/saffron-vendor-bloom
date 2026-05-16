@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, LayoutGrid, Columns3, Filter as FilterIcon, Table as TableIcon } from "lucide-react";
+import { Sparkles, LayoutGrid, Columns3, Filter as FilterIcon, Table as TableIcon, Clock } from "lucide-react";
 import { ClientGate } from "@/components/ClientGate";
 import { useAuth } from "@/lib/auth";
 import { getMyProject } from "@/server/projects.functions";
+import { listProjectCategoryDeadlines } from "@/server/project-deadlines.functions";
 import { ClientTopNav } from "@/components/client/ClientTopNav";
 import { ClientSidebar, type ClientFilterState } from "@/components/client/ClientSidebar";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
@@ -14,9 +15,12 @@ import { ClientBoardView } from "@/components/client/ClientBoardView";
 import { ClientVendorTable } from "@/components/client/ClientVendorTable";
 import type { ClientVendor } from "@/lib/project-types";
 import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
+import { VendorTimeline } from "@/components/timeline/VendorTimeline";
+import { UrgencyStrip } from "@/components/timeline/UrgencyStrip";
+import { buildTimelineItems } from "@/lib/build-timeline-items";
 
 
-type ViewMode = "grid" | "board" | "table";
+type ViewMode = "grid" | "board" | "table" | "timeline";
 const VIEW_STORAGE_KEY = "saffron.client.viewMode";
 
 export const Route = createFileRoute("/client/")({
