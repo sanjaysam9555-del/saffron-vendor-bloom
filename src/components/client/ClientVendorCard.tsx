@@ -34,11 +34,11 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
           <Sparkles className="h-3 w-3 fill-current" /> Saffron's Pick
         </div>
       )}
-      <h3 className="mb-2 line-clamp-1 font-display text-lg font-semibold leading-tight text-[var(--charcoal)]">
+      <h3 className="mb-2 line-clamp-1 min-h-[1.75rem] font-display text-lg font-semibold leading-tight text-[var(--charcoal)]">
         {vendor.vendor_name}
       </h3>
 
-      <div className="mb-2 flex flex-wrap gap-1">
+      <div className="mb-2 flex min-h-[1.5rem] flex-wrap gap-1">
         <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text}`}>
           {vendor.category}
         </span>
@@ -54,63 +54,79 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
         )}
       </div>
 
-      <div className="min-w-0 space-y-1.5 overflow-hidden text-sm text-[var(--charcoal)]/75">
-        {vendor.location && (
-          <div className="flex items-center gap-1.5">
-            <MapPin className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{vendor.location}</span>
-          </div>
-        )}
-        {vendor.instagram_handle && (() => {
-          const href = instagramUrl(vendor.instagram_handle);
-          if (!href) return null;
+      <div className="min-w-0 space-y-1.5 text-sm text-[var(--charcoal)]/75">
+        {(() => {
+          const igHref = vendor.instagram_handle ? instagramUrl(vendor.instagram_handle) : null;
+          const portfolioHref = vendor.portfolio_link
+            ? (vendor.portfolio_link.startsWith("http") ? vendor.portfolio_link : `https://${vendor.portfolio_link}`)
+            : null;
+          const websiteHref = vendor.website
+            ? (vendor.website.startsWith("http") ? vendor.website : `https://${vendor.website}`)
+            : null;
+          const spacer = <div aria-hidden className="h-[1.125rem]" />;
           return (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="flex min-w-0 items-center gap-1.5 hover:text-[var(--terracotta)]"
-            >
-              <Instagram className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{href}</span>
-            </a>
+            <>
+              {vendor.location ? (
+                <div className="flex h-[1.125rem] items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{vendor.location}</span>
+                </div>
+              ) : spacer}
+              {igHref ? (
+                <a
+                  href={igHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex h-[1.125rem] min-w-0 items-center gap-1.5 hover:text-[var(--terracotta)]"
+                >
+                  <Instagram className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{igHref}</span>
+                </a>
+              ) : spacer}
+              {portfolioHref ? (
+                <a
+                  href={portfolioHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex h-[1.125rem] items-center gap-1.5 hover:text-[var(--terracotta)]"
+                >
+                  <LinkIcon className="h-3.5 w-3.5 shrink-0" /> Portfolio
+                </a>
+              ) : spacer}
+              {websiteHref ? (
+                <a
+                  href={websiteHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex h-[1.125rem] items-center gap-1.5 hover:text-[var(--terracotta)]"
+                >
+                  <Globe className="h-3.5 w-3.5 shrink-0" /> Website
+                </a>
+              ) : spacer}
+              {vendor.google_rating != null ? (
+                <div className="flex h-[1.125rem] items-center gap-1.5">
+                  <Star className="h-3.5 w-3.5 fill-[var(--terracotta)] text-[var(--terracotta)]" />
+                  <span>{Number(vendor.google_rating).toFixed(1)}</span>
+                </div>
+              ) : spacer}
+            </>
           );
         })()}
-        {vendor.portfolio_link && (
-          <a
-            href={vendor.portfolio_link.startsWith("http") ? vendor.portfolio_link : `https://${vendor.portfolio_link}`}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 hover:text-[var(--terracotta)]"
-          >
-            <LinkIcon className="h-3.5 w-3.5 shrink-0" /> Portfolio
-          </a>
-        )}
-        {vendor.website && (
-          <a
-            href={vendor.website.startsWith("http") ? vendor.website : `https://${vendor.website}`}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 hover:text-[var(--terracotta)]"
-          >
-            <Globe className="h-3.5 w-3.5 shrink-0" /> Website
-          </a>
-        )}
-        {vendor.google_rating != null && (
-          <div className="flex items-center gap-1.5">
-            <Star className="h-3.5 w-3.5 fill-[var(--terracotta)] text-[var(--terracotta)]" />
-            <span>{Number(vendor.google_rating).toFixed(1)}</span>
-          </div>
-        )}
       </div>
 
-      <VendorInstagramCardStrip preview={instagramPreview} hasHandle={!!vendor.instagram_handle} />
+      {vendor.instagram_handle ? (
+        <VendorInstagramCardStrip preview={instagramPreview} hasHandle />
+      ) : (
+        <div className="mt-2 flex min-h-[148px] items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-2 text-[10px] text-[var(--charcoal)]/40">
+          No Instagram linked
+        </div>
+      )}
 
-      <div className="mt-3 space-y-2 border-t border-[var(--border)] pt-3">
+      <div className="mt-auto space-y-2 border-t border-[var(--border)] pt-3">
         <ClientStatusSelect vendorId={vendor.id} status={vendor.client_status} />
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex min-h-[1.75rem] items-center justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             {(() => {
               const quotes = vendor.quotes ?? [];
