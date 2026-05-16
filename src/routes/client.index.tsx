@@ -204,7 +204,11 @@ function ClientPortalPage() {
           <div className="mb-5 flex flex-col items-start gap-3 animate-fade-up sm:flex-row sm:flex-nowrap sm:items-end sm:justify-between sm:gap-3">
             <div className="min-w-0 w-full sm:w-auto">
               <h1 className="brand-line truncate font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
-                {filters.category ?? "Welcome"}
+                {filters.category ?? (
+                  <>
+                    Welcome, {project.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {project.groom_name}
+                  </>
+                )}
               </h1>
               <p className="mt-1 text-sm text-[var(--charcoal)]/65 sm:truncate">
                 {filters.category
