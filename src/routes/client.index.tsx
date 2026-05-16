@@ -220,7 +220,7 @@ function ClientPortalPage() {
               <button
                 onClick={() => setMobileFiltersOpen(true)}
                 aria-label="Filters"
-                className={`relative inline-flex flex-1 items-center justify-center gap-1 rounded-md border px-1.5 py-1 text-[10px] font-medium leading-none sm:flex-none sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs lg:hidden ${
+                className={`relative inline-flex shrink-0 items-center justify-center gap-1 rounded-md border px-2 py-1 text-[10px] font-medium leading-none sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs lg:hidden ${
                   filters.category || filters.locations.length
                     ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
                     : "border-[var(--border)] bg-white text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
