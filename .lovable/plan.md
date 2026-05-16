@@ -1,40 +1,110 @@
-## Problem
-
-Vendor portfolios sometimes include videos (mostly `.mp4`, e.g. WhatsApp clips up to ~16 MB). Today:
-
-- The file picker `accept` list (`ACCEPTED_FILE_TYPES` in `src/lib/vendor-files-api.ts`) does **not** list any video extensions, so video uploads only succeed via drag-and-drop or by typing the path. The 20 MB cap also rejects most real portfolio reels.
-- When a video row is clicked, `DocumentViewer` classifies it as `"other"` and shows the "Preview not available" fallback. The "Open in new tab" link relies on a short-lived (5 min) signed URL; after it expires (or for clients without project access) the storage backend returns **"Object not found"**, which is what the user is seeing.
-- Videos are never actually played inline.
-
 ## Goal
 
-Let staff and clients **watch** vendor videos directly inside the document viewer (same modal flow as PDFs/images), and stop the misleading "object not found" surface.
+Per-project, per-category booking deadlines (Model B): a category appears in the timeline only after at least one vendor in that category is assigned to the project. Urgency is computed live from the due date + admin-set criticality baseline. Both admin and client see the same data; client lands on dashboard with an always-visible urgency strip + a new Timeline tab.
 
-## Changes
+## Data model
 
-1. **`src/lib/vendor-files-api.ts`**
-   - Extend `ACCEPTED_FILE_TYPES` with common video extensions: `.mp4, .mov, .webm, .m4v`.
-   - Introduce a higher size limit for videos (e.g. `MAX_VIDEO_FILE_SIZE = 200 * 1024 * 1024`) while keeping the existing 20 MB limit for documents/images. Export a helper `maxFileSizeFor(file)` and update `VendorForm.addFiles` to use it.
+New table `project_category_deadlines`:
+- `id` uuid pk
+- `project_id` uuid (logical FK to `projects.id`)
+- `category` text (matches `vendors.category` / `categories.name`)
+- `due_date` date
+- `criticality` text — `'low' | 'medium' | 'high'`, default `'medium'`
+- `notes` text nullable
+- `created_by` uuid nullable, `created_at`, `updated_at`
+- Unique `(project_id, category)`
+- `touch_updated_at` trigger
 
-2. **`src/components/vendor/DocumentViewer.tsx`**
-   - Add a new `"video"` branch to `detectKind` (matches `video/*` MIME or `.mp4|.mov|.webm|.m4v|.mkv|.avi` extensions).
-   - Add a `VideoView` component that renders a native `<video controls preload="metadata" playsInline>` element using the signed URL **directly** (no `fetch` → `blob:` round-trip; Supabase signed URLs already support `Range` requests which the browser needs for seeking).
-   - Keep the existing PDF blob-fetch logic untouched so PDF previews are unaffected.
+RLS:
+- Staff (admin/employee): ALL.
+- Clients: SELECT where `has_project_access(auth.uid(), project_id)`.
 
-3. **`src/components/vendor/SignedDocumentViewer.tsx`**
-   - When `getAttachmentUrl` rejects with a storage "object not found" / 404 message, show a friendlier copy ("This file is no longer available") instead of the raw error, and stop using "Loading…" indefinitely.
+Realtime: add `project_category_deadlines` to `supabase_realtime` publication.
 
-4. **`src/components/vendor/VendorForm.tsx`**
-   - Use the new per-file size helper so video uploads above 20 MB are allowed up to the new video cap, and show a clearer error message when oversize.
+No changes to `projects`, `project_vendors`, `vendors`, or quotes tables.
 
-## Out of scope
+## Server functions (`src/server/project-deadlines.functions.ts`)
 
-- No schema or RLS changes — storage paths, `vendor_attachments` table, and `getVendorFileSignedUrl` authorization logic stay as they are.
-- No transcoding / thumbnail generation. The browser plays the original file.
-- No changes to quote-file viewing (`SignedQuoteFileViewer`) unless needed; can mirror the same `VideoView` later if requested.
+All protected with `requireSupabaseAuth`.
 
-## Technical notes
+- `listProjectTimeline({ project_id })` — staff OR project client. Returns:
+  ```ts
+  {
+    wedding_date: string;
+    items: Array<{
+      category: string;
+      vendor_count: number;
+      due_date: string | null;
+      criticality: 'low'|'medium'|'high' | null;
+      notes: string | null;
+      booked: boolean;
+      booked_vendor_name: string | null;
+    }>
+  }
+  ```
+  Source: `SELECT DISTINCT v.category FROM project_vendors pv JOIN vendors v ON v.id = pv.vendor_id WHERE pv.project_id = $1` left-joined with `project_category_deadlines`, plus a per-(project, category) booked check from `project_vendor_quotes (status='closed')` OR `client_vendor_status='finalised'`.
 
-- Supabase signed URLs over the `vendor-files` bucket return `206 Partial Content` for `Range` requests, so a plain `<video src={signedUrl} controls>` works for scrubbing without needing HLS.
-- We deliberately do **not** download the whole video into a `blob:` URL (the way PDFs are handled) — that would force the entire file into memory before the first frame and break seeking on large clips.
-- The viewer modal already locks `body` scroll and handles `Esc`; the video element inherits those behaviors.
+- `upsertCategoryDeadline({ project_id, category, due_date, criticality, notes })` — staff only.
+- `deleteCategoryDeadline({ project_id, category })` — staff only (used when admin wants to clear).
+
+## Urgency model (UI-only, derived)
+
+```text
+booked                                  → Booked    (green, locked)
+days_left ≤ 0 && !booked                → Overdue   (red)
+0 < days_left ≤ 7                       → Urgent    (orange)
+7 < days_left ≤ 14                      → Due soon  (amber)
+14 < days_left ≤ 30                     → Plan soon (blue)
+days_left > 30                          → Upcoming  (muted)
+no due_date                             → Needs deadline (admin: amber CTA; client: neutral "planner will set this")
+```
+
+Baseline `criticality='high'` bumps each bucket up one level; `'low'` softens one. `useNow()` ticks every 60s so urgency rolls over without a page reload.
+
+Tokens added to `src/styles.css`: `--urgency-overdue`, `--urgency-urgent`, `--urgency-soon`, `--urgency-plan`, `--urgency-upcoming`, `--urgency-booked` (oklch).
+
+## Shared UI
+
+`src/components/timeline/VendorTimeline.tsx` — reused by admin and client.
+
+Props: `{ projectId, weddingDate, items, mode: 'admin' | 'client' }`.
+
+Internal Timeline / Table sub-toggle:
+- **Timeline view**: vertical list grouped by urgency bucket (Overdue → Urgent → Due soon → Plan soon → Upcoming → Needs deadline → Booked). Wedding date pinned at top.
+- **Table view**: columns Category | Vendors assigned | Due date | Days left | Criticality | Status. Default sort: `due_date` asc, Booked sinks to bottom.
+
+Row expand → lists the assigned vendors in that category with their current `client_vendor_status` (read from existing query, no new fetch).
+
+Admin mode adds inline editor (date picker + Low/Med/High select + notes) and a "Save" action wired to `upsertCategoryDeadline`.
+
+`src/components/timeline/UrgencyStrip.tsx` — compact horizontal chip strip showing only Overdue / Urgent / Due soon items (max 4, "+N more"). Hidden if empty. Click chip → switch to Timeline tab + scroll to row.
+
+## Admin integration
+
+In `src/routes/admin.projects.$id.tsx`:
+- Add **Booking Timeline** section above Assigned Vendors.
+- Banner at top: "N categories have no deadline set yet" with jump-to-row.
+- Uses `VendorTimeline mode="admin"`.
+- `useRealtimeInvalidate` already subscribed to `project_vendors`, `project_vendor_quotes`, `client_vendor_status`; add `project_category_deadlines`.
+
+## Client integration
+
+In `src/routes/client.index.tsx`:
+- **UrgencyStrip** pinned under `ClientTopNav`, full width, always rendered (hidden if no urgent items).
+- Main view toggle gets a third option: `Table | Board | Timeline`. Selecting Timeline replaces the vendor area with `VendorTimeline mode="client"`.
+- Clicking a chip in the strip sets the active tab to Timeline and scrolls to the target category row via `scrollIntoView`.
+- Realtime: extend the existing client subscription to include `project_category_deadlines`.
+
+## Data fetching
+
+TanStack Query keys:
+- `["project-timeline", projectId]` for `listProjectTimeline`.
+
+Both admin and client pages prime via `ensureQueryData` in their existing loaders (or first render) and read with `useSuspenseQuery`. Mutations (`upsertCategoryDeadline`, `deleteCategoryDeadline`) invalidate `["project-timeline", projectId]`.
+
+## Out of scope for v1
+
+- Email/in-app notifications when a category tips into Urgent/Overdue (follow-up using existing `staff_notifications` + transactional email infra).
+- Auto-suggested due dates from wedding date.
+- Per-vendor (not per-category) deadlines.
+- Bulk-seed deadlines.

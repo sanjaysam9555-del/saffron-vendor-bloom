@@ -89,6 +89,15 @@
   --chart-3: var(--champagne);
   --chart-4: var(--sage);
   --chart-5: var(--charcoal);
+
+  /* Booking-timeline urgency tokens */
+  --urgency-overdue: hsl(0 72% 48%);
+  --urgency-urgent: hsl(18 88% 52%);
+  --urgency-soon: hsl(36 95% 50%);
+  --urgency-plan: hsl(210 75% 50%);
+  --urgency-upcoming: hsl(20 8% 55%);
+  --urgency-unset: hsl(36 65% 55%);
+  --urgency-booked: hsl(142 55% 38%);
 }
 
 @layer base {

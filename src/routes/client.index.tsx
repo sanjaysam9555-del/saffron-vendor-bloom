@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, LayoutGrid, Columns3, Filter as FilterIcon, Table as TableIcon } from "lucide-react";
+import { Sparkles, LayoutGrid, Columns3, Filter as FilterIcon, Table as TableIcon, Clock } from "lucide-react";
 import { ClientGate } from "@/components/ClientGate";
 import { useAuth } from "@/lib/auth";
 import { getMyProject } from "@/server/projects.functions";
+import { listProjectCategoryDeadlines } from "@/server/project-deadlines.functions";
 import { ClientTopNav } from "@/components/client/ClientTopNav";
 import { ClientSidebar, type ClientFilterState } from "@/components/client/ClientSidebar";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
@@ -14,9 +15,12 @@ import { ClientBoardView } from "@/components/client/ClientBoardView";
 import { ClientVendorTable } from "@/components/client/ClientVendorTable";
 import type { ClientVendor } from "@/lib/project-types";
 import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
+import { VendorTimeline } from "@/components/timeline/VendorTimeline";
+import { UrgencyStrip } from "@/components/timeline/UrgencyStrip";
+import { buildTimelineItems } from "@/lib/build-timeline-items";
 
 
-type ViewMode = "grid" | "board" | "table";
+type ViewMode = "grid" | "board" | "table" | "timeline";
 const VIEW_STORAGE_KEY = "saffron.client.viewMode";
 
 export const Route = createFileRoute("/client/")({
@@ -61,6 +65,7 @@ function ClientPortalPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "project_vendors", filter: `project_id=eq.${projectId}` }, invalidateProject)
       .on("postgres_changes", { event: "*", schema: "public", table: "client_vendor_status" }, invalidateProject)
       .on("postgres_changes", { event: "*", schema: "public", table: "vendors" }, invalidateProject)
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_category_deadlines", filter: `project_id=eq.${projectId}` }, () => queue([["project-deadlines", projectId]]))
       .subscribe();
     return () => {
       if (timer) window.clearTimeout(timer);
@@ -79,12 +84,38 @@ function ClientPortalPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
-    if (stored === "grid" || stored === "board" || stored === "table") setView(stored);
+    if (stored === "grid" || stored === "board" || stored === "table" || stored === "timeline") setView(stored);
   }, []);
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(VIEW_STORAGE_KEY, view);
   }, [view]);
+
+  // Booking-timeline data
+  const { data: deadlines = [] } = useQuery({
+    queryKey: ["project-deadlines", projectId],
+    queryFn: () => listProjectCategoryDeadlines({ data: { project_id: projectId! } }),
+    enabled: !!projectId,
+  });
+  const timelineItems = useMemo(
+    () => buildTimelineItems((data?.vendors ?? []) as ClientVendor[], deadlines),
+    [data?.vendors, deadlines],
+  );
+
+  // Refs to category rows so the urgency strip can scroll to them.
+  const rowRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const registerRowRef = (category: string, el: HTMLDivElement | null) => {
+    if (el) rowRefs.current.set(category, el);
+    else rowRefs.current.delete(category);
+  };
+  const jumpToCategory = (category: string) => {
+    setView("timeline");
+    // wait for the timeline to mount
+    requestAnimationFrame(() => {
+      const el = rowRefs.current.get(category);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  };
 
   const vendors = (data?.vendors ?? []) as ClientVendor[];
 
@@ -151,6 +182,8 @@ function ClientPortalPage() {
         groomName={project.groom_name}
         weddingDate={project.wedding_date}
       />
+
+      <UrgencyStrip items={timelineItems} onChipClick={jumpToCategory} />
 
       <div className="mx-auto flex w-full max-w-[1600px] flex-1">
         <ClientSidebar
@@ -231,11 +264,31 @@ function ClientPortalPage() {
                 >
                   <TableIcon className="h-3.5 w-3.5" /> Table
                 </button>
+                <button
+                  role="tab"
+                  aria-selected={view === "timeline"}
+                  onClick={() => setView("timeline")}
+                  className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 transition-colors ${
+                    view === "timeline"
+                      ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                      : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                  }`}
+                >
+                  <Clock className="h-3.5 w-3.5" /> Timeline
+                </button>
               </div>
             </div>
           </div>
 
-          {vendors.length === 0 ? (
+          {view === "timeline" ? (
+            <VendorTimeline
+              projectId={projectId!}
+              weddingDate={project.wedding_date}
+              items={timelineItems}
+              mode="client"
+              registerRowRef={registerRowRef}
+            />
+          ) : vendors.length === 0 ? (
             <EmptyState message="Your planner hasn't shared any vendors yet. Check back soon." />
           ) : filtered.length === 0 ? (
             <EmptyState message="No vendors match your filters." />

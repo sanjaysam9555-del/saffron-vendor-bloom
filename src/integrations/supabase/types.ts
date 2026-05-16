@@ -260,6 +260,42 @@ export type Database = {
         }
         Relationships: []
       }
+      project_category_deadlines: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          criticality: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by?: string | null
+          criticality?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          criticality?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       project_clients: {
         Row: {
           created_at: string
