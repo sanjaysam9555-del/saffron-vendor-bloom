@@ -1,110 +1,52 @@
-## Goal
+# Timeline UI polish + perf fixes
 
-Per-project, per-category booking deadlines (Model B): a category appears in the timeline only after at least one vendor in that category is assigned to the project. Urgency is computed live from the due date + admin-set criticality baseline. Both admin and client see the same data; client lands on dashboard with an always-visible urgency strip + a new Timeline tab.
+Three targeted fixes — pure presentation + cache work, no schema or server changes.
 
-## Data model
+## 1. Redesign the client urgency strip
 
-New table `project_category_deadlines`:
-- `id` uuid pk
-- `project_id` uuid (logical FK to `projects.id`)
-- `category` text (matches `vendors.category` / `categories.name`)
-- `due_date` date
-- `criticality` text — `'low' | 'medium' | 'high'`, default `'medium'`
-- `notes` text nullable
-- `created_by` uuid nullable, `created_at`, `updated_at`
-- Unique `(project_id, category)`
-- `touch_updated_at` trigger
+File: `src/components/timeline/UrgencyStrip.tsx`
 
-RLS:
-- Staff (admin/employee): ALL.
-- Clients: SELECT where `has_project_access(auth.uid(), project_id)`.
+Current look is a flat amber utility strip that clashes with the Saffron brand palette (cream / terracotta / charcoal). New design:
 
-Realtime: add `project_category_deadlines` to `supabase_realtime` publication.
+- Brand-aligned container: subtle gradient from `var(--cream-deep)` to `var(--cream)`, hairline bottom border in `var(--champagne)`, soft inner shadow. Drops the amber background entirely.
+- Left side: small pulsing dot in `var(--urgency-overdue)` when any item is overdue, otherwise `var(--urgency-urgent)`. Replace the warning triangle with an `AlarmClock` icon in `var(--terracotta)`. Label text uses `font-display` for a more editorial feel: "Needs your attention" + count badge (e.g. "3").
+- Chips: pill cards with white background, 1px border tinted from the bucket color (mix at ~40% opacity), small bucket dot, category in `font-medium`, bucket label in `text-[var(--charcoal)]/55`, and a right-aligned days-left chip in the bucket color. Hover lifts with `translate-y-[-1px]` and shadow. Overdue chips get a faint pulsing ring.
+- Layout: horizontal scroll on mobile keeps current behavior, but adds soft fade masks on left/right edges so cutoff chips read intentionally. Increases vertical padding from `py-1.5` to `py-2.5` for breathing room.
+- Adds an inline "View all" link on the right that triggers `onChipClick` with a special sentinel (or new `onViewAll` prop) to open the Timeline tab without scrolling to a specific row.
 
-No changes to `projects`, `project_vendors`, `vendors`, or quotes tables.
+No behavior change beyond the optional View-all affordance.
 
-## Server functions (`src/server/project-deadlines.functions.ts`)
+## 2. Fit all view-toggle buttons on mobile
 
-All protected with `requireSupabaseAuth`.
+File: `src/routes/client.index.tsx` (lines ~211–280)
 
-- `listProjectTimeline({ project_id })` — staff OR project client. Returns:
-  ```ts
-  {
-    wedding_date: string;
-    items: Array<{
-      category: string;
-      vendor_count: number;
-      due_date: string | null;
-      criticality: 'low'|'medium'|'high' | null;
-      notes: string | null;
-      booked: boolean;
-      booked_vendor_name: string | null;
-    }>
-  }
-  ```
-  Source: `SELECT DISTINCT v.category FROM project_vendors pv JOIN vendors v ON v.id = pv.vendor_id WHERE pv.project_id = $1` left-joined with `project_category_deadlines`, plus a per-(project, category) booked check from `project_vendor_quotes (status='closed')` OR `client_vendor_status='finalised'`.
+Issue: at 360–414px width the Filters button + 4-tab toggle overflow and clip Timeline on the left.
 
-- `upsertCategoryDeadline({ project_id, category, due_date, criticality, notes })` — staff only.
-- `deleteCategoryDeadline({ project_id, category })` — staff only (used when admin wants to clear).
+Fix:
+- Filters button: drop the "Filters" label on screens `<sm`, keep only the icon. Use `<span className="hidden sm:inline">Filters</span>`. Shrink to a square icon button (`h-8 w-8`) on mobile.
+- View toggle: hide the label text on `<sm` for all 4 buttons (Grid / Board / Table / Timeline), keep icons. Reduce horizontal padding from `px-3` to `px-2` on mobile.
+- Wrap the toggle group in `min-w-0` and the outer container in `flex-nowrap` (instead of `flex-wrap`) so it sits on one row even with the title; the title gets `truncate min-w-0`.
+- Add `aria-label` to each tab button so icon-only mode is still accessible.
 
-## Urgency model (UI-only, derived)
+## 3. Make admin deadline save feel instant
 
-```text
-booked                                  → Booked    (green, locked)
-days_left ≤ 0 && !booked                → Overdue   (red)
-0 < days_left ≤ 7                       → Urgent    (orange)
-7 < days_left ≤ 14                      → Due soon  (amber)
-14 < days_left ≤ 30                     → Plan soon (blue)
-days_left > 30                          → Upcoming  (muted)
-no due_date                             → Needs deadline (admin: amber CTA; client: neutral "planner will set this")
-```
+File: `src/components/timeline/VendorTimeline.tsx` (DeadlineEditor, lines ~253–355)
 
-Baseline `criticality='high'` bumps each bucket up one level; `'low'` softens one. `useNow()` ticks every 60s so urgency rolls over without a page reload.
+Current flow waits for: server roundtrip → success → invalidate `["project-deadlines", projectId]` → refetch deadlines → realtime echo also fires same invalidation. Net latency 400ms–1.5s before the row updates.
 
-Tokens added to `src/styles.css`: `--urgency-overdue`, `--urgency-urgent`, `--urgency-soon`, `--urgency-plan`, `--urgency-upcoming`, `--urgency-booked` (oklch).
+Fix:
+- Use React Query optimistic update on `saveM` and `clearM` via `onMutate`:
+  - Snapshot current `["project-deadlines", projectId]` cache.
+  - Synchronously upsert the edited category into the cache (mirror the `CategoryDeadline` shape).
+  - Call `onDone()` immediately so the editor closes the moment the user clicks Save.
+  - On `onError`, roll back to the snapshot and surface the existing toast.
+  - On `onSettled`, invalidate the same key so the eventual server truth replaces our optimistic value (realtime echo becomes a cheap no-op).
+- Also remove the implicit `Optimistic = true` behavior on `clearM` similarly (remove row from cache).
 
-## Shared UI
+Result: row reflects new date / criticality and re-buckets in <16ms; server confirmation is silent.
 
-`src/components/timeline/VendorTimeline.tsx` — reused by admin and client.
+## Out of scope
 
-Props: `{ projectId, weddingDate, items, mode: 'admin' | 'client' }`.
-
-Internal Timeline / Table sub-toggle:
-- **Timeline view**: vertical list grouped by urgency bucket (Overdue → Urgent → Due soon → Plan soon → Upcoming → Needs deadline → Booked). Wedding date pinned at top.
-- **Table view**: columns Category | Vendors assigned | Due date | Days left | Criticality | Status. Default sort: `due_date` asc, Booked sinks to bottom.
-
-Row expand → lists the assigned vendors in that category with their current `client_vendor_status` (read from existing query, no new fetch).
-
-Admin mode adds inline editor (date picker + Low/Med/High select + notes) and a "Save" action wired to `upsertCategoryDeadline`.
-
-`src/components/timeline/UrgencyStrip.tsx` — compact horizontal chip strip showing only Overdue / Urgent / Due soon items (max 4, "+N more"). Hidden if empty. Click chip → switch to Timeline tab + scroll to row.
-
-## Admin integration
-
-In `src/routes/admin.projects.$id.tsx`:
-- Add **Booking Timeline** section above Assigned Vendors.
-- Banner at top: "N categories have no deadline set yet" with jump-to-row.
-- Uses `VendorTimeline mode="admin"`.
-- `useRealtimeInvalidate` already subscribed to `project_vendors`, `project_vendor_quotes`, `client_vendor_status`; add `project_category_deadlines`.
-
-## Client integration
-
-In `src/routes/client.index.tsx`:
-- **UrgencyStrip** pinned under `ClientTopNav`, full width, always rendered (hidden if no urgent items).
-- Main view toggle gets a third option: `Table | Board | Timeline`. Selecting Timeline replaces the vendor area with `VendorTimeline mode="client"`.
-- Clicking a chip in the strip sets the active tab to Timeline and scrolls to the target category row via `scrollIntoView`.
-- Realtime: extend the existing client subscription to include `project_category_deadlines`.
-
-## Data fetching
-
-TanStack Query keys:
-- `["project-timeline", projectId]` for `listProjectTimeline`.
-
-Both admin and client pages prime via `ensureQueryData` in their existing loaders (or first render) and read with `useSuspenseQuery`. Mutations (`upsertCategoryDeadline`, `deleteCategoryDeadline`) invalidate `["project-timeline", projectId]`.
-
-## Out of scope for v1
-
-- Email/in-app notifications when a category tips into Urgent/Overdue (follow-up using existing `staff_notifications` + transactional email infra).
-- Auto-suggested due dates from wedding date.
-- Per-vendor (not per-category) deadlines.
-- Bulk-seed deadlines.
+- Notifications when an item tips into Urgent / Overdue.
+- Any schema, RLS, or server-function change.
+- Admin-side timeline restyle (only the client strip is being redesigned now).
