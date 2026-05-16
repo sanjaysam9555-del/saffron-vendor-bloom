@@ -241,20 +241,13 @@ function ProjectDetailPage() {
           </div>
         </section>
 
-        {/* Booking timeline */}
-        <VendorTimeline
-          projectId={id}
-          weddingDate={project.wedding_date}
-          items={buildTimelineItems(vendors, deadlines)}
-          mode="admin"
-        />
-
-        {/* Assigned vendors */}
-        <AssignedVendorsSection
+        <ProjectSectionTabs
           projectId={id}
           vendors={vendors}
           selections={selections}
-          onRemove={removeVendor}
+          deadlines={deadlines}
+          weddingDate={project.wedding_date}
+          onRemoveVendor={removeVendor}
         />
       </div>
     </div>
