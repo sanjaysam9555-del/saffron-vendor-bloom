@@ -231,59 +231,59 @@ function ClientPortalPage() {
               <div
                 role="tablist"
                 aria-label="View"
-                className="inline-flex overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs"
+                className="inline-flex overflow-hidden rounded-md border border-[var(--border)] bg-white text-[10px] leading-none sm:text-xs"
               >
                 <button
                   role="tab"
                   aria-label="Grid view"
                   aria-selected={view === "grid"}
                   onClick={() => setView("grid")}
-                  className={`inline-flex items-center gap-1.5 px-2 py-1.5 transition-colors sm:px-3 ${
+                  className={`inline-flex items-center gap-1 px-1.5 py-1 transition-colors sm:gap-1.5 sm:px-2 sm:py-1.5 ${
                     view === "grid"
                       ? "bg-[var(--charcoal)] text-[var(--cream)]"
                       : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
                   }`}
                 >
-                  <LayoutGrid className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Grid</span>
+                  <LayoutGrid className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Grid</span>
                 </button>
                 <button
                   role="tab"
                   aria-label="Board view"
                   aria-selected={view === "board"}
                   onClick={() => setView("board")}
-                  className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-2 py-1.5 transition-colors sm:px-3 ${
+                  className={`inline-flex items-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:gap-1.5 sm:px-2 sm:py-1.5 ${
                     view === "board"
                       ? "bg-[var(--charcoal)] text-[var(--cream)]"
                       : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
                   }`}
                 >
-                  <Columns3 className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Board</span>
+                  <Columns3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Board</span>
                 </button>
                 <button
                   role="tab"
                   aria-label="Table view"
                   aria-selected={view === "table"}
                   onClick={() => setView("table")}
-                  className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-2 py-1.5 transition-colors sm:px-3 ${
+                  className={`inline-flex items-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:gap-1.5 sm:px-2 sm:py-1.5 ${
                     view === "table"
                       ? "bg-[var(--charcoal)] text-[var(--cream)]"
                       : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
                   }`}
                 >
-                  <TableIcon className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Table</span>
+                  <TableIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Table</span>
                 </button>
                 <button
                   role="tab"
                   aria-label="Timeline view"
                   aria-selected={view === "timeline"}
                   onClick={() => setView("timeline")}
-                  className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-2 py-1.5 transition-colors sm:px-3 ${
+                  className={`inline-flex items-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:gap-1.5 sm:px-2 sm:py-1.5 ${
                     view === "timeline"
                       ? "bg-[var(--charcoal)] text-[var(--cream)]"
                       : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
                   }`}
                 >
-                  <Clock className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Timeline</span>
+                  <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Time</span>
                 </button>
               </div>
             </div>
