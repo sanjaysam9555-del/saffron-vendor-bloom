@@ -214,7 +214,7 @@ function ProjectDetailPage() {
             </form>
           )}
 
-          <div className="mt-3 -mx-6 sm:mx-0 sm:rounded-lg sm:border sm:border-[var(--border)] bg-white">
+          <div className="mt-3 -mx-4 sm:mx-0 sm:rounded-lg sm:border sm:border-[var(--border)] bg-white">
             {clients.length === 0 ? (
               <div className="p-6 text-sm text-[var(--charcoal)]/60">No client login yet.</div>
             ) : (
