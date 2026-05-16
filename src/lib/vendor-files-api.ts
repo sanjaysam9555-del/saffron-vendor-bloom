@@ -65,9 +65,21 @@ export async function getAttachmentUrl(filePath: string): Promise<string> {
 }
 
 export const ACCEPTED_FILE_TYPES =
-  ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp";
+  ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.mp4,.mov,.webm,.m4v";
 
-export const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
+export const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB (documents & images)
+export const MAX_VIDEO_FILE_SIZE = 200 * 1024 * 1024; // 200 MB (videos)
+
+const VIDEO_EXT_RE = /\.(mp4|mov|webm|m4v|mkv|avi)$/i;
+
+export function isVideoFile(file: { name: string; type?: string }): boolean {
+  if (file.type && file.type.toLowerCase().startsWith("video/")) return true;
+  return VIDEO_EXT_RE.test(file.name);
+}
+
+export function maxFileSizeFor(file: { name: string; type?: string }): number {
+  return isVideoFile(file) ? MAX_VIDEO_FILE_SIZE : MAX_FILE_SIZE;
+}
 
 export function formatFileSize(bytes: number | null | undefined): string {
   if (!bytes && bytes !== 0) return "";

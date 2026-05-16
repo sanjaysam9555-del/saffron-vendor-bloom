@@ -8,13 +8,14 @@ interface DocumentViewerProps {
   onClose: () => void;
 }
 
-type Kind = "pdf" | "image" | "office" | "other";
+type Kind = "pdf" | "image" | "video" | "office" | "other";
 
 function detectKind(name: string, mime: string | null): Kind {
   const lower = name.toLowerCase();
   const m = (mime ?? "").toLowerCase();
   if (m === "application/pdf" || lower.endsWith(".pdf")) return "pdf";
   if (m.startsWith("image/") || /\.(jpe?g|png|webp|gif|bmp|svg)$/.test(lower)) return "image";
+  if (m.startsWith("video/") || /\.(mp4|mov|webm|m4v|mkv|avi)$/.test(lower)) return "video";
   if (/\.(docx?|pptx?|xlsx?)$/.test(lower) || m.includes("officedocument") || m.includes("msword") || m.includes("ms-excel") || m.includes("ms-powerpoint")) return "office";
   return "other";
 }
@@ -121,8 +122,28 @@ export function DocumentViewer({ url, fileName, mimeType, onClose }: DocumentVie
       <div className="relative flex-1 overflow-hidden">
         {kind === "pdf" && <PdfView url={url} fileName={fileName} />}
         {kind === "image" && <ImageView url={url} alt={fileName} />}
+        {kind === "video" && <VideoView url={url} mimeType={mimeType} />}
         {(kind === "office" || kind === "other") && <FallbackView url={url} fileName={fileName} kind={kind} />}
       </div>
+    </div>
+  );
+}
+
+/* -------- Video: stream signed URL directly (supports Range/seek) -------- */
+function VideoView({ url, mimeType }: { url: string; mimeType: string | null }) {
+  return (
+    <div className="flex h-full items-center justify-center bg-black">
+      <video
+        src={url}
+        controls
+        autoPlay
+        playsInline
+        preload="metadata"
+        className="max-h-full max-w-full"
+      >
+        {mimeType ? <source src={url} type={mimeType} /> : null}
+        Your browser does not support inline video playback.
+      </video>
     </div>
   );
 }

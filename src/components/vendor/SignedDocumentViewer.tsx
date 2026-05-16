@@ -27,7 +27,12 @@ export function SignedDocumentViewer({ filePath, fileName, mimeType, onClose }: 
         if (!cancelled) setUrl(u);
       })
       .catch((e) => {
-        if (!cancelled) setError(e?.message ?? "Failed to load file");
+        if (cancelled) return;
+        const raw = String(e?.message ?? "Failed to load file");
+        const friendly = /not found|404/i.test(raw)
+          ? "This file is no longer available."
+          : raw;
+        setError(friendly);
       });
     return () => {
       cancelled = true;
