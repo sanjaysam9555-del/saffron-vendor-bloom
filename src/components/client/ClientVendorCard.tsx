@@ -38,7 +38,7 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
         {vendor.vendor_name}
       </h3>
 
-      <div className="mb-2 flex min-h-[1.75rem] flex-nowrap gap-1 overflow-hidden">
+      <div className="mb-2 flex flex-wrap gap-1">
         <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text}`}>
           {vendor.category}
         </span>
@@ -54,7 +54,7 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
         )}
       </div>
 
-      <div className="min-h-[6rem] min-w-0 space-y-1.5 overflow-hidden text-sm text-[var(--charcoal)]/75">
+      <div className="min-w-0 space-y-1.5 overflow-hidden text-sm text-[var(--charcoal)]/75">
         {vendor.location && (
           <div className="flex items-center gap-1.5">
             <MapPin className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{vendor.location}</span>
@@ -108,7 +108,7 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
 
       <VendorInstagramCardStrip preview={instagramPreview} hasHandle={!!vendor.instagram_handle} />
 
-      <div className="mt-3 space-y-2 border-t border-[var(--border)] pt-3" style={{ marginTop: "auto" }}>
+      <div className="mt-3 space-y-2 border-t border-[var(--border)] pt-3">
         <ClientStatusSelect vendorId={vendor.id} status={vendor.client_status} />
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
