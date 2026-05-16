@@ -212,18 +212,18 @@ function ClientPortalPage() {
                   : "Here are the vendors we think will be perfect for your wedding."}
               </p>
             </div>
-            <div className="flex w-full shrink-0 items-center gap-1.5 sm:w-auto sm:gap-2">
+            <div className="flex w-full shrink-0 items-stretch gap-1.5 sm:w-auto sm:gap-2">
               <button
                 onClick={() => setMobileFiltersOpen(true)}
                 aria-label="Filters"
-                className={`relative inline-flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs font-medium sm:px-3 lg:hidden ${
+                className={`relative inline-flex flex-1 items-center justify-center gap-1 rounded-md border px-1.5 py-1 text-[10px] font-medium leading-none sm:flex-none sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs lg:hidden ${
                   filters.category || filters.locations.length
                     ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
                     : "border-[var(--border)] bg-white text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
                 }`}
               >
-                <FilterIcon className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Filters</span>
+                <FilterIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <span>Filter</span>
                 {(filters.category || filters.locations.length > 0) && (
                   <span className="ml-0.5 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
                 )}
@@ -231,14 +231,14 @@ function ClientPortalPage() {
               <div
                 role="tablist"
                 aria-label="View"
-                className="inline-flex overflow-hidden rounded-md border border-[var(--border)] bg-white text-[10px] leading-none sm:text-xs"
+                className="inline-flex flex-1 items-stretch overflow-hidden rounded-md border border-[var(--border)] bg-white text-[10px] leading-none sm:flex-none sm:text-xs"
               >
                 <button
                   role="tab"
                   aria-label="Grid view"
                   aria-selected={view === "grid"}
                   onClick={() => setView("grid")}
-                  className={`inline-flex items-center gap-1 px-1.5 py-1 transition-colors sm:gap-1.5 sm:px-2 sm:py-1.5 ${
+                  className={`inline-flex flex-1 items-center justify-center gap-1 px-1.5 py-1 transition-colors sm:flex-none sm:gap-1.5 sm:px-2 sm:py-1.5 ${
                     view === "grid"
                       ? "bg-[var(--charcoal)] text-[var(--cream)]"
                       : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
@@ -251,7 +251,7 @@ function ClientPortalPage() {
                   aria-label="Board view"
                   aria-selected={view === "board"}
                   onClick={() => setView("board")}
-                  className={`inline-flex items-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:gap-1.5 sm:px-2 sm:py-1.5 ${
+                  className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:flex-none sm:gap-1.5 sm:px-2 sm:py-1.5 ${
                     view === "board"
                       ? "bg-[var(--charcoal)] text-[var(--cream)]"
                       : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
@@ -264,7 +264,7 @@ function ClientPortalPage() {
                   aria-label="Table view"
                   aria-selected={view === "table"}
                   onClick={() => setView("table")}
-                  className={`inline-flex items-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:gap-1.5 sm:px-2 sm:py-1.5 ${
+                  className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:flex-none sm:gap-1.5 sm:px-2 sm:py-1.5 ${
                     view === "table"
                       ? "bg-[var(--charcoal)] text-[var(--cream)]"
                       : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
@@ -277,7 +277,7 @@ function ClientPortalPage() {
                   aria-label="Timeline view"
                   aria-selected={view === "timeline"}
                   onClick={() => setView("timeline")}
-                  className={`inline-flex items-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:gap-1.5 sm:px-2 sm:py-1.5 ${
+                  className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:flex-none sm:gap-1.5 sm:px-2 sm:py-1.5 ${
                     view === "timeline"
                       ? "bg-[var(--charcoal)] text-[var(--cream)]"
                       : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
