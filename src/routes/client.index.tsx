@@ -183,7 +183,11 @@ function ClientPortalPage() {
         weddingDate={project.wedding_date}
       />
 
-      <UrgencyStrip items={timelineItems} onChipClick={jumpToCategory} />
+      <UrgencyStrip
+        items={timelineItems}
+        onChipClick={jumpToCategory}
+        onViewAll={() => setView("timeline")}
+      />
 
       <div className="mx-auto flex w-full max-w-[1600px] flex-1">
         <ClientSidebar
