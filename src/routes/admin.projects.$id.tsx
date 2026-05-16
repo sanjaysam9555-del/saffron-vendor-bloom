@@ -193,7 +193,7 @@ function ProjectDetailPage() {
               <UserPlus className="h-4 w-4" /> Add Client Login
             </button>
           </div>
-          <p className="text-xs text-[var(--charcoal)]/55">
+          <p className="text-xs text-[var(--charcoal)]/55 my-[10px]">
             Share these credentials with the client. They sign in at <code>/login</code>.
           </p>
 
@@ -492,7 +492,7 @@ function AssignedVendorsSection({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div>
           <h2 className="font-display text-xl text-[var(--charcoal)]">Assigned vendors ({vendors.length})</h2>
-          <p className="text-xs text-[var(--charcoal)]/55">
+          <p className="text-xs text-[var(--charcoal)]/55 my-[10px]">
             What the client has marked appears next to each vendor.
           </p>
         </div>
