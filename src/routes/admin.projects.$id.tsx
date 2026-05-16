@@ -193,7 +193,7 @@ function ProjectDetailPage() {
               <UserPlus className="h-4 w-4" /> Add Client Login
             </button>
           </div>
-          <p className="text-xs text-[var(--charcoal)]/55">
+          <p className="text-xs text-[var(--charcoal)]/55 my-[10px]">
             Share these credentials with the client. They sign in at <code>/login</code>.
           </p>
 
