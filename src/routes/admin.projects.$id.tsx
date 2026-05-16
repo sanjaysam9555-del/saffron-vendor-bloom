@@ -27,6 +27,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 
 import { VendorCommentsThread } from "@/components/client/VendorCommentsThread";
 import { instagramUrl, normalizeInstagramHandle } from "@/lib/instagram";
+import { VendorTimeline } from "@/components/timeline/VendorTimeline";
+import { listProjectCategoryDeadlines } from "@/server/project-deadlines.functions";
+import { buildTimelineItems } from "@/lib/build-timeline-items";
 
 export const Route = createFileRoute("/admin/projects/$id")({
   head: () => ({ meta: [{ title: "Project — Saffron Planning Studio" }] }),
@@ -58,7 +61,13 @@ function ProjectDetailPage() {
     { table: "project_vendor_comments", filter: `project_id=eq.${id}`, invalidate: [["project", id], ["vendor-comments"]] },
     { table: "client_vendor_status", invalidate: [["project", id]] },
     { table: "vendors", invalidate: [["project", id]] },
+    { table: "project_category_deadlines", filter: `project_id=eq.${id}`, invalidate: [["project-deadlines", id]] },
   ]);
+
+  const { data: deadlines = [] } = useQuery({
+    queryKey: ["project-deadlines", id],
+    queryFn: () => listProjectCategoryDeadlines({ data: { project_id: id } }),
+  });
 
   const [showAddClient, setShowAddClient] = useState(false);
   const [cEmail, setCEmail] = useState("");
