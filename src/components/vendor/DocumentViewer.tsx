@@ -8,13 +8,14 @@ interface DocumentViewerProps {
   onClose: () => void;
 }
 
-type Kind = "pdf" | "image" | "office" | "other";
+type Kind = "pdf" | "image" | "video" | "office" | "other";
 
 function detectKind(name: string, mime: string | null): Kind {
   const lower = name.toLowerCase();
   const m = (mime ?? "").toLowerCase();
   if (m === "application/pdf" || lower.endsWith(".pdf")) return "pdf";
   if (m.startsWith("image/") || /\.(jpe?g|png|webp|gif|bmp|svg)$/.test(lower)) return "image";
+  if (m.startsWith("video/") || /\.(mp4|mov|webm|m4v|mkv|avi)$/.test(lower)) return "video";
   if (/\.(docx?|pptx?|xlsx?)$/.test(lower) || m.includes("officedocument") || m.includes("msword") || m.includes("ms-excel") || m.includes("ms-powerpoint")) return "office";
   return "other";
 }
