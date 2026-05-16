@@ -162,7 +162,7 @@ function VideoView({ url, fileName, mimeType }: { url: string; fileName: string;
         autoPlay
         playsInline
         preload="metadata"
-        crossOrigin="anonymous"
+        
         className="max-h-full max-w-full"
         onError={() => setFailed(true)}
       >
