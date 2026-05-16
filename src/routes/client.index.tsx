@@ -183,7 +183,11 @@ function ClientPortalPage() {
         weddingDate={project.wedding_date}
       />
 
-      <UrgencyStrip items={timelineItems} onChipClick={jumpToCategory} />
+      <UrgencyStrip
+        items={timelineItems}
+        onChipClick={jumpToCategory}
+        onViewAll={() => setView("timeline")}
+      />
 
       <div className="mx-auto flex w-full max-w-[1600px] flex-1">
         <ClientSidebar
@@ -197,28 +201,29 @@ function ClientPortalPage() {
         />
 
         <main className="min-w-0 flex-1 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
-          <div className="mb-5 flex flex-wrap items-end justify-between gap-3 animate-fade-up">
-            <div>
-              <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
+          <div className="mb-5 flex flex-nowrap items-end justify-between gap-2 animate-fade-up sm:gap-3">
+            <div className="min-w-0">
+              <h1 className="brand-line truncate font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
                 {filters.category ?? "Welcome"}
               </h1>
-              <p className="mt-1 text-sm text-[var(--charcoal)]/65">
+              <p className="mt-1 truncate text-sm text-[var(--charcoal)]/65">
                 {filters.category
                   ? `${filtered.length} of ${vendors.length} vendor${vendors.length === 1 ? "" : "s"}`
                   : "Here are the vendors we think will be perfect for your wedding."}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               <button
                 onClick={() => setMobileFiltersOpen(true)}
-                className={`relative inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium lg:hidden ${
+                aria-label="Filters"
+                className={`relative inline-flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs font-medium sm:px-3 lg:hidden ${
                   filters.category || filters.locations.length
                     ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
                     : "border-[var(--border)] bg-white text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
                 }`}
               >
                 <FilterIcon className="h-3.5 w-3.5" />
-                Filters
+                <span className="hidden sm:inline">Filters</span>
                 {(filters.category || filters.locations.length > 0) && (
                   <span className="ml-0.5 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
                 )}
@@ -230,51 +235,55 @@ function ClientPortalPage() {
               >
                 <button
                   role="tab"
+                  aria-label="Grid view"
                   aria-selected={view === "grid"}
                   onClick={() => setView("grid")}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 transition-colors ${
+                  className={`inline-flex items-center gap-1.5 px-2 py-1.5 transition-colors sm:px-3 ${
                     view === "grid"
                       ? "bg-[var(--charcoal)] text-[var(--cream)]"
                       : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
                   }`}
                 >
-                  <LayoutGrid className="h-3.5 w-3.5" /> Grid
+                  <LayoutGrid className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Grid</span>
                 </button>
                 <button
                   role="tab"
+                  aria-label="Board view"
                   aria-selected={view === "board"}
                   onClick={() => setView("board")}
-                  className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 transition-colors ${
+                  className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-2 py-1.5 transition-colors sm:px-3 ${
                     view === "board"
                       ? "bg-[var(--charcoal)] text-[var(--cream)]"
                       : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
                   }`}
                 >
-                  <Columns3 className="h-3.5 w-3.5" /> Board
+                  <Columns3 className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Board</span>
                 </button>
                 <button
                   role="tab"
+                  aria-label="Table view"
                   aria-selected={view === "table"}
                   onClick={() => setView("table")}
-                  className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 transition-colors ${
+                  className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-2 py-1.5 transition-colors sm:px-3 ${
                     view === "table"
                       ? "bg-[var(--charcoal)] text-[var(--cream)]"
                       : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
                   }`}
                 >
-                  <TableIcon className="h-3.5 w-3.5" /> Table
+                  <TableIcon className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Table</span>
                 </button>
                 <button
                   role="tab"
+                  aria-label="Timeline view"
                   aria-selected={view === "timeline"}
                   onClick={() => setView("timeline")}
-                  className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 transition-colors ${
+                  className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-2 py-1.5 transition-colors sm:px-3 ${
                     view === "timeline"
                       ? "bg-[var(--charcoal)] text-[var(--cream)]"
                       : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
                   }`}
                 >
-                  <Clock className="h-3.5 w-3.5" /> Timeline
+                  <Clock className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Timeline</span>
                 </button>
               </div>
             </div>
