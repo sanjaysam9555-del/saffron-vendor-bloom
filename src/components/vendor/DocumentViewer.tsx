@@ -122,8 +122,28 @@ export function DocumentViewer({ url, fileName, mimeType, onClose }: DocumentVie
       <div className="relative flex-1 overflow-hidden">
         {kind === "pdf" && <PdfView url={url} fileName={fileName} />}
         {kind === "image" && <ImageView url={url} alt={fileName} />}
+        {kind === "video" && <VideoView url={url} mimeType={mimeType} />}
         {(kind === "office" || kind === "other") && <FallbackView url={url} fileName={fileName} kind={kind} />}
       </div>
+    </div>
+  );
+}
+
+/* -------- Video: stream signed URL directly (supports Range/seek) -------- */
+function VideoView({ url, mimeType }: { url: string; mimeType: string | null }) {
+  return (
+    <div className="flex h-full items-center justify-center bg-black">
+      <video
+        src={url}
+        controls
+        autoPlay
+        playsInline
+        preload="metadata"
+        className="max-h-full max-w-full"
+      >
+        {mimeType ? <source src={url} type={mimeType} /> : null}
+        Your browser does not support inline video playback.
+      </video>
     </div>
   );
 }
