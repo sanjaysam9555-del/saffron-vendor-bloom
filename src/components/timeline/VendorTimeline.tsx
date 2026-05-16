@@ -416,7 +416,7 @@ function TableView({
   registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
 }) {
   return (
-    <div className="overflow-x-auto rounded-md border border-[var(--border)]">
+    <div className="overflow-x-auto rounded-md border border-[var(--border)] shadow-[inset_-12px_0_8px_-8px_rgba(0,0,0,0.08)]">
       <table className="w-full min-w-[640px] text-sm">
         <thead className="bg-[var(--cream)] text-left text-xs uppercase tracking-wider text-[var(--charcoal)]/60">
           <tr>
@@ -471,7 +471,7 @@ function TableRow({
         }
         data-category={item.category}
         className="border-t border-[var(--border)]"
-        style={{ borderLeft: `4px solid ${color}` }}
+        style={{ borderLeft: `3px solid ${color}` }}
       >
         <td className="px-3 py-2 font-medium">{item.category}</td>
         <td className="px-3 py-2">{item.vendor_count}</td>
