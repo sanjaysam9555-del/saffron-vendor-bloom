@@ -553,7 +553,7 @@ function AssignedVendorsSection({
     <section className="mt-10">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div>
-          <h2 className="font-display text-xl text-[var(--charcoal)]">Assigned vendors ({vendors.length})</h2>
+          <h2 className="font-display text-2xl text-[var(--terracotta)] sm:text-xl">Assigned vendors ({vendors.length})</h2>
           <p className="text-xs text-[var(--charcoal)]/55 my-[10px]">
             What the client has marked appears next to each vendor.
           </p>
