@@ -196,16 +196,17 @@ function DashboardPage() {
                 return (
                   <button
                     onClick={() => setMobileFiltersOpen(true)}
-                    className={`relative inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium lg:hidden ${
+                    aria-label="Filters"
+                    title="Filters"
+                    className={`relative inline-flex h-8 w-8 items-center justify-center rounded-md border lg:hidden ${
                       filtersActive
                         ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
                         : "border-[var(--border)] bg-white text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
                     }`}
                   >
-                    <FilterIcon className="h-3.5 w-3.5" />
-                    Filters
+                    <FilterIcon className="h-4 w-4" />
                     {filtersActive && (
-                      <span className="ml-0.5 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
+                      <span className="absolute right-1 top-1 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
                     )}
                   </button>
                 );
