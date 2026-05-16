@@ -183,7 +183,7 @@ function ProjectDetailPage() {
         />
 
         {/* Client logins */}
-        <section className="mt-8">
+        <section className="mt-6 sm:mt-8">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-display text-xl text-[var(--charcoal)]">Client login</h2>
             <button
