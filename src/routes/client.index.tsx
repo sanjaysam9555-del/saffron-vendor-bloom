@@ -262,11 +262,31 @@ function ClientPortalPage() {
                 >
                   <TableIcon className="h-3.5 w-3.5" /> Table
                 </button>
+                <button
+                  role="tab"
+                  aria-selected={view === "timeline"}
+                  onClick={() => setView("timeline")}
+                  className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 transition-colors ${
+                    view === "timeline"
+                      ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                      : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                  }`}
+                >
+                  <Clock className="h-3.5 w-3.5" /> Timeline
+                </button>
               </div>
             </div>
           </div>
 
-          {vendors.length === 0 ? (
+          {view === "timeline" ? (
+            <VendorTimeline
+              projectId={projectId!}
+              weddingDate={project.wedding_date}
+              items={timelineItems}
+              mode="client"
+              registerRowRef={registerRowRef}
+            />
+          ) : vendors.length === 0 ? (
             <EmptyState message="Your planner hasn't shared any vendors yet. Check back soon." />
           ) : filtered.length === 0 ? (
             <EmptyState message="No vendors match your filters." />
