@@ -88,7 +88,7 @@ export function VendorCard({
         </div>
       </div>
 
-      <div className="mb-2 flex min-h-[1.75rem] flex-nowrap gap-1 overflow-hidden">
+      <div className="mb-2 flex min-h-[1.75rem] flex-wrap gap-1">
         <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text}`}>
           {vendor.category}
         </span>
@@ -108,86 +108,96 @@ export function VendorCard({
         <BookedBadge vendorId={vendor.id} compact summary={bookedSummary} />
       </div>
 
-      <div className="min-h-[6rem] min-w-0 space-y-1.5 overflow-hidden text-sm text-[var(--charcoal)]/75">
-        {vendor.location && (
-          <div className="flex items-center gap-1.5">
-            <MapPin className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{vendor.location}</span>
-          </div>
-        )}
-        {vendor.contact_number && (() => {
-          const digits = vendor.contact_number.replace(/\D/g, "");
-          // Default to +91 (India) when no country code is present.
-          const intl = digits.length === 10 ? `91${digits}` : digits;
-          const telHref = `tel:+${intl}`;
-          const waHref = `https://wa.me/${intl}`;
+      <div className="min-w-0 space-y-1.5 text-sm text-[var(--charcoal)]/75">
+        {(() => {
+          const lineSpacer = <div aria-hidden className="h-[1.125rem]" />;
+          const contactSpacer = <div aria-hidden className="h-7" />;
+          const igHref = vendor.instagram_handle ? instagramUrl(vendor.instagram_handle) : null;
           return (
-            <div className="flex items-center gap-1.5">
-              <Phone className="h-3.5 w-3.5 shrink-0" />
-              <button
-                onClick={copyPhone}
-                className="min-w-0 truncate text-left hover:text-[var(--terracotta)]"
-                title="Click to copy"
-              >
-                {vendor.contact_number}
-              </button>
-              {copied ? (
-                <Check className="h-3 w-3 shrink-0 text-green-600" />
-              ) : (
-                <Copy className="h-3 w-3 shrink-0 opacity-40" />
-              )}
-              <a
-                href={waHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                aria-label={`WhatsApp ${vendor.vendor_name}`}
-                title="WhatsApp"
-                className="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)] text-[#25D366] hover:bg-[#25D366]/10 hover:border-[#25D366]"
-              >
-                <MessageCircle className="h-3.5 w-3.5" />
-              </a>
-              <a
-                href={telHref}
-                onClick={(e) => e.stopPropagation()}
-                aria-label={`Call ${vendor.vendor_name}`}
-                title="Call"
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)] text-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:border-[var(--terracotta)]"
-              >
-                <Phone className="h-3.5 w-3.5" />
-              </a>
-            </div>
+            <>
+              {vendor.location ? (
+                <div className="flex h-[1.125rem] items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{vendor.location}</span>
+                </div>
+              ) : lineSpacer}
+              {vendor.contact_number ? (() => {
+                const digits = vendor.contact_number.replace(/\D/g, "");
+                const intl = digits.length === 10 ? `91${digits}` : digits;
+                const telHref = `tel:+${intl}`;
+                const waHref = `https://wa.me/${intl}`;
+                return (
+                  <div className="flex h-7 items-center gap-1.5">
+                    <Phone className="h-3.5 w-3.5 shrink-0" />
+                    <button
+                      onClick={copyPhone}
+                      className="min-w-0 truncate text-left hover:text-[var(--terracotta)]"
+                      title="Click to copy"
+                    >
+                      {vendor.contact_number}
+                    </button>
+                    {copied ? (
+                      <Check className="h-3 w-3 shrink-0 text-green-600" />
+                    ) : (
+                      <Copy className="h-3 w-3 shrink-0 opacity-40" />
+                    )}
+                    <a
+                      href={waHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label={`WhatsApp ${vendor.vendor_name}`}
+                      title="WhatsApp"
+                      className="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)] text-[#25D366] hover:bg-[#25D366]/10 hover:border-[#25D366]"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                    </a>
+                    <a
+                      href={telHref}
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label={`Call ${vendor.vendor_name}`}
+                      title="Call"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)] text-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:border-[var(--terracotta)]"
+                    >
+                      <Phone className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+                );
+              })() : contactSpacer}
+              {igHref ? (
+                <a
+                  href={igHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex h-[1.125rem] min-w-0 items-center gap-1.5 hover:text-[var(--terracotta)]"
+                >
+                  <Instagram className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{igHref}</span>
+                </a>
+              ) : lineSpacer}
+              {vendor.price_text ? (
+                <div className="h-[1.125rem] truncate text-sm font-medium leading-[1.125rem] text-[var(--terracotta)]">
+                  {vendor.price_text}
+                </div>
+              ) : lineSpacer}
+            </>
           );
         })()}
-        {vendor.instagram_handle && (() => {
-          const href = instagramUrl(vendor.instagram_handle);
-          if (!href) return null;
-          return (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="flex min-w-0 items-center gap-1.5 hover:text-[var(--terracotta)]"
-            >
-              <Instagram className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{href}</span>
-            </a>
-          );
-        })()}
-        {vendor.price_text && (
-          <div className="truncate text-sm font-medium text-[var(--terracotta)]">
-            {vendor.price_text}
-          </div>
-        )}
       </div>
 
       {!selectMode && (
-        <VendorInstagramCardStrip preview={instagramPreview} hasHandle={!!vendor.instagram_handle} />
+        vendor.instagram_handle ? (
+          <VendorInstagramCardStrip preview={instagramPreview} hasHandle />
+        ) : (
+          <div className="mt-2 flex min-h-[148px] items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-2 text-[10px] text-[var(--charcoal)]/40">
+            No Instagram linked
+          </div>
+        )
       )}
 
       {!selectMode && (
         <>
-          <div className="mt-3 border-t border-[var(--border)] pt-3" style={{ marginTop: 'auto' }}>
+          <div className="mt-auto border-t border-[var(--border)] pt-3">
             <VendorProjectAssigner vendorId={vendor.id} compact />
           </div>
 
