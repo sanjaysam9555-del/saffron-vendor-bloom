@@ -311,3 +311,16 @@ button:active, a:active, [role="button"]:active {
     animation: none !important;
   }
 }
+
+/* Buzz — subtle continuous wobble for alert icons */
+@keyframes buzz {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-10deg); }
+  40% { transform: rotate(8deg); }
+  60% { transform: rotate(-6deg); }
+  80% { transform: rotate(4deg); }
+}
+.animate-buzz { animation: buzz 1.4s ease-in-out infinite; transform-origin: top center; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-buzz { animation: none !important; }
+}
