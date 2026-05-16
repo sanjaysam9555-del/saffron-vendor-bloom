@@ -30,7 +30,7 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
       }`}
     >
       {isPick && (
-        <div className="mb-2 inline-flex w-fit items-center gap-1 rounded-full bg-gradient-to-r from-[var(--terracotta)] to-[var(--terracotta)]/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--cream)] shadow-sm">
+        <div className="pointer-events-none absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[var(--terracotta)] to-[var(--terracotta)]/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--cream)] shadow-sm">
           <Sparkles className="h-3 w-3 fill-current" /> Saffron's Pick
         </div>
       )}
