@@ -530,7 +530,7 @@ function AssignedVendorsSection({
             const rows = selections[v.id] ?? [];
             const primary = pickPrimary(rows);
             return (
-              <div key={v.id} className="flex items-start justify-between gap-3 rounded-lg border border-[var(--border)] bg-white p-3">
+              <div key={v.id} className="relative flex items-start justify-between gap-3 rounded-lg border border-[var(--border)] bg-white p-3 pr-10 sm:pr-3">
                 <div className="min-w-0 flex-1">
                   <div className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
                     {v.category}{v.subcategory ? ` · ${v.subcategory}` : ""}
@@ -580,7 +580,7 @@ function AssignedVendorsSection({
                 <button
                   onClick={() => onRemove(v.id, v.vendor_name)}
                   title="Remove from project"
-                  className="rounded p-1.5 text-red-600 hover:bg-red-50"
+                  className="absolute right-2 top-2 rounded p-1.5 text-[var(--charcoal)]/55 hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)] sm:static"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -706,7 +706,7 @@ function VendorQuotesPill({
             onClick={() => onOpen(false)}
             className={
               closed
-                ? "inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-800 hover:border-green-400"
+                ? "inline-flex items-center gap-1 rounded-full border border-[var(--sage)] bg-[var(--sage)]/40 px-2.5 py-1 text-[11px] font-semibold text-[var(--terracotta)] hover:border-[var(--terracotta)]"
                 : "inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2.5 py-1 text-[11px] text-[var(--charcoal)]/80 hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
             }
             title={tip}
@@ -891,9 +891,9 @@ function ProjectHeader({ project, canDelete, onDelete, onSaved }: ProjectHeaderP
   }
 
   return (
-    <div className="mt-4 flex items-start justify-between gap-4">
-      <div>
-        <h1 className="font-display text-3xl text-[var(--charcoal)]">
+    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+      <div className="min-w-0">
+        <h1 className="font-display text-2xl text-[var(--charcoal)] sm:text-3xl">
           {project.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {project.groom_name}
         </h1>
         <div className="mt-1 flex items-center gap-1.5 text-sm text-[var(--charcoal)]/65">
@@ -905,14 +905,14 @@ function ProjectHeader({ project, canDelete, onDelete, onSaved }: ProjectHeaderP
       <div className="flex items-center gap-2">
         <button
           onClick={startEdit}
-          className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:flex-none"
         >
           <Pencil className="h-4 w-4" /> Edit
         </button>
         {canDelete && (
           <button
             onClick={onDelete}
-            className="inline-flex items-center gap-1.5 rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-[var(--terracotta)]/30 px-3 py-1.5 text-sm text-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] sm:flex-none"
           >
             <Trash2 className="h-4 w-4" /> Delete
           </button>
