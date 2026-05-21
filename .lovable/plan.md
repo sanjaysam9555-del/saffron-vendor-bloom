@@ -1,31 +1,48 @@
-## Plan
+## 1. Edit client display name on the project detail page
 
-Fix the attachment viewer so video files that exist in storage reliably play, and make missing-file cases clear instead of looking like a playback bug.
+On `/admin/projects/:id`, the **Client logins** table already lets you edit the email (pencil icon) and reset the password, but the **Name** column (the display name captured when creating the client login) is read-only.
 
-### What I found
-- Recent uploaded MP4 attachments mostly do exist in storage and should be playable.
-- Two older MP4 attachment records for **DJ Prince Music** point to storage objects that no longer exist, so those will correctly produce “File not found” until re-uploaded or cleaned up.
-- The current video viewer relies directly on a short-lived signed storage URL inside `<video>`, which can still fail in browsers due to signed URL / range / CORS behavior.
+**Change**
+- In `src/routes/admin.projects.$id.tsx`, in the client login row component (around the `{c.display_name || "—"}` cell), add an inline edit affordance mirroring the existing email edit:
+  - Pencil icon to enter edit mode
+  - Text input + Check/Cancel buttons
+  - Disabled save when value is empty
+- Reuse the existing `setUserDisplayName` server function (already used by `admin.users.tsx` and accepts `{ user_id, display_name }`).
+- On success, show toast, call `onChanged()` to refresh, exit edit mode.
 
-### Changes to implement
-1. **Route video playback through an app-controlled streaming endpoint**
-   - Add a server route that accepts a signed token or file path request, verifies the user can access the attachment, and streams the file from private storage.
-   - Support `Range` requests so MP4 metadata loading, seeking, and browser video playback work properly.
+No database or server-side changes needed.
 
-2. **Use the streaming endpoint for videos only**
-   - Keep PDFs/images using the current preview behavior.
-   - Update `SignedDocumentViewer` and `SignedQuoteFileViewer` so when the file is a video, the viewer receives a same-origin stream URL instead of a raw storage signed URL.
+## 2. Three new vendor filters on `/admin`
 
-3. **Improve the viewer error state**
-   - Distinguish between:
-     - missing storage object: “File not found. Please re-upload this attachment.”
-     - unsupported codec/browser playback issue: “Download or open in new tab.”
-   - Keep download/open actions available when a URL exists.
+Add filter toggles in the Sidebar under existing filters (Reviews, Locations, Submitted via form):
 
-4. **Clean stale attachment records**
-   - For the two DJ Prince Music MP4 records whose storage files are missing, either hide them automatically in the UI or remove the stale database rows via migration/query if you approve cleanup.
+1. **Assigned to any project** — vendor appears in `project_vendors`
+2. **Has quote history** — vendor appears in `project_vendor_quotes`
+3. **Has attachment** — vendor appears in `vendor_attachments`
 
-### Validation
-- Test with a recent MP4 attachment that exists in storage.
-- Confirm the browser requests the stream endpoint successfully and the video plays inline.
-- Confirm missing file records show a clear missing-file message instead of a generic playback error.
+Each is a tri-state chip group: `Any` / `Yes` / `No` (consistent with the existing "Submitted via form" filter).
+
+**Server change** (`src/server/vendors.functions.ts`)
+- Extend `listVendorsServer` to additionally fetch the set of vendor IDs present in:
+  - `project_vendors` (distinct `vendor_id`)
+  - `project_vendor_quotes` (distinct `vendor_id`)
+  - `vendor_attachments` (distinct `vendor_id`)
+- Attach three derived boolean fields to each returned vendor row: `has_assignment`, `has_quote_history`, `has_attachment`.
+
+**Type change** (`src/lib/vendor-api.ts` / wherever `Vendor` is typed)
+- Add the three optional booleans to the `Vendor` type.
+
+**Client filter state** (`src/components/vendor/Sidebar.tsx`)
+- Extend `FilterState` with `assignedToProject: "any" | "yes" | "no"`, `hasQuoteHistory: "any" | "yes" | "no"`, `hasAttachment: "any" | "yes" | "no"` (defaults `"any"`).
+- Add a "Relationships" section with three chip groups matching the existing "Submitted via form" pattern.
+- Update `clearAll` and the active-filter detector.
+
+**Filter logic** (`src/routes/admin.index.tsx`)
+- In the `filtered` memo, apply the three new filters against the derived booleans.
+- In `ActiveFilterChips`, add removable chips for each active filter ("Assigned: Yes", "Has quotes", "Has files", etc.).
+- Update the `filtersActive` check that controls the mobile filter badge.
+
+## Out of scope
+- Editing bride/groom names or wedding date (already supported on project detail page via the pencil icon next to the project title).
+- Editing client email (already supported).
+- Changes to filtering UI for non-staff users.
