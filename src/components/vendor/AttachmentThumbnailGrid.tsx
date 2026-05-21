@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { FileText, Play, ImageOff } from "lucide-react";
-import { getAttachmentUrl, getAttachmentStreamUrl, formatFileSize } from "@/lib/vendor-files-api";
+import { getAttachmentThumbnailUrl, getAttachmentStreamUrl, getAttachmentUrl, formatFileSize } from "@/lib/vendor-files-api";
 
 export interface AttachmentLike {
   id: string;
