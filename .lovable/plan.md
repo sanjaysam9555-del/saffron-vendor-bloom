@@ -1,48 +1,45 @@
-## 1. Edit client display name on the project detail page
+## 1. Remove "Copy Contact Card"
 
-On `/admin/projects/:id`, the **Client logins** table already lets you edit the email (pencil icon) and reset the password, but the **Name** column (the display name captured when creating the client login) is read-only.
+In `src/components/vendor/VendorDetail.tsx`:
+- Remove the `copyContactCard` handler, the `copiedCard` state, and the button at line ~214 (used in both admin and client because this component is shared).
+- Clean up unused imports (`Copy`/`Check` icon, etc.) if no longer referenced.
 
-**Change**
-- In `src/routes/admin.projects.$id.tsx`, in the client login row component (around the `{c.display_name || "—"}` cell), add an inline edit affordance mirroring the existing email edit:
-  - Pencil icon to enter edit mode
-  - Text input + Check/Cancel buttons
-  - Disabled save when value is empty
-- Reuse the existing `setUserDisplayName` server function (already used by `admin.users.tsx` and accepts `{ user_id, display_name }`).
-- On success, show toast, call `onChanged()` to refresh, exit edit mode.
+No other usages exist (`rg "Copy Contact Card"` only matches this file).
 
-No database or server-side changes needed.
+## 2. Fix Instagram previews that stay blank for valid handles
 
-## 2. Three new vendor filters on `/admin`
+Symptom: vendors with a working IG link never show a preview, even after multiple refreshes. Root causes in the current code:
 
-Add filter toggles in the Sidebar under existing filters (Reviews, Locations, Submitted via form):
+- `ensureVendorInstagramPreview` only re-scrapes when the cached row is `stale` or `status === "error"`. Rows cached as **`not_found`** (which is what the scraper returns when Apify gives back an empty item, a private/blocked profile, or no avatar+thumbs) are never refreshed — so once a handle lands in that bucket it stays blank forever.
+- `scrapeInstagramProfile` downgrades a valid `ok` Apify response to `not_found` whenever `avatar_url`, `display_name`, and `thumbs` are all empty. The Apify actor occasionally returns a thin payload for real profiles, locking them into `not_found`.
+- The Apify call is made once with no retry; transient 5xx/empty responses also stick.
+- The manual "Refresh" button works against the cache, but the UI in `VendorInstagramDetailBlock` only shows it inside the "no preview" panel — easy to miss, and it just hits the same single-shot scrape.
 
-1. **Assigned to any project** — vendor appears in `project_vendors`
-2. **Has quote history** — vendor appears in `project_vendor_quotes`
-3. **Has attachment** — vendor appears in `vendor_attachments`
+### Server-side changes
 
-Each is a tri-state chip group: `Any` / `Yes` / `No` (consistent with the existing "Submitted via form" filter).
+`src/server/instagram-preview.server.ts`
+- Add one retry (≈1.5 s backoff) around the Apify `fetch` when the response is non-OK or returns zero items.
+- Stop converting `ok` responses with missing media to `not_found`. Persist whatever fields we do have (handle + profile_url) with `status: "ok"` so the UI can render the link-only state; only mark `not_found` when Apify explicitly says the profile doesn't exist.
 
-**Server change** (`src/server/vendors.functions.ts`)
-- Extend `listVendorsServer` to additionally fetch the set of vendor IDs present in:
-  - `project_vendors` (distinct `vendor_id`)
-  - `project_vendor_quotes` (distinct `vendor_id`)
-  - `vendor_attachments` (distinct `vendor_id`)
-- Attach three derived boolean fields to each returned vendor row: `has_assignment`, `has_quote_history`, `has_attachment`.
+`src/server/instagram-preview.functions.ts`
+- In `ensureVendorInstagramPreview`, treat `status === "not_found"` the same as `error` for re-scrape eligibility (staff only). Add a short cooldown (e.g. 10 min since `fetched_at`) to avoid hammering Apify on every page load.
+- Keep client behavior unchanged (read-only).
 
-**Type change** (`src/lib/vendor-api.ts` / wherever `Vendor` is typed)
-- Add the three optional booleans to the `Vendor` type.
+### UI changes
 
-**Client filter state** (`src/components/vendor/Sidebar.tsx`)
-- Extend `FilterState` with `assignedToProject: "any" | "yes" | "no"`, `hasQuoteHistory: "any" | "yes" | "no"`, `hasAttachment: "any" | "yes" | "no"` (defaults `"any"`).
-- Add a "Relationships" section with three chip groups matching the existing "Submitted via form" pattern.
-- Update `clearAll` and the active-filter detector.
+`src/components/vendor/VendorInstagramPreview.tsx`
+- Render available data (handle, profile link, avatar if any) whenever `status === "ok"`, even without thumbnails.
+- Always show the "Refresh" button (for staff) in the header, not only inside the empty state, so admins can recover stuck rows in one click.
 
-**Filter logic** (`src/routes/admin.index.tsx`)
-- In the `filtered` memo, apply the three new filters against the derived booleans.
-- In `ActiveFilterChips`, add removable chips for each active filter ("Assigned: Yes", "Has quotes", "Has files", etc.).
-- Update the `filtersActive` check that controls the mobile filter badge.
+### Out of scope
 
-## Out of scope
-- Editing bride/groom names or wedding date (already supported on project detail page via the pencil icon next to the project title).
-- Editing client email (already supported).
-- Changes to filtering UI for non-staff users.
+- No schema changes.
+- No changes to the `/api/public/instagram-image` proxy route.
+- No change to the client-side hooks/cache shape.
+
+## Files touched
+
+- `src/components/vendor/VendorDetail.tsx`
+- `src/server/instagram-preview.server.ts`
+- `src/server/instagram-preview.functions.ts`
+- `src/components/vendor/VendorInstagramPreview.tsx`

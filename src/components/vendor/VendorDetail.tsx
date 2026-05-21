@@ -34,7 +34,6 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
-  const [copiedCard, setCopiedCard] = useState(false);
   const [viewing, setViewing] = useState<VendorAttachment | null>(null);
 
   const handleConfirmDelete = async () => {
@@ -73,19 +72,8 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
   if (!vendor) return null;
   const colors = CATEGORY_COLORS[vendor.category] ?? { bg: "bg-[var(--cream-deep)]", text: "text-[var(--charcoal)]" };
 
-  const copyContactCard = () => {
-    const lines = [
-      vendor.vendor_name,
-      vendor.category,
-      vendor.contact_number ?? "",
-      instagramDisplay(vendor.instagram_handle) ?? "",
-      vendor.website ?? "",
-      vendor.price_text ?? "",
-    ].filter(Boolean);
-    navigator.clipboard.writeText(lines.join(" | "));
-    setCopiedCard(true);
-    setTimeout(() => setCopiedCard(false), 1800);
-  };
+
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
@@ -209,14 +197,7 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
           </div>
         )}
 
-        <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)] bg-[var(--cream)] px-6 py-3">
-          <button
-            onClick={copyContactCard}
-            className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] px-3 py-2 text-sm hover:border-[var(--terracotta)]"
-          >
-            {copiedCard ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-            {copiedCard ? "Copied!" : "Copy Contact Card"}
-          </button>
+        <div className="sticky bottom-0 flex flex-wrap items-center justify-end gap-2 border-t border-[var(--border)] bg-[var(--cream)] px-6 py-3">
           <div className="flex gap-2">
             {confirmDelete ? (
               <>

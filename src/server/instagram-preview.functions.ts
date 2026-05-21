@@ -138,8 +138,12 @@ export const ensureVendorInstagramPreview = createServerFn({ method: "POST" })
     const row = existing as unknown as VendorInstagramPreview | null;
     const ageMs = row ? Date.now() - new Date(row.fetched_at).getTime() : Infinity;
     const stale = ageMs > STALE_DAYS * 24 * 60 * 60 * 1000;
-    const failed = row?.status === "error";
-    if (row && !stale && !failed) return row;
+    const failed = row?.status === "error" || row?.status === "not_found";
+    // Retry failed rows when at least 10 minutes have passed since the last
+    // attempt, so the page doesn't hammer Apify on every load.
+    const RETRY_COOLDOWN_MS = 10 * 60 * 1000;
+    const canRetryFailed = failed && ageMs > RETRY_COOLDOWN_MS;
+    if (row && !stale && !canRetryFailed) return row;
     if (!isStaff) return row;
     const scrape = await scrapeInstagramProfile(data.handle);
     return upsertPreview(data.vendorId, scrape);
