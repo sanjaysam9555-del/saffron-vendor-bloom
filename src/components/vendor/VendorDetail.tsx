@@ -230,13 +230,22 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
       </div>
 
       {viewing && (
+        (viewing.mime_type ?? "").toLowerCase().startsWith("image/") ||
+        /\.(jpe?g|png|webp|gif|avif|svg|bmp)$/i.test(viewing.file_name)
+      ) ? (
+        <AttachmentGalleryViewer
+          attachments={attachments}
+          initialId={viewing!.id}
+          onClose={() => setViewing(null)}
+        />
+      ) : viewing ? (
         <SignedDocumentViewer
           filePath={viewing.file_path}
           fileName={viewing.file_name}
           mimeType={viewing.mime_type}
           onClose={() => setViewing(null)}
         />
-      )}
+      ) : null}
     </div>
   );
 }
