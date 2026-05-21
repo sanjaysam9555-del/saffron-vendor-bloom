@@ -1,6 +1,11 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { FileText, Play, ImageOff } from "lucide-react";
-import { getAttachmentThumbnailUrl, getAttachmentStreamUrl, getAttachmentUrl, formatFileSize } from "@/lib/vendor-files-api";
+import {
+  getAttachmentThumbnailUrlsBulk,
+  getAttachmentStreamUrl,
+  formatFileSize,
+} from "@/lib/vendor-files-api";
 
 export interface AttachmentLike {
   id: string;
@@ -29,6 +34,23 @@ function extOf(name: string): string {
 }
 
 export function AttachmentThumbnailGrid<T extends AttachmentLike>({ attachments, onOpen }: Props<T>) {
+  // Collect every image path once and sign them in a single bulk call so
+  // opening a vendor with N images costs one request instead of N.
+  const imagePaths = useMemo(
+    () => attachments.filter((a) => classify(a) === "image").map((a) => a.file_path),
+    [attachments],
+  );
+  const cacheKey = useMemo(() => [...imagePaths].sort().join("|"), [imagePaths]);
+
+  const { data: thumbMap = {} } = useQuery({
+    queryKey: ["att-thumbs-bulk", cacheKey],
+    queryFn: () => getAttachmentThumbnailUrlsBulk(imagePaths, { width: 400, height: 400 }),
+    enabled: imagePaths.length > 0,
+    staleTime: 50 * 60_000,
+    gcTime: 60 * 60_000,
+    retry: 1,
+  });
+
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {attachments.map((att) => {
@@ -39,9 +61,12 @@ export function AttachmentThumbnailGrid<T extends AttachmentLike>({ attachments,
             type="button"
             onClick={() => onOpen(att)}
             className="group flex flex-col overflow-hidden rounded-md border border-[var(--border)] bg-white text-left transition-colors hover:border-[var(--terracotta)]"
+            style={{ contentVisibility: "auto", containIntrinsicSize: "180px 220px" }}
           >
             <div className="relative aspect-square w-full overflow-hidden bg-[var(--cream-deep)]">
-              {kind === "image" && <ImageTile filePath={att.file_path} alt={att.file_name} />}
+              {kind === "image" && (
+                <ImageTile url={thumbMap[att.file_path]} alt={att.file_name} />
+              )}
               {kind === "video" && <VideoTile filePath={att.file_path} />}
               {kind === "file" && <FileTile name={att.file_name} />}
             </div>
@@ -60,23 +85,22 @@ export function AttachmentThumbnailGrid<T extends AttachmentLike>({ attachments,
   );
 }
 
-function ImageTile({ filePath, alt }: { filePath: string; alt: string }) {
-  const { data: url, isError } = useQuery({
-    queryKey: ["att-thumb", filePath],
-    queryFn: async () => {
-      try {
-        return await getAttachmentThumbnailUrl(filePath, { width: 400, height: 400 });
-      } catch {
-        // Fall back to a plain signed URL if transforms aren't available.
-        return getAttachmentUrl(filePath);
-      }
-    },
-    staleTime: 5 * 60_000,
-    retry: 1,
-  });
-  if (isError) return <Fallback icon={<ImageOff className="h-6 w-6" />} />;
+function ImageTile({ url, alt }: { url: string | undefined; alt: string }) {
   if (!url) return <div className="h-full w-full animate-pulse bg-[var(--cream-deep)]" />;
-  return <img src={url} alt={alt} loading="lazy" decoding="async" className="h-full w-full object-cover" />;
+  return (
+    <img
+      src={url}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      width={400}
+      height={400}
+      className="h-full w-full object-cover"
+      onError={(e) => {
+        (e.currentTarget as HTMLImageElement).style.display = "none";
+      }}
+    />
+  );
 }
 
 function VideoTile({ filePath }: { filePath: string }) {
