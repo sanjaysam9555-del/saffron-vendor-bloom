@@ -201,7 +201,7 @@ function DashboardPage() {
             </div>
             <div className="flex items-center gap-2">
               {(() => {
-                const filtersActive = !!(filters.category || filters.locations.length || filters.minGoogleRating != null || filters.minSaffronRating != null || filters.submittedViaForm !== "any");
+                const filtersActive = !!(filters.category || filters.locations.length || filters.minGoogleRating != null || filters.minSaffronRating != null || filters.submittedViaForm !== "any" || filters.assignedToProject !== "any" || filters.hasQuoteHistory !== "any" || filters.hasAttachment !== "any");
                 return (
                   <button
                     onClick={() => setMobileFiltersOpen(true)}
@@ -467,6 +467,21 @@ function ActiveFilterChips({
       onRemove: () => onChange({ ...filters, submittedViaForm: "any" }),
     });
   }
+  const relLabels: Record<"assignedToProject" | "hasQuoteHistory" | "hasAttachment", string> = {
+    assignedToProject: "Assigned to project",
+    hasQuoteHistory: "Has quote history",
+    hasAttachment: "Has attachment",
+  };
+  (Object.keys(relLabels) as Array<keyof typeof relLabels>).forEach((k) => {
+    const val = filters[k];
+    if (val !== "any") {
+      chips.push({
+        key: k,
+        label: `${relLabels[k]}: ${val === "yes" ? "Yes" : "No"}`,
+        onRemove: () => onChange({ ...filters, [k]: "any" }),
+      });
+    }
+  });
   const sortChip =
     sort !== DEFAULT_SORT
       ? { key: "sort", label: `Sort: ${SORT_LABEL[sort]}`, onRemove: () => onSortChange(DEFAULT_SORT) }
@@ -481,6 +496,9 @@ function ActiveFilterChips({
       minGoogleRating: null,
       minSaffronRating: null,
       submittedViaForm: "any",
+      assignedToProject: "any",
+      hasQuoteHistory: "any",
+      hasAttachment: "any",
     });
     onClearSearch();
     onSortChange(DEFAULT_SORT);
