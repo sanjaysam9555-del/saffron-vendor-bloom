@@ -163,8 +163,14 @@ export function ClientVendorTable({ vendors, onView }: Props) {
               </tr>
             );
           })}
+          {visibleCount < vendors.length && (
+            <tr ref={sentinelRef} aria-hidden>
+              <td colSpan={7} className="h-10" />
+            </tr>
+          )}
         </tbody>
       </table>
+
     </div>
   );
 }
