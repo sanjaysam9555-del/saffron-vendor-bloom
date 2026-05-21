@@ -1,8 +1,21 @@
 import { LOCATION_OPTIONS, useAllCategories } from "@/lib/categories";
 import type { Vendor } from "@/lib/vendor-types";
 import { Filter, X, ChevronLeft, ChevronRight, Settings2 } from "lucide-react";
-import { useState } from "react";
-import { CategoryManager } from "./CategoryManager";
+import { lazy, Suspense, useState } from "react";
+
+// Lazy-load the admin category manager — it's a heavy modal only opened on demand.
+const CategoryManager = lazy(() =>
+  import("./CategoryManager").then((m) => ({ default: m.CategoryManager })),
+);
+
+function LazyCategoryManager(props: { vendors: Vendor[]; onClose: () => void }) {
+  return (
+    <Suspense fallback={null}>
+      <CategoryManager {...props} />
+    </Suspense>
+  );
+}
+
 
 export interface FilterState {
   category: string | null;
