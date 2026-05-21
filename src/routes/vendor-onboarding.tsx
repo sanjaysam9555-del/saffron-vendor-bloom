@@ -9,7 +9,7 @@ import { VendorSignupSuccess } from "@/components/vendor/VendorSignupSuccess";
 export const Route = createFileRoute("/vendor-onboarding")({
   head: () => ({
     meta: [
-      { title: "Partner With Us | Saffron Planning Studio Vendor Signup" },
+      { title: "Partner With Us | Saffron Planning Studio Vendor Onboarding" },
       {
         name: "description",
         content:
@@ -20,11 +20,11 @@ export const Route = createFileRoute("/vendor-onboarding")({
         property: "og:description",
         content: "Vendors — register your business with Saffron Planning Studio.",
       },
-      { property: "og:url", content: "https://planwithsaffron.in/vendor-signup" },
+      { property: "og:url", content: "https://planwithsaffron.in/vendor-onboarding" },
       { name: "robots", content: "index, follow" },
     ],
     links: [
-      { rel: "canonical", href: "https://planwithsaffron.in/vendor-signup" },
+      { rel: "canonical", href: "https://planwithsaffron.in/vendor-onboarding" },
     ],
   }),
   component: VendorSignupPage,
