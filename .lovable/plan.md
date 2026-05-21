@@ -1,45 +1,31 @@
-## 1. Remove "Copy Contact Card"
+The previous turn proposed thumbnail grids but never wrote the code — `AttachmentThumbnailGrid.tsx` doesn't exist, and both `VendorDetail.tsx` and `ClientVendorDetail.tsx` still render the old `<ul>` of filename rows. This plan actually ships the change.
 
-In `src/components/vendor/VendorDetail.tsx`:
-- Remove the `copyContactCard` handler, the `copiedCard` state, and the button at line ~214 (used in both admin and client because this component is shared).
-- Clean up unused imports (`Copy`/`Check` icon, etc.) if no longer referenced.
+## What you'll see
 
-No other usages exist (`rg "Copy Contact Card"` only matches this file).
+- Documents section becomes a responsive grid of preview tiles (2 cols on mobile, 3 on tablet, 4 on desktop within the narrow side panel).
+- **Images** show the actual image as a thumbnail (signed URL fetched lazily).
+- **Videos** show the first-frame poster via `<video preload="metadata">` with a play-icon overlay.
+- **PDFs / docs / other** show a file-type icon tile with the extension badge (no remote fetch — keeps the panel fast and avoids rendering PDFs as images).
+- Clicking any tile opens the existing `SignedDocumentViewer` exactly as before.
+- Filename + size sit under each tile in a 2-line footer.
 
-## 2. Fix Instagram previews that stay blank for valid handles
+## Files
 
-Symptom: vendors with a working IG link never show a preview, even after multiple refreshes. Root causes in the current code:
+**New:** `src/components/vendor/AttachmentThumbnailGrid.tsx`
+- Props: `attachments`, `onOpen(att)`.
+- One `<TileImage>` / `<TileVideo>` / `<TileFile>` per attachment, picked by mime type.
+- `TileImage` and `TileVideo` use `useQuery` keyed on `file_path` with `staleTime: 5 * 60_000` to fetch the signed URL once per session.
+- Grid classes: `grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3`.
+- Each tile is a `<button>` with `aspect-square` thumbnail area + caption.
 
-- `ensureVendorInstagramPreview` only re-scrapes when the cached row is `stale` or `status === "error"`. Rows cached as **`not_found`** (which is what the scraper returns when Apify gives back an empty item, a private/blocked profile, or no avatar+thumbs) are never refreshed — so once a handle lands in that bucket it stays blank forever.
-- `scrapeInstagramProfile` downgrades a valid `ok` Apify response to `not_found` whenever `avatar_url`, `display_name`, and `thumbs` are all empty. The Apify actor occasionally returns a thin payload for real profiles, locking them into `not_found`.
-- The Apify call is made once with no retry; transient 5xx/empty responses also stick.
-- The manual "Refresh" button works against the cache, but the UI in `VendorInstagramDetailBlock` only shows it inside the "no preview" panel — easy to miss, and it just hits the same single-shot scrape.
+**Edited:** `src/components/vendor/VendorDetail.tsx`
+- Replace the existing `<ul>…vendor.attachments.map…</ul>` block with `<AttachmentThumbnailGrid attachments={vendor.attachments} onOpen={setViewing} />`.
 
-### Server-side changes
+**Edited:** `src/components/client/ClientVendorDetail.tsx`
+- Same replacement for the client-side attachments `<ul>`.
 
-`src/server/instagram-preview.server.ts`
-- Add one retry (≈1.5 s backoff) around the Apify `fetch` when the response is non-OK or returns zero items.
-- Stop converting `ok` responses with missing media to `not_found`. Persist whatever fields we do have (handle + profile_url) with `status: "ok"` so the UI can render the link-only state; only mark `not_found` when Apify explicitly says the profile doesn't exist.
+## Out of scope
 
-`src/server/instagram-preview.functions.ts`
-- In `ensureVendorInstagramPreview`, treat `status === "not_found"` the same as `error` for re-scrape eligibility (staff only). Add a short cooldown (e.g. 10 min since `fetched_at`) to avoid hammering Apify on every page load.
-- Keep client behavior unchanged (read-only).
-
-### UI changes
-
-`src/components/vendor/VendorInstagramPreview.tsx`
-- Render available data (handle, profile link, avatar if any) whenever `status === "ok"`, even without thumbnails.
-- Always show the "Refresh" button (for staff) in the header, not only inside the empty state, so admins can recover stuck rows in one click.
-
-### Out of scope
-
-- No schema changes.
-- No changes to the `/api/public/instagram-image` proxy route.
-- No change to the client-side hooks/cache shape.
-
-## Files touched
-
-- `src/components/vendor/VendorDetail.tsx`
-- `src/server/instagram-preview.server.ts`
-- `src/server/instagram-preview.functions.ts`
-- `src/components/vendor/VendorInstagramPreview.tsx`
+- No upload, RLS, viewer, or data-shape changes.
+- No PDF first-page rendering (clicking the PDF tile still opens the full PDF in the viewer).
+- No changes to the quote-file lists (those remain as filename rows).
