@@ -22,12 +22,59 @@ export async function listVendorAttachments(vendorId: string): Promise<VendorAtt
   return (data ?? []) as VendorAttachment[];
 }
 
+const COMPRESSIBLE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const COMPRESS_MAX_DIMENSION = 2000;
+const COMPRESS_QUALITY = 0.82;
+const COMPRESS_SKIP_BELOW_BYTES = 400 * 1024;
+
+async function compressImageIfNeeded(file: File): Promise<File> {
+  if (typeof window === "undefined") return file;
+  const type = (file.type || "").toLowerCase();
+  if (!COMPRESSIBLE_IMAGE_TYPES.has(type)) return file;
+  if (file.size <= COMPRESS_SKIP_BELOW_BYTES) return file;
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const { width, height } = bitmap;
+    const maxSide = Math.max(width, height);
+    const scale = maxSide > COMPRESS_MAX_DIMENSION ? COMPRESS_MAX_DIMENSION / maxSide : 1;
+    const targetW = Math.round(width * scale);
+    const targetH = Math.round(height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = targetW;
+    canvas.height = targetH;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      bitmap.close?.();
+      return file;
+    }
+    ctx.drawImage(bitmap, 0, 0, targetW, targetH);
+    bitmap.close?.();
+
+    const blob: Blob | null = await new Promise((resolve) =>
+      canvas.toBlob(resolve, "image/webp", COMPRESS_QUALITY),
+    );
+    if (!blob || blob.size >= file.size) return file;
+
+    const baseName = file.name.replace(/\.[^.]+$/, "");
+    return new File([blob], `${baseName}.webp`, {
+      type: "image/webp",
+      lastModified: Date.now(),
+    });
+  } catch {
+    return file;
+  }
+}
+
 export async function uploadVendorAttachment(vendorId: string, file: File): Promise<VendorAttachment> {
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const originalName = file.name;
+  const uploadFile = await compressImageIfNeeded(file);
+  const safeName = uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const path = `${vendorId}/${crypto.randomUUID()}-${safeName}`;
 
-  const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
-    contentType: file.type || undefined,
+  const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, uploadFile, {
+    contentType: uploadFile.type || undefined,
     upsert: false,
   });
   if (upErr) throw upErr;
@@ -37,9 +84,9 @@ export async function uploadVendorAttachment(vendorId: string, file: File): Prom
     .insert({
       vendor_id: vendorId,
       file_path: path,
-      file_name: file.name,
-      mime_type: file.type || null,
-      size_bytes: file.size,
+      file_name: originalName,
+      mime_type: uploadFile.type || null,
+      size_bytes: uploadFile.size,
     })
     .select()
     .single();
@@ -57,7 +104,7 @@ export async function deleteVendorAttachment(att: VendorAttachment): Promise<voi
   if (error) throw error;
 }
 
-import { getVendorFileSignedUrl, getVendorFileStreamUrl } from "@/server/vendor-files.functions";
+import { getVendorFileSignedUrl, getVendorFileStreamUrl, getVendorFileThumbnailUrl } from "@/server/vendor-files.functions";
 
 export async function getAttachmentUrl(filePath: string): Promise<string> {
   const { url } = await getVendorFileSignedUrl({ data: { file_path: filePath } });
@@ -66,6 +113,21 @@ export async function getAttachmentUrl(filePath: string): Promise<string> {
 
 export async function getAttachmentStreamUrl(filePath: string): Promise<string> {
   const { url } = await getVendorFileStreamUrl({ data: { file_path: filePath } });
+  return url;
+}
+
+export async function getAttachmentThumbnailUrl(
+  filePath: string,
+  opts: { width?: number; height?: number; quality?: number } = {},
+): Promise<string> {
+  const { url } = await getVendorFileThumbnailUrl({
+    data: {
+      file_path: filePath,
+      width: opts.width ?? 400,
+      height: opts.height ?? 400,
+      quality: opts.quality ?? 70,
+    },
+  });
   return url;
 }
 

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { FileText, Play, ImageOff } from "lucide-react";
-import { getAttachmentUrl, getAttachmentStreamUrl, formatFileSize } from "@/lib/vendor-files-api";
+import { getAttachmentThumbnailUrl, getAttachmentStreamUrl, getAttachmentUrl, formatFileSize } from "@/lib/vendor-files-api";
 
 export interface AttachmentLike {
   id: string;
@@ -62,14 +62,21 @@ export function AttachmentThumbnailGrid<T extends AttachmentLike>({ attachments,
 
 function ImageTile({ filePath, alt }: { filePath: string; alt: string }) {
   const { data: url, isError } = useQuery({
-    queryKey: ["att-url", filePath],
-    queryFn: () => getAttachmentUrl(filePath),
+    queryKey: ["att-thumb", filePath],
+    queryFn: async () => {
+      try {
+        return await getAttachmentThumbnailUrl(filePath, { width: 400, height: 400 });
+      } catch {
+        // Fall back to a plain signed URL if transforms aren't available.
+        return getAttachmentUrl(filePath);
+      }
+    },
     staleTime: 5 * 60_000,
     retry: 1,
   });
   if (isError) return <Fallback icon={<ImageOff className="h-6 w-6" />} />;
   if (!url) return <div className="h-full w-full animate-pulse bg-[var(--cream-deep)]" />;
-  return <img src={url} alt={alt} loading="lazy" className="h-full w-full object-cover" />;
+  return <img src={url} alt={alt} loading="lazy" decoding="async" className="h-full w-full object-cover" />;
 }
 
 function VideoTile({ filePath }: { filePath: string }) {
