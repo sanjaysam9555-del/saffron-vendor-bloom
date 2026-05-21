@@ -11,6 +11,7 @@ import {
   createProjectClient,
   resetProjectClientPassword,
   setProjectClientEmail,
+  setProjectClientDisplayName,
   removeProjectClient,
   unassignVendorFromProject,
   deleteProject,
@@ -331,6 +332,9 @@ function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
   const [emailVal, setEmailVal] = useState<string>(c.email ?? "");
   const [emailBusy, setEmailBusy] = useState(false);
   const [emailErr, setEmailErr] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [nameVal, setNameVal] = useState<string>(c.display_name ?? "");
+  const [nameBusy, setNameBusy] = useState(false);
 
   const savePwd = async () => {
     try {
@@ -361,6 +365,22 @@ function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
     }
   };
 
+  const saveName = async () => {
+    const trimmed = nameVal.trim();
+    if (!trimmed) return;
+    setNameBusy(true);
+    try {
+      await setProjectClientDisplayName({ data: { user_id: c.user_id, display_name: trimmed } });
+      notifySuccess("Name updated");
+      setEditingName(false);
+      onChanged();
+    } catch (e) {
+      notifyError(e, "Could not update name");
+    } finally {
+      setNameBusy(false);
+    }
+  };
+
   const handleRemove = async () => {
     const ok = await confirmDelete({
       title: `Remove ${c.email}?`,
@@ -379,7 +399,28 @@ function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
 
   return (
     <tr className="border-t border-[var(--border)]">
-      <td className="px-4 py-3">{c.display_name || "—"}</td>
+      <td className="px-4 py-3">
+        {editingName ? (
+          <div className="flex items-center gap-1">
+            <input
+              type="text"
+              className="rounded border border-[var(--border)] px-2 py-1 text-sm"
+              value={nameVal}
+              onChange={(e) => setNameVal(e.target.value)}
+              autoFocus
+            />
+            <button onClick={saveName} disabled={nameBusy || !nameVal.trim()} className="rounded p-1 text-green-700 hover:bg-green-50 disabled:opacity-50"><Check className="h-4 w-4" /></button>
+            <button onClick={() => { setEditingName(false); setNameVal(c.display_name ?? ""); }} className="rounded p-1 text-[var(--charcoal)]/60 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span>{c.display_name || "—"}</span>
+            <button onClick={() => { setNameVal(c.display_name ?? ""); setEditingName(true); }} title="Change name" className="text-[var(--charcoal)]/40 hover:text-[var(--terracotta)]">
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+      </td>
       <td className="px-4 py-3 text-[var(--charcoal)]/70">
         {editingEmail ? (
           <div className="flex flex-col gap-1">

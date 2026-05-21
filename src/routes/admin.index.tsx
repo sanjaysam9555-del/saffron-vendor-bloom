@@ -60,6 +60,9 @@ function DashboardPage() {
     minGoogleRating: null,
     minSaffronRating: null,
     submittedViaForm: "any",
+    assignedToProject: "any",
+    hasQuoteHistory: "any",
+    hasAttachment: "any",
   });
   const [sort, setSort] = useState<SortKey>("date_added_desc");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -79,6 +82,12 @@ function DashboardPage() {
       if (filters.minSaffronRating != null && (v.saffron_rating ?? -1) < filters.minSaffronRating) return false;
       if (filters.submittedViaForm === "yes" && !v.submitted_via_form) return false;
       if (filters.submittedViaForm === "no" && v.submitted_via_form) return false;
+      if (filters.assignedToProject === "yes" && !v.has_assignment) return false;
+      if (filters.assignedToProject === "no" && v.has_assignment) return false;
+      if (filters.hasQuoteHistory === "yes" && !v.has_quote_history) return false;
+      if (filters.hasQuoteHistory === "no" && v.has_quote_history) return false;
+      if (filters.hasAttachment === "yes" && !v.has_attachment) return false;
+      if (filters.hasAttachment === "no" && v.has_attachment) return false;
       if (q) {
         const hay = [v.vendor_name, v.location, v.instagram_handle, v.remarks].filter(Boolean).join(" ").toLowerCase();
         if (!hay.includes(q)) return false;
@@ -192,7 +201,7 @@ function DashboardPage() {
             </div>
             <div className="flex items-center gap-2">
               {(() => {
-                const filtersActive = !!(filters.category || filters.locations.length || filters.minGoogleRating != null || filters.minSaffronRating != null || filters.submittedViaForm !== "any");
+                const filtersActive = !!(filters.category || filters.locations.length || filters.minGoogleRating != null || filters.minSaffronRating != null || filters.submittedViaForm !== "any" || filters.assignedToProject !== "any" || filters.hasQuoteHistory !== "any" || filters.hasAttachment !== "any");
                 return (
                   <button
                     onClick={() => setMobileFiltersOpen(true)}
@@ -458,6 +467,21 @@ function ActiveFilterChips({
       onRemove: () => onChange({ ...filters, submittedViaForm: "any" }),
     });
   }
+  const relLabels: Record<"assignedToProject" | "hasQuoteHistory" | "hasAttachment", string> = {
+    assignedToProject: "Assigned to project",
+    hasQuoteHistory: "Has quote history",
+    hasAttachment: "Has attachment",
+  };
+  (Object.keys(relLabels) as Array<keyof typeof relLabels>).forEach((k) => {
+    const val = filters[k];
+    if (val !== "any") {
+      chips.push({
+        key: k,
+        label: `${relLabels[k]}: ${val === "yes" ? "Yes" : "No"}`,
+        onRemove: () => onChange({ ...filters, [k]: "any" }),
+      });
+    }
+  });
   const sortChip =
     sort !== DEFAULT_SORT
       ? { key: "sort", label: `Sort: ${SORT_LABEL[sort]}`, onRemove: () => onSortChange(DEFAULT_SORT) }
@@ -472,6 +496,9 @@ function ActiveFilterChips({
       minGoogleRating: null,
       minSaffronRating: null,
       submittedViaForm: "any",
+      assignedToProject: "any",
+      hasQuoteHistory: "any",
+      hasAttachment: "any",
     });
     onClearSearch();
     onSortChange(DEFAULT_SORT);

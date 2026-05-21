@@ -422,6 +422,27 @@ export const setProjectClientEmail = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const setProjectClientDisplayName = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ user_id: z.string().uuid(), display_name: z.string().min(1).max(120) }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await assertStaff(context.userId);
+    const display_name = data.display_name.trim();
+    if (!display_name) throw new Error("Name is required");
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ display_name, updated_at: new Date().toISOString() })
+      .eq("user_id", data.user_id);
+    if (error) throw new Error(error.message);
+    // Keep auth user_metadata in sync.
+    await supabaseAdmin.auth.admin
+      .updateUserById(data.user_id, { user_metadata: { display_name } })
+      .catch(() => {});
+    return { ok: true };
+  });
+
 export const removeProjectClient = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) =>

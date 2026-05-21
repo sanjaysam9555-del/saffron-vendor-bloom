@@ -67,13 +67,26 @@ export const listVendorsServer = createServerFn({ method: "GET" })
   .middleware([attachAuthToken])
   .handler(async () => {
     await requireStaffUser();
-    const { data, error } = await supabaseAdmin
-      .from("vendors")
-      .select("*")
-      .order("date_added", { ascending: false })
-      .limit(2000);
-    if (error) throw new Error(error.message);
-    return data ?? [];
+    const [vendorsRes, assignedRes, quotedRes, attachedRes] = await Promise.all([
+      supabaseAdmin
+        .from("vendors")
+        .select("*")
+        .order("date_added", { ascending: false })
+        .limit(2000),
+      supabaseAdmin.from("project_vendors").select("vendor_id").limit(10000),
+      supabaseAdmin.from("project_vendor_quotes").select("vendor_id").limit(10000),
+      supabaseAdmin.from("vendor_attachments").select("vendor_id").limit(10000),
+    ]);
+    if (vendorsRes.error) throw new Error(vendorsRes.error.message);
+    const assigned = new Set((assignedRes.data ?? []).map((r: any) => r.vendor_id));
+    const quoted = new Set((quotedRes.data ?? []).map((r: any) => r.vendor_id));
+    const attached = new Set((attachedRes.data ?? []).map((r: any) => r.vendor_id));
+    return (vendorsRes.data ?? []).map((v: any) => ({
+      ...v,
+      has_assignment: assigned.has(v.id),
+      has_quote_history: quoted.has(v.id),
+      has_attachment: attached.has(v.id),
+    }));
   });
 
 export const createVendorServer = createServerFn({ method: "POST" })
