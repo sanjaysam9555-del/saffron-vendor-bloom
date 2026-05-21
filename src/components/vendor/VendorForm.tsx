@@ -145,6 +145,11 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
     setSubmitting(true);
     try {
       const result = await onSubmit(form);
+      // Kick off Instagram preview scrape in the background so the new card
+      // and detail page light up without a manual refresh.
+      if (form.instagram_handle?.trim()) {
+        triggerInstagramPreview(result.id, form.instagram_handle);
+      }
       // Upload pending files
       for (const file of pendingFiles) {
         try {
