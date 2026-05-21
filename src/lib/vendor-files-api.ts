@@ -104,7 +104,12 @@ export async function deleteVendorAttachment(att: VendorAttachment): Promise<voi
   if (error) throw error;
 }
 
-import { getVendorFileSignedUrl, getVendorFileStreamUrl, getVendorFileThumbnailUrl } from "@/server/vendor-files.functions";
+import {
+  getVendorFileSignedUrl,
+  getVendorFileStreamUrl,
+  getVendorFileThumbnailUrl,
+  getVendorFileThumbnailUrlsBulk,
+} from "@/server/vendor-files.functions";
 
 export async function getAttachmentUrl(filePath: string): Promise<string> {
   const { url } = await getVendorFileSignedUrl({ data: { file_path: filePath } });
@@ -129,6 +134,22 @@ export async function getAttachmentThumbnailUrl(
     },
   });
   return url;
+}
+
+export async function getAttachmentThumbnailUrlsBulk(
+  filePaths: string[],
+  opts: { width?: number; height?: number; quality?: number } = {},
+): Promise<Record<string, string>> {
+  if (filePaths.length === 0) return {};
+  const { urls } = await getVendorFileThumbnailUrlsBulk({
+    data: {
+      file_paths: filePaths,
+      width: opts.width ?? 400,
+      height: opts.height ?? 400,
+      quality: opts.quality ?? 70,
+    },
+  });
+  return urls;
 }
 
 export const ACCEPTED_FILE_TYPES =
