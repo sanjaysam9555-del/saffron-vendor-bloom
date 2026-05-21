@@ -156,13 +156,14 @@ function RootComponent() {
   const [client] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        // Treat data as fresh for 2 minutes so reopening the iPhone PWA or
-        // switching tabs doesn't kick off a full reload of every dashboard
-        // query. Realtime channels still push live updates.
-        staleTime: 2 * 60_000,
-        gcTime: 10 * 60_000,
+        // Treat data as fresh for 5 minutes. Realtime channels still push
+        // live updates, and route navigation no longer triggers a refetch
+        // storm — pages feel instant on back/forward.
+        staleTime: 5 * 60_000,
+        gcTime: 30 * 60_000,
         refetchOnWindowFocus: false,
         refetchOnReconnect: true,
+        refetchOnMount: false,
         retry: 1,
         retryDelay: 400,
       },
