@@ -60,9 +60,9 @@ function DashboardPage() {
     minGoogleRating: null,
     minSaffronRating: null,
     submittedViaForm: "any",
-    assignedToProject: "any",
-    hasQuoteHistory: "any",
     hasAttachment: "any",
+    hasQuoteHistory: "any",
+    assignedToProject: "any",
   });
   const [sort, setSort] = useState<SortKey>("date_added_desc");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -467,10 +467,10 @@ function ActiveFilterChips({
       onRemove: () => onChange({ ...filters, submittedViaForm: "any" }),
     });
   }
-  const relLabels: Record<"assignedToProject" | "hasQuoteHistory" | "hasAttachment", string> = {
-    assignedToProject: "Assigned to project",
-    hasQuoteHistory: "Has quote history",
+  const relLabels: Record<"hasAttachment" | "hasQuoteHistory" | "assignedToProject", string> = {
     hasAttachment: "Has attachment",
+    hasQuoteHistory: "Has quote history",
+    assignedToProject: "Assigned to project",
   };
   (Object.keys(relLabels) as Array<keyof typeof relLabels>).forEach((k) => {
     const val = filters[k];
@@ -496,9 +496,9 @@ function ActiveFilterChips({
       minGoogleRating: null,
       minSaffronRating: null,
       submittedViaForm: "any",
-      assignedToProject: "any",
-      hasQuoteHistory: "any",
       hasAttachment: "any",
+      hasQuoteHistory: "any",
+      assignedToProject: "any",
     });
     onClearSearch();
     onSortChange(DEFAULT_SORT);

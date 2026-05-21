@@ -226,7 +226,7 @@ function ProjectDetailPage() {
                 <table className="w-full min-w-[560px] text-sm">
                   <thead className="bg-[var(--cream)] text-left text-xs uppercase tracking-wider text-[var(--charcoal)]/60">
                     <tr>
-                      <th className="px-4 py-2.5">Name</th>
+                      <th className="px-4 py-2.5">Display Name</th>
                       <th className="px-4 py-2.5">Email</th>
                       <th className="px-4 py-2.5 text-right">Actions</th>
                     </tr>
@@ -907,12 +907,14 @@ function ProjectHeader({ project, canDelete, onDelete, onSaved }: ProjectHeaderP
   const [bride, setBride] = useState(project.bride_name);
   const [groom, setGroom] = useState(project.groom_name);
   const [date, setDate] = useState(project.wedding_date?.slice(0, 10) ?? "");
+  const [notes, setNotes] = useState(project.notes ?? "");
   const [busy, setBusy] = useState(false);
 
   const startEdit = () => {
     setBride(project.bride_name);
     setGroom(project.groom_name);
     setDate(project.wedding_date?.slice(0, 10) ?? "");
+    setNotes(project.notes ?? "");
     setEditing(true);
   };
 
@@ -929,6 +931,7 @@ function ProjectHeader({ project, canDelete, onDelete, onSaved }: ProjectHeaderP
           bride_name: bride.trim(),
           groom_name: groom.trim(),
           wedding_date: date,
+          notes: notes.trim() || null,
         },
       });
       notifySuccess("Project updated");
@@ -968,6 +971,15 @@ function ProjectHeader({ project, canDelete, onDelete, onSaved }: ProjectHeaderP
               className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+            />
+          </label>
+          <label className="sm:col-span-3 text-xs text-[var(--charcoal)]/70">
+            Notes
+            <textarea
+              className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
+              rows={3}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
             />
           </label>
         </div>

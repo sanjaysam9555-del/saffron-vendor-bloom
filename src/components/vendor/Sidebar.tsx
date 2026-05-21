@@ -10,9 +10,9 @@ export interface FilterState {
   minGoogleRating: number | null;
   minSaffronRating: number | null;
   submittedViaForm: "any" | "yes" | "no";
-  assignedToProject: "any" | "yes" | "no";
-  hasQuoteHistory: "any" | "yes" | "no";
   hasAttachment: "any" | "yes" | "no";
+  hasQuoteHistory: "any" | "yes" | "no";
+  assignedToProject: "any" | "yes" | "no";
 }
 
 const RATING_OPTIONS = [3, 3.5, 4, 4.5] as const;
@@ -64,9 +64,9 @@ export function Sidebar({
     minGoogleRating: null,
     minSaffronRating: null,
     submittedViaForm: "any",
-    assignedToProject: "any",
-    hasQuoteHistory: "any",
     hasAttachment: "any",
+    hasQuoteHistory: "any",
+    assignedToProject: "any",
   });
 
   const chip = (active: boolean) =>
@@ -211,9 +211,9 @@ export function Sidebar({
       <div className="mb-6">
         <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Relationships</div>
         {([
-          ["assignedToProject", "Assigned to a project"],
-          ["hasQuoteHistory", "Has quote history"],
-          ["hasAttachment", "Has attachment"],
+          ["hasAttachment", "Has Attachment"],
+          ["hasQuoteHistory", "Has Quote History"],
+          ["assignedToProject", "Assigned to Project"],
         ] as const).map(([key, label]) => (
           <div key={key} className="mb-2 last:mb-0">
             <div className="mb-1 text-xs text-[var(--charcoal)]/70">{label}</div>
