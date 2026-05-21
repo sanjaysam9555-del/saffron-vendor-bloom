@@ -112,7 +112,7 @@ export function VendorTable({
           </tr>
         </thead>
         <tbody>
-          {sorted.map((v) => {
+          {visibleRows.map((v) => {
             const colors = CATEGORY_COLORS[v.category] ?? { bg: "bg-[var(--cream-deep)]", text: "text-[var(--charcoal)]" };
             const isSelected = !!selectedIds?.has(v.id);
             const handleRowClick = () => {
@@ -166,8 +166,14 @@ export function VendorTable({
               </tr>
             );
           })}
+          {visibleCount < sorted.length && (
+            <tr ref={sentinelRef} aria-hidden>
+              <td colSpan={selectMode ? 8 : 7} className="h-10" />
+            </tr>
+          )}
         </tbody>
       </table>
+
     </div>
   );
 }
