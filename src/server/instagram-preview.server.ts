@@ -47,26 +47,38 @@ export async function scrapeInstagramProfile(
     return { status: "error", handle, profile_url: profileUrl, error: "APIFY_API_TOKEN not configured" };
   }
 
-  try {
-    const url = `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${encodeURIComponent(token)}&timeout=90`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ usernames: [handle] }),
-    });
+  const url = `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${encodeURIComponent(token)}&timeout=90`;
+  const callApify = async (): Promise<{ items: ApifyProfileItem[] | null; error: string | null }> => {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usernames: [handle] }),
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        return { items: null, error: `Apify ${res.status}: ${body.slice(0, 250)}` };
+      }
+      const items = (await res.json()) as ApifyProfileItem[];
+      return { items: Array.isArray(items) ? items : null, error: null };
+    } catch (e) {
+      return { items: null, error: e instanceof Error ? e.message.slice(0, 250) : "fetch failed" };
+    }
+  };
 
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      return {
-        status: "error",
-        handle,
-        profile_url: profileUrl,
-        error: `Apify ${res.status}: ${body.slice(0, 250)}`,
-      };
+  try {
+    let { items, error: firstErr } = await callApify();
+    // One retry on transport error or empty payload.
+    if (!items || items.length === 0) {
+      await new Promise((r) => setTimeout(r, 1500));
+      const retry = await callApify();
+      items = retry.items;
+      if (!items) {
+        return { status: "error", handle, profile_url: profileUrl, error: retry.error ?? firstErr ?? "Empty response" };
+      }
     }
 
-    const items = (await res.json()) as ApifyProfileItem[];
-    const item = Array.isArray(items) ? items[0] : null;
+    const item = items[0] ?? null;
 
     if (!item) {
       return { status: "not_found", handle, profile_url: profileUrl, error: "No data returned" };
@@ -89,28 +101,8 @@ export async function scrapeInstagramProfile(
       .filter((u): u is string => typeof u === "string" && u.length > 0)
       .slice(0, 3);
 
-    if (item.private) {
-      return {
-        status: "ok",
-        handle,
-        profile_url: profileUrl,
-        avatar_url: avatarUrl,
-        display_name: displayName,
-        bio,
-        followers_text: followersText,
-        post_thumbnails: [],
-      };
-    }
-
-    if (!avatarUrl && !displayName && thumbs.length === 0) {
-      return {
-        status: "not_found",
-        handle,
-        profile_url: profileUrl,
-        error: "Profile is private, blocked, or empty",
-      };
-    }
-
+    // Always return ok — even if media is missing, the link + handle are
+    // still useful, and the row should not be locked into not_found forever.
     return {
       status: "ok",
       handle,
@@ -119,7 +111,7 @@ export async function scrapeInstagramProfile(
       display_name: displayName,
       bio,
       followers_text: followersText,
-      post_thumbnails: thumbs,
+      post_thumbnails: item.private ? [] : thumbs,
     };
   } catch (error) {
     return {
