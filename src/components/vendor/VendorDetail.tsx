@@ -19,6 +19,7 @@ import { BookedBadge } from "./BookedBadge";
 import { VendorQuoteHistory } from "./VendorQuoteHistory";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { VendorInstagramDetailBlock } from "./VendorInstagramPreview";
+import { AttachmentThumbnailGrid } from "./AttachmentThumbnailGrid";
 
 interface VendorDetailProps {
   vendor: Vendor | null;
