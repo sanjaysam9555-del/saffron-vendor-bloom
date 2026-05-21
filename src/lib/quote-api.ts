@@ -5,7 +5,7 @@ import type {
   QuoteStatus,
   VendorBookedSummary,
 } from "./quote-types";
-import { getQuoteFileSignedUrl } from "@/server/quote-files.functions";
+import { getQuoteFileSignedUrl, getQuoteFileStreamUrl } from "@/server/quote-files.functions";
 
 const BUCKET = "vendor-files";
 
@@ -227,5 +227,10 @@ export async function deleteQuoteFile(file: QuoteFile): Promise<void> {
 
 export async function getQuoteFileUrl(filePath: string): Promise<string> {
   const { url } = await getQuoteFileSignedUrl({ data: { file_path: filePath } });
+  return url;
+}
+
+export async function getQuoteFileStreamUrlClient(filePath: string): Promise<string> {
+  const { url } = await getQuoteFileStreamUrl({ data: { file_path: filePath } });
   return url;
 }
