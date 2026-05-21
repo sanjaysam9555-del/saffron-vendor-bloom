@@ -28,6 +28,7 @@ import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lova
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicVendorSignupCheckRouteImport } from './routes/api/public/vendor-signup.check'
+import { Route as ApiFilesStreamSplatRouteImport } from './routes/api/files/stream.$'
 
 const VendorSignupRoute = VendorSignupRouteImport.update({
   id: '/vendor-signup',
@@ -128,6 +129,11 @@ const ApiPublicVendorSignupCheckRoute =
     path: '/check',
     getParentRoute: () => ApiPublicVendorSignupRoute,
   } as any)
+const ApiFilesStreamSplatRoute = ApiFilesStreamSplatRouteImport.update({
+  id: '/api/files/stream/$',
+  path: '/api/files/stream/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -145,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/projects/': typeof AdminProjectsIndexRoute
+  '/api/files/stream/$': typeof ApiFilesStreamSplatRoute
   '/api/public/vendor-signup/check': typeof ApiPublicVendorSignupCheckRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/projects': typeof AdminProjectsIndexRoute
+  '/api/files/stream/$': typeof ApiFilesStreamSplatRoute
   '/api/public/vendor-signup/check': typeof ApiPublicVendorSignupCheckRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -188,6 +196,7 @@ export interface FileRoutesById {
   '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/projects/': typeof AdminProjectsIndexRoute
+  '/api/files/stream/$': typeof ApiFilesStreamSplatRoute
   '/api/public/vendor-signup/check': typeof ApiPublicVendorSignupCheckRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -211,6 +220,7 @@ export interface FileRouteTypes {
     | '/api/public/vendor-signup'
     | '/lovable/email/suppression'
     | '/admin/projects/'
+    | '/api/files/stream/$'
     | '/api/public/vendor-signup/check'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/api/public/vendor-signup'
     | '/lovable/email/suppression'
     | '/admin/projects'
+    | '/api/files/stream/$'
     | '/api/public/vendor-signup/check'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -253,6 +264,7 @@ export interface FileRouteTypes {
     | '/api/public/vendor-signup'
     | '/lovable/email/suppression'
     | '/admin/projects/'
+    | '/api/files/stream/$'
     | '/api/public/vendor-signup/check'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -275,6 +287,7 @@ export interface RootRouteChildren {
   ApiPublicVendorSignupRoute: typeof ApiPublicVendorSignupRouteWithChildren
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   AdminProjectsIndexRoute: typeof AdminProjectsIndexRoute
+  ApiFilesStreamSplatRoute: typeof ApiFilesStreamSplatRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
@@ -415,6 +428,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicVendorSignupCheckRouteImport
       parentRoute: typeof ApiPublicVendorSignupRoute
     }
+    '/api/files/stream/$': {
+      id: '/api/files/stream/$'
+      path: '/api/files/stream/$'
+      fullPath: '/api/files/stream/$'
+      preLoaderRoute: typeof ApiFilesStreamSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -447,6 +467,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicVendorSignupRoute: ApiPublicVendorSignupRouteWithChildren,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   AdminProjectsIndexRoute: AdminProjectsIndexRoute,
+  ApiFilesStreamSplatRoute: ApiFilesStreamSplatRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
