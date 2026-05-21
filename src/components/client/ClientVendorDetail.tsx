@@ -3,6 +3,7 @@ import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import { X, MapPin, Instagram, Link as LinkIcon, Paperclip, FileText, Globe, Star, CircleCheck, Sparkles } from "lucide-react";
 import { SignedDocumentViewer } from "@/components/vendor/SignedDocumentViewer";
+import { AttachmentThumbnailGrid } from "@/components/vendor/AttachmentThumbnailGrid";
 import { SignedQuoteFileViewer } from "@/components/admin/SignedQuoteFileViewer";
 import { formatFileSize } from "@/lib/vendor-files-api";
 import { ClientStatusSelect } from "./ClientStatusSelect";
@@ -190,27 +191,8 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
             <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
               <Paperclip className="h-3 w-3" /> Documents ({vendor.attachments.length})
             </div>
-            <ul className="space-y-1.5">
-              {vendor.attachments.map((att) => (
-                <li key={att.id}>
-                  <button
-                    type="button"
-                    onClick={() => setViewing(att)}
-                    className="group flex w-full items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-white px-3 py-2 text-left text-sm transition-colors hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)]"
-                  >
-                    <div className="flex min-w-0 items-center gap-2">
-                      <FileText className="h-4 w-4 shrink-0 text-[var(--terracotta)]" />
-                      <span className="truncate text-[var(--charcoal)] group-hover:text-[var(--terracotta)]">
-                        {att.file_name}
-                      </span>
-                    </div>
-                    <span className="shrink-0 text-xs text-[var(--charcoal)]/55">
-                      {formatFileSize(att.size_bytes)}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <AttachmentThumbnailGrid attachments={vendor.attachments} onOpen={setViewing} />
+
           </div>
         )}
 
