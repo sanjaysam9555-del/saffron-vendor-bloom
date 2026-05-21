@@ -531,6 +531,7 @@ function VendorCardGrid({
     [vendors],
   );
   const { map: previewMap } = useInstagramPreviewsBulk(ids);
+  useAutoEnsureMissingPreviews(vendors, previewMap);
 
   // One bulk booked-summary fetch for all visible vendors instead of one
   // request per card (which previously caused 100+ network calls on load).
