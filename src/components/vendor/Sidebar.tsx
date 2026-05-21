@@ -278,7 +278,7 @@ export function Sidebar({
           </div>
         </div>
         {Body}
-        {managerOpen && <CategoryManager vendors={vendors} onClose={() => setManagerOpen(false)} />}
+        {managerOpen && <LazyCategoryManager vendors={vendors} onClose={() => setManagerOpen(false)} />}
       </aside>
     </div>
   ) : null;
@@ -338,7 +338,7 @@ export function Sidebar({
 
         {Body}
 
-        {managerOpen && <CategoryManager vendors={vendors} onClose={() => setManagerOpen(false)} />}
+        {managerOpen && <LazyCategoryManager vendors={vendors} onClose={() => setManagerOpen(false)} />}
       </aside>
       {MobileOverlay}
     </>
