@@ -10,8 +10,13 @@ import { listProjectCategoryDeadlines } from "@/server/project-deadlines.functio
 import { ClientTopNav } from "@/components/client/ClientTopNav";
 import { ClientSidebar, type ClientFilterState } from "@/components/client/ClientSidebar";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
-import { ClientVendorDetail } from "@/components/client/ClientVendorDetail";
-import { ClientBoardView } from "@/components/client/ClientBoardView";
+const ClientVendorDetail = lazy(() =>
+  import("@/components/client/ClientVendorDetail").then((m) => ({ default: m.ClientVendorDetail })),
+);
+const ClientBoardView = lazy(() =>
+  import("@/components/client/ClientBoardView").then((m) => ({ default: m.ClientBoardView })),
+);
+
 import { ClientVendorTable } from "@/components/client/ClientVendorTable";
 import type { ClientVendor } from "@/lib/project-types";
 import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
