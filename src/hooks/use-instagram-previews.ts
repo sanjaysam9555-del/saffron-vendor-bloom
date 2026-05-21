@@ -198,7 +198,20 @@ export function useAutoEnsureMissingPreviews(
     if (missing.length === 0) return;
 
     let cancelled = false;
-    const CONCURRENCY = 2;
+    // Defer past first paint so the cards render immediately and the
+    // background scraping never blocks navigation or interaction.
+    const win = window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    };
+    const startDelay = (cb: () => void) => {
+      if (typeof win.requestIdleCallback === "function") {
+        win.requestIdleCallback(cb, { timeout: 2000 });
+      } else {
+        window.setTimeout(cb, 1200);
+      }
+    };
+
+    const CONCURRENCY = 6;
     let cursor = 0;
 
     async function worker() {
@@ -218,8 +231,14 @@ export function useAutoEnsureMissingPreviews(
       }
     }
 
-    const workers = Array.from({ length: Math.min(CONCURRENCY, missing.length) }, () => worker());
-    void Promise.all(workers);
+    startDelay(() => {
+      if (cancelled) return;
+      const workers = Array.from(
+        { length: Math.min(CONCURRENCY, missing.length) },
+        () => worker(),
+      );
+      void Promise.all(workers);
+    });
 
     return () => {
       cancelled = true;
