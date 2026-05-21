@@ -152,7 +152,7 @@ export function VendorInstagramDetailBlock({ vendorId, handle, canRefresh = fals
             className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1 text-[10px] font-medium text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] disabled:opacity-50"
           >
             <RefreshCw className={`h-3 w-3 ${refresh.isPending ? "animate-spin" : ""}`} />
-            Refresh
+            {refresh.isPending ? "Fetching…" : "Refresh"}
           </button>
         )}
       </div>
@@ -168,32 +168,34 @@ export function VendorInstagramDetailBlock({ vendorId, handle, canRefresh = fals
             : status === "error"
               ? "Couldn't fetch preview right now."
               : "No preview cached yet."}
-          {canRefresh && (
-            <button
-              type="button"
-              onClick={() => refresh.mutate({ vendorId, handle })}
-              disabled={refresh.isPending}
-              className="ml-2 underline hover:text-[var(--terracotta)] disabled:opacity-50"
-            >
-              {refresh.isPending ? "Fetching…" : "Try fetching"}
-            </button>
-          )}
+          <a
+            href={`https://www.instagram.com/${handle}/`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-2 underline hover:text-[var(--terracotta)]"
+          >
+            Open @{handle} on Instagram
+          </a>
         </div>
       )}
 
       {preview && status === "ok" && (
         <div className="space-y-3">
           <div className="flex items-start gap-3">
-            {preview.avatar_url && (
+            {preview.avatar_url ? (
               <SafeImg
                 src={preview.avatar_url}
                 alt={preview.display_name ?? "Instagram avatar"}
                 className="h-14 w-14 rounded-full object-cover ring-2 ring-[var(--border)]"
               />
+            ) : (
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--cream-deep)] ring-2 ring-[var(--border)]">
+                <Instagram className="h-5 w-5 text-[var(--terracotta)]" />
+              </div>
             )}
             <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold text-[var(--charcoal)]">
-                {preview.display_name ?? `@${preview.handle ?? ""}`}
+                {preview.display_name ?? `@${preview.handle ?? handle}`}
               </div>
               {preview.handle && (
                 <div className="text-[11px] text-[var(--charcoal)]/55">@{preview.handle}</div>
@@ -227,9 +229,9 @@ export function VendorInstagramDetailBlock({ vendorId, handle, canRefresh = fals
             </div>
           )}
 
-          {preview.profile_url && (
+          {(preview.profile_url || handle) && (
             <a
-              href={preview.profile_url}
+              href={preview.profile_url ?? `https://www.instagram.com/${handle}/`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs font-medium text-[var(--terracotta)] hover:underline"
