@@ -4,6 +4,7 @@ import { getClientStatusOption } from "@/lib/client-status";
 import { ClientStatusSelect } from "./ClientStatusSelect";
 import { CircleCheck, FileText, Star, Paperclip, MessageSquare, Sparkles } from "lucide-react";
 import { formatINR, formatINRShort } from "@/lib/quote-types";
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
   vendors: ClientVendor[];
@@ -11,6 +12,30 @@ interface Props {
 }
 
 export function ClientVendorTable({ vendors, onView }: Props) {
+  // Incremental render — only mount the first N rows, then more on scroll.
+  const BATCH = 80;
+  const [visibleCount, setVisibleCount] = useState(BATCH);
+  useEffect(() => {
+    setVisibleCount(BATCH);
+  }, [vendors]);
+  const sentinelRef = useRef<HTMLTableRowElement | null>(null);
+  useEffect(() => {
+    if (visibleCount >= vendors.length) return;
+    const node = sentinelRef.current;
+    if (!node) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisibleCount((c) => Math.min(c + BATCH, vendors.length));
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    io.observe(node);
+    return () => io.disconnect();
+  }, [visibleCount, vendors.length]);
+  const visibleRows = vendors.slice(0, visibleCount);
+
   return (
     <div className="overflow-x-auto rounded-lg border border-[var(--border)] bg-white animate-fade-in">
       <table className="w-full min-w-[900px] text-sm">
