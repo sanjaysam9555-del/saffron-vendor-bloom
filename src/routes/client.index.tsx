@@ -314,7 +314,9 @@ function ClientPortalPage() {
             <ClientVendorGrid vendors={filtered} onView={(v) => setDetail(v)} />
           ) : view === "board" ? (
             <div className="animate-fade-in">
-              <ClientBoardView vendors={filtered} onView={(v) => setDetail(v)} />
+              <Suspense fallback={<div className="h-40" aria-hidden />}>
+                <ClientBoardView vendors={filtered} onView={(v) => setDetail(v)} />
+              </Suspense>
             </div>
           ) : (
             <ClientVendorTable vendors={filtered} onView={(v) => setDetail(v)} />
@@ -322,7 +324,12 @@ function ClientPortalPage() {
         </main>
       </div>
 
-      <ClientVendorDetail vendor={detail} onClose={() => setDetail(null)} />
+      {detail && (
+        <Suspense fallback={null}>
+          <ClientVendorDetail vendor={detail} onClose={() => setDetail(null)} />
+        </Suspense>
+      )}
+
     </div>
   );
 }
