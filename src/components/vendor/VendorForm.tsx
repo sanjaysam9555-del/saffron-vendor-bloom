@@ -46,6 +46,7 @@ const EMPTY: VendorInput = {
 
 export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps) {
   const [form, setForm] = useState<VendorInput>(EMPTY);
+  const triggerInstagramPreview = useTriggerInstagramPreview();
   const [submitting, setSubmitting] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
