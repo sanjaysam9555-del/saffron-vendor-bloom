@@ -356,45 +356,58 @@ function DashboardPage() {
         />
       )}
 
-      <BulkEditDialog
-        open={bulkDialogOpen}
-        vendors={selectedVendors}
-        onClose={() => setBulkDialogOpen(false)}
-        onApply={async (patch) => {
-          const ids = Array.from(selectedIds);
-          const res = await bulkUpdate.mutateAsync({ ids, patch });
-          toast.success(`Updated ${res.updated} vendor${res.updated === 1 ? "" : "s"}`);
-          exitBulkMode();
-        }}
-      />
+      {bulkDialogOpen && (
+        <Suspense fallback={null}>
+          <BulkEditDialog
+            open={bulkDialogOpen}
+            vendors={selectedVendors}
+            onClose={() => setBulkDialogOpen(false)}
+            onApply={async (patch) => {
+              const ids = Array.from(selectedIds);
+              const res = await bulkUpdate.mutateAsync({ ids, patch });
+              toast.success(`Updated ${res.updated} vendor${res.updated === 1 ? "" : "s"}`);
+              exitBulkMode();
+            }}
+          />
+        </Suspense>
+      )}
 
-      <VendorForm
-        open={modals.state.formOpen}
-        initial={modals.state.editing ?? modals.state.prefill}
-        onClose={modals.closeForm}
-        onSubmit={async (input) => {
-          if (modals.state.editing) {
-            const v = await update.mutateAsync({ id: modals.state.editing.id, input });
-            toast.success("Vendor updated");
-            return v;
-          }
-          const v = await create.mutateAsync(input);
-          toast.success(`${v.vendor_name} added`);
-          return v;
-        }}
-      />
+      {modals.state.formOpen && (
+        <Suspense fallback={null}>
+          <VendorForm
+            open={modals.state.formOpen}
+            initial={modals.state.editing ?? modals.state.prefill}
+            onClose={modals.closeForm}
+            onSubmit={async (input) => {
+              if (modals.state.editing) {
+                const v = await update.mutateAsync({ id: modals.state.editing.id, input });
+                toast.success("Vendor updated");
+                return v;
+              }
+              const v = await create.mutateAsync(input);
+              toast.success(`${v.vendor_name} added`);
+              return v;
+            }}
+          />
+        </Suspense>
+      )}
 
-      <VendorDetail
-        vendor={modals.state.detail}
-        onClose={modals.closeDetail}
-        onEdit={() => modals.state.detail && modals.openEdit(modals.state.detail)}
-        onDelete={async () => {
-          if (modals.state.detail) {
-            await remove.mutateAsync(modals.state.detail.id);
-            modals.closeDetail();
-          }
-        }}
-      />
+      {modals.state.detail && (
+        <Suspense fallback={null}>
+          <VendorDetail
+            vendor={modals.state.detail}
+            onClose={modals.closeDetail}
+            onEdit={() => modals.state.detail && modals.openEdit(modals.state.detail)}
+            onDelete={async () => {
+              if (modals.state.detail) {
+                await remove.mutateAsync(modals.state.detail.id);
+                modals.closeDetail();
+              }
+            }}
+          />
+        </Suspense>
+      )}
+
     </div>
   );
 }
