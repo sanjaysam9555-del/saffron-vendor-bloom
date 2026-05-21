@@ -11,6 +11,7 @@ import {
   uploadVendorAttachment,
   type VendorAttachment,
 } from "@/lib/vendor-files-api";
+import { useTriggerInstagramPreview } from "@/hooks/use-instagram-previews";
 
 interface VendorFormProps {
   open: boolean;
