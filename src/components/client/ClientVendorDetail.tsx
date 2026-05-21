@@ -3,6 +3,7 @@ import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import { X, MapPin, Instagram, Link as LinkIcon, Paperclip, FileText, Globe, Star, CircleCheck, Sparkles } from "lucide-react";
 import { SignedDocumentViewer } from "@/components/vendor/SignedDocumentViewer";
+import { AttachmentGalleryViewer } from "@/components/vendor/AttachmentGalleryViewer";
 import { AttachmentThumbnailGrid } from "@/components/vendor/AttachmentThumbnailGrid";
 import { SignedQuoteFileViewer } from "@/components/admin/SignedQuoteFileViewer";
 import { formatFileSize } from "@/lib/vendor-files-api";
@@ -204,13 +205,22 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
       </div>
 
       {viewing && (
+        (viewing.mime_type ?? "").toLowerCase().startsWith("image/") ||
+        /\.(jpe?g|png|webp|gif|avif|svg|bmp)$/i.test(viewing.file_name)
+      ) ? (
+        <AttachmentGalleryViewer
+          attachments={vendor.attachments}
+          initialId={viewing!.id}
+          onClose={() => setViewing(null)}
+        />
+      ) : viewing ? (
         <SignedDocumentViewer
           filePath={viewing.file_path}
           fileName={viewing.file_name}
           mimeType={viewing.mime_type}
           onClose={() => setViewing(null)}
         />
-      )}
+      ) : null}
 
       {viewingQuoteFile && (
         <SignedQuoteFileViewer

@@ -1,44 +1,39 @@
-## Problem
+## What you'll see
 
-The grid loads images via signed URLs that point to the originals — a 6 MB JPEG stays 6 MB even when shown in a ~200 px tile. The fix has two parts: **shrink new uploads** at the browser before they reach storage, and **render thumbnails at thumbnail size** for everything (new + existing) so the grid stops downloading multi-MB originals.
+Clicking an image in the Documents grid opens it in a full-screen viewer that:
+- Fits the screen by default (no scroll, full image visible — `object-contain` instead of the current scrollable scaled wrapper).
+- Shows **←** / **→** arrow buttons when the vendor has more than one image, plus a `2 / 5` counter.
+- Supports keyboard arrows (← / →) and horizontal swipe on touch devices to move between images.
+- Wraps around at the ends.
+- Still supports zoom in/out and download for the current image.
 
-## 1. Client-side image compression on upload (new files)
+Non-image attachments (PDF, video, doc) open exactly as today — single-file viewer, no nav.
 
-In `src/lib/vendor-files-api.ts`, add a `compressImageIfNeeded(file)` helper called inside `uploadVendorAttachment` before the storage upload.
+## How it works
 
-- Applies to `image/jpeg`, `image/png`, `image/webp` only. PDFs/videos/docs pass through untouched.
-- Uses `createImageBitmap` + `<canvas>` + `canvas.toBlob("image/webp", 0.82)`.
-- Max dimension **2000 px** on the longest side (preserves quality for the full-screen viewer).
-- Skips compression if the result is larger than the original or if the source is already < 400 KB.
-- Renames the stored file to `.webp` when re-encoded; original `file_name` (display) keeps its extension so the user still sees `IMG_9137.jpeg` in the UI, while storage holds the compressed WebP — `mime_type` and `size_bytes` reflect the compressed blob.
+The grid currently opens `SignedDocumentViewer` for a single attachment. We'll add a sibling component, `AttachmentGalleryViewer`, that:
+- Takes `attachments: AttachmentLike[]` + `initialId: string` + `onClose`.
+- Filters the list to image attachments only (the gallery only makes sense for images).
+- Tracks `currentIndex` in state.
+- For each image, resolves its full signed URL via `getAttachmentUrl` (lazy — only fetches the current ± 1 neighbors to pre-warm).
+- Renders the existing `<img>` zoom UI from `DocumentViewer.ImageView`, but with `object-contain max-h-full max-w-full` as the default fit (zoom defaults to 1, no overflow).
+- Adds prev/next buttons (`ChevronLeft` / `ChevronRight`) along the left/right edges, only visible when more than one image exists.
+- Listens for `ArrowLeft` / `ArrowRight` keys and `touchstart`/`touchend` for swipe (≥ 40 px horizontal delta).
+- Resets zoom to 1 when the index changes.
 
-This drops typical phone photos from 4–6 MB to ~200–400 KB with no visible quality loss in the panel or full viewer.
-
-## 2. Thumbnail rendering for the grid (covers existing files too)
-
-Storage URLs from Supabase support on-the-fly image transforms. In `AttachmentThumbnailGrid.tsx`'s `ImageTile`, switch to a thumbnail-sized signed URL instead of the full-size one.
-
-- Add `getAttachmentThumbnailUrl(filePath, { width, height, quality })` in `vendor-files-api.ts` that calls a new server fn `getVendorFileThumbnailUrl` (mirrors `getVendorFileSignedUrl`) which uses `supabaseAdmin.storage.from("vendor-files").createSignedUrl(path, 3600, { transform: { width: 400, height: 400, resize: "cover", quality: 70 } })`.
-- `ImageTile` requests width/height **400** (≈ 2× the grid tile for retina). Falls back to the full signed URL on transform error so the tile still renders.
-- The full-screen `SignedDocumentViewer` keeps using the existing non-transformed URL, so opening still shows the high-res image.
-
-This immediately speeds up the grid for the legacy 6 MB / 16 MB files already in the bucket — no re-upload required.
-
-## 3. Tile UX while loading
-
-- Add `loading="lazy"` and `decoding="async"` (already lazy; add `decoding`).
-- Keep the `animate-pulse` placeholder until the thumbnail resolves.
-- No change to videos — `preload="metadata"` is already the right call.
-
-## Out of scope
-
-- No server-side reprocessing of existing originals (the transform CDN handles display; originals stay as-is for full-view fidelity).
-- No video transcoding (would need ffmpeg / a worker; out of scope for a quick fix).
-- No PDF page-image rendering.
-- No schema changes, no bucket changes, no RLS changes.
+Routing decision at the grid:
+- If the clicked attachment is an image **and** the vendor has any image attachments, open `AttachmentGalleryViewer` with the full image list.
+- Otherwise (PDF/video/doc) open `SignedDocumentViewer` as today.
 
 ## Files touched
 
-- `src/lib/vendor-files-api.ts` — add `compressImageIfNeeded`, wire into `uploadVendorAttachment`, add `getAttachmentThumbnailUrl`.
-- `src/server/vendor-files.functions.ts` — add `getVendorFileThumbnailUrl` server fn (transform-enabled signed URL).
-- `src/components/vendor/AttachmentThumbnailGrid.tsx` — `ImageTile` uses the thumbnail URL with full-URL fallback.
+- **New:** `src/components/vendor/AttachmentGalleryViewer.tsx` — full-screen image gallery (header with filename + counter + close/download, image area with prev/next + swipe, footer zoom controls).
+- **Edit:** `src/components/vendor/AttachmentThumbnailGrid.tsx` — accept an optional `gallery` mode prop or, simpler, expose `onOpen(att, kind)` so the parent can decide which viewer to mount. Default: keep current `onOpen(att)` signature and add a second prop `images` so the parent can pass the list.
+- **Edit:** `src/components/vendor/VendorDetail.tsx` — when `viewing` is an image and there's more than one image attachment, render `AttachmentGalleryViewer` with the image list; otherwise keep `SignedDocumentViewer`.
+- **Edit:** `src/components/client/ClientVendorDetail.tsx` — same change as `VendorDetail.tsx`.
+
+## Out of scope
+
+- No changes to the grid layout, thumbnails, upload pipeline, or non-image file handling.
+- No pinch-zoom gesture (existing +/- zoom buttons stay).
+- No thumbnail strip at the bottom — counter only.
