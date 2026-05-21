@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Sparkles, LayoutGrid, Columns3, Filter as FilterIcon, Table as TableIcon, Clock } from "lucide-react";
@@ -10,8 +10,13 @@ import { listProjectCategoryDeadlines } from "@/server/project-deadlines.functio
 import { ClientTopNav } from "@/components/client/ClientTopNav";
 import { ClientSidebar, type ClientFilterState } from "@/components/client/ClientSidebar";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
-import { ClientVendorDetail } from "@/components/client/ClientVendorDetail";
-import { ClientBoardView } from "@/components/client/ClientBoardView";
+const ClientVendorDetail = lazy(() =>
+  import("@/components/client/ClientVendorDetail").then((m) => ({ default: m.ClientVendorDetail })),
+);
+const ClientBoardView = lazy(() =>
+  import("@/components/client/ClientBoardView").then((m) => ({ default: m.ClientBoardView })),
+);
+
 import { ClientVendorTable } from "@/components/client/ClientVendorTable";
 import type { ClientVendor } from "@/lib/project-types";
 import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
@@ -309,7 +314,9 @@ function ClientPortalPage() {
             <ClientVendorGrid vendors={filtered} onView={(v) => setDetail(v)} />
           ) : view === "board" ? (
             <div className="animate-fade-in">
-              <ClientBoardView vendors={filtered} onView={(v) => setDetail(v)} />
+              <Suspense fallback={<div className="h-40" aria-hidden />}>
+                <ClientBoardView vendors={filtered} onView={(v) => setDetail(v)} />
+              </Suspense>
             </div>
           ) : (
             <ClientVendorTable vendors={filtered} onView={(v) => setDetail(v)} />
@@ -317,7 +324,12 @@ function ClientPortalPage() {
         </main>
       </div>
 
-      <ClientVendorDetail vendor={detail} onClose={() => setDetail(null)} />
+      {detail && (
+        <Suspense fallback={null}>
+          <ClientVendorDetail vendor={detail} onClose={() => setDetail(null)} />
+        </Suspense>
+      )}
+
     </div>
   );
 }
@@ -334,16 +346,45 @@ function EmptyState({ message }: { message: string }) {
 function ClientVendorGrid({ vendors, onView }: { vendors: ClientVendor[]; onView: (v: ClientVendor) => void }) {
   const ids = useMemo(() => vendors.filter((v) => v.instagram_handle).map((v) => v.id), [vendors]);
   const { map: previewMap } = useInstagramPreviewsBulk(ids);
+
+  // Incremental render so a project with hundreds of shared vendors paints fast.
+  const BATCH = 60;
+  const [visibleCount, setVisibleCount] = useState(BATCH);
+  useEffect(() => {
+    setVisibleCount(BATCH);
+  }, [vendors]);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (visibleCount >= vendors.length) return;
+    const node = sentinelRef.current;
+    if (!node) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisibleCount((c) => Math.min(c + BATCH, vendors.length));
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    io.observe(node);
+    return () => io.disconnect();
+  }, [visibleCount, vendors.length]);
+  const visibleVendors = vendors.slice(0, visibleCount);
+
   return (
-    <div className="grid gap-3 sm:gap-4 animate-fade-in sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {vendors.map((v) => (
-        <ClientVendorCard
-          key={v.id}
-          vendor={v}
-          onView={() => onView(v)}
-          instagramPreview={previewMap.get(v.id) ?? null}
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid gap-3 sm:gap-4 animate-fade-in sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {visibleVendors.map((v) => (
+          <ClientVendorCard
+            key={v.id}
+            vendor={v}
+            onView={() => onView(v)}
+            instagramPreview={previewMap.get(v.id) ?? null}
+          />
+        ))}
+      </div>
+      {visibleCount < vendors.length && <div ref={sentinelRef} className="h-12" aria-hidden />}
+    </>
   );
 }
+

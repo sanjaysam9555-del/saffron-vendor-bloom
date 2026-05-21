@@ -1,7 +1,8 @@
 import type { Vendor } from "@/lib/vendor-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import { Pencil, ArrowUpDown } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
 
 type SortKey = "vendor_name" | "category" | "location" | "price_text" | "google_rating" | "date_added";
 type SortDir = "asc" | "desc";
@@ -43,10 +44,36 @@ export function VendorTable({
     return copy;
   }, [vendors, sortKey, sortDir]);
 
+  // Incremental render — only mount the first N rows, then more as the user
+  // scrolls. Avoids painting 400+ rows on first load.
+  const BATCH = 80;
+  const [visibleCount, setVisibleCount] = useState(BATCH);
+  useEffect(() => {
+    setVisibleCount(BATCH);
+  }, [vendors]);
+  const sentinelRef = useRef<HTMLTableRowElement | null>(null);
+  useEffect(() => {
+    if (visibleCount >= sorted.length) return;
+    const node = sentinelRef.current;
+    if (!node) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisibleCount((c) => Math.min(c + BATCH, sorted.length));
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    io.observe(node);
+    return () => io.disconnect();
+  }, [visibleCount, sorted.length]);
+  const visibleRows = sorted.slice(0, visibleCount);
+
   const toggleSort = (k: SortKey) => {
     if (k === sortKey) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortKey(k); setSortDir("asc"); }
   };
+
 
   const Th = ({ k, label, className }: { k: SortKey; label: string; className?: string }) => (
     <th className={`px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--charcoal)]/55 ${className ?? ""}`}>
@@ -85,7 +112,7 @@ export function VendorTable({
           </tr>
         </thead>
         <tbody>
-          {sorted.map((v) => {
+          {visibleRows.map((v) => {
             const colors = CATEGORY_COLORS[v.category] ?? { bg: "bg-[var(--cream-deep)]", text: "text-[var(--charcoal)]" };
             const isSelected = !!selectedIds?.has(v.id);
             const handleRowClick = () => {
@@ -139,8 +166,14 @@ export function VendorTable({
               </tr>
             );
           })}
+          {visibleCount < sorted.length && (
+            <tr ref={sentinelRef} aria-hidden>
+              <td colSpan={selectMode ? 8 : 7} className="h-10" />
+            </tr>
+          )}
         </tbody>
       </table>
+
     </div>
   );
 }

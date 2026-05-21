@@ -1,9 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { Search, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import logoLight from "@/assets/saffron-logo-transparent.png";
 import { UserMenu } from "@/components/UserMenu";
-import { NotificationsBell } from "@/components/admin/NotificationsBell";
+
+// Defer NotificationsBell — it has its own realtime subscription and data
+// fetches that aren't needed for first paint.
+const NotificationsBell = lazy(() =>
+  import("@/components/admin/NotificationsBell").then((m) => ({ default: m.NotificationsBell })),
+);
+
 
 interface TopNavProps {
   search: string;
@@ -50,9 +56,14 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
           </button>
 
           <div className="sm:order-3 flex items-center gap-1">
-            <NotificationsBell />
+            {mounted && (
+              <Suspense fallback={<div className="h-8 w-8" aria-hidden />}>
+                <NotificationsBell />
+              </Suspense>
+            )}
             <UserMenu />
           </div>
+
         </div>
 
         {/* Search — full-width row on mobile, inline on >=sm */}

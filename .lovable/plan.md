@@ -1,96 +1,54 @@
-# Make the app fast end-to-end
+## Remaining performance work
 
-The app feels slow because the admin/client dashboards render every vendor at once, each card fires its own Instagram + booked + assignment queries, file thumbnails request signed URLs one-by-one (with a server-side HEAD probe per file), and most routes fetch after mount instead of preloading. Here is a targeted plan that fixes all of that without changing functionality.
+The previous turn shipped quick wins (query tuning, batched thumbnails, Instagram proxy caching, idle background sync). This plan covers the heavier refactors still outstanding from the original 10-point plan.
 
-## What you'll notice
+### 1. Virtualize long vendor lists
+- Add `@tanstack/react-virtual`.
+- Apply to: `src/routes/admin.index.tsx` (vendor table/grid), `src/components/client/ClientVendorTable.tsx`, `src/components/client/ClientBoardView.tsx`.
+- Only render rows/cards in the viewport (+ small overscan). This alone removes the "hundreds of cards mount at once" cost that triggers the per-card query cascade.
 
-- Dashboards paint in well under a second even with thousands of vendors.
-- Instagram previews and file thumbnails stream in without the visible "one card at a time" cascade.
-- Switching between Admin / Projects / Client / Vendor detail feels instant (data is preloaded on hover/intent).
-- Opening files, attachments and the image gallery is near-instant on repeat visits.
+### 2. Gate per-card side queries behind visibility
+- Wrap `VendorInstagramPreview`, `BookedBadge`, attachment thumbnails, and any per-vendor query in an `IntersectionObserver` hook (`useInView`).
+- Queries only fire when the card actually scrolls into view.
+- Combined with virtualization, first paint drops from "N vendors × 3 queries" to "visible vendors × 3 queries".
 
-## 1. Render only what's on screen (virtualization)
+### 3. Route-level data preloading
+- Convert `admin.index`, `admin.projects.$id`, `client.index`, and vendor detail routes to the canonical TanStack pattern: `loader: ({ context }) => context.queryClient.ensureQueryData(...)` + `useSuspenseQuery` in the component.
+- Enable `defaultPreload: "intent"` on the router so hovering a link warms the cache.
+- Result: navigating between pages feels instant; no "blank then pop" flashes.
 
-The dashboards currently mount every vendor card simultaneously. Each card runs an Instagram strip, project assigner, and booked badge — that's hundreds of subscriptions on first paint.
+### 4. Code-split heavy dialogs and viewers
+Lazy-load with `React.lazy` + Suspense:
+- `BulkInstagramSyncDialog`
+- `BulkEditDialog`
+- `VendorForm`
+- `CategoryManager`
+- `SignedDocumentViewer`
+- `AttachmentGalleryViewer`
+- `ProjectVendorQuotesPanel`
+Shrinks the main admin bundle so first paint and route transitions are quicker.
 
-- Add `@tanstack/react-virtual` and virtualize:
-  - `src/routes/admin.index.tsx` card grid and table view
-  - `src/components/client/ClientVendorTable.tsx` and `ClientBoardView.tsx`
-- Cards keep the same look; only off-screen items are skipped.
+### 5. Patch realtime updates in place
+- In the vendor realtime subscription, stop calling `queryClient.invalidateQueries` for the whole list on every change.
+- Instead, use `queryClient.setQueryData` to mutate the single affected row in cache.
+- Eliminates the full 2000-row refetch on any edit.
 
-## 2. Stop the "cards updating one by one" Instagram cascade
+### 6. Image hygiene pass
+- Add explicit `width`/`height` (or `aspect-ratio`) on all `<img>` to prevent layout shift.
+- `fetchpriority="high"` on the LCP image of each route.
+- `loading="lazy" decoding="async"` on offscreen images.
+- Preload the primary brand font in `__root.tsx` head.
 
-`useAutoEnsureMissingPreviews` currently kicks off a scrape for every vendor in the list as soon as the page mounts.
+### 7. Defer non-critical mounts
+- Wrap `NotificationsBell` and any "nice-to-have" widgets in an idle/intersection-gated mount so they don't compete with the first paint.
 
-- Gate auto-ensure behind an `IntersectionObserver` so we only scrape for vendors actually in the viewport (or about to be), in small concurrent batches (e.g. 4 at a time).
-- Keep `localStorage` hydration (already in place) so revisits paint instantly.
-- Add a short `staleTime` bypass: if the cached row is `ok`, never re-scrape on this load.
+### Out of scope
+- No design changes, no auth/RLS changes, no business-logic changes.
+- No backend provider swap.
+- The `vendors_with_flags` SQL view from the original plan is parked — the existing indexes plus virtualization + visibility gating should make the current `listVendorsServer` fast enough. Revisit only if profiling still shows it as the bottleneck after the above.
 
-## 3. Batch + cache attachment thumbnails
-
-Today every image tile calls `getVendorFileThumbnailUrl` individually, and the server fn does a HEAD probe before handing back a URL.
-
-- New server fn `getVendorFileThumbnailUrlsBulk({ file_paths })` returns a `{ path: url }` map in one round-trip.
-- Drop the HEAD probe — Supabase's signed transform URL already 404s cleanly; the probe doubles latency.
-- Sign with a 1-hour TTL and bump React Query `staleTime` to 50 min so repeat opens are instant.
-- `AttachmentThumbnailGrid` issues one `useQuery` keyed on the full path list instead of one per tile.
-
-## 4. Preload route data on hover/intent
-
-`defaultPreload: "intent"` is already on the router, but routes don't expose loaders, so hovering a link doesn't prefetch data.
-
-- Add TanStack Query loaders to: `admin.index`, `admin.projects.index`, `admin.projects.$id`, `admin.submissions`, `client.index`, vendor detail drawers.
-- Pattern: `loader: ({ context }) => context.queryClient.ensureQueryData(vendorsQueryOptions)` + `useSuspenseQuery` in the component.
-- Wire `queryClient` into router context (`createRootRouteWithContext`) so loaders share the singleton cache.
-
-## 5. Tune React Query + realtime
-
-- Global defaults: `staleTime: 5 * 60_000`, `gcTime: 30 * 60_000`, `refetchOnWindowFocus: false`, `refetchOnReconnect: "always"`.
-- Realtime vendor subscription currently invalidates the entire 2000-row list on any change. Patch the cache in place instead: for `INSERT/UPDATE/DELETE` payloads, mutate the cached array directly so we don't refetch everything.
-
-## 6. Code-split heavy admin features
-
-Split these out of the main admin bundle (dynamic `import()` + `React.lazy`):
-
-- `BulkInstagramSyncDialog`, `BulkEditDialog`, `VendorForm`, `CategoryManager`, `VendorQuoteHistory`, `SignedDocumentViewer`, `AttachmentGalleryViewer`, `ProjectVendorQuotesPanel`, `VendorInstagramPreview` (detail strip).
-- Only loaded the first time the user opens that dialog/route.
-
-## 7. Cache the Instagram image proxy harder
-
-`src/routes/api/public/instagram-image.ts` already sets `Cache-Control: public, max-age=86400`. Add:
-
-- `immutable` and `stale-while-revalidate=604800` so the browser + Lovable edge keep them for a week.
-- Stream upstream straight through (already done) but add `Vary: Accept` and a `Last-Modified` passthrough so 304s work on revisit.
-
-## 8. Defer non-critical work past first paint
-
-- Wrap `useAutoEnsureMissingPreviews` and `BookedBadge` bulk fetch in the existing `useIdleReady()` so they only run after the cards are painted.
-- Lazy-mount `NotificationsBell` polling after idle.
-- Use `content-visibility: auto` on virtualized rows for additional layout savings.
-
-## 9. Image + asset hygiene
-
-- Add `width`/`height` (or `aspect-ratio`) on every `<img>` in cards/grids to prevent CLS reflow.
-- Add `fetchpriority="high"` to the LCP image of each route (vendor card hero/IG avatar on the first row), `loading="lazy" decoding="async"` on the rest (already partly done).
-- Preload the Inter/display fonts already used in `__root.tsx`'s `head().links` with `rel=preload as=font crossorigin`.
-
-## 10. Server function hot paths
-
-- `listVendorsServer` runs 4 parallel queries returning up to 30k ids just to build 3 booleans per vendor. Replace with a single SQL view or RPC (`vendors_with_flags`) that returns `has_assignment / has_quote_history / has_attachment` as columns — one query instead of four, and tiny payloads.
-- Add database indexes on `project_vendors(vendor_id)`, `project_vendor_quotes(vendor_id)`, `vendor_attachments(vendor_id)` if not present.
-
-## Technical details
-
-- New deps: `@tanstack/react-virtual`.
-- New server fn: `getVendorFileThumbnailUrlsBulk` (POST, `requireSupabaseAuth`, input `{ file_paths: string[] }`, authorizes each path with the existing `authorizeVendorFile`).
-- New RPC + migration: `vendors_with_flags()` (SECURITY DEFINER) + indexes on the three child tables.
-- Router context change in `__root.tsx` to expose `queryClient`; route files add `loader` + `useSuspenseQuery`.
-- Realtime handler in `useVendors` switches from `qc.invalidateQueries` to `qc.setQueryData` patching.
-- All visual styling, components, and user flows stay identical — this is a perf-only change.
-
-## Out of scope
-
-- No design or copy changes.
-- No new features.
-- No changes to auth, RLS, or business logic.
-- No swap of storage/backend providers.
+### Expected impact
+- Admin index first paint: large drop (only ~15 visible rows mount instead of all).
+- Navigation between pages: near-instant via preload + cached query data.
+- Edits / realtime updates: no full-list refetch.
+- Bundle size for the main route: meaningfully smaller via lazy dialogs.

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon, ArrowUpDown, X } from "lucide-react";
 import { toast } from "sonner";
@@ -9,15 +9,25 @@ import { TopNav } from "@/components/vendor/TopNav";
 import { Sidebar, type FilterState } from "@/components/vendor/Sidebar";
 import { VendorCard } from "@/components/vendor/VendorCard";
 import { VendorTable } from "@/components/vendor/VendorTable";
-import { VendorForm } from "@/components/vendor/VendorForm";
-import { VendorDetail } from "@/components/vendor/VendorDetail";
 import { BulkActionBar } from "@/components/vendor/BulkActionBar";
-import { BulkEditDialog } from "@/components/vendor/BulkEditDialog";
 import { useVendors, useVendorMutations, useVendorModals } from "@/hooks/useVendorData";
 import { useAllCategories } from "@/lib/categories";
 import { AuthGate } from "@/components/AuthGate";
 import { useIsAdmin } from "@/lib/auth";
 import { useInstagramPreviewsBulk, useAutoEnsureMissingPreviews } from "@/hooks/use-instagram-previews";
+
+// Lazy-load heavy dialogs and the detail drawer so they don't bloat the
+// initial admin bundle. They only render when the user opens them.
+const VendorForm = lazy(() =>
+  import("@/components/vendor/VendorForm").then((m) => ({ default: m.VendorForm })),
+);
+const VendorDetail = lazy(() =>
+  import("@/components/vendor/VendorDetail").then((m) => ({ default: m.VendorDetail })),
+);
+const BulkEditDialog = lazy(() =>
+  import("@/components/vendor/BulkEditDialog").then((m) => ({ default: m.BulkEditDialog })),
+);
+
 
 
 type SortKey = "date_added_desc" | "date_added_asc" | "updated_desc" | "name_asc" | "name_desc";
@@ -346,45 +356,58 @@ function DashboardPage() {
         />
       )}
 
-      <BulkEditDialog
-        open={bulkDialogOpen}
-        vendors={selectedVendors}
-        onClose={() => setBulkDialogOpen(false)}
-        onApply={async (patch) => {
-          const ids = Array.from(selectedIds);
-          const res = await bulkUpdate.mutateAsync({ ids, patch });
-          toast.success(`Updated ${res.updated} vendor${res.updated === 1 ? "" : "s"}`);
-          exitBulkMode();
-        }}
-      />
+      {bulkDialogOpen && (
+        <Suspense fallback={null}>
+          <BulkEditDialog
+            open={bulkDialogOpen}
+            vendors={selectedVendors}
+            onClose={() => setBulkDialogOpen(false)}
+            onApply={async (patch) => {
+              const ids = Array.from(selectedIds);
+              const res = await bulkUpdate.mutateAsync({ ids, patch });
+              toast.success(`Updated ${res.updated} vendor${res.updated === 1 ? "" : "s"}`);
+              exitBulkMode();
+            }}
+          />
+        </Suspense>
+      )}
 
-      <VendorForm
-        open={modals.state.formOpen}
-        initial={modals.state.editing ?? modals.state.prefill}
-        onClose={modals.closeForm}
-        onSubmit={async (input) => {
-          if (modals.state.editing) {
-            const v = await update.mutateAsync({ id: modals.state.editing.id, input });
-            toast.success("Vendor updated");
-            return v;
-          }
-          const v = await create.mutateAsync(input);
-          toast.success(`${v.vendor_name} added`);
-          return v;
-        }}
-      />
+      {modals.state.formOpen && (
+        <Suspense fallback={null}>
+          <VendorForm
+            open={modals.state.formOpen}
+            initial={modals.state.editing ?? modals.state.prefill}
+            onClose={modals.closeForm}
+            onSubmit={async (input) => {
+              if (modals.state.editing) {
+                const v = await update.mutateAsync({ id: modals.state.editing.id, input });
+                toast.success("Vendor updated");
+                return v;
+              }
+              const v = await create.mutateAsync(input);
+              toast.success(`${v.vendor_name} added`);
+              return v;
+            }}
+          />
+        </Suspense>
+      )}
 
-      <VendorDetail
-        vendor={modals.state.detail}
-        onClose={modals.closeDetail}
-        onEdit={() => modals.state.detail && modals.openEdit(modals.state.detail)}
-        onDelete={async () => {
-          if (modals.state.detail) {
-            await remove.mutateAsync(modals.state.detail.id);
-            modals.closeDetail();
-          }
-        }}
-      />
+      {modals.state.detail && (
+        <Suspense fallback={null}>
+          <VendorDetail
+            vendor={modals.state.detail}
+            onClose={modals.closeDetail}
+            onEdit={() => modals.state.detail && modals.openEdit(modals.state.detail)}
+            onDelete={async () => {
+              if (modals.state.detail) {
+                await remove.mutateAsync(modals.state.detail.id);
+                modals.closeDetail();
+              }
+            }}
+          />
+        </Suspense>
+      )}
+
     </div>
   );
 }
@@ -566,24 +589,57 @@ function VendorCardGrid({
   const idsKey = useMemo(() => allIds.slice().sort().join(","), [allIds]);
   const { data: bookedMap } = useBookedSummaryBulk(allIds, idsKey);
 
+  // Incremental render: only mount the first BATCH cards initially, then
+  // mount more as the user scrolls toward the end. This keeps the initial
+  // paint fast even when filtered.length is in the hundreds.
+  const BATCH = 60;
+  const [visibleCount, setVisibleCount] = useState(BATCH);
+  useEffect(() => {
+    setVisibleCount(BATCH);
+  }, [idsKey]);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (visibleCount >= vendors.length) return;
+    const node = sentinelRef.current;
+    if (!node) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisibleCount((c) => Math.min(c + BATCH, vendors.length));
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    io.observe(node);
+    return () => io.disconnect();
+  }, [visibleCount, vendors.length]);
+
+  const visibleVendors = vendors.slice(0, visibleCount);
+
   return (
-    <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-fade-in">
-      {vendors.map((v) => (
-        <VendorCard
-          key={v.id}
-          vendor={v}
-          onView={() => modals.openDetail(v)}
-          onEdit={() => modals.openEdit(v)}
-          selectMode={bulkMode}
-          selected={selectedIds.has(v.id)}
-          onToggleSelect={() => toggleSelect(v.id)}
-          instagramPreview={previewMap.get(v.id) ?? null}
-          bookedSummary={bookedMap?.[v.id] ?? null}
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-fade-in">
+        {visibleVendors.map((v) => (
+          <VendorCard
+            key={v.id}
+            vendor={v}
+            onView={() => modals.openDetail(v)}
+            onEdit={() => modals.openEdit(v)}
+            selectMode={bulkMode}
+            selected={selectedIds.has(v.id)}
+            onToggleSelect={() => toggleSelect(v.id)}
+            instagramPreview={previewMap.get(v.id) ?? null}
+            bookedSummary={bookedMap?.[v.id] ?? null}
+          />
+        ))}
+      </div>
+      {visibleCount < vendors.length && (
+        <div ref={sentinelRef} className="h-12" aria-hidden />
+      )}
+    </>
   );
 }
+
 
 function useBookedSummaryBulk(ids: string[], idsKey: string) {
   return useQuery({
