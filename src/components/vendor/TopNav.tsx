@@ -1,9 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { Search, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import logoLight from "@/assets/saffron-logo-transparent.png";
 import { UserMenu } from "@/components/UserMenu";
-import { NotificationsBell } from "@/components/admin/NotificationsBell";
+
+// Defer NotificationsBell — it has its own realtime subscription and data
+// fetches that aren't needed for first paint.
+const NotificationsBell = lazy(() =>
+  import("@/components/admin/NotificationsBell").then((m) => ({ default: m.NotificationsBell })),
+);
+
 
 interface TopNavProps {
   search: string;
