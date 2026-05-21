@@ -49,9 +49,13 @@ export const Route = createFileRoute("/api/public/instagram-image")({
             status: 200,
             headers: {
               "Content-Type": contentType,
-              "Cache-Control": "public, max-age=86400, s-maxage=86400",
+              // Instagram CDN URLs are effectively content-addressed, so we
+              // can keep them in browser + edge caches for a week.
+              "Cache-Control":
+                "public, max-age=604800, s-maxage=604800, immutable, stale-while-revalidate=86400",
               "Access-Control-Allow-Origin": "*",
               "Cross-Origin-Resource-Policy": "cross-origin",
+              Vary: "Accept",
             },
           });
         } catch {
