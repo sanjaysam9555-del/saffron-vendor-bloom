@@ -104,7 +104,7 @@ export async function deleteVendorAttachment(att: VendorAttachment): Promise<voi
   if (error) throw error;
 }
 
-import { getVendorFileSignedUrl, getVendorFileStreamUrl } from "@/server/vendor-files.functions";
+import { getVendorFileSignedUrl, getVendorFileStreamUrl, getVendorFileThumbnailUrl } from "@/server/vendor-files.functions";
 
 export async function getAttachmentUrl(filePath: string): Promise<string> {
   const { url } = await getVendorFileSignedUrl({ data: { file_path: filePath } });
@@ -113,6 +113,21 @@ export async function getAttachmentUrl(filePath: string): Promise<string> {
 
 export async function getAttachmentStreamUrl(filePath: string): Promise<string> {
   const { url } = await getVendorFileStreamUrl({ data: { file_path: filePath } });
+  return url;
+}
+
+export async function getAttachmentThumbnailUrl(
+  filePath: string,
+  opts: { width?: number; height?: number; quality?: number } = {},
+): Promise<string> {
+  const { url } = await getVendorFileThumbnailUrl({
+    data: {
+      file_path: filePath,
+      width: opts.width ?? 400,
+      height: opts.height ?? 400,
+      quality: opts.quality ?? 70,
+    },
+  });
   return url;
 }
 
