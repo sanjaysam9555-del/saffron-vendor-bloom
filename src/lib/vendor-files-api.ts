@@ -57,10 +57,15 @@ export async function deleteVendorAttachment(att: VendorAttachment): Promise<voi
   if (error) throw error;
 }
 
-import { getVendorFileSignedUrl } from "@/server/vendor-files.functions";
+import { getVendorFileSignedUrl, getVendorFileStreamUrl } from "@/server/vendor-files.functions";
 
 export async function getAttachmentUrl(filePath: string): Promise<string> {
   const { url } = await getVendorFileSignedUrl({ data: { file_path: filePath } });
+  return url;
+}
+
+export async function getAttachmentStreamUrl(filePath: string): Promise<string> {
+  const { url } = await getVendorFileStreamUrl({ data: { file_path: filePath } });
   return url;
 }
 
