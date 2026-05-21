@@ -12,6 +12,7 @@ import {
   type VendorAttachment,
 } from "@/lib/vendor-files-api";
 import { SignedDocumentViewer } from "./SignedDocumentViewer";
+import { AttachmentGalleryViewer } from "./AttachmentGalleryViewer";
 import { useAuth, useIsAdmin } from "@/lib/auth";
 import { instagramDisplay, instagramUrl } from "@/lib/instagram";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
