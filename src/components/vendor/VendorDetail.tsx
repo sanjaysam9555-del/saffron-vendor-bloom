@@ -1,7 +1,7 @@
 import type { Vendor } from "@/lib/vendor-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import {
-  X, MapPin, Phone, Mail, Instagram, Globe, Star, Sparkles, Pencil, Trash2, Copy, Check, Link as LinkIcon, Paperclip, FileText, Loader2,
+  X, MapPin, Phone, Mail, Instagram, Globe, Star, Sparkles, Pencil, Trash2, Link as LinkIcon, Paperclip, FileText, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
