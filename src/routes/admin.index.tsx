@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon, ArrowUpDown, X } from "lucide-react";
 import { toast } from "sonner";
@@ -9,15 +9,25 @@ import { TopNav } from "@/components/vendor/TopNav";
 import { Sidebar, type FilterState } from "@/components/vendor/Sidebar";
 import { VendorCard } from "@/components/vendor/VendorCard";
 import { VendorTable } from "@/components/vendor/VendorTable";
-import { VendorForm } from "@/components/vendor/VendorForm";
-import { VendorDetail } from "@/components/vendor/VendorDetail";
 import { BulkActionBar } from "@/components/vendor/BulkActionBar";
-import { BulkEditDialog } from "@/components/vendor/BulkEditDialog";
 import { useVendors, useVendorMutations, useVendorModals } from "@/hooks/useVendorData";
 import { useAllCategories } from "@/lib/categories";
 import { AuthGate } from "@/components/AuthGate";
 import { useIsAdmin } from "@/lib/auth";
 import { useInstagramPreviewsBulk, useAutoEnsureMissingPreviews } from "@/hooks/use-instagram-previews";
+
+// Lazy-load heavy dialogs and the detail drawer so they don't bloat the
+// initial admin bundle. They only render when the user opens them.
+const VendorForm = lazy(() =>
+  import("@/components/vendor/VendorForm").then((m) => ({ default: m.VendorForm })),
+);
+const VendorDetail = lazy(() =>
+  import("@/components/vendor/VendorDetail").then((m) => ({ default: m.VendorDetail })),
+);
+const BulkEditDialog = lazy(() =>
+  import("@/components/vendor/BulkEditDialog").then((m) => ({ default: m.BulkEditDialog })),
+);
+
 
 
 type SortKey = "date_added_desc" | "date_added_asc" | "updated_desc" | "name_asc" | "name_desc";
