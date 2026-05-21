@@ -11,6 +11,7 @@ import {
   uploadVendorAttachment,
   type VendorAttachment,
 } from "@/lib/vendor-files-api";
+import { useTriggerInstagramPreview } from "@/hooks/use-instagram-previews";
 
 interface VendorFormProps {
   open: boolean;
@@ -45,6 +46,7 @@ const EMPTY: VendorInput = {
 
 export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps) {
   const [form, setForm] = useState<VendorInput>(EMPTY);
+  const triggerInstagramPreview = useTriggerInstagramPreview();
   const [submitting, setSubmitting] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -143,6 +145,11 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
     setSubmitting(true);
     try {
       const result = await onSubmit(form);
+      // Kick off Instagram preview scrape in the background so the new card
+      // and detail page light up without a manual refresh.
+      if (form.instagram_handle?.trim()) {
+        triggerInstagramPreview(result.id, form.instagram_handle);
+      }
       // Upload pending files
       for (const file of pendingFiles) {
         try {
