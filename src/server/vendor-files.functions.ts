@@ -95,3 +95,45 @@ export const getVendorFileStreamUrl = createServerFn({ method: "POST" })
     const token = signFileStreamToken(data.file_path);
     return { url: `/api/files/stream/${token}` };
   });
+
+/**
+ * Returns a short-lived signed URL with on-the-fly image resize transform.
+ * Used to render small grid thumbnails without downloading the full original.
+ * Falls back to a plain signed URL if the transform pipeline rejects the file.
+ */
+export const getVendorFileThumbnailUrl = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        file_path: z.string().min(1),
+        width: z.number().int().min(16).max(2000).default(400),
+        height: z.number().int().min(16).max(2000).default(400),
+        quality: z.number().int().min(20).max(100).default(70),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await authorizeVendorFile(context.userId, data.file_path);
+
+    const { data: signed, error } = await supabaseAdmin.storage
+      .from(BUCKET)
+      .createSignedUrl(data.file_path, 3600, {
+        transform: {
+          width: data.width,
+          height: data.height,
+          resize: "cover",
+          quality: data.quality,
+        },
+      });
+
+    if (signed?.signedUrl) return { url: signed.signedUrl };
+
+    // Fall back to a plain signed URL (e.g. for non-image content types).
+    const { data: plain } = await supabaseAdmin.storage
+      .from(BUCKET)
+      .createSignedUrl(data.file_path, 3600);
+    if (!plain?.signedUrl) throw new Error(error?.message ?? "File missing from storage");
+    return { url: plain.signedUrl };
+  });
+
