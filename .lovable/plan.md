@@ -1,28 +1,37 @@
-# Symmetrical vendor cards on client dashboard
+# Fix: Instagram previews don't auto-load for new vendors
 
-Tighten `src/components/client/ClientVendorCard.tsx` so every card in the grid shares the same vertical rhythm regardless of which optional fields a vendor has filled in. No other files touched.
+## Root causes
 
-## Asymmetries today
+1. **Cards never trigger a scrape.** `admin.index.tsx` calls `useInstagramPreviewsBulk(ids)`, which only **reads** existing rows from `vendor_instagram_previews`. A freshly added vendor has no row yet, so `previewMap.get(id)` is `undefined`, the card passes `null` to `VendorInstagramCardStrip`, and the strip shows the "No Instagram preview" fallback. The only place that actually calls `ensureVendorInstagramPreview` (the staff-side scrape) is the detail drawer (`VendorInstagramDetailBlock`). That's why a manual refresh — or just opening the drawer — is required today.
 
-1. **Chip row** wraps to 2 lines when a subcategory is present, pushing every section below it down on those cards only.
-2. **Info block** (location / instagram / portfolio / website / rating) has 0–5 lines depending on the vendor, so the Instagram strip and footer start at different Y positions on every card.
-3. **Instagram strip** renders nothing when the vendor has no handle, but reserves `min-h-[148px]` when it does — cards without a handle visually "lose" that block.
-4. **Footer block** sits flush against the last filled row (we removed `marginTop:auto` earlier), so cards with little content have their status select / View Details near the middle of the card while richer cards push it to the bottom.
-5. **Quotes / attachments / comments row** is missing entirely on most cards and present on a few — when present it adds a line above View Details, shifting that button down.
+2. **Detail-drawer fetch doesn't update the card cache.** `useEnsureInstagramPreview` writes the new row to its own per-vendor key and to localStorage, but never updates the `["instagram-previews-bulk", …]` query data the card grid is subscribed to. So even after the drawer scrapes successfully, the card stays empty until the bulk query refetches (next mount / staleTime expiry). Same gap exists for `useRefreshInstagramPreview` — it invalidates but doesn't patch optimistically, so there's a visible delay.
 
-## Fixes
+## Changes
 
-All changes are presentation-only Tailwind tweaks inside `ClientVendorCard.tsx`.
+### 1. `src/hooks/use-instagram-previews.ts`
 
-- **Title**: keep `line-clamp-1` but switch to `min-h-[1.75rem]` so single-line titles still reserve the same height as wrapped ones across breakpoints.
-- **Chip row**: keep `flex-wrap` (so nothing clips) but reserve `min-h-[1.5rem]` so a one-row chip set occupies the same height as a wrapped two-row set on neighbouring cards. Accept wrapping only on the cards that need it; the reserve normalises the rest.
-- **Info block**: wrap each optional row (location, instagram, portfolio, website, rating) so the block always renders 5 slots. Missing rows render an invisible `aria-hidden` spacer with the same height (`h-[1.125rem]`) instead of being omitted. Drop `overflow-hidden`; keep `min-w-0 space-y-1.5`. Result: every card's info block is the same height and the Instagram strip starts at the same Y.
-- **Instagram strip**: always reserve the slot. When the vendor has no handle, render a muted dashed placeholder of the same `min-h-[148px]` ("No Instagram linked") instead of returning `null`. This keeps the footer at the same Y across all cards. Implementation lives inside `ClientVendorCard` (a sibling wrapper around `VendorInstagramCardStrip`) so `VendorInstagramPreview.tsx` is untouched.
-- **Footer**: re-introduce `mt-auto` on the footer block so it always pins to the card bottom now that the upper sections have stable heights. Combined with `h-full` on the card and the grid's row stretch, every footer aligns across a row.
-- **Quotes / attachments / comments sub-row**: always render the row container with `min-h-[1.5rem]`; when there are no quotes/attachments/comments, render nothing inside but keep the row so the View Details button sits at a consistent Y.
-- **Saffron's Pick badge** stays absolutely positioned (already doesn't affect layout).
+- Add a small helper `patchBulkCaches(qc, row)` that, for every cached `["instagram-previews-bulk", *]` query, replaces the matching `vendor_id` entry (or appends it). Also writes through to localStorage. Call it from:
+  - `useEnsureInstagramPreview`'s `queryFn` after a fresh row comes back.
+  - `useRefreshInstagramPreview`'s `onSuccess`.
+- Add a new hook `useAutoEnsureMissingPreviews(vendors)` for staff use:
+  - Input: `Array<{ id, instagram_handle }>` of currently visible vendors.
+  - Reads the bulk map + localStorage; computes the set of vendors that have a handle but no cached row (or a stale/error row).
+  - Sequentially (concurrency 2) calls the `ensureVendorInstagramPreview` server fn for each missing vendor; on each success, calls `patchBulkCaches` so the corresponding card re-renders immediately.
+  - Guards against re-entry with a `useRef<Set<string>>` of in-flight vendor IDs, and re-runs whenever `vendors` or the bulk map changes.
+
+### 2. `src/routes/admin.index.tsx`
+
+- In `VendorCardGrid`, after `useInstagramPreviewsBulk(ids)`, call the new `useAutoEnsureMissingPreviews(vendors)` so newly added vendors get scraped automatically on the grid.
+
+### 3. `src/components/vendor/VendorInstagramPreview.tsx`
+
+- In `VendorInstagramCardStrip`, when `hasHandle` is true and `preview === null` (cache miss, not loading), render the skeleton block instead of the "No Instagram preview" fallback. The auto-ensure hook will fill it in within seconds. The "No Instagram preview" message stays for the explicit failure case (`status !== "ok"` on a fetched row).
+
+### 4. Vendor create flow (`VendorForm` save path)
+
+- After a successful create whose payload includes a non-empty `instagram_handle`, fire-and-forget the `ensureVendorInstagramPreview` server fn for the new vendor id, then `patchBulkCaches` on the returned row. This guarantees the new card and the just-opened detail page both light up without a manual refresh, even before the grid re-renders.
 
 ## Out of scope
 
-- The Instagram preview component itself (`VendorInstagramPreview.tsx`), the status select, quote chips' styling, View Details styling, grid/column counts in `client.index.tsx`, desktop vs mobile breakpoints (the changes apply at every size).
-- No data, server, or query changes.
+- Client-side cards: clients can't trigger scrapes server-side, so behavior there is unchanged (they continue to see whatever staff has cached).
+- Backfill job UI.
