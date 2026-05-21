@@ -60,6 +60,9 @@ function DashboardPage() {
     minGoogleRating: null,
     minSaffronRating: null,
     submittedViaForm: "any",
+    assignedToProject: "any",
+    hasQuoteHistory: "any",
+    hasAttachment: "any",
   });
   const [sort, setSort] = useState<SortKey>("date_added_desc");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -79,6 +82,12 @@ function DashboardPage() {
       if (filters.minSaffronRating != null && (v.saffron_rating ?? -1) < filters.minSaffronRating) return false;
       if (filters.submittedViaForm === "yes" && !v.submitted_via_form) return false;
       if (filters.submittedViaForm === "no" && v.submitted_via_form) return false;
+      if (filters.assignedToProject === "yes" && !v.has_assignment) return false;
+      if (filters.assignedToProject === "no" && v.has_assignment) return false;
+      if (filters.hasQuoteHistory === "yes" && !v.has_quote_history) return false;
+      if (filters.hasQuoteHistory === "no" && v.has_quote_history) return false;
+      if (filters.hasAttachment === "yes" && !v.has_attachment) return false;
+      if (filters.hasAttachment === "no" && v.has_attachment) return false;
       if (q) {
         const hay = [v.vendor_name, v.location, v.instagram_handle, v.remarks].filter(Boolean).join(" ").toLowerCase();
         if (!hay.includes(q)) return false;
