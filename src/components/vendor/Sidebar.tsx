@@ -10,6 +10,9 @@ export interface FilterState {
   minGoogleRating: number | null;
   minSaffronRating: number | null;
   submittedViaForm: "any" | "yes" | "no";
+  assignedToProject: "any" | "yes" | "no";
+  hasQuoteHistory: "any" | "yes" | "no";
+  hasAttachment: "any" | "yes" | "no";
 }
 
 const RATING_OPTIONS = [3, 3.5, 4, 4.5] as const;
@@ -49,7 +52,10 @@ export function Sidebar({
     filters.locations.length ||
     filters.minGoogleRating != null ||
     filters.minSaffronRating != null ||
-    filters.submittedViaForm !== "any",
+    filters.submittedViaForm !== "any" ||
+    filters.assignedToProject !== "any" ||
+    filters.hasQuoteHistory !== "any" ||
+    filters.hasAttachment !== "any",
   );
 
   const clearAll = (): FilterState => ({
@@ -58,6 +64,9 @@ export function Sidebar({
     minGoogleRating: null,
     minSaffronRating: null,
     submittedViaForm: "any",
+    assignedToProject: "any",
+    hasQuoteHistory: "any",
+    hasAttachment: "any",
   });
 
   const chip = (active: boolean) =>
@@ -196,6 +205,35 @@ export function Sidebar({
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Relationships */}
+      <div className="mb-6">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Relationships</div>
+        {([
+          ["assignedToProject", "Assigned to a project"],
+          ["hasQuoteHistory", "Has quote history"],
+          ["hasAttachment", "Has attachment"],
+        ] as const).map(([key, label]) => (
+          <div key={key} className="mb-2 last:mb-0">
+            <div className="mb-1 text-xs text-[var(--charcoal)]/70">{label}</div>
+            <div className="flex flex-wrap gap-1">
+              {([
+                ["any", "Any"],
+                ["yes", "Yes"],
+                ["no", "No"],
+              ] as const).map(([val, lbl]) => (
+                <button
+                  key={val}
+                  onClick={() => onChange({ ...filters, [key]: val })}
+                  className={chip(filters[key] === val)}
+                >
+                  {lbl}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </>
   );
