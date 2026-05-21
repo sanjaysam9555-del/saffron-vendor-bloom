@@ -103,6 +103,32 @@ export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enable
   return { map, isLoading: query.isLoading };
 }
 
+// ---------------------------------------------------------------------------
+// Cache sync — push a freshly-scraped row into every active bulk-query cache
+// (and the per-vendor cache + localStorage) so cards refresh instantly when
+// the detail drawer or auto-ensure produces a new preview.
+// ---------------------------------------------------------------------------
+
+function patchBulkCaches(qc: QueryClient, row: VendorInstagramPreview) {
+  // Per-vendor cache
+  qc.setQueryData(
+    ["instagram-preview", row.vendor_id, normalizeInstagramHandle(row.handle)],
+    row,
+  );
+  // Every active bulk query
+  const caches = qc.getQueriesData<VendorInstagramPreview[]>({
+    queryKey: ["instagram-previews-bulk"],
+  });
+  for (const [key, value] of caches) {
+    const list = Array.isArray(value) ? value : [];
+    const next = list.some((p) => p.vendor_id === row.vendor_id)
+      ? list.map((p) => (p.vendor_id === row.vendor_id ? row : p))
+      : [...list, row];
+    qc.setQueryData(key, next);
+  }
+  writeLS([row]);
+}
+
 export function useEnsureInstagramPreview(vendorId: string, handle: string | null | undefined) {
   const fn = useServerFn(ensureVendorInstagramPreview);
   const qc = useQueryClient();
@@ -112,7 +138,7 @@ export function useEnsureInstagramPreview(vendorId: string, handle: string | nul
     queryFn: async () => {
       if (!handle) return null;
       const row = await fn({ data: { vendorId, handle } });
-      if (row) writeLS([row]);
+      if (row) patchBulkCaches(qc, row);
       return row;
     },
     enabled: !!handle,
@@ -138,13 +164,89 @@ export function useRefreshInstagramPreview() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { vendorId: string; handle: string }) => fn({ data: input }),
-    onSuccess: (data, vars) => {
-      if (data) writeLS([data]);
-      qc.invalidateQueries({ queryKey: ["instagram-preview", vars.vendorId] });
-      qc.invalidateQueries({ queryKey: ["instagram-previews-bulk"] });
+    onSuccess: (data) => {
+      if (data) patchBulkCaches(qc, data);
     },
   });
 }
+
+/**
+ * Staff-only: for every visible vendor that has an Instagram handle but no
+ * cached preview row (or a stale/error one), trigger a background scrape and
+ * patch the bulk cache when it returns. Keeps a small in-flight set so we
+ * don't fire duplicate requests across re-renders.
+ */
+export function useAutoEnsureMissingPreviews(
+  vendors: Array<{ id: string; instagram_handle: string | null | undefined }>,
+  previewMap: Map<string, VendorInstagramPreview>,
+) {
+  const ensureFn = useServerFn(ensureVendorInstagramPreview);
+  const qc = useQueryClient();
+  const inFlight = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const missing = vendors.filter((v) => {
+      const handle = (v.instagram_handle ?? "").trim();
+      if (!handle) return false;
+      if (inFlight.current.has(v.id)) return false;
+      const existing = previewMap.get(v.id);
+      if (!existing) return true;
+      // Re-fetch errored rows opportunistically; treat 'ok' / 'not_found' as final until staleness logic in the server fn kicks in.
+      return existing.status === "error";
+    });
+
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    const CONCURRENCY = 2;
+    let cursor = 0;
+
+    async function worker() {
+      while (!cancelled && cursor < missing.length) {
+        const v = missing[cursor++];
+        const handle = (v.instagram_handle ?? "").trim();
+        if (!handle) continue;
+        inFlight.current.add(v.id);
+        try {
+          const row = await ensureFn({ data: { vendorId: v.id, handle } });
+          if (row && !cancelled) patchBulkCaches(qc, row);
+        } catch {
+          /* swallow — scraper failures are tracked in last_error */
+        } finally {
+          inFlight.current.delete(v.id);
+        }
+      }
+    }
+
+    const workers = Array.from({ length: Math.min(CONCURRENCY, missing.length) }, () => worker());
+    void Promise.all(workers);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [vendors, previewMap, ensureFn, qc]);
+}
+
+/**
+ * Fire-and-forget scrape for a single vendor (e.g. right after creation).
+ * Returns a stable callback safe to call from event handlers.
+ */
+export function useTriggerInstagramPreview() {
+  const ensureFn = useServerFn(ensureVendorInstagramPreview);
+  const qc = useQueryClient();
+  return (vendorId: string, handle: string | null | undefined) => {
+    const h = (handle ?? "").trim();
+    if (!h) return;
+    void ensureFn({ data: { vendorId, handle: h } })
+      .then((row) => {
+        if (row) patchBulkCaches(qc, row);
+      })
+      .catch(() => {
+        /* noop */
+      });
+  };
+}
+
 
 export function useStartInstagramBackfill() {
   const fn = useServerFn(startInstagramBackfill);
