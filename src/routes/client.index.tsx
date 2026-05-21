@@ -388,4 +388,3 @@ function ClientVendorGrid({ vendors, onView }: { vendors: ClientVendor[]; onView
   );
 }
 
-}
