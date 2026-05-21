@@ -35,7 +35,6 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
   const [deleting, setDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [viewing, setViewing] = useState<VendorAttachment | null>(null);
-  const [viewing, setViewing] = useState<VendorAttachment | null>(null);
 
   const handleConfirmDelete = async () => {
     if (deleting) return;
