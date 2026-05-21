@@ -56,9 +56,14 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
           </button>
 
           <div className="sm:order-3 flex items-center gap-1">
-            <NotificationsBell />
+            {mounted && (
+              <Suspense fallback={<div className="h-8 w-8" aria-hidden />}>
+                <NotificationsBell />
+              </Suspense>
+            )}
             <UserMenu />
           </div>
+
         </div>
 
         {/* Search — full-width row on mobile, inline on >=sm */}
