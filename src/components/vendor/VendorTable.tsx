@@ -1,7 +1,8 @@
 import type { Vendor } from "@/lib/vendor-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import { Pencil, ArrowUpDown } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
 
 type SortKey = "vendor_name" | "category" | "location" | "price_text" | "google_rating" | "date_added";
 type SortDir = "asc" | "desc";
