@@ -51,7 +51,7 @@ export function ClientVendorTable({ vendors, onView }: Props) {
           </tr>
         </thead>
         <tbody>
-          {vendors.map((v) => {
+          {visibleRows.map((v) => {
             const colors = CATEGORY_COLORS[v.category] ?? {
               bg: "bg-[var(--cream-deep)]",
               text: "text-[var(--charcoal)]",
