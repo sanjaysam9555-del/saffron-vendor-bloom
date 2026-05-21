@@ -60,9 +60,9 @@ function DashboardPage() {
     minGoogleRating: null,
     minSaffronRating: null,
     submittedViaForm: "any",
-    assignedToProject: "any",
-    hasQuoteHistory: "any",
     hasAttachment: "any",
+    hasQuoteHistory: "any",
+    assignedToProject: "any",
   });
   const [sort, setSort] = useState<SortKey>("date_added_desc");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -496,9 +496,9 @@ function ActiveFilterChips({
       minGoogleRating: null,
       minSaffronRating: null,
       submittedViaForm: "any",
-      assignedToProject: "any",
-      hasQuoteHistory: "any",
       hasAttachment: "any",
+      hasQuoteHistory: "any",
+      assignedToProject: "any",
     });
     onClearSearch();
     onSortChange(DEFAULT_SORT);
