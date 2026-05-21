@@ -197,14 +197,7 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
           </div>
         )}
 
-        <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)] bg-[var(--cream)] px-6 py-3">
-          <button
-            onClick={copyContactCard}
-            className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] px-3 py-2 text-sm hover:border-[var(--terracotta)]"
-          >
-            {copiedCard ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-            {copiedCard ? "Copied!" : "Copy Contact Card"}
-          </button>
+        <div className="sticky bottom-0 flex flex-wrap items-center justify-end gap-2 border-t border-[var(--border)] bg-[var(--cream)] px-6 py-3">
           <div className="flex gap-2">
             {confirmDelete ? (
               <>
