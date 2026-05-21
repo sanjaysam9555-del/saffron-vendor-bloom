@@ -72,19 +72,8 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
   if (!vendor) return null;
   const colors = CATEGORY_COLORS[vendor.category] ?? { bg: "bg-[var(--cream-deep)]", text: "text-[var(--charcoal)]" };
 
-  const copyContactCard = () => {
-    const lines = [
-      vendor.vendor_name,
-      vendor.category,
-      vendor.contact_number ?? "",
-      instagramDisplay(vendor.instagram_handle) ?? "",
-      vendor.website ?? "",
-      vendor.price_text ?? "",
-    ].filter(Boolean);
-    navigator.clipboard.writeText(lines.join(" | "));
-    setCopiedCard(true);
-    setTimeout(() => setCopiedCard(false), 1800);
-  };
+
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
