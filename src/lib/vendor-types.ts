@@ -24,6 +24,9 @@ export interface Vendor {
   submitted_via_form: boolean;
   date_added: string;
   updated_at: string;
+  has_assignment?: boolean;
+  has_quote_history?: boolean;
+  has_attachment?: boolean;
 }
 
-export type VendorInput = Omit<Vendor, "id" | "date_added" | "updated_at" | "submitted_via_form">;
+export type VendorInput = Omit<Vendor, "id" | "date_added" | "updated_at" | "submitted_via_form" | "has_assignment" | "has_quote_history" | "has_attachment">;
