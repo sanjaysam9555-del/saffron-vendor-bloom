@@ -63,7 +63,7 @@ function SubmissionsPage() {
             <ArrowLeft className="h-4 w-4" /> Back to dashboard
           </Link>
           <div className="ml-auto text-xs text-[var(--charcoal)]/50">
-            Public link: <code className="rounded bg-[var(--cream-deep)] px-1.5 py-0.5">/vendor-signup</code>
+            Public link: <code className="rounded bg-[var(--cream-deep)] px-1.5 py-0.5">/vendor-onboarding</code>
           </div>
         </div>
       </header>
@@ -126,7 +126,7 @@ function SubmissionsPage() {
             title={submissions.length === 0 ? "No submissions yet" : "No matches"}
             description={
               submissions.length === 0
-                ? "Share your /vendor-signup link to start receiving submissions."
+                ? "Share your /vendor-onboarding link to start receiving submissions."
                 : "Try a different search."
             }
           />

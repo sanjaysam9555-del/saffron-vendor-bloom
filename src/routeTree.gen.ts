@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VendorSignupRouteImport } from './routes/vendor-signup'
+import { Route as VendorOnboardingRouteImport } from './routes/vendor-onboarding'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
@@ -33,6 +34,11 @@ import { Route as ApiFilesStreamSplatRouteImport } from './routes/api/files/stre
 const VendorSignupRoute = VendorSignupRouteImport.update({
   id: '/vendor-signup',
   path: '/vendor-signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VendorOnboardingRoute = VendorOnboardingRouteImport.update({
+  id: '/vendor-onboarding',
+  path: '/vendor-onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -139,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/vendor-onboarding': typeof VendorOnboardingRoute
   '/vendor-signup': typeof VendorSignupRoute
   '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/vendor-onboarding': typeof VendorOnboardingRoute
   '/vendor-signup': typeof VendorSignupRoute
   '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -184,6 +192,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/vendor-onboarding': typeof VendorOnboardingRoute
   '/vendor-signup': typeof VendorSignupRoute
   '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/sitemap.xml'
+    | '/vendor-onboarding'
     | '/vendor-signup'
     | '/admin/submissions'
     | '/admin/users'
@@ -230,6 +240,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/sitemap.xml'
+    | '/vendor-onboarding'
     | '/vendor-signup'
     | '/admin/submissions'
     | '/admin/users'
@@ -252,6 +263,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/sitemap.xml'
+    | '/vendor-onboarding'
     | '/vendor-signup'
     | '/admin/submissions'
     | '/admin/users'
@@ -275,6 +287,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  VendorOnboardingRoute: typeof VendorOnboardingRoute
   VendorSignupRoute: typeof VendorSignupRoute
   AdminSubmissionsRoute: typeof AdminSubmissionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -300,6 +313,13 @@ declare module '@tanstack/react-router' {
       path: '/vendor-signup'
       fullPath: '/vendor-signup'
       preLoaderRoute: typeof VendorSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vendor-onboarding': {
+      id: '/vendor-onboarding'
+      path: '/vendor-onboarding'
+      fullPath: '/vendor-onboarding'
+      preLoaderRoute: typeof VendorOnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -455,6 +475,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  VendorOnboardingRoute: VendorOnboardingRoute,
   VendorSignupRoute: VendorSignupRoute,
   AdminSubmissionsRoute: AdminSubmissionsRoute,
   AdminUsersRoute: AdminUsersRoute,

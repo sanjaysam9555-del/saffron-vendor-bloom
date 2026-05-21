@@ -37,7 +37,7 @@ function RootIndex() {
           </p>
           <div className="mt-6">
             <Link
-              to="/vendor-signup"
+              to="/vendor-onboarding"
               className="inline-flex items-center gap-2 text-sm font-medium text-[var(--terracotta)] hover:underline"
             >
               Are you a vendor? Sign up here →

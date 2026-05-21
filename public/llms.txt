@@ -7,4 +7,4 @@ Saffron Planning Studio curates vendors, manages logistics, and designs weddings
 ## Pages
 
 - [Home](/): Overview of Saffron Planning Studio and client sign-in.
-- [Vendor Signup](/vendor-signup): Vendors can register their business to be considered for upcoming projects.
+- [Vendor Onboarding](/vendor-onboarding): Vendors can register their business to be considered for upcoming projects.
