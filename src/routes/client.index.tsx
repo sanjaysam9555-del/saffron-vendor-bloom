@@ -346,16 +346,46 @@ function EmptyState({ message }: { message: string }) {
 function ClientVendorGrid({ vendors, onView }: { vendors: ClientVendor[]; onView: (v: ClientVendor) => void }) {
   const ids = useMemo(() => vendors.filter((v) => v.instagram_handle).map((v) => v.id), [vendors]);
   const { map: previewMap } = useInstagramPreviewsBulk(ids);
+
+  // Incremental render so a project with hundreds of shared vendors paints fast.
+  const BATCH = 60;
+  const [visibleCount, setVisibleCount] = useState(BATCH);
+  useEffect(() => {
+    setVisibleCount(BATCH);
+  }, [vendors]);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (visibleCount >= vendors.length) return;
+    const node = sentinelRef.current;
+    if (!node) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisibleCount((c) => Math.min(c + BATCH, vendors.length));
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    io.observe(node);
+    return () => io.disconnect();
+  }, [visibleCount, vendors.length]);
+  const visibleVendors = vendors.slice(0, visibleCount);
+
   return (
-    <div className="grid gap-3 sm:gap-4 animate-fade-in sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {vendors.map((v) => (
-        <ClientVendorCard
-          key={v.id}
-          vendor={v}
-          onView={() => onView(v)}
-          instagramPreview={previewMap.get(v.id) ?? null}
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid gap-3 sm:gap-4 animate-fade-in sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {visibleVendors.map((v) => (
+          <ClientVendorCard
+            key={v.id}
+            vendor={v}
+            onView={() => onView(v)}
+            instagramPreview={previewMap.get(v.id) ?? null}
+          />
+        ))}
+      </div>
+      {visibleCount < vendors.length && <div ref={sentinelRef} className="h-12" aria-hidden />}
+    </>
   );
+}
+
 }
