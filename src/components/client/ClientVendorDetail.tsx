@@ -3,6 +3,7 @@ import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import { X, MapPin, Instagram, Link as LinkIcon, Paperclip, FileText, Globe, Star, CircleCheck, Sparkles } from "lucide-react";
 import { SignedDocumentViewer } from "@/components/vendor/SignedDocumentViewer";
+import { AttachmentThumbnailGrid } from "@/components/vendor/AttachmentThumbnailGrid";
 import { SignedQuoteFileViewer } from "@/components/admin/SignedQuoteFileViewer";
 import { formatFileSize } from "@/lib/vendor-files-api";
 import { ClientStatusSelect } from "./ClientStatusSelect";
