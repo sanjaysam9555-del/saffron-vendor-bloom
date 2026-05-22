@@ -664,7 +664,11 @@ export const getMyProject = createServerFn({ method: "GET" })
       commentCountByVendor.set(c.vendor_id, (commentCountByVendor.get(c.vendor_id) ?? 0) + 1);
     }
 
-    const vendors = (vrows ?? []).map((v) => ({
+    const vendorById = new Map((vrows ?? []).map((v) => [v.id, v]));
+    const vendors = vendorIds
+      .map((id) => vendorById.get(id))
+      .filter((v): v is NonNullable<typeof v> => !!v)
+      .map((v) => ({
       id: v.id,
       category: v.category,
       subcategory: v.subcategory,
