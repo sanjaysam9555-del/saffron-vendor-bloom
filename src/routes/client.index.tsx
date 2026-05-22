@@ -348,6 +348,7 @@ function EmptyState({ message }: { message: string }) {
 function ClientVendorGrid({ vendors, onView }: { vendors: ClientVendor[]; onView: (v: ClientVendor) => void }) {
   const ids = useMemo(() => vendors.filter((v) => v.instagram_handle).map((v) => v.id), [vendors]);
   const { map: previewMap } = useInstagramPreviewsBulk(ids);
+  useAutoEnsureMissingPreviews(vendors, previewMap);
 
   return (
     <VirtualGrid
