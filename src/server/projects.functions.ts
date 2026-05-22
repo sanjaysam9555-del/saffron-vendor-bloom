@@ -567,14 +567,16 @@ export const getMyProject = createServerFn({ method: "GET" })
         .maybeSingle(),
       supabaseAdmin
         .from("project_vendors")
-        .select("vendor_id, is_saffron_pick")
-        .eq("project_id", projectId),
+        .select("vendor_id, is_saffron_pick, created_at")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false }),
     ]);
     if (projectRes.error) throw new Error(projectRes.error.message);
     const project = projectRes.data;
     if (!project) throw new Error("Project not found");
 
     const pv = pvRes.data;
+    // Preserve the assignment order (newest first) for the final vendor list.
     const vendorIds = (pv ?? []).map((r) => r.vendor_id);
     const saffronPickMap = new Map<string, boolean>(
       (pv ?? []).map((r) => [r.vendor_id, !!r.is_saffron_pick]),
