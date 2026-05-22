@@ -128,8 +128,20 @@ export const ensureVendorInstagramPreview = createServerFn({ method: "POST" })
     z.object({ vendorId: z.string().uuid(), handle: z.string().min(1) }).parse(d),
   )
   .handler(async ({ data }): Promise<VendorInstagramPreview | null> => {
-    const { isStaff } = await requireUser();
-    // Only staff can trigger fresh scrapes; clients only read cache.
+    const { userId, isStaff } = await requireUser();
+
+    // Non-staff: verify the caller is allowed to see this vendor before
+    // doing anything else (mirrors getVendorInstagramPreviewsBulk).
+    if (!isStaff) {
+      const { data: pv } = await supabaseAdmin
+        .from("project_vendors")
+        .select("project_id, project_clients!inner(user_id)")
+        .eq("vendor_id", data.vendorId)
+        .eq("project_clients.user_id", userId)
+        .limit(1);
+      if (!pv || pv.length === 0) return null;
+    }
+
     const { data: existing } = await supabaseAdmin
       .from("vendor_instagram_previews" as never)
       .select("*")
@@ -144,7 +156,8 @@ export const ensureVendorInstagramPreview = createServerFn({ method: "POST" })
     const RETRY_COOLDOWN_MS = 10 * 60 * 1000;
     const canRetryFailed = failed && ageMs > RETRY_COOLDOWN_MS;
     if (row && !stale && !canRetryFailed) return row;
-    if (!isStaff) return row;
+    // Both staff and authorized clients may trigger a scrape to warm the
+    // cache. Manual force-refresh stays staff-only (refreshVendorInstagramPreview).
     const scrape = await scrapeInstagramProfile(data.handle);
     return upsertPreview(data.vendorId, scrape);
   });
