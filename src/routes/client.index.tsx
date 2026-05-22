@@ -21,7 +21,7 @@ const ClientBoardView = lazy(() =>
 
 import { ClientVendorTable } from "@/components/client/ClientVendorTable";
 import type { ClientVendor } from "@/lib/project-types";
-import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
+import { useInstagramPreviewsBulk, useAutoEnsureMissingPreviews } from "@/hooks/use-instagram-previews";
 import { VendorTimeline } from "@/components/timeline/VendorTimeline";
 import { UrgencyStrip } from "@/components/timeline/UrgencyStrip";
 import { buildTimelineItems } from "@/lib/build-timeline-items";
