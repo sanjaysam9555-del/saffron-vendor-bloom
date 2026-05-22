@@ -1,55 +1,55 @@
-## Goal
-Make the admin/client vendor lists feel instant with 450+ vendors (and scale to thousands), keeping the single infinite-scroll UX — no pagination, no "Load more" buttons.
+## Problem
 
-## Changes
+Instagram previews load instantly on the **admin** dashboard but not on the **client** dashboard (cards stay on the skeleton, the detail drawer shows "No preview cached yet").
 
-### 1. True windowing with `@tanstack/react-virtual`
-Replace the current "render in batches of 60 with a sentinel" pattern with real virtualization in:
-- `src/routes/admin.index.tsx` (card grid + table view)
-- `src/components/vendor/VendorTable.tsx`
-- `src/routes/client.index.tsx` (card grid)
-- `src/components/client/ClientVendorTable.tsx`
+## Root cause
 
-Only the ~15–20 rows in the viewport (plus a small overscan) stay mounted. Scrolling 450 or 4500 vendors costs the same. Keeps existing card/row visuals untouched.
+In `src/hooks/use-instagram-previews.ts` only the admin route calls `useAutoEnsureMissingPreviews(vendors, previewMap)`. That hook is what:
 
-### 2. Slim the initial payload (`listVendorsLite`)
-In `src/server/vendors.functions.ts` (or wherever `listVendorsServer` lives), add a new lightweight server fn that selects only the fields the list view needs:
-`id, vendor_name, category, subcategory, location, instagram_handle, saffron_rating, google_rating, price_text, date_added` + the existing flag columns (assignments / quotes / attachments counts).
+1. Detects vendors whose `vendor_instagram_previews` row is missing/errored, and
+2. Calls `ensureVendorInstagramPreview` to scrape Instagram and patch the cache for every visible card.
 
-Heavy fields (deliverables, quote_breakdown, remarks, long text) move to a `getVendorFull(id)` fn called only when the detail drawer opens. Expected JSON size reduction ~60–70%.
+The client route (`src/routes/client.index.tsx`) only calls `useInstagramPreviewsBulk(ids)` — a pure read of whatever rows already exist. And the server fn `ensureVendorInstagramPreview` has an early `if (!isStaff) return row;` (line 147 of `src/server/instagram-preview.functions.ts`), so even if a client did call it, no scrape would happen.
 
-### 3. Server-side search / filter / sort
-Move the search box, category filter, location filter, and sort to the server:
-- Add `searchVendorsServer({ q, category, location, sort, cursor, limit })` returning `{ rows, nextCursor, total }`.
-- Use Postgres `ilike` on `vendor_name`, `category`, `location`, `instagram_handle` for `q`.
-- Keyset pagination (cursor on `date_added, id`) to support infinite scroll without OFFSET cost.
-- Client uses `useInfiniteQuery` + virtualization — fetches the next page automatically when the virtualizer approaches the end. Debounce search input by 200ms.
+Net effect: any vendor that an admin has never opened on the admin dashboard has no cached row, so the client gets `null` from the bulk read and the card sits on the loading skeleton forever, and the detail block falls through to "No preview cached yet".
 
-This means the browser never holds more than the rows actually rendered + a small buffer. URL stays the same (no `?page=` params).
+## Fix
 
-### 4. Thumbnail signing tied to the visible window
-`AttachmentThumbnailGrid.tsx` and the per-card primary thumbnail already use `getVendorFileThumbnailUrlsBulk`. Tie the bulk sign call to the virtualizer's visible range instead of "all mounted cards", so we only request signed URLs for ~15 visible vendors at a time. Cache results keyed by `vendor_id` for 5 min (existing `staleTime`).
+Two small, surgical changes — no UI redesign, no schema changes.
 
-### 5. Keep Instagram previews idle-loaded
-Already done in `use-instagram-previews.ts` (`requestIdleCallback`, 6 workers). With virtualization, the queue naturally shrinks because only visible vendors register.
+### 1. Allow server-side scraping for client viewers (rate-limited)
 
-### 6. Indexes (verify, add if missing)
-Run a migration to ensure these exist (cheap, idempotent):
-- `vendors (date_added DESC, id)` — keyset cursor
-- `vendors (vendor_name text_pattern_ops)` — ilike prefix
-- `vendors (category)`, `vendors (location)` — filter
+In `src/server/instagram-preview.functions.ts`, change `ensureVendorInstagramPreview` so non-staff callers are also allowed to trigger a scrape, but only when:
 
-If any are already present, the migration is a no-op.
+- The vendor is one the caller is actually allowed to see (reuse the same `project_clients` → `project_vendors` join used in `getVendorInstagramPreviewsBulk`), and
+- The row is missing, or older than `STALE_DAYS`, or in `error`/`not_found` past the existing `RETRY_COOLDOWN_MS` cool-down.
+
+`refreshVendorInstagramPreview` (the manual "Refresh" button) stays staff-only.
+
+This makes the client experience match admin: the first client to open the dashboard warms the cache; subsequent visits hit cache + localStorage and render instantly.
+
+### 2. Wire `useAutoEnsureMissingPreviews` into the client grid
+
+In `src/routes/client.index.tsx` (`ClientVendorGrid`), mirror the admin route:
+
+```ts
+const ids = useMemo(...)
+const { map: previewMap } = useInstagramPreviewsBulk(ids);
+useAutoEnsureMissingPreviews(vendors, previewMap); // <- add
+```
+
+The hook already defers work via `requestIdleCallback`, caps concurrency at 6, and tracks an in-flight set, so it won't hammer Apify. With the virtualized grid only ~15 cards are mounted at a time, so the ensure queue stays small.
+
+### 3. Detail drawer needs no code change
+
+`VendorInstagramDetailBlock` already calls `useEnsureInstagramPreview`. Once change (1) lifts the staff-only block, the same call will warm the cache for clients too, and the existing `initialData` (per-vendor cache + localStorage) keeps revisits instant.
 
 ## Out of scope
-- Pagination UI / page numbers / "Load more" buttons
-- Auth, RLS, business logic
-- Any visual redesign — cards and tables look identical
-- Realtime, backend provider, or AI changes
 
-## Expected impact
-- First paint: only ~15 visible rows render → DOM nodes drop from ~450×N to ~15×N
-- Network: initial list response ~60–70% smaller; search no longer ships full dataset
-- Scroll: constant cost regardless of total vendor count
-- Typing in search: one debounced server query instead of filtering 450 objects in JS
-- Memory: per-card subqueries (Instagram, thumbnails) scoped to visible window
+- Pagination, search, or any other perf work.
+- Visual changes to the strip/detail.
+- Changes to the bulk backfill job or admin "Refresh" button.
+
+## Expected outcome
+
+First client visit: cards show skeleton briefly while missing rows are scraped in the background (same as admin's first visit), then resolve to real previews and persist in localStorage. Subsequent visits and detail-drawer opens render instantly from cache.
