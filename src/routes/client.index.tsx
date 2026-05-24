@@ -128,7 +128,7 @@ function ClientPortalPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return vendors.filter((v) => {
+    const result = vendors.filter((v) => {
       if (filters.category && v.category !== filters.category) return false;
       if (
         filters.locations.length &&
@@ -144,6 +144,16 @@ function ClientPortalPage() {
       }
       return true;
     });
+    // Push rejected vendors to the bottom while preserving relative order.
+    return result
+      .map((v, i) => ({ v, i }))
+      .sort((a, b) => {
+        const ar = a.v.client_status === "rejected" ? 1 : 0;
+        const br = b.v.client_status === "rejected" ? 1 : 0;
+        if (ar !== br) return ar - br;
+        return a.i - b.i;
+      })
+      .map((x) => x.v);
   }, [vendors, filters, search]);
 
   if (isLoading) {
