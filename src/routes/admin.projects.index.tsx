@@ -227,7 +227,6 @@ function ProjectsListPage() {
               />
             ))
           )}
-        </div>
       </div>
 
       <CreateProjectDialog
@@ -236,5 +235,6 @@ function ProjectsListPage() {
         onCreated={(id) => navigate({ to: "/admin/projects/$id", params: { id } })}
       />
     </div>
+
   );
 }
