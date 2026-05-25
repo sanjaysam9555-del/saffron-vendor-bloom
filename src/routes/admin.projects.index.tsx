@@ -19,12 +19,16 @@ export const Route = createFileRoute("/admin/projects/")({
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  component: () => (
-    <AuthGate>
-      <ProjectsListPage />
-    </AuthGate>
-  ),
+  // Rendered by the /admin layout via the ProjectsPane export so the pane stays
+  // mounted across tab switches. The route only exists to match the URL.
+  component: () => null,
 });
+
+export function ProjectsPane() {
+  return <ProjectsListPage />;
+}
+
+
 
 type Tab = "active" | "archived";
 type SortKey = "upcoming" | "updated" | "most_vendors" | "most_quoted";
