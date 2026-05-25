@@ -7,7 +7,6 @@ export function UserMenu() {
   const { user, role, signOut } = useAuth();
   const confirm = useConfirm();
   if (!user) return null;
-  const isStaff = role === "admin" || role === "employee";
   const handleSignOut = async () => {
     const ok = await confirm({
       title: "Sign out?",
