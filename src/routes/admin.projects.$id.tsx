@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Switch } from "@/components/ui/switch";
-import { UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck, MessageSquare, Star, MapPin, Instagram, Phone, Globe, Plus, Sparkles, Archive, ArchiveRestore, Eye } from "lucide-react";
+import { UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck, MessageSquare, Star, MapPin, Instagram, Phone, Globe, Plus, Sparkles, Archive, ArchiveRestore, Eye, ChevronDown } from "lucide-react";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { ClientStatusPill, StatusCountsRow, CLIENT_STATUS_OPTIONS } from "@/components/admin/ClientStatusPill";
 import { AuthGate } from "@/components/AuthGate";
@@ -77,6 +77,7 @@ function ProjectDetailPage() {
   });
 
   const [showAddClient, setShowAddClient] = useState(false);
+  const [credsOpen, setCredsOpen] = useState(false);
   const [cEmail, setCEmail] = useState("");
   const [cName, setCName] = useState("");
   const [cPwd, setCPwd] = useState("");
@@ -204,64 +205,86 @@ function ProjectDetailPage() {
         />
 
 
-        {/* Client logins */}
+        {/* Client credentials */}
         <section className="mt-6 sm:mt-8">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-display text-xl text-[var(--charcoal)]">Client login</h2>
+          <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-white">
             <button
-              onClick={() => setShowAddClient((s) => !s)}
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 sm:w-auto"
+              type="button"
+              onClick={() => setCredsOpen((s) => !s)}
+              aria-expanded={credsOpen}
+              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-[var(--cream)]/50"
             >
-              <UserPlus className="h-4 w-4" /> Add Client Login
-            </button>
-          </div>
-          <p className="text-xs text-[var(--charcoal)]/55 my-[10px]">
-            Share these credentials with the client. They sign in at <code>/login</code>.
-          </p>
-
-          {showAddClient && (
-            <form onSubmit={addClient} className="mt-3 grid gap-2 rounded-lg border border-[var(--border)] bg-white p-4 sm:grid-cols-3">
-              <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" placeholder="Display name" value={cName} onChange={(e) => setCName(e.target.value)} />
-              <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" type="email" required placeholder="Email" value={cEmail} onChange={(e) => setCEmail(e.target.value)} />
-              <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" required minLength={6} type="password" placeholder="Password (min 6)" value={cPwd} onChange={(e) => setCPwd(e.target.value)} autoComplete="new-password" />
-              {cErr && <div className="sm:col-span-3 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{cErr}</div>}
-              <div className="sm:col-span-3 flex gap-2">
-                <button type="submit" disabled={cBusy} className="flex-1 rounded-md bg-[var(--charcoal)] px-3 py-2 text-sm text-white hover:opacity-90 disabled:opacity-50">
-                  {cBusy ? "Creating…" : "Create"}
-                </button>
-                <button type="button" onClick={() => setShowAddClient(false)} className="rounded-md border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--cream)]">
-                  Cancel
-                </button>
+              <div className="flex items-center gap-2.5">
+                <KeyRound className="h-4 w-4 text-[var(--terracotta)]" />
+                <h2 className="font-display text-base sm:text-lg text-[var(--charcoal)]">Client credentials</h2>
+                <span className="rounded-full bg-[var(--cream)] px-2 py-0.5 text-[11px] text-[var(--charcoal)]/65">
+                  {clients.length} {clients.length === 1 ? "login" : "logins"}
+                </span>
               </div>
-            </form>
-          )}
+              <ChevronDown className={`h-4 w-4 text-[var(--charcoal)]/60 transition-transform ${credsOpen ? "rotate-180" : ""}`} />
+            </button>
 
-          <div className="mt-3 rounded-lg border border-[var(--border)] bg-white overflow-hidden">
-            {clients.length === 0 ? (
-              <div className="p-6 text-sm text-[var(--charcoal)]/60">No client login yet.</div>
-            ) : (
-              <div
-                className="overflow-x-auto touch-pan-x"
-                style={{ WebkitOverflowScrolling: "touch" }}
-              >
-                <table className="w-full min-w-[560px] text-sm">
-                  <thead className="bg-[var(--cream)] text-left text-xs uppercase tracking-wider text-[var(--charcoal)]/60">
-                    <tr>
-                      <th className="px-4 py-2.5">Display Name</th>
-                      <th className="px-4 py-2.5">Email</th>
-                      <th className="px-4 py-2.5 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {clients.map((c: any) => (
-                      <ClientRow key={c.id} c={c} projectId={id} onChanged={refresh} />
-                    ))}
-                  </tbody>
-                </table>
+            {credsOpen && (
+              <div className="border-t border-[var(--border)] p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-[var(--charcoal)]/55">
+                    Share these credentials with the client. They sign in at <code>/login</code>.
+                  </p>
+                  <button
+                    onClick={() => setShowAddClient((s) => !s)}
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 sm:w-auto"
+                  >
+                    <UserPlus className="h-4 w-4" /> Add Client Login
+                  </button>
+                </div>
+
+                {showAddClient && (
+                  <form onSubmit={addClient} className="mt-3 grid gap-2 rounded-lg border border-[var(--border)] bg-[var(--cream)]/40 p-4 sm:grid-cols-3">
+                    <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" placeholder="Display name" value={cName} onChange={(e) => setCName(e.target.value)} />
+                    <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" type="email" required placeholder="Email" value={cEmail} onChange={(e) => setCEmail(e.target.value)} />
+                    <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" required minLength={6} type="password" placeholder="Password (min 6)" value={cPwd} onChange={(e) => setCPwd(e.target.value)} autoComplete="new-password" />
+                    {cErr && <div className="sm:col-span-3 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{cErr}</div>}
+                    <div className="sm:col-span-3 flex gap-2">
+                      <button type="submit" disabled={cBusy} className="flex-1 rounded-md bg-[var(--charcoal)] px-3 py-2 text-sm text-white hover:opacity-90 disabled:opacity-50">
+                        {cBusy ? "Creating…" : "Create"}
+                      </button>
+                      <button type="button" onClick={() => setShowAddClient(false)} className="rounded-md border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--cream)]">
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                <div className="mt-3 rounded-lg border border-[var(--border)] bg-white overflow-hidden">
+                  {clients.length === 0 ? (
+                    <div className="p-6 text-sm text-[var(--charcoal)]/60">No client login yet.</div>
+                  ) : (
+                    <div
+                      className="overflow-x-auto touch-pan-x"
+                      style={{ WebkitOverflowScrolling: "touch" }}
+                    >
+                      <table className="w-full min-w-[560px] text-sm">
+                        <thead className="bg-[var(--cream)] text-left text-xs uppercase tracking-wider text-[var(--charcoal)]/60">
+                          <tr>
+                            <th className="px-4 py-2.5">Display Name</th>
+                            <th className="px-4 py-2.5">Email</th>
+                            <th className="px-4 py-2.5 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {clients.map((c: any) => (
+                            <ClientRow key={c.id} c={c} projectId={id} onChanged={refresh} />
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
         </section>
+
 
         <ProjectSectionTabs
           projectId={id}
