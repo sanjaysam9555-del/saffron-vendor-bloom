@@ -13,7 +13,7 @@ import { BulkActionBar } from "@/components/vendor/BulkActionBar";
 import { VirtualGrid } from "@/components/ui/VirtualGrid";
 import { useVendors, useVendorMutations, useVendorModals } from "@/hooks/useVendorData";
 import { useAllCategories } from "@/lib/categories";
-import { AuthGate } from "@/components/AuthGate";
+
 import { useIsAdmin } from "@/lib/auth";
 import { useInstagramPreviewsBulk, useAutoEnsureMissingPreviews } from "@/hooks/use-instagram-previews";
 
@@ -51,14 +51,18 @@ export const Route = createFileRoute("/admin/")({
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  component: () => (
-    <AuthGate>
-      <DashboardPage />
-    </AuthGate>
-  ),
+  // The vendors UI is rendered once by the /admin layout (see VendorsPane export
+  // below) so the pane stays mounted across tab switches. This route exists only
+  // so the router can match `/admin` and apply head metadata.
+  component: () => null,
 });
 
+export function VendorsPane() {
+  return <DashboardPage />;
+}
+
 function DashboardPage() {
+
   const isAdmin = useIsAdmin();
   const categories = useAllCategories();
   const { data: vendors = [], isLoading } = useVendors();
