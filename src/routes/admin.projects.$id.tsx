@@ -77,6 +77,7 @@ function ProjectDetailPage() {
   });
 
   const [showAddClient, setShowAddClient] = useState(false);
+  const [credsOpen, setCredsOpen] = useState(false);
   const [cEmail, setCEmail] = useState("");
   const [cName, setCName] = useState("");
   const [cPwd, setCPwd] = useState("");
