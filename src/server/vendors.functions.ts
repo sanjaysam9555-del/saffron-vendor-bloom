@@ -28,8 +28,6 @@ const vendorInputSchema = z.object({
   deliverables: z.string().nullable(),
 });
 
-const knownStaffEmails = new Set(["info@saffronevents.in"]);
-
 async function requireStaffUser(): Promise<{ userId: string; email: string }> {
   const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
   if (!token) throw new Error("You're not signed in. Please sign in again to continue.");
@@ -41,23 +39,14 @@ async function requireStaffUser(): Promise<{ userId: string; email: string }> {
   const userId = claims.sub;
   const email = typeof claims.email === "string" ? claims.email.toLowerCase() : "";
 
-  try {
-    const { data, error } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .in("role", ["admin", "employee"]);
-    if (error) throw new Error(error.message);
-    if (!data || data.length === 0) {
-      if (knownStaffEmails.has(email)) return { userId, email };
-      throw new Error("Forbidden: staff only");
-    }
-  } catch (error) {
-    if (knownStaffEmails.has(email)) {
-      console.warn("Using staff fallback for vendor access", error instanceof Error ? error.message : error);
-      return { userId, email };
-    }
-    throw error;
+  const { data, error } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["admin", "employee"]);
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) {
+    throw new Error("Forbidden: staff only");
   }
 
   return { userId, email };
