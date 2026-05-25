@@ -147,6 +147,19 @@ function ProjectDetailPage() {
     }
   };
 
+  const handleToggleArchived = async (archived: boolean) => {
+    try {
+      await setProjectArchived({ data: { id, archived } });
+      notifySuccess(archived ? "Project archived" : "Project restored");
+      await Promise.all([
+        refresh(),
+        qc.invalidateQueries({ queryKey: ["projects-overview"] }),
+      ]);
+    } catch (e) {
+      notifyError(e, archived ? "Could not archive project" : "Could not restore project");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[var(--cream)] px-6 py-8">
