@@ -133,60 +133,73 @@ function ProjectsListPage() {
     }
   };
 
+  const totalProjects = active.length + archived.length;
+
   return (
-    <div className="mx-auto max-w-[1600px] px-3 py-5 sm:px-6 sm:py-6">
-      <div className="flex flex-wrap items-end justify-between gap-3 animate-fade-up">
-        <div>
-          <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">Projects</h1>
-          <p className="text-xs text-[var(--charcoal)]/60">
-            Each project is one wedding. Manage assigned vendors, quotes, and the client portal in one place.
-          </p>
-        </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
-        >
-          <Plus className="h-4 w-4" /> New project
-        </button>
-      </div>
-
-
-        {/* tabs + toolbar */}
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div
-            role="tablist"
-            aria-label="Projects"
-            className="inline-flex overflow-hidden rounded-md border border-[var(--border)] bg-white text-sm"
-          >
-            <button
-              role="tab"
-              aria-selected={tab === "active"}
-              onClick={() => setTab("active")}
-              className={`px-4 py-1.5 ${tab === "active" ? "bg-[var(--terracotta)] text-[var(--cream)]" : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"}`}
-            >
-              Active <span className="ml-1 opacity-70">({active.length})</span>
-            </button>
-            <button
-              role="tab"
-              aria-selected={tab === "archived"}
-              onClick={() => setTab("archived")}
-              className={`border-l border-[var(--border)] px-4 py-1.5 inline-flex items-center gap-1.5 ${tab === "archived" ? "bg-[var(--terracotta)] text-[var(--cream)]" : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"}`}
-            >
-              <Archive className="h-3.5 w-3.5" />
-              Archived <span className="opacity-70">({archived.length})</span>
-            </button>
+    <div>
+      {/* Secondary toolbar (mirrors vendor TopNav) */}
+      <div className="border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
+        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-2 px-3 py-2 sm:flex-nowrap sm:gap-4 sm:px-6">
+          <div className="relative order-2 w-full min-w-0 sm:order-1 sm:w-auto sm:flex-1 sm:max-w-[320px]">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/40" />
+            <input
+              type="text"
+              placeholder="Search projects…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-md border border-[var(--border)] bg-white py-1.5 pl-8 pr-2 text-sm text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/40 focus:border-[var(--terracotta)] focus:outline-none focus:ring-2 focus:ring-[var(--terracotta-soft)]"
+            />
           </div>
 
-          <div className="flex flex-1 items-center gap-2 sm:max-w-md sm:justify-end">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/40" />
-              <input
-                type="text"
-                placeholder="Search projects…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-md border border-[var(--border)] bg-white py-1.5 pl-8 pr-2 text-sm placeholder:text-[var(--charcoal)]/40 focus:border-[var(--terracotta)] focus:outline-none focus:ring-2 focus:ring-[var(--terracotta-soft)]"
-              />
+          <div className="order-3 hidden items-center gap-4 text-xs text-[var(--charcoal)]/60 lg:flex">
+            <div><span className="font-semibold text-[var(--terracotta)]">{active.length}</span> active</div>
+            <div><span className="font-semibold text-[var(--terracotta)]">{archived.length}</span> archived</div>
+          </div>
+
+          <button
+            onClick={() => setShowCreate(true)}
+            aria-label="New project"
+            className="order-1 ml-auto inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-2.5 py-1.5 text-sm font-medium text-[var(--cream)] shadow-sm transition-all hover:bg-[var(--terracotta)]/90 hover:-translate-y-0.5 sm:order-4 sm:px-3.5"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">New project</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 animate-fade-up">
+          <div className="flex items-baseline gap-3">
+            <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
+              Projects
+            </h1>
+            <span className="text-xs text-[var(--charcoal)]/55">
+              {filtered.length} of {totalProjects}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div
+              role="tablist"
+              aria-label="Projects"
+              className="inline-flex overflow-hidden rounded-md border border-[var(--border)] bg-white text-sm"
+            >
+              <button
+                role="tab"
+                aria-selected={tab === "active"}
+                onClick={() => setTab("active")}
+                className={`px-3 py-1 text-xs ${tab === "active" ? "bg-[var(--terracotta)] text-[var(--cream)]" : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"}`}
+              >
+                Active <span className="ml-1 opacity-70">({active.length})</span>
+              </button>
+              <button
+                role="tab"
+                aria-selected={tab === "archived"}
+                onClick={() => setTab("archived")}
+                className={`border-l border-[var(--border)] px-3 py-1 text-xs inline-flex items-center gap-1.5 ${tab === "archived" ? "bg-[var(--terracotta)] text-[var(--cream)]" : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"}`}
+              >
+                <Archive className="h-3.5 w-3.5" />
+                Archived <span className="opacity-70">({archived.length})</span>
+              </button>
             </div>
             <label className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-xs text-[var(--charcoal)]/75">
               <ArrowUpDown className="h-3.5 w-3.5" />
@@ -205,7 +218,7 @@ function ProjectsListPage() {
         </div>
 
         {/* cards */}
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="h-56 animate-pulse rounded-xl border border-[var(--border)] bg-white" />
@@ -232,6 +245,7 @@ function ProjectsListPage() {
               />
             ))
           )}
+        </div>
       </div>
 
       <CreateProjectDialog
@@ -240,6 +254,5 @@ function ProjectsListPage() {
         onCreated={(id) => navigate({ to: "/admin/projects/$id", params: { id } })}
       />
     </div>
-
   );
 }

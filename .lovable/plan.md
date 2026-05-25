@@ -1,42 +1,35 @@
 ## Goal
-Make Vendors ⇄ Projects switching flawless: no intermittent crash, no full-page error, and no unnecessary refetch when toggling tabs.
 
-## Plan
-1. Replace the current “keep hidden panes mounted” approach with “only mount the active pane”.
-   - The current vendor pane keeps a virtualized grid alive while hidden.
-   - That hidden virtualized layout is the most likely cause of the intermittent React update loop.
+Make the Projects tab visually and structurally match the Vendors tab so switching feels seamless, and drop the descriptive intro line under the Projects title.
 
-2. Keep both datasets warm in cache from the admin layout.
-   - Preload vendors and projects queries at the `/admin` layout level.
-   - This preserves near-instant switching without relying on hidden DOM.
-   - Switching tabs becomes a remount of the visible pane, but data should already be ready.
+## Current state
 
-3. Preserve vendor/projects UI state outside the pane components.
-   - Lift vendor UI state that should survive tab switches: search, filters, sort, view mode, bulk-mode selection policy if needed.
-   - Lift project UI state that should survive tab switches: active/archived tab, search, sort.
-   - Pass that state into each pane so the screen returns exactly as the user left it.
+**Vendors tab** has two stacked regions:
+1. A full-width secondary toolbar (`TopNav`): search input on the left, quick stats in the middle, primary action button (`Add Vendor`) on the right.
+2. A main content area: page title + result count on the left, then sort dropdown / bulk-edit / view toggle on the right. Filter chips below.
 
-4. Make the vendor virtual grid safe for route/tab visibility.
-   - Stop measuring when not visible, or avoid mounting it unless the Vendors tab is active.
-   - If needed, add a visibility-aware guard in `VirtualGrid` so resize/measurement logic does not run for hidden content.
+**Projects tab** does not follow this shape:
+- Title + descriptive intro paragraph + `New project` button sit together in the header.
+- Active/Archived tabs, search input, and sort dropdown live in a separate row below.
+- No shared secondary-toolbar pattern with Vendors.
 
-5. Keep the shared admin chrome unchanged.
-   - Header and tab switcher remain persistent.
-   - Detail pages like project details still render through `Outlet` as they do now.
+## Changes (UI only, `src/routes/admin.projects.index.tsx`)
 
-## Files likely to change
-- `src/routes/admin.tsx`
-- `src/routes/admin.index.tsx`
-- `src/routes/admin.projects.index.tsx`
-- `src/components/ui/VirtualGrid.tsx`
+1. **Add a Vendors-style secondary toolbar at the top of the Projects pane**, matching `TopNav`'s structure and styling:
+   - Left: `Search projects…` input (same width caps, same icon, same focus ring).
+   - Middle (lg+ only): quick stats — `{active.length} active`, `{archived.length} archived` in the same muted style as vendor stats.
+   - Right: `New project` primary button (same terracotta styling and placement as `Add Vendor`).
 
-## Technical details
-- Root cause matches known `@tanstack/react-virtual` behavior when lists are hidden with `display: none` / hidden containers and still receive `ResizeObserver` measurements.
-- Safer architecture: cache data + preserve UI state separately, instead of preserving the entire hidden DOM tree.
-- This should remove the intermittent crash while keeping the switch visually immediate.
+2. **Restructure the main content header to mirror Vendors**:
+   - Left: `Projects` title + `{filtered.length} of {active.length + archived.length}` count, using the same `brand-line font-display` classes and muted count style as Vendors.
+   - Right: Active/Archived tab switcher + sort dropdown, aligned the same way the Vendors row aligns sort / bulk-edit / view toggle controls.
+   - **Remove** the intro line ("Each project is one wedding…").
+   - **Remove** the now-duplicate search input and `New project` button from this row (they live in the toolbar above).
 
-## Validation
-- Switch Vendors → Projects → Vendors repeatedly.
-- Confirm no error boundary appears.
-- Confirm vendors/projects data does not visibly reload on each toggle.
-- Confirm vendor filters/search/view and project search/sort/tab state remain intact after switching.
+3. **Keep everything else intact**: project grid, empty state, card behavior, archive/edit/delete handlers, `CreateProjectDialog`, persisted tab state via `useProjectTabState`, realtime invalidation. No business-logic, data, or routing changes.
+
+## Out of scope
+
+- No changes to `TopNav`, vendor pane, sidebar, or any shared chrome.
+- No changes to project cards, dialogs, server functions, or queries.
+- No new components; the toolbar is implemented inline in the projects route to match `TopNav`'s class structure (small, local, easy to keep in sync visually).
