@@ -14,13 +14,13 @@ export function DashboardSwitch() {
     <div
       role="tablist"
       aria-label="Dashboard"
-      className="inline-flex items-stretch overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs"
+      className="flex w-full items-stretch overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs sm:inline-flex sm:w-auto"
     >
       <Link
         to="/admin"
         role="tab"
         aria-selected={!onProjects}
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 transition-colors ${
+        className={`inline-flex flex-1 items-center justify-center gap-1.5 px-3 py-1.5 transition-colors sm:flex-none sm:justify-start ${
           !onProjects
             ? "bg-[var(--terracotta)] text-[var(--cream)]"
             : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
@@ -33,7 +33,7 @@ export function DashboardSwitch() {
         to="/admin/projects"
         role="tab"
         aria-selected={onProjects}
-        className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 transition-colors ${
+        className={`inline-flex flex-1 items-center justify-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 transition-colors sm:flex-none sm:justify-start ${
           onProjects
             ? "bg-[var(--terracotta)] text-[var(--cream)]"
             : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
