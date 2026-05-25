@@ -13,7 +13,7 @@ import { BulkActionBar } from "@/components/vendor/BulkActionBar";
 import { VirtualGrid } from "@/components/ui/VirtualGrid";
 import { useVendors, useVendorMutations, useVendorModals } from "@/hooks/useVendorData";
 import { useAllCategories } from "@/lib/categories";
-import { AuthGate } from "@/components/AuthGate";
+
 import { useIsAdmin } from "@/lib/auth";
 import { useInstagramPreviewsBulk, useAutoEnsureMissingPreviews } from "@/hooks/use-instagram-previews";
 
