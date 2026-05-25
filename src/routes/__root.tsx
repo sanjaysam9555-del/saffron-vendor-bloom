@@ -38,7 +38,7 @@ export const Route = createRootRoute({
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
-      { name: "apple-mobile-web-app-title", content: "Planning Studio" },
+      { name: "apple-mobile-web-app-title", content: "Saffron" },
       { title: "Wedding & Event Planning Studio | Saffron Planning Studio" },
       {
         name: "description",
@@ -59,7 +59,7 @@ export const Route = createRootRoute({
 
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Saffron Planning Studio" },
-      { property: "og:image", content: "https://planwithsaffron.in/images/og-cover.jpg" },
+      { property: "og:image", content: "https://planwithsaffron.in/og-cover.jpg" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { property: "og:image:alt", content: "Saffron Planning Studio — Wedding & Event Planning Studio" },
@@ -71,7 +71,7 @@ export const Route = createRootRoute({
         name: "twitter:description",
         content: "Boutique wedding & event planning studio in India. Crafting unforgettable celebrations.",
       },
-      { name: "twitter:image", content: "https://planwithsaffron.in/images/og-cover.jpg" },
+      { name: "twitter:image", content: "https://planwithsaffron.in/og-cover.jpg" },
       { name: "twitter:image:alt", content: "Saffron Planning Studio — Wedding & Event Planning Studio" },
     ],
     links: [
@@ -114,8 +114,8 @@ export const Route = createRootRoute({
           name: "Saffron Planning Studio",
           alternateName: "Plan with Saffron",
           url: "https://planwithsaffron.in",
-          logo: "https://planwithsaffron.in/images/logo.png",
-          image: "https://planwithsaffron.in/images/og-cover.jpg",
+          logo: "https://planwithsaffron.in/apple-touch-icon.png",
+          image: "https://planwithsaffron.in/og-cover.jpg",
           description:
             "Saffron Planning Studio is a boutique wedding and event planning studio in India, crafting unforgettable celebrations from intimate gatherings to grand weddings.",
           priceRange: "₹₹₹",

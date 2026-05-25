@@ -33,7 +33,12 @@ import { listProjectCategoryDeadlines } from "@/server/project-deadlines.functio
 import { buildTimelineItems } from "@/lib/build-timeline-items";
 
 export const Route = createFileRoute("/admin/projects/$id")({
-  head: () => ({ meta: [{ title: "Project — Saffron Planning Studio" }] }),
+  head: () => ({
+    meta: [
+      { title: "Project — Saffron Planning Studio" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: () => (
     <AuthGate>
       <ProjectDetailPage />

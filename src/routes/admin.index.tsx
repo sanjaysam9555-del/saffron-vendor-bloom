@@ -48,6 +48,7 @@ export const Route = createFileRoute("/admin/")({
     meta: [
       { title: "Vendor Dashboard — Saffron Planning Studio" },
       { name: "description", content: "Saffron Planning Studio staff dashboard for managing wedding vendors." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: () => (
