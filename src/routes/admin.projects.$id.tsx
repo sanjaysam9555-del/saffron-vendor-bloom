@@ -410,7 +410,7 @@ function ClientRow({ c, projectId, onChanged }: { c: any; projectId: string; onC
     });
     if (!ok) return;
     try {
-      await removeProjectClient({ data: { project_id: c.project_id ?? "", user_id: c.user_id } });
+      await removeProjectClient({ data: { project_id: projectId, user_id: c.user_id } });
       notifySuccess("Client removed");
       onChanged();
     } catch (e) {
