@@ -1,27 +1,14 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Users, Heart } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { listProjectsOverview } from "@/server/projects.functions";
 
 /**
- * Segmented control in the admin chrome for jumping between the
- * Vendor Dashboard and the Projects Dashboard.
- *
- * Prefetches the projects list on hover/focus so the swap feels instant —
- * combined with the persistent `/admin` layout, the header never re-mounts.
+ * Segmented control in the admin chrome for jumping between the Vendor and
+ * Projects panes. Both panes stay mounted in the /admin layout, so switching
+ * is a pure CSS visibility toggle — no prefetch needed.
  */
 export function DashboardSwitch() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const onProjects = pathname.startsWith("/admin/projects");
-  const qc = useQueryClient();
-
-  const prefetchProjects = () => {
-    qc.prefetchQuery({
-      queryKey: ["projects"],
-      queryFn: () => listProjectsOverview(),
-      staleTime: 30_000,
-    });
-  };
 
   return (
     <div
@@ -46,9 +33,6 @@ export function DashboardSwitch() {
         to="/admin/projects"
         role="tab"
         aria-selected={onProjects}
-        onMouseEnter={prefetchProjects}
-        onFocus={prefetchProjects}
-        onTouchStart={prefetchProjects}
         className={`inline-flex items-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 transition-colors ${
           onProjects
             ? "bg-[var(--terracotta)] text-[var(--cream)]"
