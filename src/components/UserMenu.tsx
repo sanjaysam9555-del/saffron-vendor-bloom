@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { LogOut, Shield, Briefcase } from "lucide-react";
+import { LogOut, Shield } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 
