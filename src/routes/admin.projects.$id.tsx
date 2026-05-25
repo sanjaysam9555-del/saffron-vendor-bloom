@@ -917,13 +917,15 @@ function VendorMetaRow({ vendor: v }: { vendor: any }) {
 }
 
 interface ProjectHeaderProps {
-  project: { id: string; bride_name: string; groom_name: string; wedding_date: string; notes: string | null };
+  project: { id: string; bride_name: string; groom_name: string; wedding_date: string; notes: string | null; archived_at?: string | null };
   canDelete: boolean;
   onDelete: () => void;
+  onToggleArchived: (archived: boolean) => void;
   onSaved: () => void;
 }
 
-function ProjectHeader({ project, canDelete, onDelete, onSaved }: ProjectHeaderProps) {
+function ProjectHeader({ project, canDelete, onDelete, onToggleArchived, onSaved }: ProjectHeaderProps) {
+  const isArchived = !!project.archived_at;
   const [editing, setEditing] = useState(false);
   const [bride, setBride] = useState(project.bride_name);
   const [groom, setGroom] = useState(project.groom_name);
