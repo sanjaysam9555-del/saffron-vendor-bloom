@@ -1146,3 +1146,63 @@ export const deleteProjectVendorComment = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ---------- Client-facing project vendor quotes (sanitized) ----------
+
+export const listMyProjectVendorQuotes = createServerFn({ method: "GET" })
+  .middleware([attachAuthToken])
+  .inputValidator((d) =>
+    z.object({ project_id: z.string().uuid(), vendor_id: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const { userId } = await requireClientUser();
+
+    // Authorize: this client must be on the project and the vendor must be on it.
+    const { data: link } = await supabaseAdmin
+      .from("project_clients")
+      .select("project_id")
+      .eq("user_id", userId)
+      .eq("project_id", data.project_id)
+      .maybeSingle();
+    if (!link) throw new Error("Forbidden");
+
+    const { data: pv } = await supabaseAdmin
+      .from("project_vendors")
+      .select("vendor_id")
+      .eq("project_id", data.project_id)
+      .eq("vendor_id", data.vendor_id)
+      .maybeSingle();
+    if (!pv) throw new Error("Vendor not available to this client");
+
+    // Return only client-safe columns (no `notes`, no `created_by`).
+    const { data: quotes, error } = await supabaseAdmin
+      .from("project_vendor_quotes")
+      .select(
+        "id, project_id, vendor_id, category, quote_text, quote_amount, currency, status, is_final, closed_amount, created_at, updated_at",
+      )
+      .eq("project_id", data.project_id)
+      .eq("vendor_id", data.vendor_id)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+
+    const quoteIds = (quotes ?? []).map((q) => q.id);
+    let filesByQuote = new Map<string, any[]>();
+    if (quoteIds.length > 0) {
+      const { data: files, error: fErr } = await supabaseAdmin
+        .from("project_vendor_quote_files")
+        .select("id, quote_id, file_path, file_name, mime_type, size_bytes, created_at")
+        .in("quote_id", quoteIds)
+        .order("created_at", { ascending: true });
+      if (fErr) throw new Error(fErr.message);
+      for (const f of files ?? []) {
+        const list = filesByQuote.get(f.quote_id) ?? [];
+        list.push(f);
+        filesByQuote.set(f.quote_id, list);
+      }
+    }
+
+    return (quotes ?? []).map((q) => ({
+      ...q,
+      files: filesByQuote.get(q.id) ?? [],
+    }));
+  });
