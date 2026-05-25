@@ -8,7 +8,12 @@ import { StatusCountsRow } from "@/components/admin/ClientStatusPill";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 
 export const Route = createFileRoute("/admin/projects/")({
-  head: () => ({ meta: [{ title: "Projects — Saffron Planning Studio" }] }),
+  head: () => ({
+    meta: [
+      { title: "Projects — Saffron Planning Studio" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: () => (
     <AuthGate>
       <ProjectsListPage />
