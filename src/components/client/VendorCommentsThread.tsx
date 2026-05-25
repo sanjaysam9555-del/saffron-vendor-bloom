@@ -8,6 +8,7 @@ import {
 } from "@/lib/comments-api";
 import { useConfirmDelete } from "@/components/ui/confirm-dialog";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
+import { useClientPreview } from "@/lib/client-preview";
 
 interface Props {
   projectId: string;
@@ -20,6 +21,8 @@ interface Props {
 export function VendorCommentsThread({ projectId, vendorId, readOnly = false, adminCanDelete = false }: Props) {
   const qc = useQueryClient();
   const confirmDelete = useConfirmDelete();
+  const { isPreview } = useClientPreview();
+  const effectiveReadOnly = readOnly || isPreview;
   const [body, setBody] = useState("");
 
   const { data: comments = [], isLoading } = useQuery({
@@ -69,12 +72,12 @@ export function VendorCommentsThread({ projectId, vendorId, readOnly = false, ad
         </div>
       ) : comments.length === 0 ? (
         <div className="rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/40 px-3 py-3 text-xs text-[var(--charcoal)]/55">
-          {readOnly ? "No comments yet from the client." : "No comments yet. Add the first one below."}
+          {effectiveReadOnly ? "No comments yet from the client." : "No comments yet. Add the first one below."}
         </div>
       ) : (
         <ul className="space-y-2">
           {comments.map((c) => {
-            const canDelete = adminCanDelete || (!readOnly && c.is_own);
+            const canDelete = (adminCanDelete && !isPreview) || (!effectiveReadOnly && c.is_own);
             return (
               <li
                 key={c.id}
@@ -112,7 +115,7 @@ export function VendorCommentsThread({ projectId, vendorId, readOnly = false, ad
         </ul>
       )}
 
-      {!readOnly && (
+      {!effectiveReadOnly && (
         <form onSubmit={submit} className="space-y-1.5">
           <textarea
             value={body}
