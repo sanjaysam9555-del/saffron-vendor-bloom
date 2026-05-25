@@ -1031,9 +1031,16 @@ function ProjectHeader({ project, canDelete, onDelete, onToggleArchived, onSaved
   return (
     <div className="relative mt-4 flex flex-col gap-3 pr-20 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:pr-0">
       <div className="min-w-0">
-        <h1 className="font-display text-2xl text-[var(--charcoal)] sm:text-3xl">
-          {project.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {project.groom_name}
-        </h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="font-display text-2xl text-[var(--charcoal)] sm:text-3xl">
+            {project.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {project.groom_name}
+          </h1>
+          {isArchived && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--charcoal)]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--charcoal)]/70">
+              <Archive className="h-3 w-3" /> Archived
+            </span>
+          )}
+        </div>
         <div className="mt-1 flex items-center gap-1.5 text-sm text-[var(--charcoal)]/65">
           <Calendar className="h-3.5 w-3.5" />
           {new Date(project.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
@@ -1048,6 +1055,15 @@ function ProjectHeader({ project, canDelete, onDelete, onToggleArchived, onSaved
           className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--border)] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:h-auto sm:w-auto sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-sm"
         >
           <Pencil className="h-4 w-4" /> <span className="hidden sm:inline">Edit</span>
+        </button>
+        <button
+          onClick={() => onToggleArchived(!isArchived)}
+          aria-label={isArchived ? "Restore project" : "Archive project"}
+          title={isArchived ? "Restore project" : "Archive project"}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--border)] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:h-auto sm:w-auto sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-sm"
+        >
+          {isArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+          <span className="hidden sm:inline">{isArchived ? "Restore" : "Archive"}</span>
         </button>
         {canDelete && (
           <button
