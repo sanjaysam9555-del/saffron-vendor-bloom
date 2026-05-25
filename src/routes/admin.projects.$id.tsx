@@ -485,6 +485,14 @@ function ClientRow({ c, projectId, onChanged }: { c: any; projectId: string; onC
           </div>
         ) : (
           <div className="flex items-center justify-end gap-1">
+            <Link
+              to="/admin/projects/$id/preview/$clientId"
+              params={{ id: projectId, clientId: c.user_id }}
+              title="View project as this client"
+              className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]"
+            >
+              <Eye className="h-4 w-4" />
+            </Link>
             <button onClick={() => setResetting(true)} title="Change password" className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
               <KeyRound className="h-4 w-4" />
             </button>
