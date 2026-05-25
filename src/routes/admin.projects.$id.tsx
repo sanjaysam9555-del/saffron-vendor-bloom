@@ -199,8 +199,10 @@ function ProjectDetailPage() {
           project={project}
           canDelete={role === "admin"}
           onDelete={handleDeleteProject}
+          onToggleArchived={handleToggleArchived}
           onSaved={refresh}
         />
+
 
         {/* Client logins */}
         <section className="mt-6 sm:mt-8">
