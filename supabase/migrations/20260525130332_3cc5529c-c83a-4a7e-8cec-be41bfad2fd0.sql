@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.enforce_staff_email_domain() FROM PUBLIC, anon, authenticated;
