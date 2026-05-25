@@ -139,8 +139,8 @@ function ProjectsListPage() {
     <div>
       {/* Secondary toolbar (mirrors vendor TopNav) */}
       <div className="border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
-        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-2 px-3 py-2 sm:flex-nowrap sm:gap-4 sm:px-6">
-          <div className="relative order-2 w-full min-w-0 sm:order-1 sm:w-auto sm:flex-1 sm:max-w-[320px]">
+        <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-3 py-2 sm:gap-4 sm:px-6">
+          <div className="relative min-w-0 flex-1 sm:max-w-[320px]">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/40" />
             <input
               type="text"
@@ -151,7 +151,7 @@ function ProjectsListPage() {
             />
           </div>
 
-          <div className="order-3 hidden items-center gap-4 text-xs text-[var(--charcoal)]/60 lg:flex">
+          <div className="hidden items-center gap-4 text-xs text-[var(--charcoal)]/60 lg:flex">
             <div><span className="font-semibold text-[var(--terracotta)]">{active.length}</span> active</div>
             <div><span className="font-semibold text-[var(--terracotta)]">{archived.length}</span> archived</div>
           </div>
@@ -159,7 +159,7 @@ function ProjectsListPage() {
           <button
             onClick={() => setShowCreate(true)}
             aria-label="New project"
-            className="order-1 ml-auto inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-2.5 py-1.5 text-sm font-medium text-[var(--cream)] shadow-sm transition-all hover:bg-[var(--terracotta)]/90 hover:-translate-y-0.5 sm:order-4 sm:px-3.5"
+            className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-2.5 py-1.5 text-sm font-medium text-[var(--cream)] shadow-sm transition-all hover:bg-[var(--terracotta)]/90 hover:-translate-y-0.5 sm:px-3.5"
           >
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">New project</span>
