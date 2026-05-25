@@ -815,6 +815,10 @@ export type Database = {
       }
     }
     Functions: {
+      client_can_access_quote: {
+        Args: { _quote_id: string; _user_id: string }
+        Returns: boolean
+      }
       client_can_view_vendor: {
         Args: { _user_id: string; _vendor_id: string }
         Returns: boolean
