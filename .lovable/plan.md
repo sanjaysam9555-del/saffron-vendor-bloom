@@ -1,59 +1,130 @@
-## Current state
 
-Root `__root.tsx` already has a solid base: title, description, keywords, robots, theme-color, OG, Twitter, JSON-LD (`EventPlanningService` + `LocalBusiness`), favicons, and webmanifest. `robots.txt` and `sitemap.xml` exist and look fine. Favicons exist (`favicon.ico`, 16/32 PNG, apple-touch, android-chrome 192/512).
+## Goal
 
-## Problems to fix
+Make Projects a first-class admin surface. The admin lands on a unified dashboard with a top-level switch between **Vendors** and **Projects**. Inside Projects, sub-tabs split **Active** and **Archived**. Project cards become richer at-a-glance briefs. Opening a project takes the admin to a **full project page** that surfaces every relevant detail, and a built-in **"View as client"** toggle previews exactly what the assigned client sees.
 
-1. **Broken OG / JSON-LD images.** Root meta references `https://planwithsaffron.in/images/og-cover.jpg` and `https://planwithsaffron.in/images/logo.png`, but `public/images/` doesn't exist. Social previews and Schema.org logo currently 404.
-2. **`og:image` on root layout.** TanStack concatenates the root's `og:image` into every leaf, so this is fine today (no leaf sets its own) but should be moved/duplicated to leaf for safety once we have real content routes. For now keep at root since `/` is the only public page.
-3. **`/` (index) is missing OG and canonical.** It only sets title, description, og:url. No `og:title`, `og:description`, no `<link rel="canonical">`. `/vendor-onboarding` is missing canonical too.
-4. **`apple-mobile-web-app-title`** is "Planning Studio" — should be "Saffron".
-5. **Private surfaces missing `noindex`.** `/admin`, `/admin/projects`, `/admin/users`, `/client`, `/client/login`, `/login` all rely solely on `robots.txt` Disallow. Add `noindex, nofollow` meta on each (matches the pattern already used on `/admin/submissions` and `/vendor-signup`) so any accidentally-crawled URL stays out of the index.
-6. **Webmanifest polish.** Missing `start_url: "/"`, `scope: "/"`, `id: "/"`, and `description`. Add them.
-7. **Favicon SVG.** Optional but cheap: add a tiny `favicon.svg` link entry only if we generate one. Skip if not.
+## 1. Top-level dashboard switch (Vendors ⇄ Projects)
 
-## Changes
+- Add a persistent segmented switch in the admin `TopNav` (visible on `/admin` and `/admin/projects`): `Vendors | Projects`.
+- Routes stay clean: `/admin` = Vendors, `/admin/projects` = Projects. The switch navigates between them and shows active state from the current pathname.
+- Eyebrow under the logo becomes dynamic ("Vendor Studio" / "Project Studio").
+- The `Add Vendor` CTA becomes contextual: on Projects, it turns into `New Project` and opens the create-project dialog.
+- Remove the standalone "Projects" entry button on the Vendors dashboard — the switch replaces it.
 
-### Assets
+## 2. Active / Archived sub-tabs
 
-- Generate `public/og-cover.jpg` (1200×630, premium tier — text legibility matters) with "Saffron Planning Studio — Wedding & Event Planning Studio in India", saffron/terracotta brand palette, elegant typography matching the splash screen. Update root meta to point at `/og-cover.jpg` (drop the missing `/images/` path).
-- Reuse `apple-touch-icon.png` for the JSON-LD logo by pointing it at `https://planwithsaffron.in/apple-touch-icon.png` (existing 180×180 brand mark) — no new asset needed.
+- Add `archived_at timestamptz null` to `projects` (+ index). Non-null = archived.
+- Tabs on `/admin/projects`: **Active** (default, nearest wedding first) and **Archived** (most recently archived first). Counts beside each tab.
+- Per-card `…` menu: **Archive / Unarchive**, **Edit details**, **Delete** (admin-only, confirm).
+- New server fn `setProjectArchived({ id, archived })` (staff-only).
+- `listProjectsOverview` returns `archived_at` and a new `closed_total_amount`.
 
-### `src/routes/__root.tsx`
+## 3. Richer project cards
 
-- Fix `og:image` and `twitter:image` URLs to `https://planwithsaffron.in/og-cover.jpg`.
-- Fix JSON-LD `logo` to `https://planwithsaffron.in/apple-touch-icon.png`.
-- Change `apple-mobile-web-app-title` to `"Saffron"`.
+New `ProjectCard` component shows:
 
-### `src/routes/index.tsx`
+- **Header**: Bride & Groom, "Wedding" eyebrow, urgency chip (`Today`, `Tomorrow`, `This week`, `Upcoming · 42d`, `Past`, `Archived`).
+- **Date row**: full date + day + countdown.
+- **Progress strip**: finalised vendors / total assigned, with a thin bar.
+- **Client status counts**: reuse `StatusCountsRow`, always rendered for height parity.
+- **Money line**: closed total (₹) across all final quotes.
+- **People**: client login initials (up to 3 + "+N"), tooltip with emails.
+- **Saffron picks**: star + count when any pick exists.
+- **Activity**: "Updated <relative time>".
+- Subtle lift + terracotta border on hover; right-arrow affordance.
 
-- Add `og:title`, `og:description`, and `<link rel="canonical">` for `https://planwithsaffron.in/`.
+Grid: 2 cols on `sm`, 3 on `xl`. Card height stays consistent regardless of populated data.
 
-### `src/routes/vendor-onboarding.tsx`
+## 4. Projects toolbar (search / sort / quick filters)
 
-- Add `<link rel="canonical">` for `https://planwithsaffron.in/vendor-onboarding`.
+Above the card grid:
 
-### Private routes — add `noindex, nofollow` meta
+- **Search**: bride/groom name, notes.
+- **Sort**: Upcoming first (default) · Recently updated · Most vendors · Most quoted.
+- **Quick filters**: `Has unfinalised quotes`, `No client login yet`, `Saffron picks only`, `Wedding in <30 / 60 / 90 days`.
+- TopNav search input relabels to "Search projects…" on the Projects tab and feeds the same state.
 
-- `src/routes/admin.index.tsx`
-- `src/routes/admin.projects.index.tsx`
-- `src/routes/admin.projects.$id.tsx`
-- `src/routes/admin.users.tsx`
-- `src/routes/client.index.tsx`
-- `src/routes/client.login.tsx`
-- `src/routes/login.tsx` (already redirects to `/`, but add noindex meta in `head()` for safety)
+All client-side filtering over the overview list (volume is low).
 
-`admin.submissions.tsx` and `vendor-signup.tsx` already have it — no change.
+## 5. Full project page (admin)
 
-### `public/site.webmanifest`
+Promote `/admin/projects/$id` from a panel-heavy editor to a proper project workspace. New layout:
 
-Add `start_url`, `scope`, `id`, and `description` while preserving existing icons/theme.
+- **Header band**
+  - Bride & Groom (display font) + urgency chip.
+  - Wedding date · countdown · location (if set).
+  - Inline KPIs: vendors assigned, finalised, closed ₹, clients linked, open quotes, comments.
+  - Right side: `Archive` / `Unarchive`, `Edit project`, `Delete` (admin), and the **View-as-client toggle** (see §6).
 
-### Sitemap & robots
+- **Tabs** (sticky on scroll)
+  1. **Overview** — KPI cards, urgency strip across categories, recent activity feed (comments + status changes + quote events), wedding-day countdown.
+  2. **Vendors** — current assignment board (cards or table), grouped by category, with Saffron-pick toggle, per-vendor client statuses, comment counts, and a button to add vendors from the master list. Each vendor row links into the existing `VendorDetail` drawer.
+  3. **Quotes** — table across all assigned vendors: status, latest amount, closed amount, final flag, files. Add / edit quotes inline via the existing `ProjectVendorQuotesPanel` flows.
+  4. **Timeline & Deadlines** — `project_category_deadlines` editor with the existing `VendorTimeline` + `UrgencyStrip`.
+  5. **Clients** — list of client logins for this project: name, email, last sign-in, reset password, change email, change name, remove. Includes the create-client form.
+  6. **Notes** — `projects.notes` editor + scratchpad comments.
 
-No changes needed. Both already cover the two public routes (`/`, `/vendor-onboarding`) and disallow private surfaces. Will mark the existing failing accessibility/GSC findings appropriately afterwards (GSC stays failing — connecting Google Search Console is a user action).
+- All tabs are mounted in a single route file with internal tab state (URL search param `?tab=overview` so deep links survive reloads).
+- Keep all existing server fns; this is mostly a UI reshape + extraction into smaller components under `src/components/admin/project/`.
 
-## Out of scope
+## 6. "View as client" preview toggle
 
-- Connecting Google Search Console (user must authorize).
-- Lighthouse accessibility contrast finding (separate request — colors live in `src/styles.css`).
+A toggle in the project header switches the page between **Admin view** and **Client view** without leaving `/admin/projects/$id`.
+
+- Implementation: render the same `ClientBoardView` / `ClientVendorDetail` components used by `/client`, but inside a wrapper that passes the project + a chosen client identity (default: the first `project_client`; switcher dropdown lists all linked clients).
+- Data is fetched via a new staff-only server fn `getProjectAsClientView({ project_id, client_user_id })` that mirrors what the real `/client` page receives (vendors, statuses for that client, comments, deadlines), but is gated by `assertStaff` rather than RLS-as-that-user. No impersonation tokens — the admin's session stays intact.
+- A persistent "Previewing as <Client Name>" banner sits across the top while the toggle is on, with a one-click `Exit preview` and a clear "Read-only — actions are disabled" note.
+- Read-only enforcement: in client-view mode, all mutation handlers (status changes, comments, etc.) are no-ops and CTAs are disabled with a tooltip. We do NOT write `client_vendor_status` rows as the client.
+- The toggle state is held in local URL search (`?as=client&clientId=...`) so reloads and shares preserve the view.
+
+## 7. What else (extras)
+
+- **Empty / onboarding states**: friendly empty page on Active when zero projects; a different message when Archived has items.
+- **Real-time**: extend `useRealtimeInvalidate` on the project page to also invalidate when `projects.updated_at` / `archived_at` change, plus quotes/comments/statuses.
+- **Auto-archive nudge**: soft banner on the card and page when `wedding_date` is older than 60 days and not archived ("Archive this project?" one-click).
+- **Keyboard shortcuts**: `g v` / `g p` to jump between Vendors / Projects.
+- **Deep links**: tab + view-as-client preserved in URL for sharing with teammates.
+
+## Technical sketch
+
+```text
+src/
+  routes/
+    admin.index.tsx                 (Vendors — unchanged logic, gets DashboardSwitch in TopNav)
+    admin.projects.index.tsx        (rewritten: tabs + toolbar + ProjectCard grid + create dialog)
+    admin.projects.$id.tsx          (rewritten: header band + tabbed workspace + view-as-client wrapper)
+  components/
+    admin/
+      DashboardSwitch.tsx           (NEW — Vendors | Projects segmented control)
+      ProjectCard.tsx               (NEW — rich card)
+      ProjectsToolbar.tsx           (NEW — search/sort/quick filters/tabs)
+      CreateProjectDialog.tsx       (NEW — extracted from inline form)
+      project/
+        ProjectHeader.tsx           (NEW — KPIs + actions + view-as-client toggle)
+        ProjectTabs.tsx             (NEW — Overview/Vendors/Quotes/Timeline/Clients/Notes)
+        OverviewTab.tsx             (NEW)
+        VendorsTab.tsx              (NEW — wraps existing assignment UI)
+        QuotesTab.tsx               (NEW — wraps existing quotes panel)
+        TimelineTab.tsx             (NEW — wraps urgency strip + deadlines editor)
+        ClientsTab.tsx              (NEW — wraps existing client login mgmt)
+        NotesTab.tsx                (NEW)
+        ClientPreviewWrapper.tsx    (NEW — renders ClientBoardView read-only)
+    vendor/
+      TopNav.tsx                    (mount DashboardSwitch; contextual CTA + search placeholder)
+  server/
+    projects.functions.ts           (+ setProjectArchived;
+                                       + closed_total_amount in overview;
+                                       + getProjectAsClientView staff-only fn)
+
+supabase migration:
+  ALTER TABLE projects ADD COLUMN archived_at timestamptz;
+  CREATE INDEX projects_archived_at_idx ON projects (archived_at);
+```
+
+No RLS changes — existing staff policies cover the new column and the staff-only preview fn uses `supabaseAdmin`.
+
+## Out of scope (for this pass)
+
+- Redesigning the real `/client` dashboard.
+- Bulk actions on projects.
+- Audit log of admin previews (can be added later if needed).
