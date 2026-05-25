@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import type { ClientVendorStatus } from "@/lib/client-status";
 import type { ClientVendor } from "@/lib/project-types";
 import { setMyVendorStatus } from "@/server/projects.functions";
+import { useClientPreview } from "@/lib/client-preview";
 
 interface Variables {
   vendor_id: string;
@@ -17,9 +18,14 @@ interface Variables {
  */
 export function useSetVendorStatus() {
   const qc = useQueryClient();
+  const { isPreview } = useClientPreview();
 
   return useMutation({
     mutationFn: async ({ vendor_id, status }: Variables) => {
+      if (isPreview) {
+        toast.info("Read-only preview", { description: "Status changes are disabled while previewing as the client." });
+        return status;
+      }
       try {
         await setMyVendorStatus({ data: { vendor_id, status } });
       } catch (err) {

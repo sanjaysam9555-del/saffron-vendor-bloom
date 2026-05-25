@@ -201,15 +201,17 @@ export const listProjectsOverview = createServerFn({ method: "GET" })
 
     // project -> vendors and clients
     const [{ data: pvAll }, { data: pcAll }] = await Promise.all([
-      supabaseAdmin.from("project_vendors").select("project_id, vendor_id").in("project_id", projectIds),
+      supabaseAdmin.from("project_vendors").select("project_id, vendor_id, is_saffron_pick").in("project_id", projectIds),
       supabaseAdmin.from("project_clients").select("project_id, user_id").in("project_id", projectIds),
     ]);
 
     const vendorCount = new Map<string, number>();
+    const saffronPickCount = new Map<string, number>();
     const projectVendorPairs: { project_id: string; vendor_id: string }[] = [];
     for (const r of pvAll ?? []) {
       vendorCount.set(r.project_id, (vendorCount.get(r.project_id) ?? 0) + 1);
-      projectVendorPairs.push(r);
+      if (r.is_saffron_pick) saffronPickCount.set(r.project_id, (saffronPickCount.get(r.project_id) ?? 0) + 1);
+      projectVendorPairs.push({ project_id: r.project_id, vendor_id: r.vendor_id });
     }
     const clientsByProject = new Map<string, string[]>();
     const allClientIds = new Set<string>();
@@ -239,14 +241,19 @@ export const listProjectsOverview = createServerFn({ method: "GET" })
     // Quote aggregates per project
     const { data: qAll } = await supabaseAdmin
       .from("project_vendor_quotes")
-      .select("project_id, vendor_id, status, is_final")
+      .select("project_id, vendor_id, status, is_final, closed_amount, quote_amount")
       .in("project_id", projectIds);
-    const quotesByProject = new Map<string, { total: number; vendors: Set<string>; closed: number }>();
+    const quotesByProject = new Map<string, { total: number; vendors: Set<string>; closed: number; finalisedVendors: Set<string>; closedTotal: number }>();
     for (const q of qAll ?? []) {
-      const s = quotesByProject.get(q.project_id) ?? { total: 0, vendors: new Set<string>(), closed: 0 };
+      const s = quotesByProject.get(q.project_id) ?? { total: 0, vendors: new Set<string>(), closed: 0, finalisedVendors: new Set<string>(), closedTotal: 0 };
       s.total += 1;
       s.vendors.add(q.vendor_id);
-      if (q.is_final || q.status === "closed") s.closed += 1;
+      if (q.is_final || q.status === "closed") {
+        s.closed += 1;
+        s.finalisedVendors.add(q.vendor_id);
+        const amt = q.closed_amount ?? q.quote_amount;
+        if (amt != null) s.closedTotal += Number(amt);
+      }
       quotesByProject.set(q.project_id, s);
     }
 
@@ -254,7 +261,6 @@ export const listProjectsOverview = createServerFn({ method: "GET" })
       const counts: Record<string, number> = { like: 0, shortlisted: 0, finalised: 0, rejected: 0, thinking: 0 };
       const clientIds = clientsByProject.get(p.id) ?? [];
       const vendorIdsForProject = projectVendorPairs.filter((pv) => pv.project_id === p.id).map((pv) => pv.vendor_id);
-      // Count any (most-recent-not-needed for index): if any client marked vendor with status, count once per (vendor,status,client)
       for (const vid of vendorIdsForProject) {
         for (const uid of clientIds) {
           const st = statusMap.get(statusKey(uid, vid));
@@ -266,14 +272,175 @@ export const listProjectsOverview = createServerFn({ method: "GET" })
         ...p,
         vendor_count: vendorCount.get(p.id) ?? 0,
         client_count: clientIds.length,
+        saffron_pick_count: saffronPickCount.get(p.id) ?? 0,
         status_counts: counts,
         quotes_summary: {
           total_quotes: qs?.total ?? 0,
           vendors_with_quotes: qs?.vendors.size ?? 0,
           closed_count: qs?.closed ?? 0,
+          finalised_vendors: qs?.finalisedVendors.size ?? 0,
+          closed_total_amount: qs?.closedTotal ?? 0,
         },
       };
     });
+  });
+
+// Toggle project archived state. Staff only.
+export const setProjectArchived = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ id: z.string().uuid(), archived: z.boolean() }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await assertStaff(context.userId);
+    const { error } = await supabaseAdmin
+      .from("projects")
+      .update({ archived_at: data.archived ? new Date().toISOString() : null })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// Staff-only: returns the same shape as getMyProject but for a chosen client on a project.
+// Used by the admin "View as client" preview. Does NOT write any rows as the client.
+export const getProjectAsClientView = createServerFn({ method: "GET" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ project_id: z.string().uuid(), client_user_id: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await assertStaff(context.userId);
+
+    // Confirm the chosen client is actually linked to this project.
+    const { data: link } = await supabaseAdmin
+      .from("project_clients")
+      .select("project_id")
+      .eq("user_id", data.client_user_id)
+      .eq("project_id", data.project_id)
+      .maybeSingle();
+    if (!link) throw new Error("That client is not linked to this project");
+
+    const projectId = data.project_id;
+    const userId = data.client_user_id;
+
+    const [projectRes, pvRes] = await Promise.all([
+      supabaseAdmin
+        .from("projects")
+        .select("id, bride_name, groom_name, wedding_date")
+        .eq("id", projectId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("project_vendors")
+        .select("vendor_id, is_saffron_pick, created_at")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false }),
+    ]);
+    if (projectRes.error) throw new Error(projectRes.error.message);
+    const project = projectRes.data;
+    if (!project) throw new Error("Project not found");
+
+    const pv = pvRes.data;
+    const vendorIds = (pv ?? []).map((r) => r.vendor_id);
+    const saffronPickMap = new Map<string, boolean>(
+      (pv ?? []).map((r) => [r.vendor_id, !!r.is_saffron_pick]),
+    );
+    if (vendorIds.length === 0) return { project, vendors: [] };
+
+    const [vendorsRes, attsRes, statusesRes, quotesRes, commentsRes] = await Promise.all([
+      supabaseAdmin
+        .from("vendors")
+        .select("id, category, subcategory, vendor_name, location, instagram_handle, price_text, portfolio_link, website, google_rating")
+        .in("id", vendorIds),
+      supabaseAdmin
+        .from("vendor_attachments")
+        .select("id, vendor_id, file_name, file_path, mime_type, size_bytes")
+        .in("vendor_id", vendorIds),
+      supabaseAdmin
+        .from("client_vendor_status")
+        .select("vendor_id, status")
+        .eq("user_id", userId)
+        .in("vendor_id", vendorIds),
+      supabaseAdmin
+        .from("project_vendor_quotes")
+        .select("id, vendor_id, status, is_final, quote_amount, closed_amount, created_at")
+        .eq("project_id", projectId)
+        .in("vendor_id", vendorIds)
+        .order("created_at", { ascending: false }),
+      supabaseAdmin
+        .from("project_vendor_comments")
+        .select("vendor_id")
+        .eq("project_id", projectId)
+        .in("vendor_id", vendorIds),
+    ]);
+
+    const attMap = new Map<string, any[]>();
+    for (const a of attsRes.data ?? []) {
+      const list = attMap.get(a.vendor_id) ?? [];
+      list.push({
+        id: a.id,
+        file_name: a.file_name,
+        file_path: a.file_path,
+        mime_type: a.mime_type,
+        size_bytes: a.size_bytes,
+      });
+      attMap.set(a.vendor_id, list);
+    }
+    const statusMap = new Map<string, string>(
+      (statusesRes.data ?? []).map((s) => [s.vendor_id, s.status]),
+    );
+
+    const quoteSummaryByVendor = new Map<string, any>();
+    const quotesByVendor = new Map<string, any[]>();
+    for (const q of quotesRes.data ?? []) {
+      const s = quoteSummaryByVendor.get(q.vendor_id) ?? { count: 0, latest_status: null, latest_amount: null, has_closed: false, closed_amount: null };
+      s.count += 1;
+      if (s.latest_status === null) s.latest_status = q.status;
+      if (s.latest_amount === null) s.latest_amount = q.quote_amount;
+      if (q.is_final || q.status === "closed") {
+        s.has_closed = true;
+        if (s.closed_amount == null) s.closed_amount = q.closed_amount;
+      }
+      quoteSummaryByVendor.set(q.vendor_id, s);
+      const list = quotesByVendor.get(q.vendor_id) ?? [];
+      list.push({
+        id: q.id,
+        status: q.status,
+        is_final: q.is_final,
+        quote_amount: q.quote_amount,
+        closed_amount: q.closed_amount,
+        created_at: q.created_at,
+      });
+      quotesByVendor.set(q.vendor_id, list);
+    }
+    const commentCountByVendor = new Map<string, number>();
+    for (const c of commentsRes.data ?? []) {
+      commentCountByVendor.set(c.vendor_id, (commentCountByVendor.get(c.vendor_id) ?? 0) + 1);
+    }
+
+    const vendorById = new Map((vendorsRes.data ?? []).map((v) => [v.id, v]));
+    const vendors = vendorIds
+      .map((id) => vendorById.get(id))
+      .filter((v): v is NonNullable<typeof v> => !!v)
+      .map((v) => ({
+        id: v.id,
+        category: v.category,
+        subcategory: v.subcategory,
+        vendor_name: v.vendor_name,
+        location: v.location,
+        instagram_handle: v.instagram_handle,
+        price_text: v.price_text,
+        portfolio_link: v.portfolio_link,
+        website: v.website,
+        google_rating: v.google_rating,
+        client_status: statusMap.get(v.id) ?? null,
+        attachments: attMap.get(v.id) ?? [],
+        quote_summary: quoteSummaryByVendor.get(v.id) ?? { count: 0, latest_status: null, latest_amount: null, has_closed: false, closed_amount: null },
+        quotes: quotesByVendor.get(v.id) ?? [],
+        comment_count: commentCountByVendor.get(v.id) ?? 0,
+        is_saffron_pick: saffronPickMap.get(v.id) ?? false,
+      }));
+
+    return { project, vendors };
   });
 
 export const createProject = createServerFn({ method: "POST" })

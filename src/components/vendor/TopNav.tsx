@@ -3,6 +3,7 @@ import { Search, Plus } from "lucide-react";
 import { lazy, Suspense, useEffect, useState } from "react";
 import logoLight from "@/assets/saffron-logo-transparent.png";
 import { UserMenu } from "@/components/UserMenu";
+import { DashboardSwitch } from "@/components/admin/DashboardSwitch";
 
 // Defer NotificationsBell — it has its own realtime subscription and data
 // fetches that aren't needed for first paint.
@@ -32,9 +33,11 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
           <img src={logoLight} alt="Saffron Planning Studio" className="hidden h-9 w-auto object-contain sm:block" />
           <div className="leading-tight">
             <div className="font-display text-base font-semibold text-[var(--terracotta)] sm:text-lg">Saffron Planning Studio</div>
-            <div className="text-[9px] uppercase tracking-[0.22em] text-[var(--charcoal)]/55">Vendor Studio</div>
+            <div className="text-[9px] uppercase tracking-[0.22em] text-[var(--charcoal)]/55">Planning Studio</div>
           </div>
         </Link>
+
+        <div className="hidden sm:block"><DashboardSwitch /></div>
 
         {/* Right cluster — on mobile this fills the row with even spacing */}
         <div className="ml-auto flex flex-1 items-center justify-between gap-2 sm:order-3 sm:ml-auto sm:flex-none sm:justify-end sm:gap-4">

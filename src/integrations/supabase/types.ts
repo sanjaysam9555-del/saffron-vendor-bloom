@@ -500,6 +500,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          archived_at: string | null
           bride_name: string
           created_at: string
           created_by: string | null
@@ -510,6 +511,7 @@ export type Database = {
           wedding_date: string
         }
         Insert: {
+          archived_at?: string | null
           bride_name: string
           created_at?: string
           created_by?: string | null
@@ -520,6 +522,7 @@ export type Database = {
           wedding_date: string
         }
         Update: {
+          archived_at?: string | null
           bride_name?: string
           created_at?: string
           created_by?: string | null
