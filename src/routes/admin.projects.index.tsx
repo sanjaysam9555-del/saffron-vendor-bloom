@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Search, ArrowUpDown, Archive } from "lucide-react";
+import { Plus, Search, ArrowUpDown, Archive } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { listProjectsOverview, setProjectArchived, deleteProject } from "@/server/projects.functions";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
