@@ -271,10 +271,10 @@ function ProjectDetailPage() {
           weddingDate={project.wedding_date}
           onRemoveVendor={removeVendor}
         />
-      </div>
     </div>
   );
 }
+
 
 function ProjectSectionTabs({
   projectId,
