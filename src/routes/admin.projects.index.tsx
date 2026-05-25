@@ -11,6 +11,7 @@ import { useConfirmDelete } from "@/components/ui/confirm-dialog";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { useIsAdmin } from "@/lib/auth";
 import { useNavigate } from "@tanstack/react-router";
+import { useProjectTabState, type ProjectSortKey, type ProjectTab } from "@/components/admin/admin-tab-state";
 
 export const Route = createFileRoute("/admin/projects/")({
   head: () => ({
@@ -19,8 +20,9 @@ export const Route = createFileRoute("/admin/projects/")({
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  // Rendered by the /admin layout via the ProjectsPane export so the pane stays
-  // mounted across tab switches. The route only exists to match the URL.
+  // Rendered by the /admin layout via ProjectsPane only while the tab is
+  // active. Persistent UI state lives in AdminTabStateProvider so the view
+  // returns as the user left it.
   component: () => null,
 });
 
@@ -30,8 +32,8 @@ export function ProjectsPane() {
 
 
 
-type Tab = "active" | "archived";
-type SortKey = "upcoming" | "updated" | "most_vendors" | "most_quoted";
+type Tab = ProjectTab;
+type SortKey = ProjectSortKey;
 
 function ProjectsListPage() {
   const qc = useQueryClient();
@@ -51,10 +53,9 @@ function ProjectsListPage() {
     { table: "client_vendor_status", invalidate: [["projects"]] },
   ]);
 
-  const [tab, setTab] = useState<Tab>("active");
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<SortKey>("upcoming");
+  const { tab, setTab, search, setSearch, sort, setSort } = useProjectTabState();
   const [showCreate, setShowCreate] = useState(false);
+
 
   const { active, archived } = useMemo(() => {
     const active: ProjectCardData[] = [];

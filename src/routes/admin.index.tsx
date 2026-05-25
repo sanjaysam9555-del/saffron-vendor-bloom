@@ -16,6 +16,7 @@ import { useAllCategories } from "@/lib/categories";
 
 import { useIsAdmin } from "@/lib/auth";
 import { useInstagramPreviewsBulk, useAutoEnsureMissingPreviews } from "@/hooks/use-instagram-previews";
+import { useVendorTabState, type VendorSortKey } from "@/components/admin/admin-tab-state";
 
 
 // Lazy-load heavy dialogs and the detail drawer so they don't bloat the
@@ -32,7 +33,7 @@ const BulkEditDialog = lazy(() =>
 
 
 
-type SortKey = "date_added_desc" | "date_added_asc" | "updated_desc" | "name_asc" | "name_desc";
+type SortKey = VendorSortKey;
 
 const SORT_LABEL: Record<SortKey, string> = {
   date_added_desc: "Newest added",
@@ -51,9 +52,9 @@ export const Route = createFileRoute("/admin/")({
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  // The vendors UI is rendered once by the /admin layout (see VendorsPane export
-  // below) so the pane stays mounted across tab switches. This route exists only
-  // so the router can match `/admin` and apply head metadata.
+  // The vendors UI is rendered by the /admin layout (see VendorsPane export
+  // below) only when the Vendors tab is active. Persistent UI state lives in
+  // AdminTabStateProvider so the view returns as the user left it.
   component: () => null,
 });
 
@@ -69,25 +70,26 @@ function DashboardPage() {
   const { create, update, remove, bulkUpdate, bulkDelete } = useVendorMutations();
   const modals = useVendorModals();
 
-  const [search, setSearch] = useState("");
-  const [view, setView] = useState<"cards" | "table">("cards");
-  const [filters, setFilters] = useState<FilterState>({
-    category: null,
-    locations: [],
-    minGoogleRating: null,
-    minSaffronRating: null,
-    submittedViaForm: "any",
-    hasAttachment: "any",
-    hasQuoteHistory: "any",
-    assignedToProject: "any",
-  });
-  const [sort, setSort] = useState<SortKey>("date_added_desc");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  // Persisted tab state (survives tab switches via AdminTabStateProvider).
+  const {
+    search,
+    setSearch,
+    view,
+    setView,
+    filters,
+    setFilters,
+    sort,
+    setSort,
+    sidebarCollapsed,
+    setSidebarCollapsed,
+  } = useVendorTabState();
 
+  // Local-only state (resets on tab switch by design).
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  
   
 
   const filtered = useMemo(() => {
