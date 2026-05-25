@@ -1,81 +1,87 @@
-
 ## Goal
 
-Make `/admin` and `/admin/projects` feel like one app with one persistent header. Switching tabs should never re-mount the chrome and should feel instantaneous.
+Switching between **Vendors** and **Projects** in the admin shell should be visually instant: no loading skeletons, no data refetch, no lost search/filter/scroll state.
 
-## Problems today
+Today each tab is a separate file route (`/admin` and `/admin/projects`). Every switch unmounts one page and mounts the other, which:
+- re-runs `useQuery` (skeletons flash until cache resolves),
+- resets local state (search, filters, view mode, scroll position),
+- re-creates lazy chunks and Instagram preview subscriptions.
 
-1. `/admin/projects` doesn't render `TopNav` at all — it ships its own page-shell with a "Back to vendor dashboard" link, a different background container, and a different heading style.
-2. The "Back to vendors" link duplicates what the `DashboardSwitch` already does.
-3. Switching tabs unmounts the entire `TopNav` (because each route owns its own header), so the user sees a brief blank/flash while the projects route's data query (`["projects"]`) loads.
+Prefetching alone can't fix lost state or unmount cost. The fix is to keep **both** pages mounted inside the existing `/admin` layout and toggle visibility.
 
-## Fix
+## Approach: render both panes inside the admin layout
 
-### 1. Introduce a shared admin layout route
-Create `src/routes/admin.tsx` as a TanStack layout for everything under `/admin/*`. It owns the persistent chrome:
+The `/admin` layout route already owns the persistent chrome (`AdminShellHeader`). Extend it so the body also owns both panes:
 
-- Logo + brand block
-- `DashboardSwitch` (Vendors ⇄ Projects)
-- `NotificationsBell` + `UserMenu`
-- `<Outlet />` for child routes
+```text
+/admin layout
+├── AdminShellHeader (already persistent)
+└── Body
+    ├── <VendorsPane />    ← visible when pathname === /admin
+    └── <ProjectsPane />   ← visible when pathname starts with /admin/projects
+```
 
-Because the layout never unmounts when navigating between `admin.index` and `admin.projects.index`, the header stays visually identical and the switch is instant.
+The currently inactive pane stays mounted but is hidden with the `hidden` HTML attribute (`display:none`) — React keeps its state, queries, and scroll position. Switching tabs becomes a pure CSS toggle.
 
-### 2. Split TopNav into chrome + context toolbar
+Detail routes (`/admin/projects/$id`, `/admin/projects/$id/preview/$clientId`, `/admin/submissions`, `/admin/users`) still render via `<Outlet />` and replace the panes when active.
 
-Today `TopNav` mixes shared chrome with vendor-only bits (search vendors, Add Vendor, totals). Refactor:
+### Files
 
-- **`src/components/admin/AdminShellHeader.tsx`** (new) — pure chrome, used by the layout. Has the logo, `DashboardSwitch`, notifications, user menu. No vendor props.
-- **`src/components/vendor/VendorToolbar.tsx`** (new) — vendor search input, Add Vendor button, totals/lastAdded. Rendered inside `admin.index.tsx` directly below the chrome.
-- **`src/components/admin/ProjectsToolbar.tsx`** (new) — projects search input, sort, New Project button, Active/Archived tabs. Rendered inside `admin.projects.index.tsx`.
-- Delete the existing `TopNav` once both call sites are migrated (or keep it as a thin wrapper composing the two new pieces — decided during implementation).
+**Extract page bodies into plain components (no route wrappers):**
+- `src/components/admin/VendorsPane.tsx` — move the `DashboardPage` body from `src/routes/admin.index.tsx` into a component, exporting `VendorsPane`.
+- `src/components/admin/ProjectsPane.tsx` — move the `ProjectsListPage` body from `src/routes/admin.projects.index.tsx` into a component, exporting `ProjectsPane`.
 
-Result: both pages share the exact same top band; only the slim toolbar beneath it changes.
+Both panes keep all current state (`useState` for search/filters/sort/view), queries, and realtime subscriptions exactly as they are. No business logic changes.
 
-### 3. Clean up projects page
+**Update `src/routes/admin.tsx` (layout):**
+- Read `pathname` via `useRouterState`.
+- Compute `onVendors = pathname === "/admin"`, `onProjects = pathname === "/admin/projects"`, `onOther = !onVendors && !onProjects`.
+- Render:
+  ```tsx
+  <AdminShellHeader />
+  <div hidden={!onVendors}><VendorsPane /></div>
+  <div hidden={!onProjects}><ProjectsPane /></div>
+  {onOther && <Outlet />}
+  ```
+- This keeps both panes warm; detail/sub-routes (`/admin/projects/$id`, `/admin/submissions`, `/admin/users`) replace them via `<Outlet />` and never collide with the hidden panes.
 
-In `src/routes/admin.projects.index.tsx`:
-- Remove the "Back to vendor dashboard" link entirely.
-- Drop the bespoke `min-h-screen bg-[var(--cream)] px-… py-…` outer container — let the layout supply the background and the page just renders its toolbar + cards in the same `max-w-[1600px]` container the vendor page uses.
-- Replace the page-level `<h1>Projects</h1>` block with the new `ProjectsToolbar` so the visual rhythm matches the Vendor page (where the H1 is small and lives next to filters).
+**Shrink the index routes to no-op components** (the layout renders the panes; the routes only need to exist so the router matches the URL):
+- `src/routes/admin.index.tsx` → keep `head()`, `AuthGate`, but `component` becomes `() => null`. Move `DashboardPage` body into `VendorsPane`.
+- `src/routes/admin.projects.index.tsx` → same treatment, body moves into `ProjectsPane`.
 
-### 4. Clean up project detail page
+**Simplify `DashboardSwitch.tsx`:**
+- Remove the on-hover `prefetchQuery` — no longer needed, projects pane is already mounted and its query already ran on first paint.
+- Keep `Link`s and active-tab styling.
 
-In `src/routes/admin.projects.$id.tsx`:
-- Remove the "Back" link in the header — the persistent `DashboardSwitch` + a breadcrumb-style "Projects / {couple name}" link is enough.
-- Keep the rest of the page (KPIs, tabs, archive/view-as-client) unchanged.
+### Preloading on first admin visit
 
-### 5. Make the switch instant
+Because both panes mount the first time `/admin/*` is opened, both `useQuery(["vendors"])` and `useQuery(["projects"])` fire immediately in parallel. The user pays one initial load, then every subsequent switch is a zero-network CSS toggle.
 
-Two complementary tweaks:
+### Trade-offs (acknowledged, acceptable)
 
-1. **Prefetch on intent.** In `DashboardSwitch`, on `onMouseEnter`/`onFocus` of each link, call `queryClient.prefetchQuery({ queryKey: ['projects'], queryFn: () => listProjectsOverview() })` (and the equivalent vendors prefetch for the reverse direction). The list is then warm before the click.
-2. **Avoid a loading flash when data is cached.** Show the cached list immediately and only show the skeleton when there is truly no cached data (`isLoading && !data`), not on background refetches.
+- Memory: both grids and their realtime channels are mounted on every `/admin/*` page. The existing realtime hooks already dedupe by channel name, and both panes are lightweight after first render.
+- First admin visit fetches both lists in parallel instead of one. Net feel is faster because the second tab never loads again.
+- When the user opens a detail route (e.g. `/admin/projects/$id`) the panes are hidden via `hidden`-style outlet replacement; their queries remain cached, so returning to the list is also instant.
 
-Combined with the persistent layout (no header remount), the switch will feel native-app instant.
+### Out of scope
 
-### 6. Out of scope
+- No changes to detail routes, server functions, RLS, or business logic.
+- No changes to client portal or vendor onboarding.
+- No visual redesign — only the mount strategy changes.
 
-- Client portal chrome.
-- The Project Studio tabs (Overview/Quotes/Clients/Notes) — pre-existing plan.
-- Visual redesign of the toolbars beyond what's needed to match the vendor page.
+## Files touched
 
-## Files
+Create:
+- `src/components/admin/VendorsPane.tsx`
+- `src/components/admin/ProjectsPane.tsx`
 
-**Create**
-- `src/routes/admin.tsx` — layout route with `<Outlet />`
-- `src/components/admin/AdminShellHeader.tsx`
-- `src/components/admin/ProjectsToolbar.tsx`
-- `src/components/vendor/VendorToolbar.tsx`
+Edit:
+- `src/routes/admin.tsx` (render both panes + Outlet)
+- `src/routes/admin.index.tsx` (component → null wrapper)
+- `src/routes/admin.projects.index.tsx` (component → null wrapper)
+- `src/components/admin/DashboardSwitch.tsx` (drop prefetch handlers)
 
-**Edit**
-- `src/routes/admin.index.tsx` — drop `<TopNav>`, render `<VendorToolbar>` instead
-- `src/routes/admin.projects.index.tsx` — drop bespoke shell + back link, render `<ProjectsToolbar>` + cards
-- `src/routes/admin.projects.$id.tsx` — drop the "Back" link in the header
-- `src/components/admin/DashboardSwitch.tsx` — add hover/focus prefetch for `["projects"]` and `["vendors"]`
-- `src/components/vendor/TopNav.tsx` — delete or reduce to a re-export composing the new pieces
-
-**Auto-regenerates**
+Auto-regenerates:
 - `src/routeTree.gen.ts`
 
-No migrations, no server-function changes, no business-logic changes.
+No migrations.
