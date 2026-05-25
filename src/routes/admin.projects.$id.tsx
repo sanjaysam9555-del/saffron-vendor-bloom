@@ -254,7 +254,7 @@ function ProjectDetailPage() {
                   </thead>
                   <tbody>
                     {clients.map((c: any) => (
-                      <ClientRow key={c.id} c={c} onChanged={refresh} />
+                      <ClientRow key={c.id} c={c} projectId={id} onChanged={refresh} />
                     ))}
                   </tbody>
                 </table>
