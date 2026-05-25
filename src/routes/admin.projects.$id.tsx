@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck, MessageSquare, Star, MapPin, Instagram, Phone, Globe, Plus, Sparkles } from "lucide-react";
+import { ArrowLeft, UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck, MessageSquare, Star, MapPin, Instagram, Phone, Globe, Plus, Sparkles, Archive, ArchiveRestore, Eye } from "lucide-react";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { ClientStatusPill, StatusCountsRow, CLIENT_STATUS_OPTIONS } from "@/components/admin/ClientStatusPill";
 import { AuthGate } from "@/components/AuthGate";
@@ -17,6 +17,7 @@ import {
   deleteProject,
   setVendorSaffronPick,
   updateProject,
+  setProjectArchived,
 } from "@/server/projects.functions";
 import { useAuth } from "@/lib/auth";
 import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotesPanel";
@@ -146,6 +147,19 @@ function ProjectDetailPage() {
     }
   };
 
+  const handleToggleArchived = async (archived: boolean) => {
+    try {
+      await setProjectArchived({ data: { id, archived } });
+      notifySuccess(archived ? "Project archived" : "Project restored");
+      await Promise.all([
+        refresh(),
+        qc.invalidateQueries({ queryKey: ["projects-overview"] }),
+      ]);
+    } catch (e) {
+      notifyError(e, archived ? "Could not archive project" : "Could not restore project");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[var(--cream)] px-6 py-8">
@@ -185,8 +199,10 @@ function ProjectDetailPage() {
           project={project}
           canDelete={role === "admin"}
           onDelete={handleDeleteProject}
+          onToggleArchived={handleToggleArchived}
           onSaved={refresh}
         />
+
 
         {/* Client logins */}
         <section className="mt-6 sm:mt-8">
@@ -238,7 +254,7 @@ function ProjectDetailPage() {
                   </thead>
                   <tbody>
                     {clients.map((c: any) => (
-                      <ClientRow key={c.id} c={c} onChanged={refresh} />
+                      <ClientRow key={c.id} c={c} projectId={id} onChanged={refresh} />
                     ))}
                   </tbody>
                 </table>
@@ -329,7 +345,7 @@ function ProjectSectionTabs({
   );
 }
 
-function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
+function ClientRow({ c, projectId, onChanged }: { c: any; projectId: string; onChanged: () => void }) {
   const confirmDelete = useConfirmDelete();
   const [resetting, setResetting] = useState(false);
   const [pwd, setPwd] = useState("");
@@ -394,7 +410,7 @@ function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
     });
     if (!ok) return;
     try {
-      await removeProjectClient({ data: { project_id: c.project_id ?? "", user_id: c.user_id } });
+      await removeProjectClient({ data: { project_id: projectId, user_id: c.user_id } });
       notifySuccess("Client removed");
       onChanged();
     } catch (e) {
@@ -469,6 +485,14 @@ function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
           </div>
         ) : (
           <div className="flex items-center justify-end gap-1">
+            <Link
+              to="/admin/projects/$id/preview/$clientId"
+              params={{ id: projectId, clientId: c.user_id }}
+              title="View project as this client"
+              className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]"
+            >
+              <Eye className="h-4 w-4" />
+            </Link>
             <button onClick={() => setResetting(true)} title="Change password" className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
               <KeyRound className="h-4 w-4" />
             </button>
@@ -901,13 +925,15 @@ function VendorMetaRow({ vendor: v }: { vendor: any }) {
 }
 
 interface ProjectHeaderProps {
-  project: { id: string; bride_name: string; groom_name: string; wedding_date: string; notes: string | null };
+  project: { id: string; bride_name: string; groom_name: string; wedding_date: string; notes: string | null; archived_at?: string | null };
   canDelete: boolean;
   onDelete: () => void;
+  onToggleArchived: (archived: boolean) => void;
   onSaved: () => void;
 }
 
-function ProjectHeader({ project, canDelete, onDelete, onSaved }: ProjectHeaderProps) {
+function ProjectHeader({ project, canDelete, onDelete, onToggleArchived, onSaved }: ProjectHeaderProps) {
+  const isArchived = !!project.archived_at;
   const [editing, setEditing] = useState(false);
   const [bride, setBride] = useState(project.bride_name);
   const [groom, setGroom] = useState(project.groom_name);
@@ -1013,9 +1039,16 @@ function ProjectHeader({ project, canDelete, onDelete, onSaved }: ProjectHeaderP
   return (
     <div className="relative mt-4 flex flex-col gap-3 pr-20 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:pr-0">
       <div className="min-w-0">
-        <h1 className="font-display text-2xl text-[var(--charcoal)] sm:text-3xl">
-          {project.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {project.groom_name}
-        </h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="font-display text-2xl text-[var(--charcoal)] sm:text-3xl">
+            {project.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {project.groom_name}
+          </h1>
+          {isArchived && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--charcoal)]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--charcoal)]/70">
+              <Archive className="h-3 w-3" /> Archived
+            </span>
+          )}
+        </div>
         <div className="mt-1 flex items-center gap-1.5 text-sm text-[var(--charcoal)]/65">
           <Calendar className="h-3.5 w-3.5" />
           {new Date(project.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
@@ -1030,6 +1063,15 @@ function ProjectHeader({ project, canDelete, onDelete, onSaved }: ProjectHeaderP
           className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--border)] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:h-auto sm:w-auto sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-sm"
         >
           <Pencil className="h-4 w-4" /> <span className="hidden sm:inline">Edit</span>
+        </button>
+        <button
+          onClick={() => onToggleArchived(!isArchived)}
+          aria-label={isArchived ? "Restore project" : "Archive project"}
+          title={isArchived ? "Restore project" : "Archive project"}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--border)] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:h-auto sm:w-auto sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-sm"
+        >
+          {isArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+          <span className="hidden sm:inline">{isArchived ? "Restore" : "Archive"}</span>
         </button>
         {canDelete && (
           <button
