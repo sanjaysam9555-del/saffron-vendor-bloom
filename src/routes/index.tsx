@@ -1,5 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { UnifiedLoginForm } from "@/components/auth/UnifiedLoginForm";
+import { useAuth, type AppRole } from "@/lib/auth";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -19,7 +21,30 @@ export const Route = createFileRoute("/")({
   component: RootIndex,
 });
 
+function destinationFor(role: AppRole | null): "/admin" | "/client" | null {
+  if (role === "admin" || role === "employee") return "/admin";
+  if (role === "client") return "/client";
+  return null;
+}
+
 function RootIndex() {
+  const { initialized, session, role } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!initialized || !session) return;
+    const dest = destinationFor(role);
+    if (dest) navigate({ to: dest, replace: true });
+  }, [initialized, session, role, navigate]);
+
+  // While auth is still restoring, or if the user is already signed in and
+  // about to be redirected, render an empty cream surface. This prevents the
+  // login form's password input from briefly mounting and triggering the iOS
+  // keyboard during the auth-restore window.
+  if (!initialized || session) {
+    return <main className="min-h-screen bg-[var(--cream)]" />;
+  }
+
   return (
     <main className="min-h-screen bg-[var(--cream)]">
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-12 lg:grid-cols-2 lg:gap-16 lg:py-20">
