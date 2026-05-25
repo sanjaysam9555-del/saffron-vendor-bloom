@@ -345,7 +345,7 @@ function ProjectSectionTabs({
   );
 }
 
-function ClientRow({ c, onChanged }: { c: any; onChanged: () => void }) {
+function ClientRow({ c, projectId, onChanged }: { c: any; projectId: string; onChanged: () => void }) {
   const confirmDelete = useConfirmDelete();
   const [resetting, setResetting] = useState(false);
   const [pwd, setPwd] = useState("");
