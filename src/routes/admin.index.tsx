@@ -51,14 +51,18 @@ export const Route = createFileRoute("/admin/")({
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  component: () => (
-    <AuthGate>
-      <DashboardPage />
-    </AuthGate>
-  ),
+  // The vendors UI is rendered once by the /admin layout (see VendorsPane export
+  // below) so the pane stays mounted across tab switches. This route exists only
+  // so the router can match `/admin` and apply head metadata.
+  component: () => null,
 });
 
+export function VendorsPane() {
+  return <DashboardPage />;
+}
+
 function DashboardPage() {
+
   const isAdmin = useIsAdmin();
   const categories = useAllCategories();
   const { data: vendors = [], isLoading } = useVendors();
