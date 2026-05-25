@@ -189,11 +189,11 @@ function ProjectDetailPage() {
   const { project, clients, vendors, selections = {} as Record<string, { user_id: string; display_name: string; email: string; status: string; updated_at: string }[]> } = data as any;
 
   return (
-    <div className="min-h-screen bg-[var(--cream)] px-4 py-6 sm:px-6 sm:py-8">
-      <div className="mx-auto max-w-5xl">
-        <Link to="/admin/projects" className="inline-flex items-center gap-1 text-sm text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]">
-          <ArrowLeft className="h-4 w-4" /> All projects
-        </Link>
+    <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-6">
+      <Link to="/admin/projects" className="text-xs uppercase tracking-[0.18em] text-[var(--charcoal)]/50 hover:text-[var(--terracotta)]">
+        Projects
+      </Link>
+
 
         <ProjectHeader
           project={project}
