@@ -1,130 +1,81 @@
 
 ## Goal
 
-Make Projects a first-class admin surface. The admin lands on a unified dashboard with a top-level switch between **Vendors** and **Projects**. Inside Projects, sub-tabs split **Active** and **Archived**. Project cards become richer at-a-glance briefs. Opening a project takes the admin to a **full project page** that surfaces every relevant detail, and a built-in **"View as client"** toggle previews exactly what the assigned client sees.
+Make `/admin` and `/admin/projects` feel like one app with one persistent header. Switching tabs should never re-mount the chrome and should feel instantaneous.
 
-## 1. Top-level dashboard switch (Vendors ⇄ Projects)
+## Problems today
 
-- Add a persistent segmented switch in the admin `TopNav` (visible on `/admin` and `/admin/projects`): `Vendors | Projects`.
-- Routes stay clean: `/admin` = Vendors, `/admin/projects` = Projects. The switch navigates between them and shows active state from the current pathname.
-- Eyebrow under the logo becomes dynamic ("Vendor Studio" / "Project Studio").
-- The `Add Vendor` CTA becomes contextual: on Projects, it turns into `New Project` and opens the create-project dialog.
-- Remove the standalone "Projects" entry button on the Vendors dashboard — the switch replaces it.
+1. `/admin/projects` doesn't render `TopNav` at all — it ships its own page-shell with a "Back to vendor dashboard" link, a different background container, and a different heading style.
+2. The "Back to vendors" link duplicates what the `DashboardSwitch` already does.
+3. Switching tabs unmounts the entire `TopNav` (because each route owns its own header), so the user sees a brief blank/flash while the projects route's data query (`["projects"]`) loads.
 
-## 2. Active / Archived sub-tabs
+## Fix
 
-- Add `archived_at timestamptz null` to `projects` (+ index). Non-null = archived.
-- Tabs on `/admin/projects`: **Active** (default, nearest wedding first) and **Archived** (most recently archived first). Counts beside each tab.
-- Per-card `…` menu: **Archive / Unarchive**, **Edit details**, **Delete** (admin-only, confirm).
-- New server fn `setProjectArchived({ id, archived })` (staff-only).
-- `listProjectsOverview` returns `archived_at` and a new `closed_total_amount`.
+### 1. Introduce a shared admin layout route
+Create `src/routes/admin.tsx` as a TanStack layout for everything under `/admin/*`. It owns the persistent chrome:
 
-## 3. Richer project cards
+- Logo + brand block
+- `DashboardSwitch` (Vendors ⇄ Projects)
+- `NotificationsBell` + `UserMenu`
+- `<Outlet />` for child routes
 
-New `ProjectCard` component shows:
+Because the layout never unmounts when navigating between `admin.index` and `admin.projects.index`, the header stays visually identical and the switch is instant.
 
-- **Header**: Bride & Groom, "Wedding" eyebrow, urgency chip (`Today`, `Tomorrow`, `This week`, `Upcoming · 42d`, `Past`, `Archived`).
-- **Date row**: full date + day + countdown.
-- **Progress strip**: finalised vendors / total assigned, with a thin bar.
-- **Client status counts**: reuse `StatusCountsRow`, always rendered for height parity.
-- **Money line**: closed total (₹) across all final quotes.
-- **People**: client login initials (up to 3 + "+N"), tooltip with emails.
-- **Saffron picks**: star + count when any pick exists.
-- **Activity**: "Updated <relative time>".
-- Subtle lift + terracotta border on hover; right-arrow affordance.
+### 2. Split TopNav into chrome + context toolbar
 
-Grid: 2 cols on `sm`, 3 on `xl`. Card height stays consistent regardless of populated data.
+Today `TopNav` mixes shared chrome with vendor-only bits (search vendors, Add Vendor, totals). Refactor:
 
-## 4. Projects toolbar (search / sort / quick filters)
+- **`src/components/admin/AdminShellHeader.tsx`** (new) — pure chrome, used by the layout. Has the logo, `DashboardSwitch`, notifications, user menu. No vendor props.
+- **`src/components/vendor/VendorToolbar.tsx`** (new) — vendor search input, Add Vendor button, totals/lastAdded. Rendered inside `admin.index.tsx` directly below the chrome.
+- **`src/components/admin/ProjectsToolbar.tsx`** (new) — projects search input, sort, New Project button, Active/Archived tabs. Rendered inside `admin.projects.index.tsx`.
+- Delete the existing `TopNav` once both call sites are migrated (or keep it as a thin wrapper composing the two new pieces — decided during implementation).
 
-Above the card grid:
+Result: both pages share the exact same top band; only the slim toolbar beneath it changes.
 
-- **Search**: bride/groom name, notes.
-- **Sort**: Upcoming first (default) · Recently updated · Most vendors · Most quoted.
-- **Quick filters**: `Has unfinalised quotes`, `No client login yet`, `Saffron picks only`, `Wedding in <30 / 60 / 90 days`.
-- TopNav search input relabels to "Search projects…" on the Projects tab and feeds the same state.
+### 3. Clean up projects page
 
-All client-side filtering over the overview list (volume is low).
+In `src/routes/admin.projects.index.tsx`:
+- Remove the "Back to vendor dashboard" link entirely.
+- Drop the bespoke `min-h-screen bg-[var(--cream)] px-… py-…` outer container — let the layout supply the background and the page just renders its toolbar + cards in the same `max-w-[1600px]` container the vendor page uses.
+- Replace the page-level `<h1>Projects</h1>` block with the new `ProjectsToolbar` so the visual rhythm matches the Vendor page (where the H1 is small and lives next to filters).
 
-## 5. Full project page (admin)
+### 4. Clean up project detail page
 
-Promote `/admin/projects/$id` from a panel-heavy editor to a proper project workspace. New layout:
+In `src/routes/admin.projects.$id.tsx`:
+- Remove the "Back" link in the header — the persistent `DashboardSwitch` + a breadcrumb-style "Projects / {couple name}" link is enough.
+- Keep the rest of the page (KPIs, tabs, archive/view-as-client) unchanged.
 
-- **Header band**
-  - Bride & Groom (display font) + urgency chip.
-  - Wedding date · countdown · location (if set).
-  - Inline KPIs: vendors assigned, finalised, closed ₹, clients linked, open quotes, comments.
-  - Right side: `Archive` / `Unarchive`, `Edit project`, `Delete` (admin), and the **View-as-client toggle** (see §6).
+### 5. Make the switch instant
 
-- **Tabs** (sticky on scroll)
-  1. **Overview** — KPI cards, urgency strip across categories, recent activity feed (comments + status changes + quote events), wedding-day countdown.
-  2. **Vendors** — current assignment board (cards or table), grouped by category, with Saffron-pick toggle, per-vendor client statuses, comment counts, and a button to add vendors from the master list. Each vendor row links into the existing `VendorDetail` drawer.
-  3. **Quotes** — table across all assigned vendors: status, latest amount, closed amount, final flag, files. Add / edit quotes inline via the existing `ProjectVendorQuotesPanel` flows.
-  4. **Timeline & Deadlines** — `project_category_deadlines` editor with the existing `VendorTimeline` + `UrgencyStrip`.
-  5. **Clients** — list of client logins for this project: name, email, last sign-in, reset password, change email, change name, remove. Includes the create-client form.
-  6. **Notes** — `projects.notes` editor + scratchpad comments.
+Two complementary tweaks:
 
-- All tabs are mounted in a single route file with internal tab state (URL search param `?tab=overview` so deep links survive reloads).
-- Keep all existing server fns; this is mostly a UI reshape + extraction into smaller components under `src/components/admin/project/`.
+1. **Prefetch on intent.** In `DashboardSwitch`, on `onMouseEnter`/`onFocus` of each link, call `queryClient.prefetchQuery({ queryKey: ['projects'], queryFn: () => listProjectsOverview() })` (and the equivalent vendors prefetch for the reverse direction). The list is then warm before the click.
+2. **Avoid a loading flash when data is cached.** Show the cached list immediately and only show the skeleton when there is truly no cached data (`isLoading && !data`), not on background refetches.
 
-## 6. "View as client" preview toggle
+Combined with the persistent layout (no header remount), the switch will feel native-app instant.
 
-A toggle in the project header switches the page between **Admin view** and **Client view** without leaving `/admin/projects/$id`.
+### 6. Out of scope
 
-- Implementation: render the same `ClientBoardView` / `ClientVendorDetail` components used by `/client`, but inside a wrapper that passes the project + a chosen client identity (default: the first `project_client`; switcher dropdown lists all linked clients).
-- Data is fetched via a new staff-only server fn `getProjectAsClientView({ project_id, client_user_id })` that mirrors what the real `/client` page receives (vendors, statuses for that client, comments, deadlines), but is gated by `assertStaff` rather than RLS-as-that-user. No impersonation tokens — the admin's session stays intact.
-- A persistent "Previewing as <Client Name>" banner sits across the top while the toggle is on, with a one-click `Exit preview` and a clear "Read-only — actions are disabled" note.
-- Read-only enforcement: in client-view mode, all mutation handlers (status changes, comments, etc.) are no-ops and CTAs are disabled with a tooltip. We do NOT write `client_vendor_status` rows as the client.
-- The toggle state is held in local URL search (`?as=client&clientId=...`) so reloads and shares preserve the view.
+- Client portal chrome.
+- The Project Studio tabs (Overview/Quotes/Clients/Notes) — pre-existing plan.
+- Visual redesign of the toolbars beyond what's needed to match the vendor page.
 
-## 7. What else (extras)
+## Files
 
-- **Empty / onboarding states**: friendly empty page on Active when zero projects; a different message when Archived has items.
-- **Real-time**: extend `useRealtimeInvalidate` on the project page to also invalidate when `projects.updated_at` / `archived_at` change, plus quotes/comments/statuses.
-- **Auto-archive nudge**: soft banner on the card and page when `wedding_date` is older than 60 days and not archived ("Archive this project?" one-click).
-- **Keyboard shortcuts**: `g v` / `g p` to jump between Vendors / Projects.
-- **Deep links**: tab + view-as-client preserved in URL for sharing with teammates.
+**Create**
+- `src/routes/admin.tsx` — layout route with `<Outlet />`
+- `src/components/admin/AdminShellHeader.tsx`
+- `src/components/admin/ProjectsToolbar.tsx`
+- `src/components/vendor/VendorToolbar.tsx`
 
-## Technical sketch
+**Edit**
+- `src/routes/admin.index.tsx` — drop `<TopNav>`, render `<VendorToolbar>` instead
+- `src/routes/admin.projects.index.tsx` — drop bespoke shell + back link, render `<ProjectsToolbar>` + cards
+- `src/routes/admin.projects.$id.tsx` — drop the "Back" link in the header
+- `src/components/admin/DashboardSwitch.tsx` — add hover/focus prefetch for `["projects"]` and `["vendors"]`
+- `src/components/vendor/TopNav.tsx` — delete or reduce to a re-export composing the new pieces
 
-```text
-src/
-  routes/
-    admin.index.tsx                 (Vendors — unchanged logic, gets DashboardSwitch in TopNav)
-    admin.projects.index.tsx        (rewritten: tabs + toolbar + ProjectCard grid + create dialog)
-    admin.projects.$id.tsx          (rewritten: header band + tabbed workspace + view-as-client wrapper)
-  components/
-    admin/
-      DashboardSwitch.tsx           (NEW — Vendors | Projects segmented control)
-      ProjectCard.tsx               (NEW — rich card)
-      ProjectsToolbar.tsx           (NEW — search/sort/quick filters/tabs)
-      CreateProjectDialog.tsx       (NEW — extracted from inline form)
-      project/
-        ProjectHeader.tsx           (NEW — KPIs + actions + view-as-client toggle)
-        ProjectTabs.tsx             (NEW — Overview/Vendors/Quotes/Timeline/Clients/Notes)
-        OverviewTab.tsx             (NEW)
-        VendorsTab.tsx              (NEW — wraps existing assignment UI)
-        QuotesTab.tsx               (NEW — wraps existing quotes panel)
-        TimelineTab.tsx             (NEW — wraps urgency strip + deadlines editor)
-        ClientsTab.tsx              (NEW — wraps existing client login mgmt)
-        NotesTab.tsx                (NEW)
-        ClientPreviewWrapper.tsx    (NEW — renders ClientBoardView read-only)
-    vendor/
-      TopNav.tsx                    (mount DashboardSwitch; contextual CTA + search placeholder)
-  server/
-    projects.functions.ts           (+ setProjectArchived;
-                                       + closed_total_amount in overview;
-                                       + getProjectAsClientView staff-only fn)
+**Auto-regenerates**
+- `src/routeTree.gen.ts`
 
-supabase migration:
-  ALTER TABLE projects ADD COLUMN archived_at timestamptz;
-  CREATE INDEX projects_archived_at_idx ON projects (archived_at);
-```
-
-No RLS changes — existing staff policies cover the new column and the staff-only preview fn uses `supabaseAdmin`.
-
-## Out of scope (for this pass)
-
-- Redesigning the real `/client` dashboard.
-- Bulk actions on projects.
-- Audit log of admin previews (can be added later if needed).
+No migrations, no server-function changes, no business-logic changes.

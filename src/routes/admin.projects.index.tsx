@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Search, ArrowUpDown, Archive } from "lucide-react";
+import { Plus, Search, ArrowUpDown, Archive } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { listProjectsOverview, setProjectArchived, deleteProject } from "@/server/projects.functions";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
@@ -129,26 +129,22 @@ function ProjectsListPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--cream)] px-4 py-6 sm:px-6 sm:py-8">
-      <div className="mx-auto max-w-6xl">
-        <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]">
-          <ArrowLeft className="h-4 w-4" /> Vendor dashboard
-        </Link>
-
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="font-display text-3xl text-[var(--charcoal)]">Projects</h1>
-            <p className="text-sm text-[var(--charcoal)]/60">
-              Each project is one wedding. Manage assigned vendors, quotes, and the client portal in one place.
-            </p>
-          </div>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3.5 py-2 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
-          >
-            <Plus className="h-4 w-4" /> New project
-          </button>
+    <div className="mx-auto max-w-[1600px] px-3 py-5 sm:px-6 sm:py-6">
+      <div className="flex flex-wrap items-end justify-between gap-3 animate-fade-up">
+        <div>
+          <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">Projects</h1>
+          <p className="text-xs text-[var(--charcoal)]/60">
+            Each project is one wedding. Manage assigned vendors, quotes, and the client portal in one place.
+          </p>
         </div>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
+        >
+          <Plus className="h-4 w-4" /> New project
+        </button>
+      </div>
+
 
         {/* tabs + toolbar */}
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -231,7 +227,6 @@ function ProjectsListPage() {
               />
             ))
           )}
-        </div>
       </div>
 
       <CreateProjectDialog
@@ -240,5 +235,6 @@ function ProjectsListPage() {
         onCreated={(id) => navigate({ to: "/admin/projects/$id", params: { id } })}
       />
     </div>
+
   );
 }

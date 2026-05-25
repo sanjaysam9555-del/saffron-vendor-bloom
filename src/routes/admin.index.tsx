@@ -181,7 +181,7 @@ function DashboardPage() {
   const busy = bulkUpdate.isPending || bulkDelete.isPending;
 
   return (
-    <div className="min-h-screen bg-[var(--cream)]">
+    <div>
       <TopNav
         search={search}
         onSearchChange={setSearch}
@@ -190,6 +190,8 @@ function DashboardPage() {
         totalCategories={categories.length}
         lastAdded={lastAdded}
       />
+
+
 
       <div className="mx-auto flex max-w-[1600px]">
         <Sidebar
