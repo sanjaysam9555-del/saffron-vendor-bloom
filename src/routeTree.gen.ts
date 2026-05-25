@@ -30,6 +30,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicVendorSignupCheckRouteImport } from './routes/api/public/vendor-signup.check'
 import { Route as ApiFilesStreamSplatRouteImport } from './routes/api/files/stream.$'
+import { Route as AdminProjectsIdPreviewClientIdRouteImport } from './routes/admin.projects.$id.preview.$clientId'
 
 const VendorSignupRoute = VendorSignupRouteImport.update({
   id: '/vendor-signup',
@@ -140,6 +141,12 @@ const ApiFilesStreamSplatRoute = ApiFilesStreamSplatRouteImport.update({
   path: '/api/files/stream/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminProjectsIdPreviewClientIdRoute =
+  AdminProjectsIdPreviewClientIdRouteImport.update({
+    id: '/preview/$clientId',
+    path: '/preview/$clientId',
+    getParentRoute: () => AdminProjectsIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -153,7 +160,7 @@ export interface FileRoutesByFullPath {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
-  '/admin/projects/$id': typeof AdminProjectsIdRoute
+  '/admin/projects/$id': typeof AdminProjectsIdRouteWithChildren
   '/api/public/instagram-image': typeof ApiPublicInstagramImageRoute
   '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
+  '/admin/projects/$id/preview/$clientId': typeof AdminProjectsIdPreviewClientIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -176,7 +184,7 @@ export interface FileRoutesByTo {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin': typeof AdminIndexRoute
   '/client': typeof ClientIndexRoute
-  '/admin/projects/$id': typeof AdminProjectsIdRoute
+  '/admin/projects/$id': typeof AdminProjectsIdRouteWithChildren
   '/api/public/instagram-image': typeof ApiPublicInstagramImageRoute
   '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -186,6 +194,7 @@ export interface FileRoutesByTo {
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
+  '/admin/projects/$id/preview/$clientId': typeof AdminProjectsIdPreviewClientIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -200,7 +209,7 @@ export interface FileRoutesById {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
-  '/admin/projects/$id': typeof AdminProjectsIdRoute
+  '/admin/projects/$id': typeof AdminProjectsIdRouteWithChildren
   '/api/public/instagram-image': typeof ApiPublicInstagramImageRoute
   '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -210,6 +219,7 @@ export interface FileRoutesById {
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
+  '/admin/projects/$id/preview/$clientId': typeof AdminProjectsIdPreviewClientIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
+    | '/admin/projects/$id/preview/$clientId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
+    | '/admin/projects/$id/preview/$clientId'
   id:
     | '__root__'
     | '/'
@@ -281,6 +293,7 @@ export interface FileRouteTypes {
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
+    | '/admin/projects/$id/preview/$clientId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -295,7 +308,7 @@ export interface RootRouteChildren {
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   AdminIndexRoute: typeof AdminIndexRoute
   ClientIndexRoute: typeof ClientIndexRoute
-  AdminProjectsIdRoute: typeof AdminProjectsIdRoute
+  AdminProjectsIdRoute: typeof AdminProjectsIdRouteWithChildren
   ApiPublicInstagramImageRoute: typeof ApiPublicInstagramImageRoute
   ApiPublicVendorSignupRoute: typeof ApiPublicVendorSignupRouteWithChildren
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -455,8 +468,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiFilesStreamSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/projects/$id/preview/$clientId': {
+      id: '/admin/projects/$id/preview/$clientId'
+      path: '/preview/$clientId'
+      fullPath: '/admin/projects/$id/preview/$clientId'
+      preLoaderRoute: typeof AdminProjectsIdPreviewClientIdRouteImport
+      parentRoute: typeof AdminProjectsIdRoute
+    }
   }
 }
+
+interface AdminProjectsIdRouteChildren {
+  AdminProjectsIdPreviewClientIdRoute: typeof AdminProjectsIdPreviewClientIdRoute
+}
+
+const AdminProjectsIdRouteChildren: AdminProjectsIdRouteChildren = {
+  AdminProjectsIdPreviewClientIdRoute: AdminProjectsIdPreviewClientIdRoute,
+}
+
+const AdminProjectsIdRouteWithChildren = AdminProjectsIdRoute._addFileChildren(
+  AdminProjectsIdRouteChildren,
+)
 
 interface ApiPublicVendorSignupRouteChildren {
   ApiPublicVendorSignupCheckRoute: typeof ApiPublicVendorSignupCheckRoute
@@ -483,7 +515,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   AdminIndexRoute: AdminIndexRoute,
   ClientIndexRoute: ClientIndexRoute,
-  AdminProjectsIdRoute: AdminProjectsIdRoute,
+  AdminProjectsIdRoute: AdminProjectsIdRouteWithChildren,
   ApiPublicInstagramImageRoute: ApiPublicInstagramImageRoute,
   ApiPublicVendorSignupRoute: ApiPublicVendorSignupRouteWithChildren,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
@@ -496,3 +528,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
