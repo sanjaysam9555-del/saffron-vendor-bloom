@@ -33,9 +33,12 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
   const liveStatus = liveVendor?.client_status ?? vendor?.client_status ?? null;
   const projectId = project?.project?.id;
 
-  const { data: quotes = [] } = useQuery({
+  const { data: quotes = [] } = useQuery<ProjectVendorQuote[]>({
     queryKey: ["client-vendor-quotes", projectId, vendor?.id],
-    queryFn: () => listProjectVendorQuotes(projectId!, vendor!.id),
+    queryFn: () =>
+      listMyProjectVendorQuotes({
+        data: { project_id: projectId!, vendor_id: vendor!.id },
+      }) as unknown as Promise<ProjectVendorQuote[]>,
     enabled: !!projectId && !!vendor?.id,
   });
 
@@ -47,8 +50,8 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
 
   // Closed/final quotes first, then others newest-first (already newest-first from API).
   const orderedQuotes: ProjectVendorQuote[] = [
-    ...quotes.filter((q) => q.is_final || q.status === "closed"),
-    ...quotes.filter((q) => !(q.is_final || q.status === "closed")),
+    ...quotes.filter((q: ProjectVendorQuote) => q.is_final || q.status === "closed"),
+    ...quotes.filter((q: ProjectVendorQuote) => !(q.is_final || q.status === "closed")),
   ];
 
   return (
