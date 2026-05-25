@@ -13,6 +13,7 @@ import { Route as VendorSignupRouteImport } from './routes/vendor-signup'
 import { Route as VendorOnboardingRouteImport } from './routes/vendor-onboarding'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClientIndexRouteImport } from './routes/client.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -52,6 +53,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -63,9 +69,9 @@ const ClientIndexRoute = ClientIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
@@ -78,19 +84,19 @@ const ClientLoginRoute = ClientLoginRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/admin/users',
-  path: '/admin/users',
-  getParentRoute: () => rootRouteImport,
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminSubmissionsRoute = AdminSubmissionsRouteImport.update({
-  id: '/admin/submissions',
-  path: '/admin/submissions',
-  getParentRoute: () => rootRouteImport,
+  id: '/submissions',
+  path: '/submissions',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminProjectsIndexRoute = AdminProjectsIndexRouteImport.update({
-  id: '/admin/projects/',
-  path: '/admin/projects/',
-  getParentRoute: () => rootRouteImport,
+  id: '/projects/',
+  path: '/projects/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
@@ -108,9 +114,9 @@ const ApiPublicInstagramImageRoute = ApiPublicInstagramImageRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminProjectsIdRoute = AdminProjectsIdRouteImport.update({
-  id: '/admin/projects/$id',
-  path: '/admin/projects/$id',
-  getParentRoute: () => rootRouteImport,
+  id: '/projects/$id',
+  path: '/projects/$id',
+  getParentRoute: () => AdminRoute,
 } as any)
 const LovableEmailTransactionalSendRoute =
   LovableEmailTransactionalSendRouteImport.update({
@@ -150,6 +156,7 @@ const AdminProjectsIdPreviewClientIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/vendor-onboarding': typeof VendorOnboardingRoute
@@ -199,6 +206,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/vendor-onboarding': typeof VendorOnboardingRoute
@@ -225,6 +233,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/login'
     | '/sitemap.xml'
     | '/vendor-onboarding'
@@ -273,6 +282,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/login'
     | '/sitemap.xml'
     | '/vendor-onboarding'
@@ -298,21 +308,17 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   VendorOnboardingRoute: typeof VendorOnboardingRoute
   VendorSignupRoute: typeof VendorSignupRoute
-  AdminSubmissionsRoute: typeof AdminSubmissionsRoute
-  AdminUsersRoute: typeof AdminUsersRoute
   ClientLoginRoute: typeof ClientLoginRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
-  AdminIndexRoute: typeof AdminIndexRoute
   ClientIndexRoute: typeof ClientIndexRoute
-  AdminProjectsIdRoute: typeof AdminProjectsIdRouteWithChildren
   ApiPublicInstagramImageRoute: typeof ApiPublicInstagramImageRoute
   ApiPublicVendorSignupRoute: typeof ApiPublicVendorSignupRouteWithChildren
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
-  AdminProjectsIndexRoute: typeof AdminProjectsIndexRoute
   ApiFilesStreamSplatRoute: typeof ApiFilesStreamSplatRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -349,6 +355,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -365,10 +378,10 @@ declare module '@tanstack/react-router' {
     }
     '/admin/': {
       id: '/admin/'
-      path: '/admin'
+      path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/email/unsubscribe': {
       id: '/email/unsubscribe'
@@ -386,24 +399,24 @@ declare module '@tanstack/react-router' {
     }
     '/admin/users': {
       id: '/admin/users'
-      path: '/admin/users'
+      path: '/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/submissions': {
       id: '/admin/submissions'
-      path: '/admin/submissions'
+      path: '/submissions'
       fullPath: '/admin/submissions'
       preLoaderRoute: typeof AdminSubmissionsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/projects/': {
       id: '/admin/projects/'
-      path: '/admin/projects'
+      path: '/projects'
       fullPath: '/admin/projects/'
       preLoaderRoute: typeof AdminProjectsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
@@ -428,10 +441,10 @@ declare module '@tanstack/react-router' {
     }
     '/admin/projects/$id': {
       id: '/admin/projects/$id'
-      path: '/admin/projects/$id'
+      path: '/projects/$id'
       fullPath: '/admin/projects/$id'
       preLoaderRoute: typeof AdminProjectsIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/lovable/email/transactional/send': {
       id: '/lovable/email/transactional/send'
@@ -490,6 +503,24 @@ const AdminProjectsIdRouteWithChildren = AdminProjectsIdRoute._addFileChildren(
   AdminProjectsIdRouteChildren,
 )
 
+interface AdminRouteChildren {
+  AdminSubmissionsRoute: typeof AdminSubmissionsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminProjectsIdRoute: typeof AdminProjectsIdRouteWithChildren
+  AdminProjectsIndexRoute: typeof AdminProjectsIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminSubmissionsRoute: AdminSubmissionsRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminProjectsIdRoute: AdminProjectsIdRouteWithChildren,
+  AdminProjectsIndexRoute: AdminProjectsIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 interface ApiPublicVendorSignupRouteChildren {
   ApiPublicVendorSignupCheckRoute: typeof ApiPublicVendorSignupCheckRoute
 }
@@ -505,21 +536,17 @@ const ApiPublicVendorSignupRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   VendorOnboardingRoute: VendorOnboardingRoute,
   VendorSignupRoute: VendorSignupRoute,
-  AdminSubmissionsRoute: AdminSubmissionsRoute,
-  AdminUsersRoute: AdminUsersRoute,
   ClientLoginRoute: ClientLoginRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
-  AdminIndexRoute: AdminIndexRoute,
   ClientIndexRoute: ClientIndexRoute,
-  AdminProjectsIdRoute: AdminProjectsIdRouteWithChildren,
   ApiPublicInstagramImageRoute: ApiPublicInstagramImageRoute,
   ApiPublicVendorSignupRoute: ApiPublicVendorSignupRouteWithChildren,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
-  AdminProjectsIndexRoute: AdminProjectsIndexRoute,
   ApiFilesStreamSplatRoute: ApiFilesStreamSplatRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
@@ -528,3 +555,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
