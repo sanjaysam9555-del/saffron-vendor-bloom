@@ -25,6 +25,7 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
   const [viewing, setViewing] = useState<ClientVendor["attachments"][number] | null>(null);
   const [viewingQuoteFile, setViewingQuoteFile] = useState<QuoteFile | null>(null);
 
+  const { isPreview, projectId: previewProjectId } = useClientPreview();
   // Subscribe to the my-project cache so the status stays in sync with the card.
   const { data: project } = useQuery<{ project: { id: string }; vendors: ClientVendor[] }>({
     queryKey: ["my-project"],
@@ -32,7 +33,7 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
   });
   const liveVendor = project?.vendors.find((v) => v.id === vendor?.id);
   const liveStatus = liveVendor?.client_status ?? vendor?.client_status ?? null;
-  const projectId = project?.project?.id;
+  const projectId = project?.project?.id ?? previewProjectId;
 
   const { isPreview } = useClientPreview();
   const { data: quotes = [] } = useQuery<ProjectVendorQuote[]>({
