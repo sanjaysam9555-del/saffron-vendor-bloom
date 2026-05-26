@@ -34,12 +34,17 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
   const liveStatus = liveVendor?.client_status ?? vendor?.client_status ?? null;
   const projectId = project?.project?.id;
 
+  const { isPreview } = useClientPreview();
   const { data: quotes = [] } = useQuery<ProjectVendorQuote[]>({
-    queryKey: ["client-vendor-quotes", projectId, vendor?.id],
+    queryKey: ["client-vendor-quotes", projectId, vendor?.id, isPreview ? "preview" : "client"],
     queryFn: () =>
-      listMyProjectVendorQuotes({
-        data: { project_id: projectId!, vendor_id: vendor!.id },
-      }) as unknown as Promise<ProjectVendorQuote[]>,
+      (isPreview
+        ? getProjectVendorQuotesForPreview({
+            data: { project_id: projectId!, vendor_id: vendor!.id },
+          })
+        : listMyProjectVendorQuotes({
+            data: { project_id: projectId!, vendor_id: vendor!.id },
+          })) as unknown as Promise<ProjectVendorQuote[]>,
     enabled: !!projectId && !!vendor?.id,
   });
 
