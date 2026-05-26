@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
 import logoLight from "@/assets/saffron-logo-transparent.png";
-import { UserMenu } from "@/components/UserMenu";
+import { AdminLink, LogoutButton } from "@/components/UserMenu";
 import { DashboardSwitch } from "@/components/admin/DashboardSwitch";
 
 // Defer NotificationsBell — it has its own realtime subscription and data
@@ -12,7 +12,8 @@ const NotificationsBell = lazy(() =>
 
 /**
  * Persistent admin chrome rendered by the `/admin` layout route.
- * Stays mounted across vendor ⇄ projects tab switches so the header never flashes.
+ * Desktop right cluster (left → right): Bell · Switcher · Admin · Logout-icon.
+ * Mobile keeps the full-width Switcher row underneath the header.
  */
 export function AdminShellHeader() {
   const [mounted, setMounted] = useState(false);
@@ -31,17 +32,17 @@ export function AdminShellHeader() {
           </div>
         </Link>
 
-        <div className="hidden sm:block">
-          <DashboardSwitch />
-        </div>
-
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-2">
           {mounted && (
             <Suspense fallback={<div className="h-8 w-8" aria-hidden />}>
               <NotificationsBell />
             </Suspense>
           )}
-          <UserMenu />
+          <div className="hidden sm:block">
+            <DashboardSwitch />
+          </div>
+          <AdminLink />
+          <LogoutButton />
         </div>
       </div>
       {/* Mobile dashboard switch sits on its own row */}

@@ -5,6 +5,8 @@ interface ClientPreviewContextValue {
   isPreview: boolean;
   /** Display name of the client being previewed as. */
   clientLabel?: string;
+  /** Project id being previewed (so child components don't need the my-project cache). */
+  projectId?: string;
 }
 
 const ClientPreviewContext = createContext<ClientPreviewContextValue>({ isPreview: false });
@@ -12,12 +14,14 @@ const ClientPreviewContext = createContext<ClientPreviewContextValue>({ isPrevie
 export function ClientPreviewProvider({
   children,
   clientLabel,
+  projectId,
 }: {
   children: ReactNode;
   clientLabel?: string;
+  projectId?: string;
 }) {
   return (
-    <ClientPreviewContext.Provider value={{ isPreview: true, clientLabel }}>
+    <ClientPreviewContext.Provider value={{ isPreview: true, clientLabel, projectId }}>
       {children}
     </ClientPreviewContext.Provider>
   );

@@ -9,9 +9,10 @@ import { SignedQuoteFileViewer } from "@/components/admin/SignedQuoteFileViewer"
 import { formatFileSize } from "@/lib/vendor-files-api";
 import { ClientStatusSelect } from "./ClientStatusSelect";
 import { useQuery } from "@tanstack/react-query";
-import { listMyProjectVendorQuotes } from "@/server/projects.functions";
+import { listMyProjectVendorQuotes, getProjectVendorQuotesForPreview } from "@/server/projects.functions";
 import { formatINR, type QuoteFile, type ProjectVendorQuote } from "@/lib/quote-types";
 import { VendorCommentsThread } from "./VendorCommentsThread";
+import { useClientPreview } from "@/lib/client-preview";
 import { instagramDisplay, instagramUrl } from "@/lib/instagram";
 import { VendorInstagramDetailBlock } from "@/components/vendor/VendorInstagramPreview";
 
@@ -24,6 +25,7 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
   const [viewing, setViewing] = useState<ClientVendor["attachments"][number] | null>(null);
   const [viewingQuoteFile, setViewingQuoteFile] = useState<QuoteFile | null>(null);
 
+  const { isPreview, projectId: previewProjectId } = useClientPreview();
   // Subscribe to the my-project cache so the status stays in sync with the card.
   const { data: project } = useQuery<{ project: { id: string }; vendors: ClientVendor[] }>({
     queryKey: ["my-project"],
@@ -31,14 +33,18 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
   });
   const liveVendor = project?.vendors.find((v) => v.id === vendor?.id);
   const liveStatus = liveVendor?.client_status ?? vendor?.client_status ?? null;
-  const projectId = project?.project?.id;
+  const projectId = project?.project?.id ?? previewProjectId;
 
   const { data: quotes = [] } = useQuery<ProjectVendorQuote[]>({
-    queryKey: ["client-vendor-quotes", projectId, vendor?.id],
+    queryKey: ["client-vendor-quotes", projectId, vendor?.id, isPreview ? "preview" : "client"],
     queryFn: () =>
-      listMyProjectVendorQuotes({
-        data: { project_id: projectId!, vendor_id: vendor!.id },
-      }) as unknown as Promise<ProjectVendorQuote[]>,
+      (isPreview
+        ? getProjectVendorQuotesForPreview({
+            data: { project_id: projectId!, vendor_id: vendor!.id },
+          })
+        : listMyProjectVendorQuotes({
+            data: { project_id: projectId!, vendor_id: vendor!.id },
+          })) as unknown as Promise<ProjectVendorQuote[]>,
     enabled: !!projectId && !!vendor?.id,
   });
 
