@@ -3,8 +3,21 @@ import { LogOut, Shield } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 
-export function UserMenu() {
-  const { user, role, signOut } = useAuth();
+export function AdminLink() {
+  const { role } = useAuth();
+  if (role !== "admin") return null;
+  return (
+    <Link
+      to="/admin/users"
+      className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-xs text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+    >
+      <Shield className="h-3.5 w-3.5" /> Admin
+    </Link>
+  );
+}
+
+export function LogoutButton() {
+  const { user, signOut } = useAuth();
   const confirm = useConfirm();
   if (!user) return null;
   const handleSignOut = async () => {
@@ -16,23 +29,28 @@ export function UserMenu() {
     if (ok) await signOut();
   };
   return (
+    <button
+      onClick={handleSignOut}
+      title="Sign out"
+      aria-label="Sign out"
+      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+    >
+      <LogOut className="h-3.5 w-3.5" />
+    </button>
+  );
+}
+
+/**
+ * Backwards-compatible default UserMenu — Admin link + icon-only Logout.
+ * The admin header composes the parts separately to control ordering.
+ */
+export function UserMenu() {
+  const { user } = useAuth();
+  if (!user) return null;
+  return (
     <div className="flex items-center gap-2">
-      {role === "admin" && (
-        <Link
-          to="/admin/users"
-          className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-xs text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
-        >
-          <Shield className="h-3.5 w-3.5" /> Admin
-        </Link>
-      )}
-      <button
-        onClick={handleSignOut}
-        title="Sign out"
-        aria-label="Sign out"
-        className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-xs text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:px-2.5"
-      >
-        <LogOut className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Logout</span>
-      </button>
+      <AdminLink />
+      <LogoutButton />
     </div>
   );
 }
