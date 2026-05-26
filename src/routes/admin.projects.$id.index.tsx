@@ -33,7 +33,7 @@ import { VendorTimeline } from "@/components/timeline/VendorTimeline";
 import { listProjectCategoryDeadlines } from "@/server/project-deadlines.functions";
 import { buildTimelineItems } from "@/lib/build-timeline-items";
 
-export const Route = createFileRoute("/admin/projects/$id")({
+export const Route = createFileRoute("/admin/projects/$id/")({
   head: () => ({
     meta: [
       { title: "Project — Saffron Planning Studio" },
