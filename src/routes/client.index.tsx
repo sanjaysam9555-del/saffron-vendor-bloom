@@ -71,7 +71,9 @@ function ClientPortalPage() {
 
     const channel = supabase
       .channel(`client-live-${projectId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quotes", filter: `project_id=eq.${projectId}` }, invalidateProjectAndQuotes)
+      // project_vendor_quotes intentionally NOT subscribed: clients have no SELECT
+      // policy on that table; quote data is fetched via server fns. Realtime would
+      // deliver nothing to clients anyway and we don't want to risk leaking rows.
       .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_quote_files" }, invalidateProjectAndQuotes)
       .on("postgres_changes", { event: "*", schema: "public", table: "project_vendor_comments", filter: `project_id=eq.${projectId}` }, invalidateProjectAndComments)
       .on("postgres_changes", { event: "*", schema: "public", table: "project_vendors", filter: `project_id=eq.${projectId}` }, invalidateProject)
