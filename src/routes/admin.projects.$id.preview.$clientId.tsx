@@ -57,7 +57,7 @@ function PreviewPage() {
   const { project, vendors } = data as { project: { id: string; bride_name: string; groom_name: string; wedding_date: string }; vendors: ClientVendor[] };
 
   return (
-    <ClientPreviewProvider clientLabel="client">
+    <ClientPreviewProvider clientLabel="client" projectId={id}>
       <div className="min-h-screen bg-[var(--cream)]">
         {/* Preview banner */}
         <div className="sticky top-0 z-30 border-b border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)] px-4 py-2 text-xs text-[var(--charcoal)] sm:px-6">
