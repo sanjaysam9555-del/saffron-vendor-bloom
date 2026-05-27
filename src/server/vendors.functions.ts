@@ -108,7 +108,10 @@ export const deleteVendorServer = createServerFn({ method: "POST" })
   .middleware([attachAuthToken])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => {
-    await requireStaffUser();
+    const { userId } = await requireStaffUser();
+    const { data: adminRow } = await supabaseAdmin
+      .from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
+    if (!adminRow) throw new Error("Forbidden: admin only");
     const { error } = await supabaseAdmin.from("vendors").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
