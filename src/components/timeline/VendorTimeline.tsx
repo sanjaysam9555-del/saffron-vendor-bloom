@@ -243,13 +243,13 @@ function CategoryRow({
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px]">
             <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2 py-0.5 text-[var(--charcoal)]/75">
-              Planned:{" "}
+              Planned Budget:{" "}
               <span className="font-medium text-[var(--charcoal)]">
                 {item.planned_amount != null ? formatINR(item.planned_amount) : "—"}
               </span>
             </span>
             <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2 py-0.5 text-[var(--charcoal)]/75">
-              Actual:{" "}
+              Actual Cost:{" "}
               <span className="font-medium text-[var(--charcoal)]">
                 {resolveActual(item) != null ? formatINR(resolveActual(item)) : "—"}
               </span>
@@ -421,7 +421,7 @@ function DeadlineEditor({
         </select>
       </label>
       <label className="flex flex-col gap-1 text-xs">
-        <span className="text-[var(--charcoal)]/65">Planned (₹)</span>
+        <span className="text-[var(--charcoal)]/65">Planned Budget (₹)</span>
         <input
           type="number"
           min={0}
@@ -434,7 +434,7 @@ function DeadlineEditor({
       </label>
       <label className="flex flex-col gap-1 text-xs">
         <span className="text-[var(--charcoal)]/65">
-          Actual override (₹)
+          Actual Cost(₹)
         </span>
         <input
           type="number"
@@ -498,10 +498,10 @@ function TotalsRow({ items }: { items: TimelineItem[] }) {
         Totals
       </span>
       <span className="text-[var(--charcoal)]/75">
-        Planned: <span className="font-semibold text-[var(--charcoal)]">{formatINR(planned)}</span>
+        Planned Budget: <span className="font-semibold text-[var(--charcoal)]">{formatINR(planned)}</span>
       </span>
       <span className="text-[var(--charcoal)]/75">
-        Actual: <span className="font-semibold text-[var(--charcoal)]">{formatINR(actual)}</span>
+        Actual Cost: <span className="font-semibold text-[var(--charcoal)]">{formatINR(actual)}</span>
       </span>
       <span className={`font-medium ${varColor}`}>
         Variance: {variance >= 0 ? "+" : "−"}
@@ -545,8 +545,8 @@ function TableView({
             <th className="px-3 py-2">Days left</th>
             <th className="px-3 py-2">Criticality</th>
             <th className="px-3 py-2">Status</th>
-            <th className="px-3 py-2 text-right">Planned</th>
-            <th className="px-3 py-2 text-right">Actual</th>
+            <th className="px-3 py-2 text-right">Planned Budget</th>
+            <th className="px-3 py-2 text-right">Actual Cost</th>
             {mode === "admin" && <th className="px-3 py-2"></th>}
           </tr>
         </thead>
