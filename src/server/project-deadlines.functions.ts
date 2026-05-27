@@ -98,7 +98,9 @@ export const deleteCategoryDeadline = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ context, data }) => {
-    await assertStaffOnly(context.userId);
+    const { data: adminRow } = await supabaseAdmin
+      .from("user_roles").select("role").eq("user_id", context.userId).eq("role", "admin").maybeSingle();
+    if (!adminRow) throw new Error("Forbidden: admin only");
     const { error } = await supabaseAdmin
       .from("project_category_deadlines")
       .delete()

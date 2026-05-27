@@ -616,7 +616,7 @@ export const removeProjectClient = createServerFn({ method: "POST" })
     z.object({ project_id: z.string().uuid(), user_id: z.string().uuid() }).parse(d),
   )
   .handler(async ({ context, data }) => {
-    await assertStaff(context.userId);
+    await assertAdmin(context.userId);
     await supabaseAdmin
       .from("project_clients")
       .delete()
@@ -652,7 +652,7 @@ export const unassignVendorFromProject = createServerFn({ method: "POST" })
     z.object({ project_id: z.string().uuid(), vendor_id: z.string().uuid() }).parse(d),
   )
   .handler(async ({ context, data }) => {
-    await assertStaff(context.userId);
+    await assertAdmin(context.userId);
     const { error } = await supabaseAdmin
       .from("project_vendors")
       .delete()
@@ -1138,10 +1138,10 @@ export const deleteProjectVendorComment = createServerFn({ method: "POST" })
       .from("user_roles")
       .select("role")
       .eq("user_id", userId);
-    const isStaff = (roles ?? []).some((r) => r.role === "admin" || r.role === "employee");
+    const isAdmin = (roles ?? []).some((r) => r.role === "admin");
 
     let q = supabaseAdmin.from("project_vendor_comments").delete().eq("id", data.id);
-    if (!isStaff) q = q.eq("user_id", userId);
+    if (!isAdmin) q = q.eq("user_id", userId);
     const { error } = await q;
     if (error) throw new Error(error.message);
     return { ok: true };

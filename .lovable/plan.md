@@ -1,17 +1,47 @@
-# Fix: Create Employee creates clients
+# Lock down delete access to admins only
 
-## Root cause
+Employees currently have delete access in several places — both via RLS policies that group all CRUD under "Staff manage X", and via server functions gated to `staff` (admin OR employee) rather than `admin`.
 
-`handle_new_user` trigger on `auth.users` always assigns the `client` role (except for the first-ever user). It ignores the `role` set in `user_metadata`. So when `createEmployee` calls `supabaseAdmin.auth.admin.createUser({ user_metadata: { role: "employee" } })`, the trigger inserts a `client` row into `user_roles` and the metadata is silently ignored.
+## DB migration: split "Staff manage X" policies
 
-## Fix
+For each table below, drop the `FOR ALL` staff policy and replace with separate policies: SELECT/INSERT/UPDATE for staff, DELETE for admin only.
 
-In `src/server/admin-users.functions.ts` → `createEmployee` handler, after the `createUser` call succeeds, upsert the role to `employee`:
+- `projects`
+- `project_clients`
+- `project_vendors`
+- `project_vendor_quotes`
+- `project_vendor_quote_files`
+- `project_category_deadlines`
+- `vendor_instagram_previews`
+- `instagram_backfill_jobs`
 
-- Delete the auto-created `client` row in `user_roles` for the new `user_id` and insert `role = 'employee'` (single transaction via two admin calls, or `upsert` with conflict on `(user_id, role)` after deleting existing).
-- The existing `enforce_staff_email_domain` trigger will validate the `@saffronevents.in` domain, so we should also validate the email in the input validator (or rely on the trigger to throw — which would leave an orphaned auth user). Better: validate domain in the zod schema before creating the user.
+Also change `project_vendor_comments` → "Staff delete any comment" from staff to admin only. (Clients can still delete their own; comment authors keep delete rights through the existing "Clients delete own comments" policy, which applies to any author including staff via `user_id = auth.uid()`.)
 
-No DB migration needed.
+Tables already correct (admin-only delete): `vendors`, `categories`, `inbound_leads`, `vendor_attachments`, `user_roles`.
 
-## Files
-- `src/server/admin-users.functions.ts` — add domain check in `inputValidator`; after `createUser`, replace the role row with `'employee'`.
+## Server functions: change `assertStaff` → `assertAdmin` for delete handlers
+
+These bypass RLS via `supabaseAdmin`, so app-level gating is the only check:
+
+- `src/server/projects.functions.ts`
+  - `removeProjectClient` (deletes `project_clients` + auth user)
+  - `unassignVendorFromProject`
+  - delete-comment handler (around line 1130) — admin or comment author only
+- `src/server/vendors.functions.ts`
+  - `deleteVendorServer`
+  - `bulkDeleteVendorsServer`
+- `src/server/project-deadlines.functions.ts`
+  - `deleteCategoryDeadline`
+
+Leave alone:
+- `assignVendorsBulk` — performs delete-then-insert to "replace set" of assigned vendors. This is a bulk-assign action, not a delete action. Keep as staff. (Flagging for awareness.)
+- `updateClientVendorStatus` — clients deleting their own status row, unchanged.
+- `deleteProject`, `deleteUser` — already admin-only.
+
+## UI
+
+No UI changes in this pass. Delete buttons will simply error for employees. (Can hide later if desired.)
+
+## Out of scope
+
+Storage bucket `vendor-files` policies — staff currently have full access via the `Staff manage quote files` / `Staff insert attachments` table policies. Storage objects themselves are server-mediated (signed URLs from server fns), and the `vendor_attachments` row delete is already admin-only, so an employee cannot delete an attachment record. Quote file deletion goes through `project_vendor_quote_files` RLS which this plan changes to admin-only delete.
