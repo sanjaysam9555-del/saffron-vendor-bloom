@@ -652,7 +652,7 @@ export const unassignVendorFromProject = createServerFn({ method: "POST" })
     z.object({ project_id: z.string().uuid(), vendor_id: z.string().uuid() }).parse(d),
   )
   .handler(async ({ context, data }) => {
-    await assertStaff(context.userId);
+    await assertAdmin(context.userId);
     const { error } = await supabaseAdmin
       .from("project_vendors")
       .delete()
