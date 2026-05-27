@@ -524,9 +524,19 @@ function TableView({
   now: Date;
   registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
 }) {
+  const totalPlanned = sumAmounts(items, (i) => i.planned_amount);
+  const totalActual = sumAmounts(items, (i) => resolveActual(i));
+  const variance = totalActual - totalPlanned;
+  const varColor =
+    variance > 0
+      ? "text-[var(--terracotta)]"
+      : variance < 0
+        ? "text-emerald-700"
+        : "text-[var(--charcoal)]/70";
+  const colSpan = mode === "admin" ? 9 : 8;
   return (
     <div className="overflow-x-auto rounded-md border border-[var(--border)] shadow-[inset_-12px_0_8px_-8px_rgba(0,0,0,0.08)]">
-      <table className="w-full min-w-[640px] text-sm">
+      <table className="w-full min-w-[820px] text-sm">
         <thead className="bg-[var(--cream)] text-left text-xs uppercase tracking-wider text-[var(--charcoal)]/60">
           <tr>
             <th className="px-3 py-2">Category</th>
@@ -535,6 +545,8 @@ function TableView({
             <th className="px-3 py-2">Days left</th>
             <th className="px-3 py-2">Criticality</th>
             <th className="px-3 py-2">Status</th>
+            <th className="px-3 py-2 text-right">Planned</th>
+            <th className="px-3 py-2 text-right">Actual</th>
             {mode === "admin" && <th className="px-3 py-2"></th>}
           </tr>
         </thead>
@@ -550,6 +562,22 @@ function TableView({
             />
           ))}
         </tbody>
+        <tfoot className="bg-[var(--cream)] text-sm">
+          <tr className="border-t-2 border-[var(--border)]">
+            <td className="px-3 py-2 font-semibold uppercase tracking-wider text-xs text-[var(--charcoal)]/70" colSpan={6}>
+              Totals
+            </td>
+            <td className="px-3 py-2 text-right font-semibold">{formatINR(totalPlanned)}</td>
+            <td className="px-3 py-2 text-right font-semibold">{formatINR(totalActual)}</td>
+            {mode === "admin" && <td className="px-3 py-2" />}
+          </tr>
+          <tr>
+            <td className={`px-3 pb-2 text-right text-xs font-medium ${varColor}`} colSpan={colSpan}>
+              Variance: {variance >= 0 ? "+" : "−"}
+              {formatINR(Math.abs(variance))}
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   );
@@ -571,6 +599,7 @@ function TableRow({
   const [editing, setEditing] = useState(false);
   const { bucket, daysLeft } = classifyUrgency(item, now);
   const color = BUCKET_TOKEN[bucket];
+  const actual = resolveActual(item);
 
   return (
     <>
@@ -598,6 +627,17 @@ function TableRow({
             BUCKET_LABEL[bucket]
           )}
         </td>
+        <td className="px-3 py-2 text-right tabular-nums">
+          {item.planned_amount != null ? formatINR(item.planned_amount) : "—"}
+        </td>
+        <td className="px-3 py-2 text-right tabular-nums">
+          {actual != null ? formatINR(actual) : "—"}
+          {item.actual_amount_override != null && (
+            <span className="ml-1 rounded bg-[var(--champagne)]/50 px-1 text-[9px] uppercase tracking-wide text-[var(--charcoal)]/70">
+              manual
+            </span>
+          )}
+        </td>
         {mode === "admin" && (
           <td className="px-3 py-2 text-right">
             <button
@@ -611,7 +651,7 @@ function TableRow({
       </tr>
       {editing && mode === "admin" && (
         <tr>
-          <td colSpan={7} className="bg-[var(--cream)] px-3 py-2">
+          <td colSpan={mode === "admin" ? 9 : 8} className="bg-[var(--cream)] px-3 py-2">
             <DeadlineEditor
               item={item}
               projectId={projectId}
