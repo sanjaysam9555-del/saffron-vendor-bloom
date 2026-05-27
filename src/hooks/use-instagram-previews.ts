@@ -164,7 +164,8 @@ export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enable
 // ---------------------------------------------------------------------------
 
 function patchBulkCaches(qc: QueryClient, row: VendorInstagramPreview) {
-  const cachedOk = row.status === "ok" ? undefined : findCachedOkPreview(qc, row.vendor_id, row.handle);
+  const cachedOk =
+    row.status === "ok" ? undefined : findCachedOkPreview(qc, row.vendor_id, row.handle);
   const nextRow = cachedOk ?? row;
   // Per-vendor cache
   qc.setQueryData(
@@ -258,7 +259,6 @@ export function useAutoEnsureMissingPreviews(
       return true;
     });
 
-
     if (missing.length === 0) return;
 
     let cancelled = false;
@@ -297,10 +297,7 @@ export function useAutoEnsureMissingPreviews(
 
     startDelay(() => {
       if (cancelled) return;
-      const workers = Array.from(
-        { length: Math.min(CONCURRENCY, missing.length) },
-        () => worker(),
-      );
+      const workers = Array.from({ length: Math.min(CONCURRENCY, missing.length) }, () => worker());
       void Promise.all(workers);
     });
 
@@ -329,7 +326,6 @@ export function useTriggerInstagramPreview() {
       });
   };
 }
-
 
 export function useStartInstagramBackfill() {
   const fn = useServerFn(startInstagramBackfill);
