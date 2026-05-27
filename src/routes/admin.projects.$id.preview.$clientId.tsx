@@ -35,6 +35,11 @@ function PreviewPage() {
   });
   const [detail, setDetail] = useState<ClientVendor | null>(null);
 
+  const vendors = ((data as { vendors?: ClientVendor[] } | undefined)?.vendors ?? []) as ClientVendor[];
+  const igIds = useMemo(() => vendors.filter((v) => v.instagram_handle).map((v) => v.id), [vendors]);
+  const { map: previewMap } = useInstagramPreviewsBulk(igIds);
+  useAutoEnsureMissingPreviews(vendors, previewMap);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[var(--cream)] px-6 py-8">
@@ -55,10 +60,8 @@ function PreviewPage() {
     );
   }
 
-  const { project, vendors } = data as { project: { id: string; bride_name: string; groom_name: string; wedding_date: string }; vendors: ClientVendor[] };
-  const igIds = useMemo(() => vendors.filter((v) => v.instagram_handle).map((v) => v.id), [vendors]);
-  const { map: previewMap } = useInstagramPreviewsBulk(igIds);
-  useAutoEnsureMissingPreviews(vendors, previewMap);
+  const { project } = data as { project: { id: string; bride_name: string; groom_name: string; wedding_date: string } };
+
 
   return (
     <ClientPreviewProvider clientLabel="client" projectId={id}>
