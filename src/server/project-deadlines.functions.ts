@@ -13,6 +13,8 @@ export interface CategoryDeadline {
   due_date: string | null;
   criticality: Criticality;
   notes: string | null;
+  planned_amount: number | null;
+  actual_amount_override: number | null;
   updated_at: string;
 }
 
