@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Eye } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { ClientPreviewProvider } from "@/lib/client-preview";
 import { getProjectAsClientView } from "@/server/projects.functions";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
+import { useInstagramPreviewsBulk, useAutoEnsureMissingPreviews } from "@/hooks/use-instagram-previews";
 import type { ClientVendor } from "@/lib/project-types";
 
 const ClientVendorDetail = lazy(() =>
