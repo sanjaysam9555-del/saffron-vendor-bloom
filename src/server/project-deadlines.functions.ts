@@ -70,6 +70,8 @@ export const upsertCategoryDeadline = createServerFn({ method: "POST" })
         due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
         criticality: z.enum(["low", "medium", "high"]),
         notes: z.string().max(1000).nullable().optional(),
+        planned_amount: z.number().min(0).max(1_000_000_000).nullable().optional(),
+        actual_amount_override: z.number().min(0).max(1_000_000_000).nullable().optional(),
       })
       .parse(d),
   )
@@ -84,6 +86,8 @@ export const upsertCategoryDeadline = createServerFn({ method: "POST" })
           due_date: data.due_date,
           criticality: data.criticality,
           notes: data.notes ?? null,
+          planned_amount: data.planned_amount ?? null,
+          actual_amount_override: data.actual_amount_override ?? null,
           created_by: context.userId,
         },
         { onConflict: "project_id,category" },
