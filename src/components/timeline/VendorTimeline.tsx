@@ -241,6 +241,25 @@ function CategoryRow({
             </span>
             {item.notes && <span className="italic text-[var(--charcoal)]/55">— {item.notes}</span>}
           </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2 py-0.5 text-[var(--charcoal)]/75">
+              Planned:{" "}
+              <span className="font-medium text-[var(--charcoal)]">
+                {item.planned_amount != null ? formatINR(item.planned_amount) : "—"}
+              </span>
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2 py-0.5 text-[var(--charcoal)]/75">
+              Actual:{" "}
+              <span className="font-medium text-[var(--charcoal)]">
+                {resolveActual(item) != null ? formatINR(resolveActual(item)) : "—"}
+              </span>
+              {item.actual_amount_override != null && (
+                <span className="ml-1 rounded bg-[var(--champagne)]/50 px-1 text-[9px] uppercase tracking-wide text-[var(--charcoal)]/70">
+                  manual
+                </span>
+              )}
+            </span>
+          </div>
         </div>
         {mode === "admin" && (
           <button
