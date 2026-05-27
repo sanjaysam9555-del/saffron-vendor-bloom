@@ -123,6 +123,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
               registerRowRef={registerRowRef}
             />
           ))}
+          <TotalsRow items={items} />
         </div>
       ) : (
         <TableView
