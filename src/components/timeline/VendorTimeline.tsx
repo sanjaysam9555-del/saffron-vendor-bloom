@@ -29,6 +29,15 @@ import {
   deleteCategoryDeadline,
 } from "@/server/project-deadlines.functions";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
+import { formatINR } from "@/lib/quote-types";
+
+function resolveActual(item: TimelineItem): number | null {
+  return item.actual_amount_override ?? item.closed_amount_auto;
+}
+
+function sumAmounts(items: TimelineItem[], pick: (i: TimelineItem) => number | null): number {
+  return items.reduce((s, i) => s + (pick(i) ?? 0), 0);
+}
 
 interface Props {
   projectId: string;
