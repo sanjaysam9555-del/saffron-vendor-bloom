@@ -29,6 +29,7 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
   // Subscribe to the my-project cache so the status stays in sync with the card.
   const { data: project } = useQuery<{ project: { id: string }; vendors: ClientVendor[] }>({
     queryKey: ["my-project"],
+    queryFn: async () => null as unknown as { project: { id: string }; vendors: ClientVendor[] },
     enabled: false,
   });
   const liveVendor = project?.vendors.find((v) => v.id === vendor?.id);
