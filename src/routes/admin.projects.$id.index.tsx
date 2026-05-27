@@ -343,7 +343,7 @@ function ProjectSectionTabs({
               : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
           }`}
         >
-          <Calendar className="h-4 w-4" /> Booking Timeline
+          <Calendar className="h-4 w-4" /> Budget &amp; Deadlines
         </button>
       </div>
 
