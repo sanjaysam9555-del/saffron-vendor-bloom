@@ -66,8 +66,9 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
 
   const thumbs = preview?.post_thumbnails ?? [];
   const hasAnything =
-    preview?.status === "ok" &&
-    (preview.avatar_url || thumbs.length > 0 || preview.display_name);
+    preview?.status === "ok"
+      ? preview.avatar_url || thumbs.length > 0 || preview.display_name || preview.profile_url || preview.handle
+      : preview?.profile_url || preview?.handle;
 
   if (!hasAnything) {
     return (

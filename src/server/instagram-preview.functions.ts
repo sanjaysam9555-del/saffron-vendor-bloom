@@ -40,6 +40,17 @@ async function upsertPreview(
   vendorId: string,
   scrape: Awaited<ReturnType<typeof scrapeInstagramProfile>>,
 ): Promise<VendorInstagramPreview | null> {
+  const { data: existing } = await supabaseAdmin
+    .from("vendor_instagram_previews" as never)
+    .select("*")
+    .eq("vendor_id", vendorId)
+    .maybeSingle();
+
+  const existingRow = existing as unknown as VendorInstagramPreview | null;
+  if (scrape.status === "error" && existingRow?.status === "ok") {
+    return existingRow;
+  }
+
   const row = {
     vendor_id: vendorId,
     handle: scrape.handle,
