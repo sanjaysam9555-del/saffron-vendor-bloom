@@ -616,7 +616,7 @@ export const removeProjectClient = createServerFn({ method: "POST" })
     z.object({ project_id: z.string().uuid(), user_id: z.string().uuid() }).parse(d),
   )
   .handler(async ({ context, data }) => {
-    await assertStaff(context.userId);
+    await assertAdmin(context.userId);
     await supabaseAdmin
       .from("project_clients")
       .delete()
