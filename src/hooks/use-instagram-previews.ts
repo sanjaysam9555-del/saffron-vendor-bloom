@@ -233,12 +233,18 @@ export function useAutoEnsureMissingPreviews(
       if (!handle) return false;
       if (inFlight.current.has(v.id)) return false;
       const existing = previewMap.get(v.id);
-      if (!existing) return true;
-      const ageMs = Date.now() - new Date(existing.fetched_at).getTime();
-      // Instagram CDN image URLs expire, so refresh cached previews before
-      // stale thumbnails start rendering as empty placeholders.
-      return existing.status === "error" || ageMs > REFRESH_AFTER_MS;
+      if (existing && existing.status === "ok") {
+        const ageMs = Date.now() - new Date(existing.fetched_at).getTime();
+        return ageMs > REFRESH_AFTER_MS;
+      }
+      // No row, or only an error row — but if we have a cached ok elsewhere,
+      // don't re-scrape (avoids wasting scraper quota when previewMap was
+      // substituted from cache).
+      const cachedOk = findCachedOkPreview(qc, v.id, handle);
+      if (cachedOk) return false;
+      return true;
     });
+
 
     if (missing.length === 0) return;
 
