@@ -54,7 +54,7 @@ export const listProjectCategoryDeadlines = createServerFn({ method: "GET" })
     await assertCanRead(context.userId, data.project_id);
     const { data: rows, error } = await supabaseAdmin
       .from("project_category_deadlines")
-      .select("id, project_id, category, due_date, criticality, notes, updated_at")
+      .select("id, project_id, category, due_date, criticality, notes, planned_amount, actual_amount_override, updated_at")
       .eq("project_id", data.project_id);
     if (error) throw new Error(error.message);
     return (rows ?? []) as CategoryDeadline[];
