@@ -68,6 +68,36 @@ function readLSForIds(ids: string[]): VendorInstagramPreview[] {
   return out;
 }
 
+function findCachedOkPreview(
+  qc: QueryClient,
+  vendorId: string,
+  handle: string | null | undefined,
+): VendorInstagramPreview | undefined {
+  // 1. Per-vendor cache
+  const perVendor = qc.getQueryData<VendorInstagramPreview>([
+    "instagram-preview",
+    vendorId,
+    normalizeInstagramHandle(handle),
+  ]);
+  if (perVendor && perVendor.status === "ok") return perVendor;
+
+  // 2. Any other active bulk cache
+  const bulkCaches = qc.getQueriesData<VendorInstagramPreview[]>({
+    queryKey: ["instagram-previews-bulk"],
+  });
+  for (const [, value] of bulkCaches) {
+    const list = Array.isArray(value) ? value : [];
+    const hit = list.find((p) => p.vendor_id === vendorId && p.status === "ok");
+    if (hit) return hit;
+  }
+
+  // 3. localStorage
+  const fromLS = readLS()[vendorId];
+  if (fromLS && fromLS.status === "ok") return fromLS;
+
+  return undefined;
+}
+
 export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enabled?: boolean }) {
   const fn = useServerFn(getVendorInstagramPreviewsBulk);
   const qc = useQueryClient();
@@ -99,8 +129,20 @@ export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enable
     placeholderData: keepPreviousData,
   });
 
+  // For any vendor whose server row is `error` (e.g. scraper rate-limited),
+  // substitute a previously cached `ok` preview from per-vendor cache,
+  // other bulk caches, or localStorage. UI-only — not written back to DB.
   const map = new Map<string, VendorInstagramPreview>();
-  (query.data ?? []).forEach((p) => map.set(p.vendor_id, p));
+  (query.data ?? []).forEach((p) => {
+    if (p.status === "error") {
+      const cached = findCachedOkPreview(qc, p.vendor_id, p.handle);
+      if (cached) {
+        map.set(p.vendor_id, cached);
+        return;
+      }
+    }
+    map.set(p.vendor_id, p);
+  });
   return { map, isLoading: query.isLoading };
 }
 
@@ -191,12 +233,18 @@ export function useAutoEnsureMissingPreviews(
       if (!handle) return false;
       if (inFlight.current.has(v.id)) return false;
       const existing = previewMap.get(v.id);
-      if (!existing) return true;
-      const ageMs = Date.now() - new Date(existing.fetched_at).getTime();
-      // Instagram CDN image URLs expire, so refresh cached previews before
-      // stale thumbnails start rendering as empty placeholders.
-      return existing.status === "error" || ageMs > REFRESH_AFTER_MS;
+      if (existing && existing.status === "ok") {
+        const ageMs = Date.now() - new Date(existing.fetched_at).getTime();
+        return ageMs > REFRESH_AFTER_MS;
+      }
+      // No row, or only an error row — but if we have a cached ok elsewhere,
+      // don't re-scrape (avoids wasting scraper quota when previewMap was
+      // substituted from cache).
+      const cachedOk = findCachedOkPreview(qc, v.id, handle);
+      if (cachedOk) return false;
+      return true;
     });
+
 
     if (missing.length === 0) return;
 

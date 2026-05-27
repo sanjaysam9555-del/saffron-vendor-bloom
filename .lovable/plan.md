@@ -1,16 +1,38 @@
-## Issues
+## Goal
+On the **Viewing as client — read-only preview** page, show the Instagram previews already cached by the Vendor Dashboard instead of re-fetching from the scraper (which is currently rate-limited and returns empty error rows).
 
-1. **Banner overlap on scroll** — `/admin/projects/$id/preview/$clientId` is nested under the `/admin` layout, which renders `AdminShellHeader` as `sticky top-0 z-30`. The preview page also renders its banner as `sticky top-0 z-30`, so on scroll both pin to the top and visually collide.
-2. **Instagram previews missing** — the preview page renders `ClientVendorCard` but never fetches Instagram previews, so `instagramPreview` is always undefined. The real client view (`client.index.tsx`) uses `useInstagramPreviewsBulk` + `useAutoEnsureMissingPreviews` and passes `previewMap.get(v.id)` to each card.
+## Why the previews look empty today
+- The Vendor Dashboard previously scraped and cached working Instagram previews for these vendors (avatar, name, 3 thumbnails) in the database, the in-memory query cache, and `localStorage`.
+- A later refresh hit the scraper's monthly limit and overwrote those database rows with `status: error` (no avatar, no thumbnails).
+- The client preview page reads only the bulk server result, so it now sees the error rows and renders "No Instagram preview" — even though the older successful preview is still sitting in the browser cache / localStorage.
 
-## Fix
+## Plan
+1. **Prefer cached good previews over server error rows (client side)**
+   In `src/hooks/use-instagram-previews.ts` (`useInstagramPreviewsBulk`):
+   - After receiving the server response, for each vendor whose returned row is `status: "error"`, look up a prior successful (`status: "ok"`) preview from:
+     1. The per-vendor query cache (`["instagram-preview", vendorId, handle]`)
+     2. Any other active bulk cache entry (`["instagram-previews-bulk", ...]`)
+     3. `localStorage` (`saffron.ig.previews.v1`)
+   - If a cached `ok` row exists, substitute it into the returned map so cards render the cached avatar + thumbnails.
+   - Do **not** write the substituted rows back to the DB; this is a UI-only fallback.
 
-In `src/routes/admin.projects.$id.preview.$clientId.tsx`:
+2. **Stop overwriting good DB rows with scraper errors (server side)**
+   In `src/server/instagram-preview.functions.ts` (`upsertPreview`):
+   - Confirm the existing guard "if scrape failed and we have an ok row, keep the ok row" stays in place so future refreshes don't blank out working previews again.
 
-- **Banner**: drop `sticky top-0 z-30` from the "Viewing as client — read-only preview" bar so it scrolls with the page (the admin shell header stays as the only sticky element on top). Keep styling otherwise unchanged.
-- **Instagram**: mirror the pattern from `ClientVendorGrid` in `client.index.tsx`:
-  - Build `ids = vendors.filter(v => v.instagram_handle).map(v => v.id)` via `useMemo`.
-  - Call `useInstagramPreviewsBulk(ids)` and `useAutoEnsureMissingPreviews(vendors, previewMap)` from `@/hooks/use-instagram-previews`.
-  - Pass `instagramPreview={previewMap.get(v.id) ?? null}` to each `ClientVendorCard`.
+3. **Skip auto-refresh while previews exist in cache**
+   In `useAutoEnsureMissingPreviews`:
+   - Treat a vendor as "already has a preview" when either the server map or the resolved cached map contains an `ok` row, so the preview page does not keep triggering scrape attempts (which currently fail and waste calls).
 
-No changes to `ClientVendorDetail` (it fetches its own preview), no schema changes, no shared layout changes.
+4. **Verify**
+   - Reopen `/admin/projects/.../preview/<clientId>` as the same admin who has already loaded the Vendor Dashboard.
+   - Confirm each Instagram-linked vendor card shows the cached preview (avatar, name, thumbnails) instead of "No Instagram preview."
+   - Check the network panel: no new `ensureVendorInstagramPreview` calls fire for vendors that already have a cached `ok` row.
+
+## Technical details
+- Files touched:
+  - `src/hooks/use-instagram-previews.ts` — merge cached `ok` rows over server `error` rows; gate auto-ensure on resolved map.
+  - `src/server/instagram-preview.functions.ts` — keep the "don't overwrite ok with error" guard.
+- No schema changes.
+- No auth/role changes.
+- Caveat: a vendor that has never been previewed on the Vendor Dashboard (no cache entry anywhere) will still show the empty state until the scraper limit is restored — there is no other source of truth for thumbnails.
