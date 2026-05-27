@@ -20,7 +20,7 @@ export interface VendorInstagramPreview {
   updated_at: string;
 }
 
-const STALE_DAYS = 30;
+const STALE_DAYS = 3;
 
 async function requireUser(): Promise<{ userId: string; isStaff: boolean }> {
   const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";

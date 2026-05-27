@@ -26,6 +26,7 @@ import { normalizeInstagramHandle } from "@/lib/instagram";
 
 const LS_KEY = "saffron.ig.previews.v1";
 const LS_MAX = 500;
+const REFRESH_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
 
 type LSCache = Record<string, VendorInstagramPreview>;
 
@@ -191,8 +192,10 @@ export function useAutoEnsureMissingPreviews(
       if (inFlight.current.has(v.id)) return false;
       const existing = previewMap.get(v.id);
       if (!existing) return true;
-      // Re-fetch errored rows opportunistically; treat 'ok' / 'not_found' as final until staleness logic in the server fn kicks in.
-      return existing.status === "error";
+      const ageMs = Date.now() - new Date(existing.fetched_at).getTime();
+      // Instagram CDN image URLs expire, so refresh cached previews before
+      // stale thumbnails start rendering as empty placeholders.
+      return existing.status === "error" || ageMs > REFRESH_AFTER_MS;
     });
 
     if (missing.length === 0) return;
