@@ -77,27 +77,49 @@ function findCachedOkPreview(
   vendorId: string,
   handle: string | null | undefined,
 ): VendorInstagramPreview | undefined {
+  const normalizedHandle = normalizeInstagramHandle(handle);
+  const asTargetVendor = (preview: VendorInstagramPreview) => ({
+    ...preview,
+    vendor_id: vendorId,
+    handle: preview.handle ?? normalizedHandle,
+  });
+
   // 1. Per-vendor cache
   const perVendor = qc.getQueryData<VendorInstagramPreview>([
     "instagram-preview",
     vendorId,
-    normalizeInstagramHandle(handle),
+    normalizedHandle,
   ]);
-  if (perVendor && perVendor.status === "ok") return perVendor;
+  if (perVendor && perVendor.status === "ok") return asTargetVendor(perVendor);
 
-  // 2. Any other active bulk cache
+  // 2. Any other active bulk cache, first by vendor id, then by handle. The
+  // admin dashboard can have a working preview cached under another vendor row
+  // when duplicate vendor records share the same Instagram profile.
   const bulkCaches = qc.getQueriesData<VendorInstagramPreview[]>({
     queryKey: ["instagram-previews-bulk"],
   });
   for (const [, value] of bulkCaches) {
     const list = Array.isArray(value) ? value : [];
     const hit = list.find((p) => p.vendor_id === vendorId && p.status === "ok");
-    if (hit) return hit;
+    if (hit) return asTargetVendor(hit);
+    if (normalizedHandle) {
+      const handleHit = list.find(
+        (p) => p.status === "ok" && normalizeInstagramHandle(p.handle) === normalizedHandle,
+      );
+      if (handleHit) return asTargetVendor(handleHit);
+    }
   }
 
-  // 3. localStorage
-  const fromLS = readLS()[vendorId];
-  if (fromLS && fromLS.status === "ok") return fromLS;
+  // 3. localStorage, also by handle for duplicate vendor records.
+  const ls = readLS();
+  const fromLS = ls[vendorId];
+  if (fromLS && fromLS.status === "ok") return asTargetVendor(fromLS);
+  if (normalizedHandle) {
+    const handleHit = Object.values(ls).find(
+      (p) => p.status === "ok" && normalizeInstagramHandle(p.handle) === normalizedHandle,
+    );
+    if (handleHit) return asTargetVendor(handleHit);
+  }
 
   return undefined;
 }
