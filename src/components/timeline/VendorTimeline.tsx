@@ -298,6 +298,12 @@ function DeadlineEditor({
   const [due, setDue] = useState<string>(item.due_date ?? "");
   const [crit, setCrit] = useState<Criticality>(item.criticality);
   const [notes, setNotes] = useState<string>(item.notes ?? "");
+  const [planned, setPlanned] = useState<string>(
+    item.planned_amount != null ? String(item.planned_amount) : "",
+  );
+  const [actualOverride, setActualOverride] = useState<string>(
+    item.actual_amount_override != null ? String(item.actual_amount_override) : "",
+  );
 
   const queryKey = ["project-deadlines", projectId] as const;
 
@@ -308,7 +314,16 @@ function DeadlineEditor({
     due_date: string | null;
     criticality: Criticality;
     notes: string | null;
+    planned_amount: number | null;
+    actual_amount_override: number | null;
     updated_at: string;
+  };
+
+  const parseAmount = (raw: string): number | null => {
+    const t = raw.trim();
+    if (!t) return null;
+    const n = Number(t);
+    return Number.isFinite(n) && n >= 0 ? n : null;
   };
 
   const saveM = useMutation({
@@ -320,6 +335,8 @@ function DeadlineEditor({
           due_date: due ? due : null,
           criticality: crit,
           notes: notes.trim() ? notes.trim() : null,
+          planned_amount: parseAmount(planned),
+          actual_amount_override: parseAmount(actualOverride),
         },
       }),
     onMutate: async () => {
@@ -333,6 +350,8 @@ function DeadlineEditor({
           due_date: due ? due : null,
           criticality: crit,
           notes: notes.trim() ? notes.trim() : null,
+          planned_amount: parseAmount(planned),
+          actual_amount_override: parseAmount(actualOverride),
           updated_at: new Date().toISOString(),
         };
         const idx = prev.findIndex((r) => r.category === item.category);
@@ -351,7 +370,7 @@ function DeadlineEditor({
       if (ctx?.prev) qc.setQueryData(queryKey, ctx.prev);
       notifyError(e, "Could not save");
     },
-    onSuccess: () => notifySuccess("Deadline saved"),
+    onSuccess: () => notifySuccess("Saved"),
     onSettled: () => qc.invalidateQueries({ queryKey }),
   });
 
@@ -372,12 +391,14 @@ function DeadlineEditor({
       if (ctx?.prev) qc.setQueryData(queryKey, ctx.prev);
       notifyError(e, "Could not clear");
     },
-    onSuccess: () => notifySuccess("Deadline cleared"),
+    onSuccess: () => notifySuccess("Cleared"),
     onSettled: () => qc.invalidateQueries({ queryKey }),
   });
 
+  const autoActual = item.closed_amount_auto;
+
   return (
-    <div className="mt-3 grid gap-2 rounded-md bg-[var(--cream)] p-3 sm:grid-cols-[auto_auto_1fr_auto]">
+    <div className="mt-3 grid gap-2 rounded-md bg-[var(--cream)] p-3 sm:grid-cols-[auto_auto_auto_auto_1fr_auto]">
       <label className="flex flex-col gap-1 text-xs">
         <span className="text-[var(--charcoal)]/65">Due date</span>
         <input
@@ -400,6 +421,32 @@ function DeadlineEditor({
         </select>
       </label>
       <label className="flex flex-col gap-1 text-xs">
+        <span className="text-[var(--charcoal)]/65">Planned (₹)</span>
+        <input
+          type="number"
+          min={0}
+          step="1"
+          value={planned}
+          onChange={(e) => setPlanned(e.target.value)}
+          placeholder="0"
+          className="w-32 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-xs">
+        <span className="text-[var(--charcoal)]/65">
+          Actual override (₹)
+        </span>
+        <input
+          type="number"
+          min={0}
+          step="1"
+          value={actualOverride}
+          onChange={(e) => setActualOverride(e.target.value)}
+          placeholder={autoActual != null ? `auto ${autoActual}` : "—"}
+          className="w-36 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-xs">
         <span className="text-[var(--charcoal)]/65">Notes</span>
         <input
           type="text"
@@ -417,7 +464,11 @@ function DeadlineEditor({
         >
           <Save className="h-3 w-3" /> Save
         </button>
-        {(item.due_date || item.notes || item.criticality !== "medium") && (
+        {(item.due_date ||
+          item.notes ||
+          item.criticality !== "medium" ||
+          item.planned_amount != null ||
+          item.actual_amount_override != null) && (
           <button
             onClick={() => clearM.mutate()}
             disabled={clearM.isPending}
@@ -427,6 +478,35 @@ function DeadlineEditor({
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+function TotalsRow({ items }: { items: TimelineItem[] }) {
+  const planned = sumAmounts(items, (i) => i.planned_amount);
+  const actual = sumAmounts(items, (i) => resolveActual(i));
+  const variance = actual - planned;
+  const varColor =
+    variance > 0
+      ? "text-[var(--terracotta)]"
+      : variance < 0
+        ? "text-emerald-700"
+        : "text-[var(--charcoal)]/70";
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-x-6 gap-y-1 rounded-md border border-[var(--border)] bg-[var(--cream)] px-4 py-2.5 text-sm">
+      <span className="text-xs uppercase tracking-wider text-[var(--charcoal)]/60">
+        Totals
+      </span>
+      <span className="text-[var(--charcoal)]/75">
+        Planned: <span className="font-semibold text-[var(--charcoal)]">{formatINR(planned)}</span>
+      </span>
+      <span className="text-[var(--charcoal)]/75">
+        Actual: <span className="font-semibold text-[var(--charcoal)]">{formatINR(actual)}</span>
+      </span>
+      <span className={`font-medium ${varColor}`}>
+        Variance: {variance >= 0 ? "+" : "−"}
+        {formatINR(Math.abs(variance))}
+      </span>
     </div>
   );
 }
