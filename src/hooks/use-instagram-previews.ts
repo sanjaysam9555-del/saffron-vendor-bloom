@@ -44,7 +44,11 @@ function writeLS(rows: VendorInstagramPreview[]) {
   if (typeof window === "undefined") return;
   try {
     const existing = readLS();
-    for (const r of rows) existing[r.vendor_id] = r;
+    for (const r of rows) {
+      const current = existing[r.vendor_id];
+      if (current?.status === "ok" && r.status !== "ok") continue;
+      existing[r.vendor_id] = r;
+    }
     // Cap size by recency of fetched_at.
     const entries = Object.values(existing).sort(
       (a, b) => new Date(b.fetched_at).getTime() - new Date(a.fetched_at).getTime(),
@@ -73,27 +77,49 @@ function findCachedOkPreview(
   vendorId: string,
   handle: string | null | undefined,
 ): VendorInstagramPreview | undefined {
+  const normalizedHandle = normalizeInstagramHandle(handle);
+  const asTargetVendor = (preview: VendorInstagramPreview) => ({
+    ...preview,
+    vendor_id: vendorId,
+    handle: preview.handle ?? normalizedHandle,
+  });
+
   // 1. Per-vendor cache
   const perVendor = qc.getQueryData<VendorInstagramPreview>([
     "instagram-preview",
     vendorId,
-    normalizeInstagramHandle(handle),
+    normalizedHandle,
   ]);
-  if (perVendor && perVendor.status === "ok") return perVendor;
+  if (perVendor && perVendor.status === "ok") return asTargetVendor(perVendor);
 
-  // 2. Any other active bulk cache
+  // 2. Any other active bulk cache, first by vendor id, then by handle. The
+  // admin dashboard can have a working preview cached under another vendor row
+  // when duplicate vendor records share the same Instagram profile.
   const bulkCaches = qc.getQueriesData<VendorInstagramPreview[]>({
     queryKey: ["instagram-previews-bulk"],
   });
   for (const [, value] of bulkCaches) {
     const list = Array.isArray(value) ? value : [];
     const hit = list.find((p) => p.vendor_id === vendorId && p.status === "ok");
-    if (hit) return hit;
+    if (hit) return asTargetVendor(hit);
+    if (normalizedHandle) {
+      const handleHit = list.find(
+        (p) => p.status === "ok" && normalizeInstagramHandle(p.handle) === normalizedHandle,
+      );
+      if (handleHit) return asTargetVendor(handleHit);
+    }
   }
 
-  // 3. localStorage
-  const fromLS = readLS()[vendorId];
-  if (fromLS && fromLS.status === "ok") return fromLS;
+  // 3. localStorage, also by handle for duplicate vendor records.
+  const ls = readLS();
+  const fromLS = ls[vendorId];
+  if (fromLS && fromLS.status === "ok") return asTargetVendor(fromLS);
+  if (normalizedHandle) {
+    const handleHit = Object.values(ls).find(
+      (p) => p.status === "ok" && normalizeInstagramHandle(p.handle) === normalizedHandle,
+    );
+    if (handleHit) return asTargetVendor(handleHit);
+  }
 
   return undefined;
 }
@@ -109,13 +135,20 @@ export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enable
     queryFn: async () => {
       if (vendorIds.length === 0) return [];
       const rows = await fn({ data: { vendorIds } });
+      const resolvedRows = rows.map((p) => {
+        if (p.status !== "ok") {
+          const cached = findCachedOkPreview(qc, p.vendor_id, p.handle);
+          if (cached) return cached;
+        }
+        return p;
+      });
       // Seed per-vendor cache so the detail drawer renders instantly.
-      rows.forEach((p) => {
+      resolvedRows.forEach((p) => {
         qc.setQueryData(["instagram-preview", p.vendor_id, normalizeInstagramHandle(p.handle)], p);
       });
       // Persist for next visit.
-      writeLS(rows);
-      return rows;
+      writeLS(resolvedRows);
+      return resolvedRows;
     },
     enabled,
     staleTime: 30 * 60 * 1000,
@@ -153,10 +186,13 @@ export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enable
 // ---------------------------------------------------------------------------
 
 function patchBulkCaches(qc: QueryClient, row: VendorInstagramPreview) {
+  const cachedOk =
+    row.status === "ok" ? undefined : findCachedOkPreview(qc, row.vendor_id, row.handle);
+  const nextRow = cachedOk ?? row;
   // Per-vendor cache
   qc.setQueryData(
-    ["instagram-preview", row.vendor_id, normalizeInstagramHandle(row.handle)],
-    row,
+    ["instagram-preview", nextRow.vendor_id, normalizeInstagramHandle(nextRow.handle)],
+    nextRow,
   );
   // Every active bulk query
   const caches = qc.getQueriesData<VendorInstagramPreview[]>({
@@ -164,12 +200,12 @@ function patchBulkCaches(qc: QueryClient, row: VendorInstagramPreview) {
   });
   for (const [key, value] of caches) {
     const list = Array.isArray(value) ? value : [];
-    const next = list.some((p) => p.vendor_id === row.vendor_id)
-      ? list.map((p) => (p.vendor_id === row.vendor_id ? row : p))
-      : [...list, row];
+    const next = list.some((p) => p.vendor_id === nextRow.vendor_id)
+      ? list.map((p) => (p.vendor_id === nextRow.vendor_id ? nextRow : p))
+      : [...list, nextRow];
     qc.setQueryData(key, next);
   }
-  writeLS([row]);
+  writeLS([nextRow]);
 }
 
 export function useEnsureInstagramPreview(vendorId: string, handle: string | null | undefined) {
@@ -245,7 +281,6 @@ export function useAutoEnsureMissingPreviews(
       return true;
     });
 
-
     if (missing.length === 0) return;
 
     let cancelled = false;
@@ -284,10 +319,7 @@ export function useAutoEnsureMissingPreviews(
 
     startDelay(() => {
       if (cancelled) return;
-      const workers = Array.from(
-        { length: Math.min(CONCURRENCY, missing.length) },
-        () => worker(),
-      );
+      const workers = Array.from({ length: Math.min(CONCURRENCY, missing.length) }, () => worker());
       void Promise.all(workers);
     });
 
@@ -316,7 +348,6 @@ export function useTriggerInstagramPreview() {
       });
   };
 }
-
 
 export function useStartInstagramBackfill() {
   const fn = useServerFn(startInstagramBackfill);
