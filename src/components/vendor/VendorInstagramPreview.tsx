@@ -63,12 +63,19 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
     );
   }
 
+  if (!preview) {
+    return (
+      <div className="mt-2 flex min-h-[148px] items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-2 text-[10px] text-[var(--charcoal)]/40">
+        No Instagram preview
+      </div>
+    );
+  }
 
-  const thumbs = preview?.post_thumbnails ?? [];
+  const thumbs = preview.post_thumbnails ?? [];
   const hasAnything =
-    preview?.status === "ok"
+    preview.status === "ok"
       ? preview.avatar_url || thumbs.length > 0 || preview.display_name || preview.profile_url || preview.handle
-      : preview?.profile_url || preview?.handle;
+      : preview.profile_url || preview.handle;
 
   if (!hasAnything) {
     return (
