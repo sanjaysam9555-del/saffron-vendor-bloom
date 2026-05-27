@@ -56,12 +56,15 @@ function PreviewPage() {
   }
 
   const { project, vendors } = data as { project: { id: string; bride_name: string; groom_name: string; wedding_date: string }; vendors: ClientVendor[] };
+  const igIds = useMemo(() => vendors.filter((v) => v.instagram_handle).map((v) => v.id), [vendors]);
+  const { map: previewMap } = useInstagramPreviewsBulk(igIds);
+  useAutoEnsureMissingPreviews(vendors, previewMap);
 
   return (
     <ClientPreviewProvider clientLabel="client" projectId={id}>
       <div className="min-h-screen bg-[var(--cream)]">
-        {/* Preview banner */}
-        <div className="sticky top-0 z-30 border-b border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)] px-4 py-2 text-xs text-[var(--charcoal)] sm:px-6">
+        {/* Preview banner — non-sticky so it doesn't overlap the admin shell header on scroll */}
+        <div className="border-b border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)] px-4 py-2 text-xs text-[var(--charcoal)] sm:px-6">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
             <span className="inline-flex items-center gap-1.5 font-medium">
               <Eye className="h-3.5 w-3.5" />
@@ -92,7 +95,12 @@ function PreviewPage() {
           ) : (
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {vendors.map((v) => (
-                <ClientVendorCard key={v.id} vendor={v} onView={() => setDetail(v)} />
+                <ClientVendorCard
+                  key={v.id}
+                  vendor={v}
+                  onView={() => setDetail(v)}
+                  instagramPreview={previewMap.get(v.id) ?? null}
+                />
               ))}
             </div>
           )}
