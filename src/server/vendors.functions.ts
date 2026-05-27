@@ -52,6 +52,19 @@ async function requireStaffUser(): Promise<{ userId: string; email: string }> {
   return { userId, email };
 }
 
+async function requireAdminUser(): Promise<{ userId: string }> {
+  const { userId } = await requireStaffUser();
+  const { data, error } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Forbidden: admin only");
+  return { userId };
+}
+
 export const listVendorsServer = createServerFn({ method: "GET" })
   .middleware([attachAuthToken])
   .handler(async () => {
