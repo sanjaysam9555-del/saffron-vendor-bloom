@@ -46,7 +46,12 @@ export const createEmployee = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z
       .object({
-        email: z.string().email(),
+        email: z
+          .string()
+          .email()
+          .refine((e) => e.toLowerCase().endsWith("@saffronevents.in"), {
+            message: "Staff accounts must use an @saffronevents.in email",
+          }),
         password: z.string().min(6),
         display_name: z.string().min(1),
       })
@@ -62,7 +67,22 @@ export const createEmployee = createServerFn({ method: "POST" })
       user_metadata: { display_name: data.display_name, role: "employee" },
     });
     if (error) throw new Error(error.message);
-    return { id: created.user?.id };
+    const newUserId = created.user?.id;
+    if (!newUserId) throw new Error("Failed to create user");
+
+    // handle_new_user trigger inserts a default 'client' role. Replace with 'employee'.
+    const { error: delErr } = await supabaseAdmin
+      .from("user_roles")
+      .delete()
+      .eq("user_id", newUserId);
+    if (delErr) throw new Error(delErr.message);
+
+    const { error: insErr } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: newUserId, role: "employee" });
+    if (insErr) throw new Error(insErr.message);
+
+    return { id: newUserId };
   });
 
 export const setUserPassword = createServerFn({ method: "POST" })
