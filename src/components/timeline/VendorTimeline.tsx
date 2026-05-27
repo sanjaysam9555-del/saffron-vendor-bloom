@@ -61,7 +61,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
     <div className="mt-2">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="font-display text-2xl text-[var(--terracotta)] sm:text-xl">Booking Timeline</h2>
+          <h2 className="font-display text-2xl text-[var(--terracotta)] sm:text-xl">Budget &amp; Deadlines</h2>
           <p className="mt-0.5 text-xs text-[var(--charcoal)]/65">
             Wedding day: {formatDueDate(weddingDate)}
           </p>
