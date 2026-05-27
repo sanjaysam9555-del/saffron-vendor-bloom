@@ -19,6 +19,9 @@ export interface TimelineItem {
   notes: string | null;
   booked: boolean;
   booked_vendor_name: string | null;
+  planned_amount: number | null;
+  closed_amount_auto: number | null;
+  actual_amount_override: number | null;
 }
 
 const BUCKET_ORDER: UrgencyBucket[] = [

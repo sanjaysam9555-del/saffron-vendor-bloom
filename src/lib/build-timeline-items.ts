@@ -6,7 +6,10 @@ interface VendorLike {
   vendor_name?: string | null;
   category: string | null;
   client_status?: string | null;
-  quote_summary?: { has_closed?: boolean } | null;
+  quote_summary?: {
+    has_closed?: boolean;
+    closed_amount?: number | null;
+  } | null;
 }
 
 /**
@@ -22,18 +25,30 @@ export function buildTimelineItems(
 ): TimelineItem[] {
   const byCat = new Map<
     string,
-    { count: number; bookedVendorName: string | null; booked: boolean }
+    {
+      count: number;
+      bookedVendorName: string | null;
+      booked: boolean;
+      closedAmount: number | null;
+    }
   >();
   for (const v of vendors) {
     const cat = (v.category ?? "").trim();
     if (!cat) continue;
-    const entry = byCat.get(cat) ?? { count: 0, bookedVendorName: null, booked: false };
+    const entry =
+      byCat.get(cat) ?? {
+        count: 0,
+        bookedVendorName: null,
+        booked: false,
+        closedAmount: null,
+      };
     entry.count += 1;
     const isBooked =
       !!v.quote_summary?.has_closed || v.client_status === "finalised";
     if (isBooked && !entry.booked) {
       entry.booked = true;
       entry.bookedVendorName = v.vendor_name ?? null;
+      entry.closedAmount = v.quote_summary?.closed_amount ?? null;
     }
     byCat.set(cat, entry);
   }
@@ -49,6 +64,9 @@ export function buildTimelineItems(
       notes: dl?.notes ?? null,
       booked: info.booked,
       booked_vendor_name: info.bookedVendorName,
+      planned_amount: dl?.planned_amount ?? null,
+      closed_amount_auto: info.closedAmount,
+      actual_amount_override: dl?.actual_amount_override ?? null,
     });
   }
   return out;

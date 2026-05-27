@@ -262,6 +262,7 @@ export type Database = {
       }
       project_category_deadlines: {
         Row: {
+          actual_amount_override: number | null
           category: string
           created_at: string
           created_by: string | null
@@ -269,10 +270,12 @@ export type Database = {
           due_date: string | null
           id: string
           notes: string | null
+          planned_amount: number | null
           project_id: string
           updated_at: string
         }
         Insert: {
+          actual_amount_override?: number | null
           category: string
           created_at?: string
           created_by?: string | null
@@ -280,10 +283,12 @@ export type Database = {
           due_date?: string | null
           id?: string
           notes?: string | null
+          planned_amount?: number | null
           project_id: string
           updated_at?: string
         }
         Update: {
+          actual_amount_override?: number | null
           category?: string
           created_at?: string
           created_by?: string | null
@@ -291,6 +296,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           notes?: string | null
+          planned_amount?: number | null
           project_id?: string
           updated_at?: string
         }
