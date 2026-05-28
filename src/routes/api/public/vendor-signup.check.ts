@@ -15,8 +15,11 @@ const ALLOWED: DuplicateField[] = [
 ];
 
 const checkHits = new Map<string, number[]>();
-const CHECK_LIMIT = 60;
+const CHECK_LIMIT = 15;
 const CHECK_WINDOW_MS = 60 * 1000;
+// Minimum query length to discourage prefix/iteration enumeration. Real values
+// (emails, phones, IG handles, website URLs, vendor names) are all longer.
+const MIN_VALUE_LENGTH = 5;
 
 function rateLimit(ip: string): boolean {
   const now = Date.now();
@@ -54,12 +57,18 @@ export const Route = createFileRoute("/api/public/vendor-signup/check")({
         if (!field || !ALLOWED.includes(field)) {
           return jsonResponse({ exists: false, error: "invalid_field" }, 400);
         }
-        if (!value.trim()) {
+        const trimmed = value.trim();
+        if (!trimmed) {
+          return jsonResponse({ exists: false }, 200);
+        }
+        if (trimmed.length < MIN_VALUE_LENGTH) {
+          // Don't oracle short prefixes — silently return "no duplicate".
           return jsonResponse({ exists: false }, 200);
         }
         if (value.length > 300) {
           return jsonResponse({ exists: false, error: "value_too_long" }, 400);
         }
+
 
         try {
           const exists = await fieldHasDuplicate(field, value);
