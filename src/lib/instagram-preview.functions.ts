@@ -24,10 +24,26 @@ const STALE_DAYS = 3;
 
 async function requireUser(): Promise<{ userId: string; isStaff: boolean }> {
   const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  if (!token) throw new Error("You're not signed in.");
-  const { data, error } = await supabaseAdmin.auth.getClaims(token);
-  const userId = data?.claims?.sub;
-  if (error || !userId) throw new Error("Your session expired.");
+  if (!token) {
+    console.error("[instagram-preview] requireUser: missing authorization header");
+    throw new Error("You're not signed in.");
+  }
+  let userId: string | undefined;
+  // Prefer getClaims (cheap, signature-verified). Fall back to getUser if
+  // claim verification rejects the token (e.g. JWKS rotation, clock skew).
+  const claimsRes = await supabaseAdmin.auth.getClaims(token);
+  userId = claimsRes.data?.claims?.sub;
+  if (!userId) {
+    const userRes = await supabaseAdmin.auth.getUser(token);
+    userId = userRes.data?.user?.id;
+    if (!userId) {
+      console.error("[instagram-preview] requireUser: token rejected", {
+        claimsErr: claimsRes.error?.message,
+        userErr: userRes.error?.message,
+      });
+      throw new Error("Your session expired.");
+    }
+  }
   const { data: roles } = await supabaseAdmin
     .from("user_roles")
     .select("role")
