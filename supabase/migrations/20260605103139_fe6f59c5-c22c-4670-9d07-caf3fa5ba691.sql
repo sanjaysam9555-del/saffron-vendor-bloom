@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Clients view their project deadlines" ON public.project_category_deadlines;
