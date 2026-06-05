@@ -138,22 +138,30 @@ export const getVendorInstagramPreviewsBulk = createServerFn({ method: "POST" })
       }
     }
 
-    const { data: rows, error } = await supabaseAdmin
-      .from("vendor_instagram_previews" as never)
-      .select("*")
-      .in("vendor_id", allowedIds);
-    if (error) {
-      console.error("[instagram-preview] bulk read failed", error.message);
-      return [];
+    // Chunk the .in() query — a single .in() with hundreds of UUIDs builds a
+    // URL that exceeds the Worker fetch URL limit and throws "fetch failed".
+    const CHUNK = 100;
+    const allRows: unknown[] = [];
+    for (let i = 0; i < allowedIds.length; i += CHUNK) {
+      const slice = allowedIds.slice(i, i + CHUNK);
+      const { data: rows, error } = await supabaseAdmin
+        .from("vendor_instagram_previews" as never)
+        .select("*")
+        .in("vendor_id", slice);
+      if (error) {
+        console.error("[instagram-preview] bulk read failed", error.message);
+        return [];
+      }
+      if (rows) allRows.push(...(rows as unknown[]));
     }
     console.log("[instagram-preview] bulk ok", {
       userId,
       isStaff,
       requested: data.vendorIds.length,
       allowed: allowedIds.length,
-      returned: (rows ?? []).length,
+      returned: allRows.length,
     });
-    return (rows ?? []) as unknown as VendorInstagramPreview[];
+    return allRows as unknown as VendorInstagramPreview[];
   });
 
 export const refreshVendorInstagramPreview = createServerFn({ method: "POST" })
