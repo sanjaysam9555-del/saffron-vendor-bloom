@@ -835,34 +835,6 @@ function DeadlineEditor({
   );
 }
 
-function TotalsRow({ items }: { items: TimelineItem[] }) {
-  const planned = sumAmounts(items, (i) => i.planned_amount);
-  const actual = sumAmounts(items, (i) => resolveActual(i));
-  const variance = actual - planned;
-  const varColor =
-    variance > 0
-      ? "text-[var(--terracotta)]"
-      : variance < 0
-        ? "text-emerald-700"
-        : "text-[var(--charcoal)]/70";
-  return (
-    <div className="flex flex-wrap items-center justify-end gap-x-6 gap-y-1 rounded-md border border-[var(--border)] bg-[var(--cream)] px-4 py-2.5 text-sm">
-      <span className="text-xs uppercase tracking-wider text-[var(--charcoal)]/60">
-        Totals
-      </span>
-      <span className="text-[var(--charcoal)]/75">
-        Planned Budget: <span className="font-semibold text-[var(--charcoal)]">{formatINR(planned)}</span>
-      </span>
-      <span className="text-[var(--charcoal)]/75">
-        Actual Cost: <span className="font-semibold text-[var(--charcoal)]">{formatINR(actual)}</span>
-      </span>
-      <span className={`font-medium ${varColor}`}>
-        Variance: {variance >= 0 ? "+" : "−"}
-        {formatINR(Math.abs(variance))}
-      </span>
-    </div>
-  );
-}
 
 function TableView({
   items,
