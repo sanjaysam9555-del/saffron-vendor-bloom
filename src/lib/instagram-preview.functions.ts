@@ -136,7 +136,13 @@ export const refreshVendorInstagramPreview = createServerFn({ method: "POST" })
 export const ensureVendorInstagramPreview = createServerFn({ method: "POST" })
   .middleware([attachAuthToken])
   .inputValidator((d) =>
-    z.object({ vendorId: z.string().uuid(), handle: z.string().min(1) }).parse(d),
+    z
+      .object({
+        vendorId: z.string().uuid(),
+        handle: z.string().min(1),
+        force: z.boolean().optional(),
+      })
+      .parse(d),
   )
   .handler(async ({ data }): Promise<VendorInstagramPreview | null> => {
     const { userId, isStaff } = await requireUser();
@@ -162,11 +168,14 @@ export const ensureVendorInstagramPreview = createServerFn({ method: "POST" })
     const ageMs = row ? Date.now() - new Date(row.fetched_at).getTime() : Infinity;
     const stale = ageMs > STALE_DAYS * 24 * 60 * 60 * 1000;
     const failed = row?.status === "error" || row?.status === "not_found";
-    // Retry failed rows when at least 10 minutes have passed since the last
-    // attempt, so the page doesn't hammer Apify on every load.
-    const RETRY_COOLDOWN_MS = 10 * 60 * 1000;
+    // Retry failed rows aggressively (30s) — the previous 10-minute cooldown
+    // stranded a lot of vendors on stale "not_found" rows from the era when
+    // we stored URLs in the handle field.
+    const RETRY_COOLDOWN_MS = 30 * 1000;
     const canRetryFailed = failed && ageMs > RETRY_COOLDOWN_MS;
-    if (row && !stale && !canRetryFailed) return row;
+    // Caller can force a rescrape (e.g. when the cached row's handle no
+    // longer matches the normalized handle the client is now using).
+    if (!data.force && row && !stale && !canRetryFailed) return row;
     // Both staff and authorized clients may trigger a scrape to warm the
     // cache. Manual force-refresh stays staff-only (refreshVendorInstagramPreview).
     const scrape = await scrapeInstagramProfile(data.handle);
