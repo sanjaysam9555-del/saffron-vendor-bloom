@@ -392,7 +392,7 @@ function RibbonRow({
         </div>
 
         <article
-          ref={(el) => registerRowRef?.(item.category, el)}
+          ref={(el) => registerRowRef?.(item.category, el as unknown as HTMLDivElement | null)}
           data-category={item.category}
           className={`rounded-lg bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-md ${
             variant === "booked" ? "opacity-90 hover:opacity-100" : ""
