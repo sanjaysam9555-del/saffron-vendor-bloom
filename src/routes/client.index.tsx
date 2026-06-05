@@ -21,7 +21,7 @@ const ClientBoardView = lazy(() =>
 
 import { ClientVendorTable } from "@/components/client/ClientVendorTable";
 import type { ClientVendor } from "@/lib/project-types";
-import { useInstagramPreviewsBulk, useAutoEnsureMissingPreviews } from "@/hooks/use-instagram-previews";
+import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
 import { VendorTimeline } from "@/components/timeline/VendorTimeline";
 import { UrgencyStrip } from "@/components/timeline/UrgencyStrip";
 import { buildTimelineItems } from "@/lib/build-timeline-items";
@@ -364,8 +364,7 @@ function EmptyState({ message }: { message: string }) {
 
 function ClientVendorGrid({ vendors, onView }: { vendors: ClientVendor[]; onView: (v: ClientVendor) => void }) {
   const ids = useMemo(() => vendors.filter((v) => v.instagram_handle).map((v) => v.id), [vendors]);
-  const { map: previewMap } = useInstagramPreviewsBulk(ids);
-  useAutoEnsureMissingPreviews(vendors, previewMap);
+  const { map: previewMap, isLoading: previewsLoading } = useInstagramPreviewsBulk(ids);
 
   return (
     <VirtualGrid
