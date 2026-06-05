@@ -841,6 +841,7 @@ function VendorQuotesPill({
   });
   const fileCount = quotes.reduce((n, q) => n + (q.files?.length ?? 0), 0);
   if (quotes.length === 0) return null;
+  const seqMap = buildQuoteSeqMap(quotes);
   const ordered = [
     ...quotes.filter((q) => q.is_final || q.status === "closed"),
     ...quotes.filter((q) => !(q.is_final || q.status === "closed")),
@@ -850,12 +851,13 @@ function VendorQuotesPill({
       {ordered.map((q) => {
         const closed = q.is_final || q.status === "closed";
         const amt = closed && q.closed_amount != null ? q.closed_amount : q.quote_amount;
-        const label = amt != null ? formatINRShort(amt) : "Quote";
+        const seqLabel = closed ? "Closed Quote" : `${ordinal(seqMap[q.id])} Quote`;
+        const amtLabel = amt != null ? formatINRShort(amt) : null;
         const datePart = new Date(q.created_at).toLocaleDateString("en-IN");
         const fullPart = amt != null ? ` · ${formatINR(amt)}` : "";
         const tip = closed
-          ? `Closed quote${fullPart} — click to manage`
-          : `Quote · ${datePart}${fullPart} — click to manage`;
+          ? `${seqLabel}${fullPart} — click to manage`
+          : `${seqLabel} · ${datePart}${fullPart} — click to manage`;
         return (
           <button
             key={q.id}
@@ -868,7 +870,7 @@ function VendorQuotesPill({
             title={tip}
           >
             {closed ? <CircleCheck className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
-            <span>{label}</span>
+            <span>{seqLabel}{amtLabel ? ` · ${amtLabel}` : ""}</span>
           </button>
         );
       })}
