@@ -2,6 +2,8 @@ import { LogOut, Search } from "lucide-react";
 import logoLight from "@/assets/saffron-logo-transparent.png";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { ClientNotificationsBell } from "./ClientNotificationsBell";
+
 
 interface Props {
   search: string;
@@ -46,6 +48,7 @@ export function ClientTopNav({ search, onSearchChange, brideName, groomName, wed
             </div>
             <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--charcoal)]/55">{dateFmt}</div>
           </div>
+          <ClientNotificationsBell />
           <button
             onClick={handleSignOut}
             title="Sign out"
@@ -55,6 +58,7 @@ export function ClientTopNav({ search, onSearchChange, brideName, groomName, wed
             <LogOut className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Sign out</span>
           </button>
+
         </div>
 
         <div className="relative order-last w-full min-w-0 sm:order-2 sm:w-auto sm:flex-1 sm:max-w-[280px]">

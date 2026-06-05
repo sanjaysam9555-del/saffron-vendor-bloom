@@ -1030,7 +1030,7 @@ export const listProjectVendorComments = createServerFn({ method: "GET" })
 
     const { data: rows, error } = await supabaseAdmin
       .from("project_vendor_comments")
-      .select("id, body, created_at, user_id")
+      .select("id, body, created_at, user_id, parent_id")
       .eq("project_id", data.project_id)
       .eq("vendor_id", data.vendor_id)
       .order("created_at", { ascending: true });
@@ -1039,12 +1039,18 @@ export const listProjectVendorComments = createServerFn({ method: "GET" })
     const userIds = Array.from(new Set((rows ?? []).map((r) => r.user_id)));
     let nameMap = new Map<string, string>();
     let emailMap = new Map<string, string>();
+    let staffSet = new Set<string>();
     if (userIds.length > 0) {
-      const { data: profs } = await supabaseAdmin
-        .from("profiles")
-        .select("user_id, display_name")
-        .in("user_id", userIds);
+      const [{ data: profs }, { data: roleRows }] = await Promise.all([
+        supabaseAdmin.from("profiles").select("user_id, display_name").in("user_id", userIds),
+        supabaseAdmin.from("user_roles").select("user_id, role").in("user_id", userIds),
+      ]);
       nameMap = new Map((profs ?? []).map((p) => [p.user_id, p.display_name ?? ""]));
+      staffSet = new Set(
+        (roleRows ?? [])
+          .filter((r) => r.role === "admin" || r.role === "employee")
+          .map((r) => r.user_id),
+      );
       // For staff view, also pull emails
       if (isStaff) {
         const { data: usersData } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
@@ -1052,17 +1058,23 @@ export const listProjectVendorComments = createServerFn({ method: "GET" })
       }
     }
 
-    return (rows ?? []).map((r) => ({
-      id: r.id,
-      body: r.body,
-      created_at: r.created_at,
-      user_id: r.user_id,
-      author_name: nameMap.get(r.user_id) || (emailMap.get(r.user_id)?.split("@")[0] ?? "Client"),
-      author_email: isStaff ? (emailMap.get(r.user_id) ?? null) : null,
-      is_own: r.user_id === userId,
-    }));
+    return (rows ?? []).map((r) => {
+      const isStaffAuthor = staffSet.has(r.user_id);
+      return {
+        id: r.id,
+        body: r.body,
+        created_at: r.created_at,
+        user_id: r.user_id,
+        parent_id: r.parent_id ?? null,
+        author_role: isStaffAuthor ? ("staff" as const) : ("client" as const),
+        author_name: isStaffAuthor
+          ? "Saffron Team"
+          : nameMap.get(r.user_id) || (emailMap.get(r.user_id)?.split("@")[0] ?? "Client"),
+        author_email: isStaff ? (emailMap.get(r.user_id) ?? null) : null,
+        is_own: r.user_id === userId,
+      };
+    });
   });
-
 export const addProjectVendorComment = createServerFn({ method: "POST" })
   .middleware([attachAuthToken])
   .inputValidator((d) =>
@@ -1070,6 +1082,7 @@ export const addProjectVendorComment = createServerFn({ method: "POST" })
       .object({
         vendor_id: z.string().uuid(),
         body: z.string().trim().min(1).max(4000),
+        parent_id: z.string().uuid().nullable().optional(),
       })
       .parse(d),
   )
@@ -1099,8 +1112,9 @@ export const addProjectVendorComment = createServerFn({ method: "POST" })
         vendor_id: data.vendor_id,
         user_id: userId,
         body: data.body.trim(),
+        parent_id: data.parent_id ?? null,
       })
-      .select("id, body, created_at, user_id")
+      .select("id, body, created_at, user_id, parent_id")
       .single();
     if (error) throw new Error(error.message);
 
@@ -1119,6 +1133,122 @@ export const addProjectVendorComment = createServerFn({ method: "POST" })
       });
     } catch (e) {
       console.warn("comment notification failed:", e);
+    }
+
+    return inserted;
+  });
+
+export const addStaffVendorComment = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken])
+  .inputValidator((d) =>
+    z
+      .object({
+        project_id: z.string().uuid(),
+        vendor_id: z.string().uuid(),
+        body: z.string().trim().min(1).max(4000),
+        parent_id: z.string().uuid().nullable().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+    if (!token) throw new Error("Authentication is still loading.");
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+    if (userError || !userData.user) throw new Error("Authentication is still loading.");
+    const staffId = userData.user.id;
+    await assertStaff(staffId);
+
+    // Confirm vendor is on this project
+    const { data: pv } = await supabaseAdmin
+      .from("project_vendors")
+      .select("project_id")
+      .eq("project_id", data.project_id)
+      .eq("vendor_id", data.vendor_id)
+      .maybeSingle();
+    if (!pv) throw new Error("Vendor is not assigned to this project");
+
+    // If replying, validate parent belongs to this thread
+    let parentAuthorId: string | null = null;
+    if (data.parent_id) {
+      const { data: parent } = await supabaseAdmin
+        .from("project_vendor_comments")
+        .select("id, user_id, project_id, vendor_id")
+        .eq("id", data.parent_id)
+        .maybeSingle();
+      if (
+        !parent ||
+        parent.project_id !== data.project_id ||
+        parent.vendor_id !== data.vendor_id
+      ) {
+        throw new Error("Reply target not found in this thread");
+      }
+      parentAuthorId = parent.user_id;
+    }
+
+    const { data: inserted, error } = await supabaseAdmin
+      .from("project_vendor_comments")
+      .insert({
+        project_id: data.project_id,
+        vendor_id: data.vendor_id,
+        user_id: staffId,
+        body: data.body.trim(),
+        parent_id: data.parent_id ?? null,
+      })
+      .select("id, body, created_at, user_id, parent_id")
+      .single();
+    if (error) throw new Error(error.message);
+
+    // Fan out to all clients on the project — in-app notifications
+    try {
+      const { data: clients } = await supabaseAdmin
+        .from("project_clients")
+        .select("user_id")
+        .eq("project_id", data.project_id);
+      const clientIds = (clients ?? []).map((c) => c.user_id);
+      if (clientIds.length > 0) {
+        const [{ data: vendorRow }, { data: parentAuthorProfile }] = await Promise.all([
+          supabaseAdmin
+            .from("vendors")
+            .select("vendor_name")
+            .eq("id", data.vendor_id)
+            .maybeSingle(),
+          parentAuthorId
+            ? supabaseAdmin
+                .from("profiles")
+                .select("display_name")
+                .eq("user_id", parentAuthorId)
+                .maybeSingle()
+            : Promise.resolve({ data: null }),
+        ]);
+        const vendorName = vendorRow?.vendor_name ?? "a vendor";
+        const replyTargetName = parentAuthorProfile?.display_name ?? "your comment";
+
+        const rows = clientIds.map((uid) => {
+          const isReplyRecipient = parentAuthorId && uid === parentAuthorId;
+          const isReply = !!data.parent_id;
+          const title = isReplyRecipient
+            ? `Saffron replied to your comment on ${vendorName}`
+            : isReply
+              ? `Saffron replied to ${replyTargetName} on ${vendorName}`
+              : `Saffron added a comment on ${vendorName}`;
+          return {
+            user_id: uid,
+            project_id: data.project_id,
+            vendor_id: data.vendor_id,
+            actor_user_id: staffId,
+            kind: isReply ? "staff_reply" : "staff_comment",
+            title,
+            body: inserted.body.slice(0, 500),
+            metadata: { vendorName, commentBody: inserted.body, parent_id: data.parent_id ?? null },
+          };
+        });
+        const { error: notifErr } = await supabaseAdmin
+          .from("client_notifications")
+          .insert(rows);
+        if (notifErr) console.warn("client notification insert failed:", notifErr.message);
+      }
+    } catch (e) {
+      console.warn("client comment fan-out failed:", e);
     }
 
     return inserted;
@@ -1146,6 +1276,7 @@ export const deleteProjectVendorComment = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 // ---------- Client-facing project vendor quotes (sanitized) ----------
 

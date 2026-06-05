@@ -1,38 +1,44 @@
-## Goal
-On the **Viewing as client — read-only preview** page, show the Instagram previews already cached by the Vendor Dashboard instead of re-fetching from the scraper (which is currently rate-limited and returns empty error rows).
+## Two-way comments + client notifications
 
-## Why the previews look empty today
-- The Vendor Dashboard previously scraped and cached working Instagram previews for these vendors (avatar, name, 3 thumbnails) in the database, the in-memory query cache, and `localStorage`.
-- A later refresh hit the scraper's monthly limit and overwrote those database rows with `status: error` (no avatar, no thumbnails).
-- The client preview page reads only the bulk server result, so it now sees the error rows and renders "No Instagram preview" — even though the older successful preview is still sitting in the browser cache / localStorage.
+Today, only clients post comments and only staff get notified. This adds staff replies, client-side notifications, and visual threading.
 
-## Plan
-1. **Prefer cached good previews over server error rows (client side)**
-   In `src/hooks/use-instagram-previews.ts` (`useInstagramPreviewsBulk`):
-   - After receiving the server response, for each vendor whose returned row is `status: "error"`, look up a prior successful (`status: "ok"`) preview from:
-     1. The per-vendor query cache (`["instagram-preview", vendorId, handle]`)
-     2. Any other active bulk cache entry (`["instagram-previews-bulk", ...]`)
-     3. `localStorage` (`saffron.ig.previews.v1`)
-   - If a cached `ok` row exists, substitute it into the returned map so cards render the cached avatar + thumbnails.
-   - Do **not** write the substituted rows back to the DB; this is a UI-only fallback.
+### 1. Comment posting (staff)
+- Add a new server function `addStaffVendorComment({ project_id, vendor_id, body, parent_id? })` in `src/server/projects.functions.ts` that:
+  - Requires staff (admin/employee) via existing role check.
+  - Inserts into `project_vendor_comments` with the staff user_id.
+  - Creates a `client_notifications` row for every client on the project (see #3).
+- Update `addProjectVendorComment` (client) to optionally accept `parent_id` so a reply maps to its parent.
+- Extend `listProjectVendorComments` response with `author_role` ("staff" | "client") and `parent_id`.
 
-2. **Stop overwriting good DB rows with scraper errors (server side)**
-   In `src/server/instagram-preview.functions.ts` (`upsertPreview`):
-   - Confirm the existing guard "if scrape failed and we have an ok row, keep the ok row" stays in place so future refreshes don't blank out working previews again.
+### 2. UI — single shared thread for staff + client
+Update `src/components/client/VendorCommentsThread.tsx`:
+- Always render the textarea (remove the read-only branch). When `readOnly` is true (admin view), it posts via the staff endpoint instead.
+- Show staff comments with a distinct style (e.g. terracotta accent + "Saffron Team" label); client comments stay neutral.
+- Add a "Reply" button under each comment. Replies render indented under their parent. Top-level "Post comment" still works for non-replies.
+- Admin view in `admin.projects.$id.index.tsx` no longer passes `readOnly`; it passes `asStaff` so the component calls the staff endpoint.
 
-3. **Skip auto-refresh while previews exist in cache**
-   In `useAutoEnsureMissingPreviews`:
-   - Treat a vendor as "already has a preview" when either the server map or the resolved cached map contains an `ok` row, so the preview page does not keep triggering scrape attempts (which currently fail and waste calls).
+### 3. Client notifications
+New table `public.client_notifications` (user_id, project_id, vendor_id, kind: "staff_comment" | "staff_reply", title, body, metadata, read_at, created_at) with RLS so each user sees only their own rows, plus standard GRANTs.
 
-4. **Verify**
-   - Reopen `/admin/projects/.../preview/<clientId>` as the same admin who has already loaded the Vendor Dashboard.
-   - Confirm each Instagram-linked vendor card shows the cached preview (avatar, name, thumbnails) instead of "No Instagram preview."
-   - Check the network panel: no new `ensureVendorInstagramPreview` calls fire for vendors that already have a cached `ok` row.
+Server functions in a new `src/server/client-notifications.functions.ts`:
+- `listMyClientNotifications({ limit })`
+- `markClientNotificationRead({ id })`
+- `markAllClientNotificationsRead()`
 
-## Technical details
-- Files touched:
-  - `src/hooks/use-instagram-previews.ts` — merge cached `ok` rows over server `error` rows; gate auto-ensure on resolved map.
-  - `src/server/instagram-preview.functions.ts` — keep the "don't overwrite ok with error" guard.
-- No schema changes.
-- No auth/role changes.
-- Caveat: a vendor that has never been previewed on the Vendor Dashboard (no cache entry anywhere) will still show the empty state until the scraper limit is restored — there is no other source of truth for thumbnails.
+Staff comment insert fans out one row per client on the project. If the comment is a reply to a specific client's comment, that client's notification is titled "Saffron replied to your comment"; others get "Saffron added a comment".
+
+### 4. Client bell UI
+New `src/components/client/ClientNotificationsBell.tsx` modeled on the admin bell:
+- Bell icon with unread count in `ClientTopNav.tsx`.
+- Realtime subscription on `client_notifications` filtered by `user_id`.
+- Clicking an item navigates to the client vendor view for that vendor and marks it read.
+
+### Out of scope
+- Email notifications for clients (in-app only, matching the staff pattern).
+- Editing comments.
+- Threading deeper than one reply level.
+
+### Technical notes
+- `project_vendor_comments` gets a nullable `parent_id uuid` column (self-FK, on delete set null).
+- Staff insert RLS policy already exists; no schema change needed for staff posting.
+- Client notification fan-out runs inside the staff-post handler; if it fails we log and continue (same pattern as `insertStaffNotification`).
