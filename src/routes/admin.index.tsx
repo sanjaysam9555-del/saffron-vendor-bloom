@@ -15,7 +15,7 @@ import { useVendors, useVendorMutations, useVendorModals } from "@/hooks/useVend
 import { useAllCategories } from "@/lib/categories";
 
 import { useIsAdmin } from "@/lib/auth";
-import { useInstagramPreviewsBulk, useAutoEnsureMissingPreviews } from "@/hooks/use-instagram-previews";
+import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
 import { useVendorTabState, type VendorSortKey } from "@/components/admin/admin-tab-state";
 
 
@@ -591,8 +591,7 @@ function VendorCardGrid({
     () => vendors.filter((v) => v.instagram_handle).map((v) => v.id),
     [vendors],
   );
-  const { map: previewMap } = useInstagramPreviewsBulk(ids);
-  useAutoEnsureMissingPreviews(vendors, previewMap);
+  const { map: previewMap, isLoading: previewsLoading } = useInstagramPreviewsBulk(ids);
 
   const allIds = useMemo(() => vendors.map((v) => v.id), [vendors]);
   const idsKey = useMemo(() => allIds.slice().sort().join(","), [allIds]);
@@ -613,7 +612,7 @@ function VendorCardGrid({
           selectMode={bulkMode}
           selected={selectedIds.has(v.id)}
           onToggleSelect={() => toggleSelect(v.id)}
-          instagramPreview={previewMap.get(v.id) ?? null}
+          instagramPreview={previewsLoading ? undefined : (previewMap.get(v.id) ?? null)}
           bookedSummary={bookedMap?.[v.id] ?? null}
         />
       )}

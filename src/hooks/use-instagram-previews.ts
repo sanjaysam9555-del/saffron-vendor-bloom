@@ -239,6 +239,30 @@ export function useEnsureInstagramPreview(vendorId: string, handle: string | nul
   });
 }
 
+/**
+ * Read-only lookup for a vendor's Instagram preview. Returns whatever is
+ * already cached (per-vendor query cache → any bulk cache → localStorage)
+ * without issuing a network request. Used by detail drawers so opening a
+ * vendor never triggers a scrape.
+ */
+export function useInstagramPreviewFromCache(
+  vendorId: string,
+  handle: string | null | undefined,
+): VendorInstagramPreview | null {
+  const qc = useQueryClient();
+  const normalized = normalizeInstagramHandle(handle);
+  const perVendor = qc.getQueryData<VendorInstagramPreview>([
+    "instagram-preview",
+    vendorId,
+    normalized,
+  ]);
+  if (perVendor) return perVendor;
+  const cachedOk = findCachedOkPreview(qc, vendorId, handle);
+  if (cachedOk) return cachedOk;
+  const fromLS = readLS()[vendorId];
+  return fromLS ?? null;
+}
+
 export function useRefreshInstagramPreview() {
   const fn = useServerFn(refreshVendorInstagramPreview);
   const qc = useQueryClient();

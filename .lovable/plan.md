@@ -1,49 +1,71 @@
-## What I found
+## Goal
 
-**1. Splash screen ("Welcome to Saffron Planning Studio") on every click**
+One stored Instagram preview per vendor in `vendor_instagram_previews`. Every surface (admin grid, admin client-preview, client grid, client detail drawer, vendor detail drawer) reads that one row and renders it instantly. Nothing triggers a scrape on view — scraping only happens on (a) new vendor creation and (b) the admin "Refresh" button. No client ever calls Apify.
 
-The `SplashScreen` component in `src/components/SplashScreen.tsx` is shown on every mount of the root layout and stays visible for at least 1200ms (`MIN_MS`). It has no "I already showed once" memory — every fresh page load shows it.
+## Current problems
 
-Normal SPA navigation inside `/admin/*` is client-side (TanStack Router `<Link>`), so the root layout does NOT remount and the splash should not reappear. But the project also runs a `chunk-recover` helper that calls `window.location.reload()` whenever a dynamic-import error fires (`src/lib/chunk-recover.ts`). Since the recent file moves (`src/server/*.functions.ts → src/lib/*.functions.ts`), the dev server has been emitting stale-module / "Cannot read properties of undefined (reading 'method')" errors. Those fire `unhandledrejection`, which trips `chunk-recover` → full reload → splash. Result: splash on virtually every click.
-
-**2. Instagram previews not loading**
-
-Two compounding causes:
-- Many vendor `instagram_handle` values are stored as **full URLs** (e.g. `https://www.instagram.com/saini_caterers/`) or even non-Instagram links (Google Drive folders). The scraper normalizes the URL to `saini_caterers` and queries Apify, but for legacy rows the DB already contains `status:"error"`/`last_error:"not_found"` from earlier bad attempts.
-- `ensureVendorInstagramPreview` enforces a 10-minute retry cooldown on failed rows, so the bulk fetch keeps returning the old error rows and the card strip falls back to skeleton/"No Instagram preview". The auto-ensure loop also skips re-trying anything younger than the cooldown.
-
-The Apify token IS configured, and previews that have a clean handle and a fresh ok row DO render (visible for `inari_5_`, `purpleplatecatering`, etc. in the replay). So this is about stale error rows, not a broken scraper.
+- `useAutoEnsureMissingPreviews` runs on every admin/client grid mount and calls `ensureVendorInstagramPreview` for any row whose `fetched_at` is older than 3 days, or whose cached LS handle doesn't match the normalized handle. Even with 493/502 vendors marked `ok`, this fires hundreds of background scrapes per page view (visible in the network panel — `ensure...handler` with `force:true` for already-fresh rows). That's the bulk of Apify token spend.
+- Clients hit `ensureVendorInstagramPreview` indirectly (the same hook is mounted in `client.index.tsx` → `ClientVendorGrid`). The server fn does an authorization check then still calls Apify on their behalf if the row looks "stale" by its rules.
+- The client detail drawer uses `useEnsureInstagramPreview` (per-vendor ensure). That's a second call layer on top of bulk.
+- `VendorInstagramCardStrip` shows a skeleton whenever `preview === undefined || preview === null`. On the client grid the first paint is `null` until the bulk request returns; on slow networks this looks like "not loading", and any ensure call that overwrites with an `error` row keeps it stuck.
 
 ## Plan
 
-### A. Stop the reload-on-every-click
+### 1. Single read path: `useInstagramPreviewsBulk` only
 
-1. Make the splash a one-shot per session.
-   - In `src/components/SplashScreen.tsx`, gate the entire visible state behind a `sessionStorage` flag (`saffron.splash.shown.v1`). After the first show, subsequent mounts return `null` immediately. This already kills the perceived "loading screen on every click" even if a reload sneaks in.
+Used by both admin and client grids. Keep its localStorage hydration + per-vendor cache seeding. No behavior change for the read; it already returns the DB row as-is.
 
-2. Make `chunk-recover` less trigger-happy in dev.
-   - In `src/lib/chunk-recover.ts`, also skip when `import.meta.env.DEV` (or only reload when the failing URL contains `/assets/` — a real chunk-hash mismatch). Stale dev-server module errors should surface as overlays, not reloads.
+### 2. Detail drawer reads from the same cache, never ensures
 
-3. (Belt-and-braces) confirm there's nothing else doing `location.reload`/`<a href>` in the admin header. If found, swap to `<Link>` / `useNavigate`.
+- Replace `useEnsureInstagramPreview` inside `VendorInstagramDetailBlock` with a read-only lookup: per-vendor query cache → any bulk cache → localStorage → `null`. Returns immediately; no server call.
+- The admin "Refresh" button keeps using `useRefreshInstagramPreview` (staff-only, manual).
 
-### B. Make Instagram previews populate
+### 3. Kill auto-ensure on view
 
-1. Normalize the handle on the client BEFORE calling the server function.
-   - In `src/hooks/use-instagram-previews.ts` (`useAutoEnsureMissingPreviews`, `useTriggerInstagramPreview`, `useEnsureInstagramPreview`) and in the vendor form, pass `normalizeInstagramHandle(v.instagram_handle)` and skip vendors where the normalized handle is empty or looks non-instagram (e.g. starts with `drive.google.com`, contains a path slash after normalization, or is longer than 30 chars).
+- Delete `useAutoEnsureMissingPreviews` calls from `client.index.tsx`, `admin.index.tsx`, and `admin.projects.$id.preview.$clientId.tsx`. The hook stays exported but unused (kept for the backfill flow).
+- DB already has 100% coverage for vendors with handles. Anything missing/erroring gets fixed by the staff "Backfill" job or manual refresh — not by every page view.
 
-2. Force one-time rescrape of legacy error rows.
-   - Lower the server retry cooldown for `not_found` rows to ~30 s (separate constant from the general error cooldown), and add an `force?: boolean` flag to `ensureVendorInstagramPreview` that bypasses the cooldown. The hook calls it with `force: true` once per vendor per session for rows where `status !== "ok"` AND the cached handle differs from the now-normalized handle (i.e. legacy URL-as-handle rows).
+### 4. New-vendor scrape stays one-shot
 
-3. Run the existing staff backfill job in `missing_or_stale` mode after deploy so all the error rows get reprocessed with the normalized handles. No code change needed — just a one-click action from the existing admin UI.
+`useTriggerInstagramPreview` (used by `VendorForm` on create) is the only auto path that should ever call ensure. It runs once per new vendor and is staff-only.
 
-### C. Verification
+### 5. Lock down `ensureVendorInstagramPreview` server fn
 
-- Reload preview, navigate Vendors ↔ Projects ↔ Project Detail: splash should appear at most once per tab.
-- Open the Vendors tab: cards with valid Instagram handles should populate avatars/thumbnails within a few seconds (auto-ensure). Cards with junk handles (Drive links etc.) should render the "No Instagram preview" placeholder instead of an endless skeleton.
-- Spot-check network: `_serverFn/...ensureVendorInstagramPreview` returns `status:"ok"` for vendors whose previous row was `error`.
+- Reject calls from non-staff (return `null`). Clients have no business triggering a scrape; bulk read is enough for them.
+- Treat `force=true` as staff-only.
+- Tighten the "shall we re-scrape" rule for any remaining staff path:
+  - If a row exists with `status === 'ok'`, return it as-is. No staleness check, no overwrite. (Matches the "if there is a preview, don't touch it" requirement.)
+  - Only scrape when no row exists, or the row is `not_found`/`error` AND the caller passed `force=true`.
 
-## Technical notes
+### 6. Skeleton vs empty-state in the card strip
 
-- Files touched: `src/components/SplashScreen.tsx`, `src/lib/chunk-recover.ts`, `src/hooks/use-instagram-previews.ts`, `src/lib/instagram-preview.functions.ts`, `src/server/instagram-preview.server.ts` (only the cooldown constant + new `force` plumbing).
-- No DB migration required — the backfill writes through the existing `vendor_instagram_previews` table.
-- No change to the auth/AuthGate path; the splash fix removes the symptom without touching authentication flow.
+`VendorInstagramCardStrip`: keep the skeleton only while bulk fetch is in flight (i.e., `preview === undefined`). Once bulk has returned, render:
+- the preview if `ok`,
+- the friendly "No Instagram preview" empty state otherwise (covers `not_found`, `error`, and DB-missing rows).
+
+This fixes the "stuck skeleton" feeling on the client side: once the bulk POST resolves, the UI commits and stops waiting.
+
+### 7. Token-spend safety net
+
+Add a small server-side log line in `ensureVendorInstagramPreview` whenever it actually calls Apify (vendorId + reason). Lets staff verify scrape volume drops to ~0 after this lands.
+
+## Files touched
+
+- `src/hooks/use-instagram-previews.ts` — remove auto-ensure usage; add a read-only `useInstagramPreviewFromCache(vendorId, handle)` helper that doesn't issue any request.
+- `src/components/vendor/VendorInstagramPreview.tsx` — `VendorInstagramDetailBlock` uses the new read-only helper; `VendorInstagramCardStrip` shows empty state once bulk resolves.
+- `src/lib/instagram-preview.functions.ts` — staff-only ensure, never overwrite an `ok` row, no staleness scrape, add scrape log.
+- `src/routes/client.index.tsx`, `src/routes/admin.index.tsx`, `src/routes/admin.projects.$id.preview.$clientId.tsx` — remove `useAutoEnsureMissingPreviews` calls.
+
+## Out of scope
+
+- Database schema (no migration; the single-row-per-vendor invariant is already enforced by the unique `vendor_id` upsert).
+- Backfill UI (staff dashboard's "Backfill" already exists and is the right tool for bulk catch-up).
+- Apify scraper itself (`server/instagram-preview.server.ts`).
+
+## How to verify after build
+
+1. Hard refresh the admin vendors grid. Network panel should show one `getVendorInstagramPreviewsBulk` call and zero `ensureVendorInstagramPreview` calls.
+2. Hard refresh a client account's vendor grid. Same: one bulk read, zero ensures. Cards render the stored previews immediately.
+3. Open a vendor detail drawer (admin and client). No network call; preview matches the card.
+4. Click admin "Refresh" on a vendor → one Apify call, row updates, all open cards re-render.
+5. Create a new vendor with a handle → one Apify call from `VendorForm`, preview appears.

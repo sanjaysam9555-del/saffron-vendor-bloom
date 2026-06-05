@@ -6,7 +6,7 @@ import { AuthGate } from "@/components/AuthGate";
 import { ClientPreviewProvider } from "@/lib/client-preview";
 import { getProjectAsClientView } from "@/lib/projects.functions";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
-import { useInstagramPreviewsBulk, useAutoEnsureMissingPreviews } from "@/hooks/use-instagram-previews";
+import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
 import type { ClientVendor } from "@/lib/project-types";
 
 const ClientVendorDetail = lazy(() =>
@@ -37,8 +37,7 @@ function PreviewPage() {
 
   const vendors = ((data as { vendors?: ClientVendor[] } | undefined)?.vendors ?? []) as ClientVendor[];
   const igIds = useMemo(() => vendors.filter((v) => v.instagram_handle).map((v) => v.id), [vendors]);
-  const { map: previewMap } = useInstagramPreviewsBulk(igIds);
-  useAutoEnsureMissingPreviews(vendors, previewMap);
+  const { map: previewMap, isLoading: previewsLoading } = useInstagramPreviewsBulk(igIds);
 
   if (isLoading) {
     return (
@@ -102,7 +101,7 @@ function PreviewPage() {
                   key={v.id}
                   vendor={v}
                   onView={() => setDetail(v)}
-                  instagramPreview={previewMap.get(v.id) ?? null}
+                  instagramPreview={previewsLoading ? undefined : (previewMap.get(v.id) ?? null)}
                 />
               ))}
             </div>

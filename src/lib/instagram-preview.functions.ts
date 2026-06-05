@@ -145,19 +145,10 @@ export const ensureVendorInstagramPreview = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }): Promise<VendorInstagramPreview | null> => {
-    const { userId, isStaff } = await requireUser();
-
-    // Non-staff: verify the caller is allowed to see this vendor before
-    // doing anything else (mirrors getVendorInstagramPreviewsBulk).
-    if (!isStaff) {
-      const { data: pv } = await supabaseAdmin
-        .from("project_vendors")
-        .select("project_id, project_clients!inner(user_id)")
-        .eq("vendor_id", data.vendorId)
-        .eq("project_clients.user_id", userId)
-        .limit(1);
-      if (!pv || pv.length === 0) return null;
-    }
+    const { isStaff } = await requireUser();
+    // Scraping is staff-only. Clients read via the bulk endpoint; they
+    // never trigger Apify.
+    if (!isStaff) return null;
 
     const { data: existing } = await supabaseAdmin
       .from("vendor_instagram_previews" as never)
@@ -165,19 +156,18 @@ export const ensureVendorInstagramPreview = createServerFn({ method: "POST" })
       .eq("vendor_id", data.vendorId)
       .maybeSingle();
     const row = existing as unknown as VendorInstagramPreview | null;
-    const ageMs = row ? Date.now() - new Date(row.fetched_at).getTime() : Infinity;
-    const stale = ageMs > STALE_DAYS * 24 * 60 * 60 * 1000;
-    const failed = row?.status === "error" || row?.status === "not_found";
-    // Retry failed rows aggressively (30s) — the previous 10-minute cooldown
-    // stranded a lot of vendors on stale "not_found" rows from the era when
-    // we stored URLs in the handle field.
-    const RETRY_COOLDOWN_MS = 30 * 1000;
-    const canRetryFailed = failed && ageMs > RETRY_COOLDOWN_MS;
-    // Caller can force a rescrape (e.g. when the cached row's handle no
-    // longer matches the normalized handle the client is now using).
-    if (!data.force && row && !stale && !canRetryFailed) return row;
-    // Both staff and authorized clients may trigger a scrape to warm the
-    // cache. Manual force-refresh stays staff-only (refreshVendorInstagramPreview).
+
+    // If a successful preview is already stored, never touch it. Staff can
+    // overwrite via refreshVendorInstagramPreview (manual "Refresh" button).
+    if (row && row.status === "ok") return row;
+
+    // Only scrape when no row exists, or when staff explicitly forces a retry
+    // on an error/not_found row.
+    if (row && !data.force) return row;
+
+    console.info(
+      `[instagram-preview] scraping vendor=${data.vendorId} handle=${data.handle} reason=${row ? "force-retry" : "missing"}`,
+    );
     const scrape = await scrapeInstagramProfile(data.handle);
     return upsertPreview(data.vendorId, scrape);
   });

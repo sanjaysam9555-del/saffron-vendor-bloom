@@ -1,7 +1,7 @@
 import { Instagram, RefreshCw, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import type { VendorInstagramPreview as PreviewData } from "@/lib/instagram-preview.functions";
-import { useEnsureInstagramPreview, useRefreshInstagramPreview } from "@/hooks/use-instagram-previews";
+import { useInstagramPreviewFromCache, useRefreshInstagramPreview } from "@/hooks/use-instagram-previews";
 
 function proxiedSrc(src: string): string {
   if (!src) return src;
@@ -41,10 +41,9 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
   // Vendor has no Instagram handle — render nothing.
   if (!hasHandle && preview == null) return null;
 
-  // Loading / cache-miss: handle exists but we don't have a cached row yet.
-  // The auto-ensure hook will populate this within a few seconds, so show a
-  // skeleton instead of the empty-state fallback to avoid a misleading flash.
-  if (preview === undefined || (hasHandle && preview === null)) {
+  // Loading: bulk fetch in flight. Once it resolves, `preview` will be a row
+  // or null and we drop into the render branches below.
+  if (preview === undefined) {
     return (
       <div className="mt-2 min-h-[148px] animate-pulse rounded-md border border-[var(--border)] bg-[var(--cream)]/40 p-2">
         <div className="flex items-center gap-2">
@@ -138,7 +137,7 @@ interface DetailProps {
  * when nothing is available.
  */
 export function VendorInstagramDetailBlock({ vendorId, handle, canRefresh = false }: DetailProps) {
-  const { data: preview, isLoading } = useEnsureInstagramPreview(vendorId, handle ?? null);
+  const preview = useInstagramPreviewFromCache(vendorId, handle ?? null);
   const refresh = useRefreshInstagramPreview();
 
   if (!handle) return null;
@@ -165,11 +164,7 @@ export function VendorInstagramDetailBlock({ vendorId, handle, canRefresh = fals
         )}
       </div>
 
-      {isLoading && !preview && (
-        <div className="text-xs text-[var(--charcoal)]/55">Loading preview…</div>
-      )}
-
-      {!isLoading && (!preview || status !== "ok") && (
+      {(!preview || status !== "ok") && (
         <div className="rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-3 text-xs text-[var(--charcoal)]/60">
           {status === "not_found"
             ? "Profile is private or unavailable."
