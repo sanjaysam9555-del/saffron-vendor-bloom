@@ -131,6 +131,7 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
             {(() => {
               const quotes = vendor.quotes ?? [];
               if (quotes.length === 0) return null;
+              const seqMap = buildQuoteSeqMap(quotes);
               const ordered = [
                 ...quotes.filter((q) => q.is_final || q.status === "closed"),
                 ...quotes.filter((q) => !(q.is_final || q.status === "closed")),
@@ -138,10 +139,11 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
               return ordered.map((q) => {
                 const closed = q.is_final || q.status === "closed";
                 const amt = closed && q.closed_amount != null ? q.closed_amount : q.quote_amount;
-                const label = amt != null ? formatINRShort(amt) : "Quote";
+                const seqLabel = closed ? "Closed Quote" : `${ordinal(seqMap[q.id])} Quote`;
+                const amtLabel = amt != null ? formatINRShort(amt) : null;
                 const fullTitle = amt != null
-                  ? `${closed ? "Closed quote" : "Quote received"} · ${formatINR(amt)}`
-                  : (closed ? "Closed quote" : "Quote received");
+                  ? `${seqLabel} · ${formatINR(amt)}`
+                  : seqLabel;
                 return (
                   <span
                     key={q.id}
@@ -153,7 +155,7 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
                     title={fullTitle}
                   >
                     {closed ? <CircleCheck className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
-                    {label}
+                    <span>{seqLabel}{amtLabel ? ` · ${amtLabel}` : ""}</span>
                   </span>
                 );
               });
