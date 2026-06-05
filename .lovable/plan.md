@@ -1,120 +1,60 @@
-# Animation Enhancement Plan
+# Fix: Client Instagram previews not loading
 
-Goal: make admin and client UIs feel alive — page transitions, scroll reveals, list staggers, hover affordances — without hurting performance or bundle size. No heavy animation libraries. Use CSS, the Tailwind keyframes already in `tailwind.config.ts` (`animate-fade-in`, `animate-scale-in`, `animate-slide-in-right`, `hover-scale`, `story-link`), the native View Transitions API, and a single tiny IntersectionObserver hook for scroll reveals.
+## Symptom
 
-## Guiding rules
+Clients see "No Instagram preview" (or skeletons) on every vendor card in `/client`, even though the DB shows their assigned vendors all have `status = 'ok'` rows in `vendor_instagram_previews` (verified: 20/20, 19/19, 17/17, 7/7 for the four current clients).
 
-- **No `framer-motion`.** Not installed; would add ~40 KB gz. Existing CSS utilities are enough.
-- **GPU-only properties** — animate `transform` and `opacity`. Never `width/height/top/left` on lists.
-- **Respect `prefers-reduced-motion`** — one global rule in `src/styles.css` disables all non-essential motion.
-- **Durations**: 150–250 ms micro-interactions, 300–450 ms page/section entrances. Nothing longer.
-- **Stagger via CSS `animation-delay`** (`index * 40ms`, capped at 12 items) — no JS orchestration.
-- **One-shot reveals** — once visible, stay visible. No re-trigger on scroll-up.
+## Likely root cause
 
-## 1. Page / route transitions
+The bulk endpoint `getVendorInstagramPreviewsBulk` is either throwing on the server (so `useQuery` lands in error state, `data` stays `undefined`, every card resolves to `null` → empty-state strip) or returning `[]` from one of its early-return branches for client callers.
 
-Two layers, both native:
+Three early-return branches in `src/lib/instagram-preview.functions.ts` could silently empty the response for a non-staff caller:
 
-**a. View Transitions API (cross-fade between routes)**
-- Enable on the router: `defaultViewTransition: true` in `src/router.tsx`. TanStack Router wraps every navigation in `document.startViewTransition` where supported (Chromium, Safari TP). Silent no-op elsewhere. Zero bundle cost.
-- Add minimal CSS in `src/styles.css`:
-  ```css
-  ::view-transition-old(root), ::view-transition-new(root) {
-    animation-duration: 220ms;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  ```
+1. `requireUser()` throws → "You're not signed in." or "Your session expired." — would only happen if the `Authorization` header is missing/invalid on the request.
+2. `projectIds.length === 0` after the `project_clients` lookup → client with no project link.
+3. `allowedIds.length === 0` after the `project_vendors` lookup → no overlap between requested vendor IDs and the client's assigned vendors.
 
-**b. Per-route content entrance (fallback + extra polish)**
-- Wrap each route's top-level container with `animate-fade-in` so even browsers without View Transitions get a soft entrance.
-- Targets: `client.index.tsx`, `admin.index.tsx`, `admin.projects.index.tsx`, `admin.projects.$id.index.tsx`, `admin.projects.$id.preview.$clientId.tsx`, `admin.users.tsx`, `admin.submissions.tsx`, client vendor detail.
+DB query confirms branches 2 and 3 should NOT trigger for current clients. That leaves the `requireUser` path (auth header) or an uncaught query error as the most likely culprit.
 
-**c. Splash → app handoff**
-- `SplashScreen.tsx` currently cuts. Add `animate-fade-out` (200 ms) on unmount and `animate-fade-in` on the app shell so there's no flash.
+A secondary possibility: when the server fn throws, the UI swallows the failure (no toast, no retry indicator) so cards just look empty.
 
-## 2. Scroll-driven reveal animations
+## Plan
 
-Two complementary techniques — pick per surface:
+### 1. Instrument and diagnose (no logic change first)
 
-**a. Native CSS scroll-driven animations (preferred where supported)**
-- Add a `@utility` reveal class in `src/styles.css`:
-  ```css
-  @utility reveal-on-scroll {
-    animation: fade-in linear both;
-    animation-timeline: view();
-    animation-range: entry 10% cover 30%;
-  }
-  ```
-- Apply to section headers, hero blocks, marketing-style strips on the client dashboard. Zero JS, runs on the compositor.
-- Falls back gracefully in non-supporting browsers (Firefox today): element just appears statically.
+Add structured `console.log`/`console.error` statements to `getVendorInstagramPreviewsBulk` so we can see in `server-function-logs`:
 
-**b. IntersectionObserver hook (universal fallback for important reveals)**
-- New `src/hooks/use-reveal-on-scroll.ts` — single shared observer, `rootMargin: "0px 0px -10% 0px"`, `threshold: 0.1`, unobserves after first hit. ~30 lines, no deps.
-- Returns `ref` + `isVisible`; component adds `animate-fade-in` when true.
-- Use on: vendor cards in `ClientVendorTable`, project cards in admin lists, quote panel rows, attachment grid items, timeline `UrgencyStrip` items.
-- Stagger via inline `style={{ animationDelay: \`${Math.min(i, 12) * 40}ms\` }}` on first reveal.
+- the resolved `userId`, `isStaff`
+- requested vs allowed vendor ID counts
+- the DB query error (if any) from the `vendor_instagram_previews` read
 
-Performance guard: ONE observer shared across all subscribers (singleton in the hook module), not one per element. Important for long lists.
+Reproduce in the preview by logging in as a client account, then inspect logs to identify which branch fires.
 
-## 3. List / grid mount staggers
+### 2. Apply the fix indicated by the logs
 
-For initial page load (before scroll observer kicks in for above-the-fold items):
-- First 12 cards animate in with staggered delay.
-- After that, rely on scroll reveal (§2) for below-the-fold rows.
-- Gate with `isInitialMount` ref so re-renders (filtering, sorting) don't re-trigger animation.
+Likely fixes (pick based on logs, not all):
 
-## 4. Hover & micro-interactions
+- **Auth header missing on client tab**: ensure `attachAuthToken` is awaiting the session before the first call. If `supabase.auth.getSession()` returns `null` on first paint (race with `AuthProvider`), the hook's `enabled` flag should also gate on `session?.access_token` rather than just `vendorIds.length`. Currently the client query in `client.index.tsx` waits for session before calling `getMyProject`, but `useInstagramPreviewsBulk` does not — it can fire before the token is hydrated.
+- **`getClaims` rejecting the token**: fall back to `supabaseAdmin.auth.getUser(token)` if `getClaims` returns no `sub`.
+- **Filter mismatch**: if logs show `allowedIds.length === 0` despite DB showing matches, the cause is likely a mismatch between requested IDs and stored IDs (case, whitespace, etc.) — normalise the comparison.
 
-- `hover-scale` on: vendor cards, project cards, primary CTAs, sidebar nav rows.
-- `story-link` underline on inline text links (vendor names → detail, project titles).
-- Buttons: `transition-colors active:scale-[0.98]` — tactile, cheap.
-- Sidebar active indicator: animate accent bar with `transition-transform duration-200`.
+### 3. Surface failures so this doesn't go silent again
 
-## 5. Dialogs, sheets, drawers, popovers
+- Set `previewsLoading` to `true` while the query is in `error` state too, OR show a tiny inline "Couldn't load Instagram preview — retry" affordance instead of the dashed empty box, so future regressions are visible.
+- Add a `retry: 2` and short backoff to the bulk query so transient network/auth races recover automatically.
 
-shadcn primitives already animate via `data-[state=open]` keyframes from `tailwindcss-animate`. Audit `dialog.tsx`, `sheet.tsx`, `drawer.tsx`, `popover.tsx`, `dropdown-menu.tsx`, `hover-card.tsx`, `tooltip.tsx`; fill any missing `data-[state=open]:animate-in fade-in-0 zoom-in-95` / `slide-in-from-*` classes.
+### 4. Gate `useInstagramPreviewsBulk` on session readiness (preventive)
 
-## 6. Data swap transitions
+Update `useInstagramPreviewsBulk` to accept (or internally read) a `sessionReady` signal so the very first call never goes out without a bearer token. This matches the gating already applied to `getMyProject` in `client.index.tsx`.
 
-- Instagram preview strip, vendor detail panes, quote panels: when query resolves, fade content in via `key` change + `animate-fade-in`.
-- Skeleton shimmer: keep current `animate-pulse`.
-- Empty states (`EmptyState`): icon `animate-scale-in`, text `animate-fade-in`, one-shot.
+## Files to touch
 
-## 7. Route progress bar
-
-`RouteProgress.tsx` already exists. Verify it shows during View Transitions navigation; tune to fade out 150 ms after navigation completes so it doesn't double-flash with the route fade.
-
-## Performance safeguards
-
-- Global `prefers-reduced-motion` rule in `src/styles.css`:
-  ```css
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-  ```
-- `will-change: transform` only on persistently animating elements (sidebar hover items). Never blanket-apply.
-- Single shared IntersectionObserver instance — not per-element.
-- Stagger cap = 12 × 40 ms = 480 ms max.
-- No animations on virtualized list items mid-scroll — only on first mount + on-enter reveal.
-- View Transitions only between top-level routes, not on every search-param change (TanStack Router default behavior, but verify).
-
-## Files touched
-
-- `src/styles.css` — reduced-motion rule, view-transition timing, `reveal-on-scroll` utility, splash fade keyframes if missing.
-- `src/router.tsx` — `defaultViewTransition: true`.
-- `src/hooks/use-reveal-on-scroll.ts` — **new**, shared-observer hook.
-- Route files in §1 — wrapper class on container.
-- List components — `ClientVendorTable`, admin vendor grid, project cards, quote rows, attachment grid, urgency strip — add reveal hook + stagger delay.
-- `EmptyState`, `Sidebar`, `ClientSidebar`, `RouteProgress`, `SplashScreen` — minor class additions.
-- shadcn ui primitives in §5 — only if audit finds missing classes.
-
-No new dependencies. No render-loop changes. Net bundle impact ≈ 0 KB (+ ~30 lines for the reveal hook).
+- `src/lib/instagram-preview.functions.ts` — diagnostic logs, possibly switch to `getUser` if `getClaims` proves flaky, harden empty-result paths.
+- `src/hooks/use-instagram-previews.ts` — gate `useInstagramPreviewsBulk` on session readiness, add `retry`, surface error state via `isLoading || isError` semantics.
+- `src/components/vendor/VendorInstagramPreview.tsx` (only if we want a visible error affordance instead of the silent empty state).
 
 ## Out of scope
 
-- `framer-motion`, `motion-one`, `auto-animate`, GSAP, Lottie.
-- Parallax / sticky-pin / scroll-jacking effects.
-- Redesigning components — this pass only adds motion.
+- Re-scraping any previews (data is already in DB).
+- Touching admin-side bulk path (admin previews already render — confirms server logic works for staff callers).
+- Bundle/animation work from the previous turn.
