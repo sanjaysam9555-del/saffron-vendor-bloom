@@ -4,26 +4,49 @@ import { useAuth } from "@/lib/auth";
 const MIN_MS = 1200;
 const MAX_MS = 3000;
 const FADE_MS = 350;
+const SHOWN_KEY = "saffron.splash.shown.v1";
+
+function alreadyShown(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.sessionStorage.getItem(SHOWN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markShown() {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(SHOWN_KEY, "1");
+  } catch {
+    /* noop */
+  }
+}
 
 export function SplashScreen() {
   const { initialized } = useAuth();
   const [mounted, setMounted] = useState(false);
-  const [visible, setVisible] = useState(true);
+  // Skip entirely if we've already shown the splash this tab session.
+  const [shouldShow] = useState(() => !alreadyShown());
+  const [visible, setVisible] = useState(shouldShow);
   const [fading, setFading] = useState(false);
   const [minElapsed, setMinElapsed] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (shouldShow) markShown();
+  }, [shouldShow]);
 
   useEffect(() => {
+    if (!shouldShow) return;
     const minT = setTimeout(() => setMinElapsed(true), MIN_MS);
     const maxT = setTimeout(() => setFading(true), MAX_MS);
     return () => {
       clearTimeout(minT);
       clearTimeout(maxT);
     };
-  }, []);
+  }, [shouldShow]);
 
   useEffect(() => {
     if (minElapsed && initialized) setFading(true);
@@ -35,7 +58,7 @@ export function SplashScreen() {
     return () => clearTimeout(t);
   }, [fading]);
 
-  if (!mounted || !visible) return null;
+  if (!shouldShow || !mounted || !visible) return null;
 
   return (
     <div

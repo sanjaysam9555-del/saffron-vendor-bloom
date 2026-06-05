@@ -9,6 +9,10 @@ const PATTERN = /Failed to fetch dynamically imported module|Importing a module 
 function shouldReload(message: string | undefined): boolean {
   if (!message) return false;
   if (!PATTERN.test(message)) return false;
+  // In dev, stale-module errors come from HMR / file moves — Vite's overlay
+  // handles them. Auto-reloading turns every transient dev error into a
+  // jarring full page reload (and re-shows the splash on every click).
+  if (import.meta.env.DEV) return false;
   try {
     if (window.sessionStorage.getItem(FLAG)) return false;
     window.sessionStorage.setItem(FLAG, String(Date.now()));
