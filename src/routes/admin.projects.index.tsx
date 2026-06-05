@@ -234,7 +234,7 @@ function ProjectsListPage() {
               </p>
             </div>
           ) : (
-            filtered.map((p) => (
+            filtered.map((p, i) => (
               <ProjectCard
                 key={p.id}
                 project={p}
@@ -242,6 +242,7 @@ function ProjectsListPage() {
                 onArchiveToggle={handleArchiveToggle}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                index={i}
               />
             ))
           )}

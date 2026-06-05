@@ -1,71 +1,120 @@
-## Goal
+# Animation Enhancement Plan
 
-One stored Instagram preview per vendor in `vendor_instagram_previews`. Every surface (admin grid, admin client-preview, client grid, client detail drawer, vendor detail drawer) reads that one row and renders it instantly. Nothing triggers a scrape on view — scraping only happens on (a) new vendor creation and (b) the admin "Refresh" button. No client ever calls Apify.
+Goal: make admin and client UIs feel alive — page transitions, scroll reveals, list staggers, hover affordances — without hurting performance or bundle size. No heavy animation libraries. Use CSS, the Tailwind keyframes already in `tailwind.config.ts` (`animate-fade-in`, `animate-scale-in`, `animate-slide-in-right`, `hover-scale`, `story-link`), the native View Transitions API, and a single tiny IntersectionObserver hook for scroll reveals.
 
-## Current problems
+## Guiding rules
 
-- `useAutoEnsureMissingPreviews` runs on every admin/client grid mount and calls `ensureVendorInstagramPreview` for any row whose `fetched_at` is older than 3 days, or whose cached LS handle doesn't match the normalized handle. Even with 493/502 vendors marked `ok`, this fires hundreds of background scrapes per page view (visible in the network panel — `ensure...handler` with `force:true` for already-fresh rows). That's the bulk of Apify token spend.
-- Clients hit `ensureVendorInstagramPreview` indirectly (the same hook is mounted in `client.index.tsx` → `ClientVendorGrid`). The server fn does an authorization check then still calls Apify on their behalf if the row looks "stale" by its rules.
-- The client detail drawer uses `useEnsureInstagramPreview` (per-vendor ensure). That's a second call layer on top of bulk.
-- `VendorInstagramCardStrip` shows a skeleton whenever `preview === undefined || preview === null`. On the client grid the first paint is `null` until the bulk request returns; on slow networks this looks like "not loading", and any ensure call that overwrites with an `error` row keeps it stuck.
+- **No `framer-motion`.** Not installed; would add ~40 KB gz. Existing CSS utilities are enough.
+- **GPU-only properties** — animate `transform` and `opacity`. Never `width/height/top/left` on lists.
+- **Respect `prefers-reduced-motion`** — one global rule in `src/styles.css` disables all non-essential motion.
+- **Durations**: 150–250 ms micro-interactions, 300–450 ms page/section entrances. Nothing longer.
+- **Stagger via CSS `animation-delay`** (`index * 40ms`, capped at 12 items) — no JS orchestration.
+- **One-shot reveals** — once visible, stay visible. No re-trigger on scroll-up.
 
-## Plan
+## 1. Page / route transitions
 
-### 1. Single read path: `useInstagramPreviewsBulk` only
+Two layers, both native:
 
-Used by both admin and client grids. Keep its localStorage hydration + per-vendor cache seeding. No behavior change for the read; it already returns the DB row as-is.
+**a. View Transitions API (cross-fade between routes)**
+- Enable on the router: `defaultViewTransition: true` in `src/router.tsx`. TanStack Router wraps every navigation in `document.startViewTransition` where supported (Chromium, Safari TP). Silent no-op elsewhere. Zero bundle cost.
+- Add minimal CSS in `src/styles.css`:
+  ```css
+  ::view-transition-old(root), ::view-transition-new(root) {
+    animation-duration: 220ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  ```
 
-### 2. Detail drawer reads from the same cache, never ensures
+**b. Per-route content entrance (fallback + extra polish)**
+- Wrap each route's top-level container with `animate-fade-in` so even browsers without View Transitions get a soft entrance.
+- Targets: `client.index.tsx`, `admin.index.tsx`, `admin.projects.index.tsx`, `admin.projects.$id.index.tsx`, `admin.projects.$id.preview.$clientId.tsx`, `admin.users.tsx`, `admin.submissions.tsx`, client vendor detail.
 
-- Replace `useEnsureInstagramPreview` inside `VendorInstagramDetailBlock` with a read-only lookup: per-vendor query cache → any bulk cache → localStorage → `null`. Returns immediately; no server call.
-- The admin "Refresh" button keeps using `useRefreshInstagramPreview` (staff-only, manual).
+**c. Splash → app handoff**
+- `SplashScreen.tsx` currently cuts. Add `animate-fade-out` (200 ms) on unmount and `animate-fade-in` on the app shell so there's no flash.
 
-### 3. Kill auto-ensure on view
+## 2. Scroll-driven reveal animations
 
-- Delete `useAutoEnsureMissingPreviews` calls from `client.index.tsx`, `admin.index.tsx`, and `admin.projects.$id.preview.$clientId.tsx`. The hook stays exported but unused (kept for the backfill flow).
-- DB already has 100% coverage for vendors with handles. Anything missing/erroring gets fixed by the staff "Backfill" job or manual refresh — not by every page view.
+Two complementary techniques — pick per surface:
 
-### 4. New-vendor scrape stays one-shot
+**a. Native CSS scroll-driven animations (preferred where supported)**
+- Add a `@utility` reveal class in `src/styles.css`:
+  ```css
+  @utility reveal-on-scroll {
+    animation: fade-in linear both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 30%;
+  }
+  ```
+- Apply to section headers, hero blocks, marketing-style strips on the client dashboard. Zero JS, runs on the compositor.
+- Falls back gracefully in non-supporting browsers (Firefox today): element just appears statically.
 
-`useTriggerInstagramPreview` (used by `VendorForm` on create) is the only auto path that should ever call ensure. It runs once per new vendor and is staff-only.
+**b. IntersectionObserver hook (universal fallback for important reveals)**
+- New `src/hooks/use-reveal-on-scroll.ts` — single shared observer, `rootMargin: "0px 0px -10% 0px"`, `threshold: 0.1`, unobserves after first hit. ~30 lines, no deps.
+- Returns `ref` + `isVisible`; component adds `animate-fade-in` when true.
+- Use on: vendor cards in `ClientVendorTable`, project cards in admin lists, quote panel rows, attachment grid items, timeline `UrgencyStrip` items.
+- Stagger via inline `style={{ animationDelay: \`${Math.min(i, 12) * 40}ms\` }}` on first reveal.
 
-### 5. Lock down `ensureVendorInstagramPreview` server fn
+Performance guard: ONE observer shared across all subscribers (singleton in the hook module), not one per element. Important for long lists.
 
-- Reject calls from non-staff (return `null`). Clients have no business triggering a scrape; bulk read is enough for them.
-- Treat `force=true` as staff-only.
-- Tighten the "shall we re-scrape" rule for any remaining staff path:
-  - If a row exists with `status === 'ok'`, return it as-is. No staleness check, no overwrite. (Matches the "if there is a preview, don't touch it" requirement.)
-  - Only scrape when no row exists, or the row is `not_found`/`error` AND the caller passed `force=true`.
+## 3. List / grid mount staggers
 
-### 6. Skeleton vs empty-state in the card strip
+For initial page load (before scroll observer kicks in for above-the-fold items):
+- First 12 cards animate in with staggered delay.
+- After that, rely on scroll reveal (§2) for below-the-fold rows.
+- Gate with `isInitialMount` ref so re-renders (filtering, sorting) don't re-trigger animation.
 
-`VendorInstagramCardStrip`: keep the skeleton only while bulk fetch is in flight (i.e., `preview === undefined`). Once bulk has returned, render:
-- the preview if `ok`,
-- the friendly "No Instagram preview" empty state otherwise (covers `not_found`, `error`, and DB-missing rows).
+## 4. Hover & micro-interactions
 
-This fixes the "stuck skeleton" feeling on the client side: once the bulk POST resolves, the UI commits and stops waiting.
+- `hover-scale` on: vendor cards, project cards, primary CTAs, sidebar nav rows.
+- `story-link` underline on inline text links (vendor names → detail, project titles).
+- Buttons: `transition-colors active:scale-[0.98]` — tactile, cheap.
+- Sidebar active indicator: animate accent bar with `transition-transform duration-200`.
 
-### 7. Token-spend safety net
+## 5. Dialogs, sheets, drawers, popovers
 
-Add a small server-side log line in `ensureVendorInstagramPreview` whenever it actually calls Apify (vendorId + reason). Lets staff verify scrape volume drops to ~0 after this lands.
+shadcn primitives already animate via `data-[state=open]` keyframes from `tailwindcss-animate`. Audit `dialog.tsx`, `sheet.tsx`, `drawer.tsx`, `popover.tsx`, `dropdown-menu.tsx`, `hover-card.tsx`, `tooltip.tsx`; fill any missing `data-[state=open]:animate-in fade-in-0 zoom-in-95` / `slide-in-from-*` classes.
+
+## 6. Data swap transitions
+
+- Instagram preview strip, vendor detail panes, quote panels: when query resolves, fade content in via `key` change + `animate-fade-in`.
+- Skeleton shimmer: keep current `animate-pulse`.
+- Empty states (`EmptyState`): icon `animate-scale-in`, text `animate-fade-in`, one-shot.
+
+## 7. Route progress bar
+
+`RouteProgress.tsx` already exists. Verify it shows during View Transitions navigation; tune to fade out 150 ms after navigation completes so it doesn't double-flash with the route fade.
+
+## Performance safeguards
+
+- Global `prefers-reduced-motion` rule in `src/styles.css`:
+  ```css
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  ```
+- `will-change: transform` only on persistently animating elements (sidebar hover items). Never blanket-apply.
+- Single shared IntersectionObserver instance — not per-element.
+- Stagger cap = 12 × 40 ms = 480 ms max.
+- No animations on virtualized list items mid-scroll — only on first mount + on-enter reveal.
+- View Transitions only between top-level routes, not on every search-param change (TanStack Router default behavior, but verify).
 
 ## Files touched
 
-- `src/hooks/use-instagram-previews.ts` — remove auto-ensure usage; add a read-only `useInstagramPreviewFromCache(vendorId, handle)` helper that doesn't issue any request.
-- `src/components/vendor/VendorInstagramPreview.tsx` — `VendorInstagramDetailBlock` uses the new read-only helper; `VendorInstagramCardStrip` shows empty state once bulk resolves.
-- `src/lib/instagram-preview.functions.ts` — staff-only ensure, never overwrite an `ok` row, no staleness scrape, add scrape log.
-- `src/routes/client.index.tsx`, `src/routes/admin.index.tsx`, `src/routes/admin.projects.$id.preview.$clientId.tsx` — remove `useAutoEnsureMissingPreviews` calls.
+- `src/styles.css` — reduced-motion rule, view-transition timing, `reveal-on-scroll` utility, splash fade keyframes if missing.
+- `src/router.tsx` — `defaultViewTransition: true`.
+- `src/hooks/use-reveal-on-scroll.ts` — **new**, shared-observer hook.
+- Route files in §1 — wrapper class on container.
+- List components — `ClientVendorTable`, admin vendor grid, project cards, quote rows, attachment grid, urgency strip — add reveal hook + stagger delay.
+- `EmptyState`, `Sidebar`, `ClientSidebar`, `RouteProgress`, `SplashScreen` — minor class additions.
+- shadcn ui primitives in §5 — only if audit finds missing classes.
+
+No new dependencies. No render-loop changes. Net bundle impact ≈ 0 KB (+ ~30 lines for the reveal hook).
 
 ## Out of scope
 
-- Database schema (no migration; the single-row-per-vendor invariant is already enforced by the unique `vendor_id` upsert).
-- Backfill UI (staff dashboard's "Backfill" already exists and is the right tool for bulk catch-up).
-- Apify scraper itself (`server/instagram-preview.server.ts`).
-
-## How to verify after build
-
-1. Hard refresh the admin vendors grid. Network panel should show one `getVendorInstagramPreviewsBulk` call and zero `ensureVendorInstagramPreview` calls.
-2. Hard refresh a client account's vendor grid. Same: one bulk read, zero ensures. Cards render the stored previews immediately.
-3. Open a vendor detail drawer (admin and client). No network call; preview matches the card.
-4. Click admin "Refresh" on a vendor → one Apify call, row updates, all open cards re-render.
-5. Create a new vendor with a handle → one Apify call from `VendorForm`, preview appears.
+- `framer-motion`, `motion-one`, `auto-animate`, GSAP, Lottie.
+- Parallax / sticky-pin / scroll-jacking effects.
+- Redesigning components — this pass only adds motion.

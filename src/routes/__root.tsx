@@ -1,4 +1,4 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
@@ -175,10 +175,28 @@ function RootComponent() {
         <ConfirmProvider>
           <RouteProgress />
           <SplashScreen />
-          <Outlet />
+          <RouteFade />
           <Toaster />
         </ConfirmProvider>
       </AuthProvider>
     </QueryClientProvider>
+  );
+}
+
+/**
+ * Wraps <Outlet /> with a keyed fade-in so route changes get a soft
+ * entrance in browsers without View Transitions support (Firefox).
+ * In Chromium/Safari TP, View Transitions handle the cross-fade and this
+ * fade is harmless (200ms one-shot, GPU-only).
+ */
+function RouteFade() {
+  // First path segment — keying on this avoids re-animating on every
+  // search-param or param change while still firing between sections.
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const section = pathname.split("/")[1] || "root";
+  return (
+    <div key={section} className="animate-fade-in">
+      <Outlet />
+    </div>
   );
 }

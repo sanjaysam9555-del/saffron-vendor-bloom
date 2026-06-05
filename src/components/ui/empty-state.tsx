@@ -28,7 +28,7 @@ export function EmptyState({
       )}
     >
       {icon && (
-        <div className="mb-3 text-[var(--terracotta)] [&>svg]:h-7 [&>svg]:w-7">
+        <div className="mb-3 text-[var(--terracotta)] animate-scale-in [&>svg]:h-7 [&>svg]:w-7">
           {icon}
         </div>
       )}
