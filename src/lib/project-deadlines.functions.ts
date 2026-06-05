@@ -61,18 +61,19 @@ export const listProjectCategoryDeadlines = createServerFn({ method: "GET" })
       : "id, project_id, category, due_date, criticality, updated_at";
     const { data: rows, error } = await supabaseAdmin
       .from("project_category_deadlines")
-      .select(cols)
+      .select(cols as string)
       .eq("project_id", data.project_id);
     if (error) throw new Error(error.message);
+    const list = (rows ?? []) as unknown as CategoryDeadline[];
     if (!staff) {
-      return (rows ?? []).map((r: any) => ({
+      return list.map((r) => ({
         ...r,
         notes: null,
         planned_amount: null,
         actual_amount_override: null,
-      })) as CategoryDeadline[];
+      }));
     }
-    return (rows ?? []) as CategoryDeadline[];
+    return list;
   });
 
 export const upsertCategoryDeadline = createServerFn({ method: "POST" })
