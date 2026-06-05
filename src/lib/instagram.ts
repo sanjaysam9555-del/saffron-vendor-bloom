@@ -21,6 +21,17 @@ export function normalizeInstagramHandle(
   return handle.length > 0 ? handle : null;
 }
 
+/**
+ * Returns true if the value looks like a real Instagram handle once
+ * normalized — letters/digits/dots/underscores only, 1-30 chars. Filters
+ * out garbage like "drive.google.com" pasted into the handle field.
+ */
+export function isValidInstagramHandle(raw: string | null | undefined): boolean {
+  const h = normalizeInstagramHandle(raw);
+  if (!h) return false;
+  return /^[a-zA-Z0-9._]{1,30}$/.test(h) && !h.includes("..");
+}
+
 export function instagramUrl(raw: string | null | undefined): string | null {
   const h = normalizeInstagramHandle(raw);
   return h ? `https://www.instagram.com/${h}/` : null;
