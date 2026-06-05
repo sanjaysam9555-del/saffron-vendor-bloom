@@ -1,7 +1,7 @@
 import { Instagram, RefreshCw, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import type { VendorInstagramPreview as PreviewData } from "@/lib/instagram-preview.functions";
-import { useEnsureInstagramPreview, useRefreshInstagramPreview } from "@/hooks/use-instagram-previews";
+import { useInstagramPreviewFromCache, useRefreshInstagramPreview } from "@/hooks/use-instagram-previews";
 
 function proxiedSrc(src: string): string {
   if (!src) return src;
@@ -138,7 +138,7 @@ interface DetailProps {
  * when nothing is available.
  */
 export function VendorInstagramDetailBlock({ vendorId, handle, canRefresh = false }: DetailProps) {
-  const { data: preview, isLoading } = useEnsureInstagramPreview(vendorId, handle ?? null);
+  const preview = useInstagramPreviewFromCache(vendorId, handle ?? null);
   const refresh = useRefreshInstagramPreview();
 
   if (!handle) return null;
@@ -165,11 +165,7 @@ export function VendorInstagramDetailBlock({ vendorId, handle, canRefresh = fals
         )}
       </div>
 
-      {isLoading && !preview && (
-        <div className="text-xs text-[var(--charcoal)]/55">Loading preview…</div>
-      )}
-
-      {!isLoading && (!preview || status !== "ok") && (
+      {(!preview || status !== "ok") && (
         <div className="rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-3 text-xs text-[var(--charcoal)]/60">
           {status === "not_found"
             ? "Profile is private or unavailable."
