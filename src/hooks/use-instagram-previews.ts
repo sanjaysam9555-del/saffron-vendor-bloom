@@ -17,7 +17,7 @@ import {
   type VendorInstagramPreview,
   type InstagramBackfillJob,
 } from "@/lib/instagram-preview.functions";
-import { normalizeInstagramHandle } from "@/lib/instagram";
+import { normalizeInstagramHandle, isValidInstagramHandle } from "@/lib/instagram";
 
 // ---------------------------------------------------------------------------
 // localStorage cache — keeps the last known preview for each vendor so the
@@ -212,19 +212,20 @@ export function useEnsureInstagramPreview(vendorId: string, handle: string | nul
   const fn = useServerFn(ensureVendorInstagramPreview);
   const qc = useQueryClient();
   const normalized = normalizeInstagramHandle(handle);
+  const valid = isValidInstagramHandle(handle);
   return useQuery({
     queryKey: ["instagram-preview", vendorId, normalized],
     queryFn: async () => {
-      if (!handle) return null;
-      const row = await fn({ data: { vendorId, handle } });
+      if (!valid || !normalized) return null;
+      const row = await fn({ data: { vendorId, handle: normalized } });
       if (row) patchBulkCaches(qc, row);
       return row;
     },
-    enabled: !!handle,
+    enabled: valid,
     staleTime: 5 * 60 * 1000,
     // Seed from the bulk cache or localStorage so the drawer never flashes empty.
     initialData: () => {
-      if (!handle) return undefined;
+      if (!valid) return undefined;
       const fromBulk = qc.getQueryData<VendorInstagramPreview>([
         "instagram-preview",
         vendorId,
@@ -264,22 +265,38 @@ export function useAutoEnsureMissingPreviews(
   const inFlight = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    const missing = vendors.filter((v) => {
-      const handle = (v.instagram_handle ?? "").trim();
-      if (!handle) return false;
-      if (inFlight.current.has(v.id)) return false;
+    type Pending = { id: string; handle: string; force: boolean };
+    const missing: Pending[] = [];
+    for (const v of vendors) {
+      const rawHandle = (v.instagram_handle ?? "").trim();
+      if (!rawHandle) continue;
+      // Skip handles that aren't actually Instagram (e.g. Google Drive
+      // links pasted into the field). Scraping them just produces noisy
+      // "not_found" rows.
+      if (!isValidInstagramHandle(rawHandle)) continue;
+      const normalized = normalizeInstagramHandle(rawHandle);
+      if (!normalized) continue;
+      if (inFlight.current.has(v.id)) continue;
+
       const existing = previewMap.get(v.id);
       if (existing && existing.status === "ok") {
         const ageMs = Date.now() - new Date(existing.fetched_at).getTime();
-        return ageMs > REFRESH_AFTER_MS;
+        if (ageMs <= REFRESH_AFTER_MS) continue;
+        missing.push({ id: v.id, handle: normalized, force: false });
+        continue;
       }
-      // No row, or only an error row — but if we have a cached ok elsewhere,
-      // don't re-scrape (avoids wasting scraper quota when previewMap was
-      // substituted from cache).
-      const cachedOk = findCachedOkPreview(qc, v.id, handle);
-      if (cachedOk) return false;
-      return true;
-    });
+      // No row, or only an error/not_found row.
+      const cachedOk = findCachedOkPreview(qc, v.id, normalized);
+      if (cachedOk) continue;
+      // If the cached row's handle no longer matches the normalized
+      // handle, it was scraped with a bad value (legacy URL-as-handle).
+      // Force a rescrape past the server cooldown.
+      const force =
+        !!existing &&
+        existing.status !== "ok" &&
+        normalizeInstagramHandle(existing.handle) !== normalized;
+      missing.push({ id: v.id, handle: normalized, force });
+    }
 
     if (missing.length === 0) return;
 
@@ -303,11 +320,11 @@ export function useAutoEnsureMissingPreviews(
     async function worker() {
       while (!cancelled && cursor < missing.length) {
         const v = missing[cursor++];
-        const handle = (v.instagram_handle ?? "").trim();
-        if (!handle) continue;
         inFlight.current.add(v.id);
         try {
-          const row = await ensureFn({ data: { vendorId: v.id, handle } });
+          const row = await ensureFn({
+            data: { vendorId: v.id, handle: v.handle, force: v.force },
+          });
           if (row && !cancelled) patchBulkCaches(qc, row);
         } catch {
           /* swallow — scraper failures are tracked in last_error */
@@ -337,9 +354,10 @@ export function useTriggerInstagramPreview() {
   const ensureFn = useServerFn(ensureVendorInstagramPreview);
   const qc = useQueryClient();
   return (vendorId: string, handle: string | null | undefined) => {
-    const h = (handle ?? "").trim();
+    if (!isValidInstagramHandle(handle)) return;
+    const h = normalizeInstagramHandle(handle);
     if (!h) return;
-    void ensureFn({ data: { vendorId, handle: h } })
+    void ensureFn({ data: { vendorId, handle: h, force: true } })
       .then((row) => {
         if (row) patchBulkCaches(qc, row);
       })
