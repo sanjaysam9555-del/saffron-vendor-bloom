@@ -22,7 +22,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotesPanel";
 import { listProjectVendorQuotes } from "@/lib/quote-api";
-import { formatINR, formatINRShort } from "@/lib/quote-types";
+import { formatINR, formatINRShort, ordinal, buildQuoteSeqMap } from "@/lib/quote-types";
 import { useConfirm, useConfirmDelete } from "@/components/ui/confirm-dialog";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { EmptyState } from "@/components/ui/empty-state";
