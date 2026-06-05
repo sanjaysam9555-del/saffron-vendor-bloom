@@ -3,7 +3,7 @@ import { CATEGORY_COLORS } from "@/lib/categories";
 import { getClientStatusOption } from "@/lib/client-status";
 import { ClientStatusSelect } from "./ClientStatusSelect";
 import { CircleCheck, FileText, Star, Paperclip, MessageSquare, Sparkles } from "lucide-react";
-import { formatINR, formatINRShort } from "@/lib/quote-types";
+import { formatINR, formatINRShort, ordinal, buildQuoteSeqMap } from "@/lib/quote-types";
 import { useEffect, useRef, useState } from "react";
 
 interface Props {
