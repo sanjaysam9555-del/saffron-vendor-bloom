@@ -559,6 +559,18 @@ export const createProjectClient = createServerFn({ method: "POST" })
     return { user_id: userId };
   });
 
+async function assertTargetIsClient(userId: string) {
+  const { data, error } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["admin", "employee"]);
+  if (error) throw new Error(error.message);
+  if (data && data.length > 0) {
+    throw new Error("Forbidden: cannot modify staff accounts");
+  }
+}
+
 export const resetProjectClientPassword = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) =>
@@ -566,6 +578,7 @@ export const resetProjectClientPassword = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     await assertStaff(context.userId);
+    await assertTargetIsClient(data.user_id);
     const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, {
       password: data.password,
     });
@@ -581,6 +594,7 @@ export const setProjectClientEmail = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     await assertStaff(context.userId);
+    await assertTargetIsClient(data.user_id);
     const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, {
       email: data.email,
       email_confirm: true,
@@ -596,6 +610,7 @@ export const setProjectClientDisplayName = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     await assertStaff(context.userId);
+    await assertTargetIsClient(data.user_id);
     const display_name = data.display_name.trim();
     if (!display_name) throw new Error("Name is required");
     const { error } = await supabaseAdmin
@@ -609,6 +624,7 @@ export const setProjectClientDisplayName = createServerFn({ method: "POST" })
       .catch(() => {});
     return { ok: true };
   });
+
 
 export const removeProjectClient = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
