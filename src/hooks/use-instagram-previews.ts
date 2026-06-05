@@ -134,7 +134,16 @@ export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enable
     queryKey: ["instagram-previews-bulk", sortedKey],
     queryFn: async () => {
       if (vendorIds.length === 0) return [];
-      const rows = await fn({ data: { vendorIds } });
+      // Server validator caps each request at 500 ids — chunk for larger lists.
+      const CHUNK = 500;
+      const chunks: string[][] = [];
+      for (let i = 0; i < vendorIds.length; i += CHUNK) {
+        chunks.push(vendorIds.slice(i, i + CHUNK));
+      }
+      const results = await Promise.all(
+        chunks.map((ids) => fn({ data: { vendorIds: ids } })),
+      );
+      const rows = results.flat();
       const resolvedRows = rows.map((p) => {
         if (p.status !== "ok") {
           const cached = findCachedOkPreview(qc, p.vendor_id, p.handle);
