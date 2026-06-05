@@ -1030,7 +1030,7 @@ export const listProjectVendorComments = createServerFn({ method: "GET" })
 
     const { data: rows, error } = await supabaseAdmin
       .from("project_vendor_comments")
-      .select("id, body, created_at, user_id")
+      .select("id, body, created_at, user_id, parent_id")
       .eq("project_id", data.project_id)
       .eq("vendor_id", data.vendor_id)
       .order("created_at", { ascending: true });
@@ -1039,12 +1039,18 @@ export const listProjectVendorComments = createServerFn({ method: "GET" })
     const userIds = Array.from(new Set((rows ?? []).map((r) => r.user_id)));
     let nameMap = new Map<string, string>();
     let emailMap = new Map<string, string>();
+    let staffSet = new Set<string>();
     if (userIds.length > 0) {
-      const { data: profs } = await supabaseAdmin
-        .from("profiles")
-        .select("user_id, display_name")
-        .in("user_id", userIds);
+      const [{ data: profs }, { data: roleRows }] = await Promise.all([
+        supabaseAdmin.from("profiles").select("user_id, display_name").in("user_id", userIds),
+        supabaseAdmin.from("user_roles").select("user_id, role").in("user_id", userIds),
+      ]);
       nameMap = new Map((profs ?? []).map((p) => [p.user_id, p.display_name ?? ""]));
+      staffSet = new Set(
+        (roleRows ?? [])
+          .filter((r) => r.role === "admin" || r.role === "employee")
+          .map((r) => r.user_id),
+      );
       // For staff view, also pull emails
       if (isStaff) {
         const { data: usersData } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
@@ -1052,16 +1058,24 @@ export const listProjectVendorComments = createServerFn({ method: "GET" })
       }
     }
 
-    return (rows ?? []).map((r) => ({
-      id: r.id,
-      body: r.body,
-      created_at: r.created_at,
-      user_id: r.user_id,
-      author_name: nameMap.get(r.user_id) || (emailMap.get(r.user_id)?.split("@")[0] ?? "Client"),
-      author_email: isStaff ? (emailMap.get(r.user_id) ?? null) : null,
-      is_own: r.user_id === userId,
-    }));
+    return (rows ?? []).map((r) => {
+      const isStaffAuthor = staffSet.has(r.user_id);
+      return {
+        id: r.id,
+        body: r.body,
+        created_at: r.created_at,
+        user_id: r.user_id,
+        parent_id: r.parent_id ?? null,
+        author_role: isStaffAuthor ? ("staff" as const) : ("client" as const),
+        author_name: isStaffAuthor
+          ? "Saffron Team"
+          : nameMap.get(r.user_id) || (emailMap.get(r.user_id)?.split("@")[0] ?? "Client"),
+        author_email: isStaff ? (emailMap.get(r.user_id) ?? null) : null,
+        is_own: r.user_id === userId,
+      };
+    });
   });
+
 
 export const addProjectVendorComment = createServerFn({ method: "POST" })
   .middleware([attachAuthToken])
