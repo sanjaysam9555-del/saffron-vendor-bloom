@@ -133,15 +133,402 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
   );
 }
 
-function BucketGroup({
-  bucket,
+function TimelineRibbon({
+  items,
+  projectId,
+  mode,
+  weddingDate,
+  now,
+  registerRowRef,
+}: {
+  items: TimelineItem[];
+  projectId: string;
+  mode: "admin" | "client";
+  weddingDate: string;
+  now: Date;
+  registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
+}) {
+  const sections = useMemo(() => {
+    const overdue: TimelineItem[] = [];
+    const upcoming: TimelineItem[] = [];
+    const unscheduled: TimelineItem[] = [];
+    const booked: TimelineItem[] = [];
+    for (const it of items) {
+      if (it.booked) booked.push(it);
+      else if (!it.due_date) unscheduled.push(it);
+      else if (classifyUrgency(it, now).bucket === "overdue") overdue.push(it);
+      else upcoming.push(it);
+    }
+    const byDate = (a: TimelineItem, b: TimelineItem) =>
+      (a.due_date ?? "").localeCompare(b.due_date ?? "");
+    overdue.sort(byDate);
+    upcoming.sort(byDate);
+    booked.sort(byDate);
+    unscheduled.sort((a, b) => a.category.localeCompare(b.category));
+    return { overdue, upcoming, unscheduled, booked };
+  }, [items, now]);
+
+  const totals = useMemo(() => {
+    const planned = sumAmounts(items, (i) => i.planned_amount);
+    const actual = sumAmounts(items, (i) => resolveActual(i));
+    return { planned, actual, variance: actual - planned };
+  }, [items]);
+
+  const weddingDays = daysBetween(now, new Date(weddingDate));
+
+  // Continuous index for left/right alternation across scheduled rows only.
+  let alt = 0;
+
+  return (
+    <div>
+      <RibbonHeader weddingDate={weddingDate} daysToWedding={weddingDays} totals={totals} />
+
+      <div className="relative">
+        <div
+          aria-hidden
+          className="absolute top-4 bottom-4 w-px bg-[var(--champagne)]/60 left-[15px] md:left-1/2 md:-translate-x-1/2"
+        />
+
+        <div className="flex flex-col gap-10 py-2">
+          {sections.overdue.map((item) => (
+            <RibbonRow
+              key={item.category}
+              item={item}
+              projectId={projectId}
+              mode={mode}
+              now={now}
+              variant="overdue"
+              side={alt++ % 2 === 0 ? "right" : "left"}
+              registerRowRef={registerRowRef}
+            />
+          ))}
+
+          {sections.upcoming.map((item) => (
+            <RibbonRow
+              key={item.category}
+              item={item}
+              projectId={projectId}
+              mode={mode}
+              now={now}
+              variant="upcoming"
+              side={alt++ % 2 === 0 ? "right" : "left"}
+              registerRowRef={registerRowRef}
+            />
+          ))}
+
+          {sections.unscheduled.length > 0 && (
+            <UnscheduledBand
+              items={sections.unscheduled}
+              projectId={projectId}
+              mode={mode}
+              now={now}
+              registerRowRef={registerRowRef}
+            />
+          )}
+
+          {sections.booked.map((item) => (
+            <RibbonRow
+              key={item.category}
+              item={item}
+              projectId={projectId}
+              mode={mode}
+              now={now}
+              variant="booked"
+              side={alt++ % 2 === 0 ? "right" : "left"}
+              registerRowRef={registerRowRef}
+            />
+          ))}
+
+          <WeddingMarker date={weddingDate} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RibbonHeader({
+  weddingDate,
+  daysToWedding,
+  totals,
+}: {
+  weddingDate: string;
+  daysToWedding: number;
+  totals: { planned: number; actual: number; variance: number };
+}) {
+  const varColor =
+    totals.variance > 0
+      ? "text-[var(--urgency-overdue)]"
+      : totals.variance < 0
+        ? "text-[var(--urgency-booked)]"
+        : "text-[var(--charcoal)]/70";
+  const countdown =
+    daysToWedding > 0
+      ? `${daysToWedding} day${daysToWedding === 1 ? "" : "s"} to go`
+      : daysToWedding === 0
+        ? "Today"
+        : `${-daysToWedding} day${daysToWedding === -1 ? "" : "s"} ago`;
+  return (
+    <div className="mb-10 flex flex-col gap-5 border-b border-[var(--champagne)]/50 pb-6 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--terracotta)]">
+          Wedding Day: {formatDueDate(weddingDate)} — {countdown}
+        </p>
+      </div>
+      <div className="flex gap-6 text-right text-sm md:gap-8">
+        <div>
+          <p className="mb-0.5 text-[9px] uppercase tracking-wider text-[var(--charcoal)]/55">
+            Planned
+          </p>
+          <p className="font-display text-xl text-[var(--charcoal)]">{formatINR(totals.planned)}</p>
+        </div>
+        <div>
+          <p className="mb-0.5 text-[9px] uppercase tracking-wider text-[var(--charcoal)]/55">
+            Actual
+          </p>
+          <p className="font-display text-xl text-[var(--charcoal)]">{formatINR(totals.actual)}</p>
+        </div>
+        <div>
+          <p className="mb-0.5 text-[9px] uppercase tracking-wider text-[var(--charcoal)]/55">
+            Variance
+          </p>
+          <p className={`font-display text-xl ${varColor}`}>
+            {totals.variance >= 0 ? "+" : "−"}
+            {formatINR(Math.abs(totals.variance))}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type RibbonVariant = "overdue" | "upcoming" | "booked";
+
+function RibbonRow({
+  item,
+  projectId,
+  mode,
+  now,
+  variant,
+  side,
+  registerRowRef,
+}: {
+  item: TimelineItem;
+  projectId: string;
+  mode: "admin" | "client";
+  now: Date;
+  variant: RibbonVariant;
+  side: "left" | "right";
+  registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const { daysLeft } = classifyUrgency(item, now);
+
+  const accent =
+    variant === "overdue"
+      ? "var(--urgency-overdue)"
+      : variant === "booked"
+        ? "var(--urgency-booked)"
+        : "var(--terracotta)";
+
+  const pillLabel =
+    variant === "overdue"
+      ? "Overdue"
+      : variant === "booked"
+        ? "Booked"
+        : item.criticality.toUpperCase();
+
+  const subtitle =
+    variant === "overdue" && daysLeft !== null
+      ? daysLeftLabel(daysLeft)
+      : variant === "upcoming" && daysLeft !== null
+        ? daysLeftLabel(daysLeft)
+        : variant === "booked"
+          ? item.booked_vendor_name
+            ? `with ${item.booked_vendor_name}`
+            : "Vendor confirmed"
+          : "";
+
+  // Mobile: always card on the right of spine. md+: alternate.
+  const cardOnRight = side === "right";
+
+  return (
+    <div className="relative grid grid-cols-1 items-center gap-4 md:grid-cols-2 md:gap-8">
+      {/* Date side */}
+      <div
+        className={`hidden md:block ${cardOnRight ? "md:order-1 md:text-right md:pr-4" : "md:order-2 md:text-left md:pl-4"}`}
+      >
+        <DateLabel
+          variant={variant}
+          dueDate={item.due_date}
+          subtitle={subtitle}
+          accent={accent}
+        />
+      </div>
+
+      {/* Spine dot */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute z-10 h-3.5 w-3.5 rounded-full border-4 border-[var(--cream)] left-[15px] top-6 -translate-x-1/2 md:left-1/2 md:top-1/2 md:-translate-y-1/2"
+        style={{
+          background: variant === "upcoming" ? "var(--cream)" : accent,
+          borderColor: "var(--cream)",
+          boxShadow: variant === "upcoming" ? `inset 0 0 0 2px ${accent}` : undefined,
+        }}
+      />
+
+      {/* Card side */}
+      <div
+        className={`pl-10 md:pl-0 ${cardOnRight ? "md:order-2 md:pl-4" : "md:order-1 md:pr-4"}`}
+      >
+        {/* On mobile, render compact date inline above card */}
+        <div className="mb-2 md:hidden">
+          <DateLabel
+            variant={variant}
+            dueDate={item.due_date}
+            subtitle={subtitle}
+            accent={accent}
+            compact
+          />
+        </div>
+
+        <article
+          ref={(el) => registerRowRef?.(item.category, el)}
+          data-category={item.category}
+          className={`rounded-lg bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-md ${
+            variant === "booked" ? "opacity-90 hover:opacity-100" : ""
+          }`}
+          style={{ borderLeft: `4px solid ${accent}` }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h4 className="font-display text-lg leading-tight text-[var(--charcoal)]">
+                {item.category}
+              </h4>
+              <p className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
+                {item.vendor_count} shortlisted
+                {item.notes ? ` · ${item.notes}` : ""}
+              </p>
+            </div>
+            <span
+              className="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+              style={{
+                background:
+                  variant === "overdue"
+                    ? "var(--terracotta-soft)"
+                    : variant === "booked"
+                      ? "color-mix(in oklab, var(--urgency-booked) 12%, transparent)"
+                      : item.criticality === "high"
+                        ? "var(--criticality-high-bg)"
+                        : item.criticality === "low"
+                          ? "var(--criticality-low-bg)"
+                          : "var(--criticality-med-bg)",
+                color: variant === "booked" ? "var(--urgency-booked)" : accent,
+              }}
+            >
+              {variant === "booked" && <CheckCircle2 className="mr-1 inline h-3 w-3 align-[-2px]" />}
+              {pillLabel}
+            </span>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--cream-deep)] pt-3 text-[11px]">
+            <div className="flex gap-5">
+              <div>
+                <p className="text-[9px] uppercase tracking-widest text-[var(--charcoal)]/45">
+                  Planned
+                </p>
+                <p className="font-medium text-[var(--charcoal)]">
+                  {item.planned_amount != null ? formatINR(item.planned_amount) : "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-[9px] uppercase tracking-widest text-[var(--charcoal)]/45">
+                  Actual
+                </p>
+                <p className="font-medium text-[var(--charcoal)]">
+                  {resolveActual(item) != null ? formatINR(resolveActual(item)) : "—"}
+                  {item.actual_amount_override != null && (
+                    <span className="ml-1 rounded bg-[var(--champagne)]/40 px-1 text-[8px] uppercase tracking-wider text-[var(--charcoal)]/70">
+                      manual
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+            {mode === "admin" && (
+              <button
+                onClick={() => setEditing((e) => !e)}
+                className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/60 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+              >
+                {editing ? <X className="h-3 w-3" /> : <Pencil className="h-3 w-3" />}
+                {editing ? "Close" : "Edit"}
+              </button>
+            )}
+          </div>
+
+          {editing && mode === "admin" && (
+            <DeadlineEditor
+              item={item}
+              projectId={projectId}
+              onDone={() => setEditing(false)}
+            />
+          )}
+        </article>
+      </div>
+    </div>
+  );
+}
+
+function DateLabel({
+  variant,
+  dueDate,
+  subtitle,
+  accent,
+  compact = false,
+}: {
+  variant: RibbonVariant;
+  dueDate: string | null;
+  subtitle: string;
+  accent: string;
+  compact?: boolean;
+}) {
+  const pill =
+    variant === "overdue"
+      ? "Overdue"
+      : variant === "booked"
+        ? "Completed"
+        : "Upcoming";
+  return (
+    <div>
+      <span
+        className="inline-block rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-widest text-white"
+        style={{ background: accent }}
+      >
+        {pill}
+      </span>
+      <h3
+        className={`font-display text-[var(--charcoal)] ${compact ? "mt-1 text-base" : "mt-2 text-2xl"}`}
+      >
+        {dueDate ? formatDueDate(dueDate) : "No deadline"}
+      </h3>
+      {subtitle && (
+        <p
+          className={`italic ${compact ? "text-[11px]" : "text-xs"} font-medium`}
+          style={{ color: accent }}
+        >
+          {subtitle}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function UnscheduledBand({
   items,
   projectId,
   mode,
   now,
   registerRowRef,
 }: {
-  bucket: UrgencyBucket;
   items: TimelineItem[];
   projectId: string;
   mode: "admin" | "client";
@@ -149,20 +536,15 @@ function BucketGroup({
   registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
 }) {
   return (
-    <section>
-      <div className="mb-2 flex items-center gap-2">
-        <span
-          className="h-2 w-2 rounded-full"
-          style={{ background: BUCKET_TOKEN[bucket] }}
-          aria-hidden
-        />
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--charcoal)]/70">
-          {BUCKET_LABEL[bucket]} · {items.length}
-        </h3>
+    <div className="relative my-2">
+      <div className="mb-6 flex items-center justify-center">
+        <span className="z-10 bg-[var(--cream)] px-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--charcoal)]/45">
+          To Be Scheduled
+        </span>
       </div>
-      <div className="grid gap-2">
+      <div className="grid grid-cols-1 gap-3 pl-10 md:grid-cols-2 md:pl-0">
         {items.map((item) => (
-          <CategoryRow
+          <UnscheduledCard
             key={item.category}
             item={item}
             projectId={projectId}
@@ -172,9 +554,88 @@ function BucketGroup({
           />
         ))}
       </div>
-    </section>
+    </div>
   );
 }
+
+function UnscheduledCard({
+  item,
+  projectId,
+  mode,
+  registerRowRef,
+}: {
+  item: TimelineItem;
+  projectId: string;
+  mode: "admin" | "client";
+  now: Date;
+  registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const critClass =
+    item.criticality === "high"
+      ? "bg-[var(--criticality-high-bg)] text-[var(--terracotta)]"
+      : item.criticality === "low"
+        ? "bg-[var(--criticality-low-bg)] text-[var(--charcoal)]/60"
+        : "bg-[var(--criticality-med-bg)] text-[var(--charcoal)]/80";
+  return (
+    <div
+      ref={(el) => registerRowRef?.(item.category, el)}
+      data-category={item.category}
+      className="flex flex-col justify-between rounded-lg border border-dashed border-[var(--champagne)]/70 bg-white/70 p-4"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <h4 className="font-display text-base text-[var(--charcoal)]">{item.category}</h4>
+        <span
+          className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${critClass}`}
+        >
+          {item.criticality}
+        </span>
+      </div>
+      <p className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/50">
+        {item.vendor_count} shortlisted
+      </p>
+      <div className="mt-3 flex items-center justify-between">
+        <p className="text-[10px] italic font-medium text-[var(--terracotta)]">
+          Set a deadline
+        </p>
+        {mode === "admin" && (
+          <button
+            onClick={() => setEditing((e) => !e)}
+            className="rounded-md p-1.5 text-[var(--charcoal)]/45 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]"
+            aria-label="Edit deadline"
+          >
+            {editing ? <X className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+          </button>
+        )}
+      </div>
+      {editing && mode === "admin" && (
+        <DeadlineEditor
+          item={item}
+          projectId={projectId}
+          onDone={() => setEditing(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function WeddingMarker({ date }: { date: string }) {
+  return (
+    <div className="relative mt-6 flex flex-col items-center">
+      <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--terracotta)] text-[var(--cream)] shadow-lg">
+        <Heart className="h-6 w-6" />
+      </div>
+      <div className="mt-4 text-center">
+        <h3 className="font-display text-3xl italic text-[var(--charcoal)]">The Wedding Day</h3>
+        <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--terracotta)]">
+          {formatDueDate(date)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
 
 function CategoryRow({
   item,
