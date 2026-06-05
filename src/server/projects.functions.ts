@@ -1075,37 +1075,6 @@ export const listProjectVendorComments = createServerFn({ method: "GET" })
       };
     });
   });
-
-
-export const addProjectVendorComment = createServerFn({ method: "POST" })
-  .middleware([attachAuthToken])
-  .inputValidator((d) =>
-    z
-      .object({
-        vendor_id: z.string().uuid(),
-        body: z.string().trim().min(1).max(4000),
-      })
-      .parse(d),
-  )
-  .handler(async ({ data }) => {
-    const { userId } = await requireClientUser();
-
-    // Find the project this client owns and confirm vendor is on it
-    const { data: links } = await supabaseAdmin
-      .from("project_clients")
-      .select("project_id")
-      .eq("user_id", userId);
-    const projectIds = (links ?? []).map((l) => l.project_id);
-    if (projectIds.length === 0) throw new Error("No project assigned");
-
-    const { data: pv } = await supabaseAdmin
-      .from("project_vendors")
-      .select("project_id, vendor_id")
-      .in("project_id", projectIds)
-      .eq("vendor_id", data.vendor_id)
-      .maybeSingle();
-    if (!pv) throw new Error("Vendor not available to this client");
-
 export const addProjectVendorComment = createServerFn({ method: "POST" })
   .middleware([attachAuthToken])
   .inputValidator((d) =>
