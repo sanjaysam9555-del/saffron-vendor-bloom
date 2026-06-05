@@ -55,7 +55,6 @@ type SubView = "timeline" | "table";
 export function VendorTimeline({ projectId, weddingDate, items, mode, registerRowRef }: Props) {
   const [sub, setSub] = useState<SubView>("timeline");
   const now = useNow();
-  const grouped = useMemo(() => groupByBucket(items, now), [items, now]);
   const sorted = useMemo(() => sortItems(items, now), [items, now]);
   const unsetCount = items.filter((i) => !i.due_date && !i.booked).length;
 
