@@ -41,6 +41,48 @@ export type Database = {
         }
         Relationships: []
       }
+      client_notifications: {
+        Row: {
+          actor_user_id: string | null
+          body: string | null
+          created_at: string
+          id: string
+          kind: string
+          metadata: Json
+          project_id: string | null
+          read_at: string | null
+          title: string
+          user_id: string
+          vendor_id: string | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          metadata?: Json
+          project_id?: string | null
+          read_at?: string | null
+          title: string
+          user_id: string
+          vendor_id?: string | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          metadata?: Json
+          project_id?: string | null
+          read_at?: string | null
+          title?: string
+          user_id?: string
+          vendor_id?: string | null
+        }
+        Relationships: []
+      }
       client_vendor_status: {
         Row: {
           created_at: string
@@ -336,6 +378,7 @@ export type Database = {
           body: string
           created_at: string
           id: string
+          parent_id: string | null
           project_id: string
           user_id: string
           vendor_id: string
@@ -344,6 +387,7 @@ export type Database = {
           body: string
           created_at?: string
           id?: string
+          parent_id?: string | null
           project_id: string
           user_id: string
           vendor_id: string
@@ -352,11 +396,20 @@ export type Database = {
           body?: string
           created_at?: string
           id?: string
+          parent_id?: string | null
           project_id?: string
           user_id?: string
           vendor_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "project_vendor_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "project_vendor_comments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_vendor_quote_files: {
         Row: {
