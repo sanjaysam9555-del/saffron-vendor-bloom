@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Clients view their project" ON public.projects;
