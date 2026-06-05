@@ -113,20 +113,14 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
             : "Your planner hasn't added any vendor categories yet."}
         </div>
       ) : sub === "timeline" ? (
-        <div className="space-y-5">
-          {grouped.map((g) => (
-            <BucketGroup
-              key={g.bucket}
-              bucket={g.bucket}
-              items={g.items}
-              projectId={projectId}
-              mode={mode}
-              now={now}
-              registerRowRef={registerRowRef}
-            />
-          ))}
-          <TotalsRow items={items} />
-        </div>
+        <TimelineRibbon
+          items={items}
+          projectId={projectId}
+          mode={mode}
+          weddingDate={weddingDate}
+          now={now}
+          registerRowRef={registerRowRef}
+        />
       ) : (
         <TableView
           items={sorted}
