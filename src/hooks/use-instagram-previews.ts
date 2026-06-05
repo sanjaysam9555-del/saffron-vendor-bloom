@@ -354,9 +354,10 @@ export function useTriggerInstagramPreview() {
   const ensureFn = useServerFn(ensureVendorInstagramPreview);
   const qc = useQueryClient();
   return (vendorId: string, handle: string | null | undefined) => {
-    const h = (handle ?? "").trim();
+    if (!isValidInstagramHandle(handle)) return;
+    const h = normalizeInstagramHandle(handle);
     if (!h) return;
-    void ensureFn({ data: { vendorId, handle: h } })
+    void ensureFn({ data: { vendorId, handle: h, force: true } })
       .then((row) => {
         if (row) patchBulkCaches(qc, row);
       })
