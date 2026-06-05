@@ -121,10 +121,11 @@ export function ClientVendorTable({ vendors, onView }: Props) {
                       {ordered.map((q) => {
                         const closed = q.is_final || q.status === "closed";
                         const amt = closed && q.closed_amount != null ? q.closed_amount : q.quote_amount;
-                        const label = amt != null ? formatINRShort(amt) : "Quote";
+                        const seqLabel = closed ? "Closed Quote" : `${ordinal(seqMap[q.id])} Quote`;
+                        const amtLabel = amt != null ? formatINRShort(amt) : null;
                         const tip = amt != null
-                          ? `${closed ? "Closed quote" : "Quote received"} · ${formatINR(amt)}`
-                          : (closed ? "Closed quote" : "Quote received");
+                          ? `${seqLabel} · ${formatINR(amt)}`
+                          : seqLabel;
                         return (
                           <span
                             key={q.id}
@@ -136,7 +137,7 @@ export function ClientVendorTable({ vendors, onView }: Props) {
                             }
                           >
                             {closed ? <CircleCheck className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
-                            {label}
+                            <span>{seqLabel}{amtLabel ? ` · ${amtLabel}` : ""}</span>
                           </span>
                         );
                       })}
