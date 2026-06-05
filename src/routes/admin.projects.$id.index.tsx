@@ -813,9 +813,10 @@ function AssignedVendorsSection({
               <VendorCommentsThread
                 projectId={projectId}
                 vendorId={commentsFor.id}
-                readOnly
+                asStaff
                 adminCanDelete
               />
+
             </div>
           </div>
         </div>

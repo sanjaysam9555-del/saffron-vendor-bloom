@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Trash2, MessageSquare, Loader2 } from "lucide-react";
+import { Trash2, MessageSquare, Loader2, Reply, Sparkles } from "lucide-react";
 import {
   fetchVendorComments,
-  postVendorComment,
+  postClientVendorComment,
+  postStaffVendorComment,
   removeVendorComment,
+  type VendorComment,
 } from "@/lib/comments-api";
 import { useConfirmDelete } from "@/components/ui/confirm-dialog";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
@@ -13,31 +15,41 @@ import { useClientPreview } from "@/lib/client-preview";
 interface Props {
   projectId: string;
   vendorId: string;
-  /** When true, the textarea is hidden and delete is allowed for any comment (admin view). */
-  readOnly?: boolean;
+  /** When true, posts via the staff endpoint (admin view). */
+  asStaff?: boolean;
+  /** Admins can delete any comment. */
   adminCanDelete?: boolean;
 }
 
-export function VendorCommentsThread({ projectId, vendorId, readOnly = false, adminCanDelete = false }: Props) {
+export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adminCanDelete = false }: Props) {
   const qc = useQueryClient();
   const confirmDelete = useConfirmDelete();
   const { isPreview } = useClientPreview();
-  const effectiveReadOnly = readOnly || isPreview;
+  const canPost = !isPreview; // preview never posts
   const [body, setBody] = useState("");
+  const [replyTo, setReplyTo] = useState<VendorComment | null>(null);
 
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["vendor-comments", projectId, vendorId],
     queryFn: () => fetchVendorComments(projectId, vendorId),
   });
 
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["vendor-comments", projectId, vendorId] });
+    qc.invalidateQueries({ queryKey: ["my-project"] });
+    qc.invalidateQueries({ queryKey: ["project", projectId] });
+  };
+
   const post = useMutation({
-    mutationFn: (text: string) => postVendorComment(vendorId, text),
+    mutationFn: async ({ text, parentId }: { text: string; parentId: string | null }) => {
+      if (asStaff) return postStaffVendorComment(projectId, vendorId, text, parentId);
+      return postClientVendorComment(vendorId, text, parentId);
+    },
     onSuccess: () => {
-      notifySuccess("Comment posted");
+      notifySuccess(replyTo ? "Reply posted" : "Comment posted");
       setBody("");
-      qc.invalidateQueries({ queryKey: ["vendor-comments", projectId, vendorId] });
-      qc.invalidateQueries({ queryKey: ["my-project"] });
-      qc.invalidateQueries({ queryKey: ["project", projectId] });
+      setReplyTo(null);
+      invalidate();
     },
     onError: (e) => notifyError(e, "Could not post comment"),
   });
@@ -46,9 +58,7 @@ export function VendorCommentsThread({ projectId, vendorId, readOnly = false, ad
     mutationFn: (id: string) => removeVendorComment(id),
     onSuccess: () => {
       notifySuccess("Comment deleted");
-      qc.invalidateQueries({ queryKey: ["vendor-comments", projectId, vendorId] });
-      qc.invalidateQueries({ queryKey: ["my-project"] });
-      qc.invalidateQueries({ queryKey: ["project", projectId] });
+      invalidate();
     },
     onError: (e) => notifyError(e, "Could not delete comment"),
   });
@@ -57,7 +67,86 @@ export function VendorCommentsThread({ projectId, vendorId, readOnly = false, ad
     e.preventDefault();
     const trimmed = body.trim();
     if (!trimmed || post.isPending) return;
-    post.mutate(trimmed);
+    post.mutate({ text: trimmed, parentId: replyTo?.id ?? null });
+  };
+
+  // Group replies under their parents (single level)
+  const { roots, repliesByParent } = useMemo(() => {
+    const r: VendorComment[] = [];
+    const byParent = new Map<string, VendorComment[]>();
+    for (const c of comments) {
+      if (c.parent_id) {
+        const list = byParent.get(c.parent_id) ?? [];
+        list.push(c);
+        byParent.set(c.parent_id, list);
+      } else {
+        r.push(c);
+      }
+    }
+    // Orphan replies (parent deleted) — promote to roots
+    for (const c of comments) {
+      if (c.parent_id && !comments.some((x) => x.id === c.parent_id)) {
+        r.push(c);
+      }
+    }
+    return { roots: r, repliesByParent: byParent };
+  }, [comments]);
+
+  const renderComment = (c: VendorComment, isReply = false) => {
+    const canDelete =
+      (adminCanDelete && !isPreview) ||
+      (!isPreview && c.is_own);
+    const isStaff = c.author_role === "staff";
+    return (
+      <li
+        key={c.id}
+        className={`rounded-md border p-2.5 text-sm ${
+          isStaff
+            ? "border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)]/40"
+            : "border-[var(--border)] bg-white"
+        }`}
+      >
+        <div className="mb-0.5 flex items-baseline justify-between gap-2 text-[11px] text-[var(--charcoal)]/60">
+          <span className="inline-flex items-center gap-1 font-medium text-[var(--charcoal)]/80">
+            {isStaff && <Sparkles className="h-3 w-3 text-[var(--terracotta)]" />}
+            <span className={isStaff ? "text-[var(--terracotta)]" : ""}>{c.author_name}</span>
+            {c.author_email ? <span className="opacity-70"> · {c.author_email}</span> : null}
+          </span>
+          <span>{new Date(c.created_at).toLocaleString("en-IN")}</span>
+        </div>
+        <div className="flex items-start justify-between gap-2">
+          <p className="whitespace-pre-wrap text-[var(--charcoal)]/90">{c.body}</p>
+          <div className="flex shrink-0 items-center gap-1">
+            {canPost && !isReply && (
+              <button
+                type="button"
+                onClick={() => setReplyTo(c)}
+                className="rounded p-1 text-[var(--charcoal)]/55 hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
+                title="Reply"
+              >
+                <Reply className="h-3.5 w-3.5" />
+              </button>
+            )}
+            {canDelete && (
+              <button
+                type="button"
+                onClick={async () => {
+                  const ok = await confirmDelete({
+                    title: "Delete this comment?",
+                    description: "This cannot be undone.",
+                  });
+                  if (ok) del.mutate(c.id);
+                }}
+                className="rounded p-1 text-red-600 hover:bg-red-50"
+                title="Delete comment"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+      </li>
+    );
   };
 
   return (
@@ -72,55 +161,49 @@ export function VendorCommentsThread({ projectId, vendorId, readOnly = false, ad
         </div>
       ) : comments.length === 0 ? (
         <div className="rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/40 px-3 py-3 text-xs text-[var(--charcoal)]/55">
-          {effectiveReadOnly ? "No comments yet from the client." : "No comments yet. Add the first one below."}
+          No comments yet. {canPost ? "Add the first one below." : ""}
         </div>
       ) : (
         <ul className="space-y-2">
-          {comments.map((c) => {
-            const canDelete = (adminCanDelete && !isPreview) || (!effectiveReadOnly && c.is_own);
-            return (
-              <li
-                key={c.id}
-                className="rounded-md border border-[var(--border)] bg-white p-2.5 text-sm"
-              >
-                <div className="mb-0.5 flex items-baseline justify-between gap-2 text-[11px] text-[var(--charcoal)]/60">
-                  <span className="font-medium text-[var(--charcoal)]/80">
-                    {c.author_name}
-                    {c.author_email ? ` · ${c.author_email}` : ""}
-                  </span>
-                  <span>{new Date(c.created_at).toLocaleString("en-IN")}</span>
-                </div>
-                <div className="flex items-start justify-between gap-2">
-                  <p className="whitespace-pre-wrap text-[var(--charcoal)]/90">{c.body}</p>
-                  {canDelete && (
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const ok = await confirmDelete({
-                          title: "Delete this comment?",
-                          description: "This cannot be undone.",
-                        });
-                        if (ok) del.mutate(c.id);
-                      }}
-                      className="shrink-0 rounded p-1 text-red-600 hover:bg-red-50"
-                      title="Delete comment"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-              </li>
-            );
-          })}
+          {roots.map((c) => (
+            <li key={c.id} className="space-y-2">
+              {renderComment(c)}
+              {(repliesByParent.get(c.id) ?? []).length > 0 && (
+                <ul className="ml-5 space-y-2 border-l-2 border-[var(--terracotta)]/20 pl-3">
+                  {(repliesByParent.get(c.id) ?? []).map((r) => renderComment(r, true))}
+                </ul>
+              )}
+            </li>
+          ))}
         </ul>
       )}
 
-      {!effectiveReadOnly && (
+      {canPost && (
         <form onSubmit={submit} className="space-y-1.5">
+          {replyTo && (
+            <div className="flex items-center justify-between rounded-md border border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)]/40 px-2 py-1 text-[11px] text-[var(--charcoal)]/75">
+              <span>
+                Replying to <span className="font-medium">{replyTo.author_name}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setReplyTo(null)}
+                className="text-[var(--terracotta)] hover:underline"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Write a comment for the team…"
+            placeholder={
+              replyTo
+                ? `Reply to ${replyTo.author_name}…`
+                : asStaff
+                  ? "Write a comment for the client…"
+                  : "Write a comment for the team…"
+            }
             rows={3}
             maxLength={4000}
             className="w-full resize-y rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-[var(--terracotta)] focus:outline-none"
@@ -130,7 +213,9 @@ export function VendorCommentsThread({ projectId, vendorId, readOnly = false, ad
           )}
           <div className="flex items-center justify-between gap-2">
             <span className="text-[10px] text-[var(--charcoal)]/45">
-              These comments are visible to the Saffron team and other clients on this project.
+              {asStaff
+                ? "Visible to the client and the Saffron team."
+                : "Visible to the Saffron team and other clients on this project."}
             </span>
             <button
               type="submit"
@@ -138,7 +223,7 @@ export function VendorCommentsThread({ projectId, vendorId, readOnly = false, ad
               className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
             >
               {post.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-              Post comment
+              {replyTo ? "Post reply" : "Post comment"}
             </button>
           </div>
         </form>
