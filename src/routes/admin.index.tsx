@@ -612,7 +612,7 @@ function VendorCardGrid({
           selectMode={bulkMode}
           selected={selectedIds.has(v.id)}
           onToggleSelect={() => toggleSelect(v.id)}
-          instagramPreview={previewMap.get(v.id) ?? null}
+          instagramPreview={previewsLoading ? undefined : (previewMap.get(v.id) ?? null)}
           bookedSummary={bookedMap?.[v.id] ?? null}
         />
       )}

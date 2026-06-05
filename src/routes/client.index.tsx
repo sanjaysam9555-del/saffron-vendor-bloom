@@ -377,7 +377,7 @@ function ClientVendorGrid({ vendors, onView }: { vendors: ClientVendor[]; onView
         <ClientVendorCard
           vendor={v}
           onView={() => onView(v)}
-          instagramPreview={previewMap.get(v.id) ?? null}
+          instagramPreview={previewsLoading ? undefined : (previewMap.get(v.id) ?? null)}
         />
       )}
     />
