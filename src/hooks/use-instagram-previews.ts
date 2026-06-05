@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   useQuery,
   useMutation,
@@ -128,7 +129,26 @@ export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enable
   const fn = useServerFn(getVendorInstagramPreviewsBulk);
   const qc = useQueryClient();
   const sortedKey = [...vendorIds].sort().join(",");
-  const enabled = (options?.enabled ?? true) && vendorIds.length > 0;
+
+  // Gate on Supabase session readiness — without a bearer token the server fn
+  // throws "You're not signed in." and every card silently falls into the
+  // empty-state branch.
+  const [sessionReady, setSessionReady] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled && data.session?.access_token) setSessionReady(true);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session?.access_token) setSessionReady(true);
+    });
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  const enabled = (options?.enabled ?? true) && vendorIds.length > 0 && sessionReady;
 
   const query = useQuery({
     queryKey: ["instagram-previews-bulk", sortedKey],
@@ -160,6 +180,8 @@ export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enable
       return resolvedRows;
     },
     enabled,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
     staleTime: 30 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
     // Hydrate from localStorage so cached strips render on first paint.
@@ -185,7 +207,13 @@ export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enable
     }
     map.set(p.vendor_id, p);
   });
-  return { map, isLoading: query.isLoading };
+  // Surface error as "still loading" so the UI doesn't render the empty
+  // strip on a transient failure; combined with retry above this self-heals.
+  return {
+    map,
+    isLoading: query.isLoading || (query.isError && !query.data) || !sessionReady,
+    isError: query.isError,
+  };
 }
 
 // ---------------------------------------------------------------------------

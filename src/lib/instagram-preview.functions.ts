@@ -24,10 +24,26 @@ const STALE_DAYS = 3;
 
 async function requireUser(): Promise<{ userId: string; isStaff: boolean }> {
   const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  if (!token) throw new Error("You're not signed in.");
-  const { data, error } = await supabaseAdmin.auth.getClaims(token);
-  const userId = data?.claims?.sub;
-  if (error || !userId) throw new Error("Your session expired.");
+  if (!token) {
+    console.error("[instagram-preview] requireUser: missing authorization header");
+    throw new Error("You're not signed in.");
+  }
+  let userId: string | undefined;
+  // Prefer getClaims (cheap, signature-verified). Fall back to getUser if
+  // claim verification rejects the token (e.g. JWKS rotation, clock skew).
+  const claimsRes = await supabaseAdmin.auth.getClaims(token);
+  userId = claimsRes.data?.claims?.sub;
+  if (!userId) {
+    const userRes = await supabaseAdmin.auth.getUser(token);
+    userId = userRes.data?.user?.id;
+    if (!userId) {
+      console.error("[instagram-preview] requireUser: token rejected", {
+        claimsErr: claimsRes.error?.message,
+        userErr: userRes.error?.message,
+      });
+      throw new Error("Your session expired.");
+    }
+  }
   const { data: roles } = await supabaseAdmin
     .from("user_roles")
     .select("role")
@@ -94,20 +110,32 @@ export const getVendorInstagramPreviewsBulk = createServerFn({ method: "POST" })
     if (!isStaff) {
       // Clients may only see Instagram previews for vendors attached to
       // projects they're assigned to. Filter the requested IDs accordingly.
-      const { data: projectLinks } = await supabaseAdmin
+      const { data: projectLinks, error: pcErr } = await supabaseAdmin
         .from("project_clients")
         .select("project_id")
         .eq("user_id", userId);
+      if (pcErr) console.error("[instagram-preview] project_clients read failed", pcErr.message);
       const projectIds = (projectLinks ?? []).map((r) => r.project_id as string);
-      if (projectIds.length === 0) return [];
-      const { data: pv } = await supabaseAdmin
+      if (projectIds.length === 0) {
+        console.warn("[instagram-preview] client has no project links", { userId });
+        return [];
+      }
+      const { data: pv, error: pvErr } = await supabaseAdmin
         .from("project_vendors")
         .select("vendor_id")
         .in("project_id", projectIds)
         .in("vendor_id", data.vendorIds);
+      if (pvErr) console.error("[instagram-preview] project_vendors read failed", pvErr.message);
       const allowed = new Set((pv ?? []).map((r) => r.vendor_id as string));
       allowedIds = data.vendorIds.filter((id) => allowed.has(id));
-      if (allowedIds.length === 0) return [];
+      if (allowedIds.length === 0) {
+        console.warn("[instagram-preview] no allowed vendor ids", {
+          userId,
+          requested: data.vendorIds.length,
+          projectIds: projectIds.length,
+        });
+        return [];
+      }
     }
 
     const { data: rows, error } = await supabaseAdmin
@@ -118,6 +146,13 @@ export const getVendorInstagramPreviewsBulk = createServerFn({ method: "POST" })
       console.error("[instagram-preview] bulk read failed", error.message);
       return [];
     }
+    console.log("[instagram-preview] bulk ok", {
+      userId,
+      isStaff,
+      requested: data.vendorIds.length,
+      allowed: allowedIds.length,
+      returned: (rows ?? []).length,
+    });
     return (rows ?? []) as unknown as VendorInstagramPreview[];
   });
 
