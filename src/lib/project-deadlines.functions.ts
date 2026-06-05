@@ -52,12 +52,28 @@ export const listProjectCategoryDeadlines = createServerFn({ method: "GET" })
   .inputValidator((d) => z.object({ project_id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     await assertCanRead(context.userId, data.project_id);
+    const staff = await isStaff(context.userId);
+    // Clients only get scheduling-relevant fields. Internal notes and budget
+    // figures (notes, planned_amount, actual_amount_override, created_by) are
+    // staff-only.
+    const cols = staff
+      ? "id, project_id, category, due_date, criticality, notes, planned_amount, actual_amount_override, updated_at"
+      : "id, project_id, category, due_date, criticality, updated_at";
     const { data: rows, error } = await supabaseAdmin
       .from("project_category_deadlines")
-      .select("id, project_id, category, due_date, criticality, notes, planned_amount, actual_amount_override, updated_at")
+      .select(cols as string)
       .eq("project_id", data.project_id);
     if (error) throw new Error(error.message);
-    return (rows ?? []) as CategoryDeadline[];
+    const list = (rows ?? []) as unknown as CategoryDeadline[];
+    if (!staff) {
+      return list.map((r) => ({
+        ...r,
+        notes: null,
+        planned_amount: null,
+        actual_amount_override: null,
+      }));
+    }
+    return list;
   });
 
 export const upsertCategoryDeadline = createServerFn({ method: "POST" })
