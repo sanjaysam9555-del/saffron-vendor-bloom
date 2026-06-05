@@ -58,6 +58,7 @@ export function ClientVendorTable({ vendors, onView }: Props) {
             };
             const statusOpt = getClientStatusOption(v.client_status);
             const quotes = v.quotes ?? [];
+            const seqMap = buildQuoteSeqMap(quotes);
             const ordered = [
               ...quotes.filter((q) => q.is_final || q.status === "closed"),
               ...quotes.filter((q) => !(q.is_final || q.status === "closed")),
