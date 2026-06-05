@@ -63,3 +63,22 @@ export function formatINRShort(amount: number | null | undefined): string {
   if (abs >= 1_000) return `₹${sign}${Math.round(abs / 1_000)}K`;
   return formatINR(amount);
 }
+
+export function ordinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+export function buildQuoteSeqMap<T extends { id: string; created_at: string }>(
+  quotes: T[],
+): Record<string, number> {
+  const sorted = [...quotes].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+  );
+  const map: Record<string, number> = {};
+  sorted.forEach((q, i) => {
+    map[q.id] = i + 1;
+  });
+  return map;
+}
