@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Calendar, Heart, ArrowRight, Sparkles, Users, Archive, ArchiveRestore, MoreHorizontal, Trash2, Pencil } from "lucide-react";
 import { useState } from "react";
+import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
 import { StatusCountsRow } from "@/components/admin/ClientStatusPill";
 import { formatINRShort } from "@/lib/quote-types";
 import {
@@ -38,6 +39,7 @@ interface Props {
   onArchiveToggle: (id: string, next: boolean) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  index?: number;
 }
 
 function daysUntil(dateStr: string): number {
@@ -77,8 +79,9 @@ function relativeTime(iso: string) {
   return `${Math.floor(mo / 12)}y ago`;
 }
 
-export function ProjectCard({ project: p, canDelete, onArchiveToggle, onEdit, onDelete }: Props) {
+export function ProjectCard({ project: p, canDelete, onArchiveToggle, onEdit, onDelete, index = 0 }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { ref, isVisible } = useRevealOnScroll<HTMLDivElement>();
   const archived = !!p.archived_at;
   const chip = urgencyChip(p.wedding_date, archived);
   const finalised = p.quotes_summary?.finalised_vendors ?? 0;
@@ -95,7 +98,11 @@ export function ProjectCard({ project: p, canDelete, onArchiveToggle, onEdit, on
   });
 
   return (
-    <div className="group relative flex h-full flex-col rounded-xl border border-[var(--border)] bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--terracotta)] hover:shadow-md">
+    <div
+      ref={ref}
+      style={isVisible ? { animationDelay: `${Math.min(index, 12) * 40}ms` } : undefined}
+      className={`group relative flex h-full flex-col rounded-xl border border-[var(--border)] bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--terracotta)] hover:shadow-md ${isVisible ? "animate-fade-up" : "opacity-0"}`}
+    >
       {/* top-right menu */}
       <div className="absolute right-2 top-2 z-10">
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen} modal={false}>
