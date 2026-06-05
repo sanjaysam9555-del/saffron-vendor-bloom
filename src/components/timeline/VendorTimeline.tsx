@@ -27,7 +27,7 @@ import {
 import {
   upsertCategoryDeadline,
   deleteCategoryDeadline,
-} from "@/server/project-deadlines.functions";
+} from "@/lib/project-deadlines.functions";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { formatINR } from "@/lib/quote-types";
 

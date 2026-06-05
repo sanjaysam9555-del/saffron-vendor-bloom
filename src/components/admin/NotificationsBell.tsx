@@ -7,7 +7,7 @@ import {
   listStaffNotifications,
   markAllNotificationsRead,
   markNotificationRead,
-} from "@/server/notifications.functions";
+} from "@/lib/notifications.functions";
 import { useAuth } from "@/lib/auth";
 import {
   Popover,

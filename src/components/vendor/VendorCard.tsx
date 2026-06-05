@@ -6,7 +6,7 @@ import { VendorProjectAssigner } from "./VendorProjectAssigner";
 import { BookedBadge } from "./BookedBadge";
 import { instagramUrl } from "@/lib/instagram";
 import { VendorInstagramCardStrip } from "./VendorInstagramPreview";
-import type { VendorInstagramPreview } from "@/server/instagram-preview.functions";
+import type { VendorInstagramPreview } from "@/lib/instagram-preview.functions";
 
 interface VendorCardProps {
   vendor: Vendor;

@@ -18,7 +18,7 @@ import {
   setVendorSaffronPick,
   updateProject,
   setProjectArchived,
-} from "@/server/projects.functions";
+} from "@/lib/projects.functions";
 import { useAuth } from "@/lib/auth";
 import { ProjectVendorQuotesPanel } from "@/components/admin/ProjectVendorQuotesPanel";
 import { listProjectVendorQuotes } from "@/lib/quote-api";
@@ -30,7 +30,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { VendorCommentsThread } from "@/components/client/VendorCommentsThread";
 import { instagramUrl, normalizeInstagramHandle } from "@/lib/instagram";
 import { VendorTimeline } from "@/components/timeline/VendorTimeline";
-import { listProjectCategoryDeadlines } from "@/server/project-deadlines.functions";
+import { listProjectCategoryDeadlines } from "@/lib/project-deadlines.functions";
 import { buildTimelineItems } from "@/lib/build-timeline-items";
 
 export const Route = createFileRoute("/admin/projects/$id/")({

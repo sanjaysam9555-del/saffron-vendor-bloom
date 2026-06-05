@@ -5,7 +5,7 @@ import type {
   QuoteStatus,
   VendorBookedSummary,
 } from "./quote-types";
-import { getQuoteFileSignedUrl, getQuoteFileStreamUrl } from "@/server/quote-files.functions";
+import { getQuoteFileSignedUrl, getQuoteFileStreamUrl } from "@/lib/quote-files.functions";
 
 const BUCKET = "vendor-files";
 

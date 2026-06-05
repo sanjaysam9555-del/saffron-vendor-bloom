@@ -6,7 +6,7 @@ import {
   listMyClientNotifications,
   markClientNotificationRead,
   markAllClientNotificationsRead,
-} from "@/server/client-notifications.functions";
+} from "@/lib/client-notifications.functions";
 import { useAuth } from "@/lib/auth";
 import {
   Popover,

@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, ArrowUpDown, Archive } from "lucide-react";
 
-import { listProjectsOverview, setProjectArchived, deleteProject } from "@/server/projects.functions";
+import { listProjectsOverview, setProjectArchived, deleteProject } from "@/lib/projects.functions";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { ProjectCard, type ProjectCardData } from "@/components/admin/ProjectCard";
 import { CreateProjectDialog } from "@/components/admin/CreateProjectDialog";

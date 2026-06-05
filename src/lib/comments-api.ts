@@ -3,7 +3,7 @@ import {
   addProjectVendorComment,
   addStaffVendorComment,
   deleteProjectVendorComment,
-} from "@/server/projects.functions";
+} from "@/lib/projects.functions";
 
 export interface VendorComment {
   id: string;

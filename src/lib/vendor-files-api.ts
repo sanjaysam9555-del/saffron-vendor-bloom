@@ -109,7 +109,7 @@ import {
   getVendorFileStreamUrl,
   getVendorFileThumbnailUrl,
   getVendorFileThumbnailUrlsBulk,
-} from "@/server/vendor-files.functions";
+} from "@/lib/vendor-files.functions";
 
 export async function getAttachmentUrl(filePath: string): Promise<string> {
   const { url } = await getVendorFileSignedUrl({ data: { file_path: filePath } });

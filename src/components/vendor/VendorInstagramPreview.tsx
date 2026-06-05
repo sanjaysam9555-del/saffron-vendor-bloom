@@ -1,6 +1,6 @@
 import { Instagram, RefreshCw, ExternalLink } from "lucide-react";
 import { useState } from "react";
-import type { VendorInstagramPreview as PreviewData } from "@/server/instagram-preview.functions";
+import type { VendorInstagramPreview as PreviewData } from "@/lib/instagram-preview.functions";
 import { useEnsureInstagramPreview, useRefreshInstagramPreview } from "@/hooks/use-instagram-previews";
 
 function proxiedSrc(src: string): string {
