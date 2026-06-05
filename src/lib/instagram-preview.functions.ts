@@ -3,7 +3,7 @@ import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { attachAuthToken } from "./auth-client-middleware";
-import { scrapeInstagramProfile } from "./instagram-preview.server";
+import { scrapeInstagramProfile } from "@/server/instagram-preview.server";
 
 export interface VendorInstagramPreview {
   vendor_id: string;

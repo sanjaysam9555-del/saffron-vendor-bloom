@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { attachAuthToken } from "./auth-client-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { signFileStreamToken } from "./file-stream-token.server";
+import { signFileStreamToken } from "@/server/file-stream-token.server";
 
 const BUCKET = "vendor-files";
 
