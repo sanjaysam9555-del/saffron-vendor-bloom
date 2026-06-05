@@ -41,10 +41,9 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
   // Vendor has no Instagram handle — render nothing.
   if (!hasHandle && preview == null) return null;
 
-  // Loading / cache-miss: handle exists but we don't have a cached row yet.
-  // The auto-ensure hook will populate this within a few seconds, so show a
-  // skeleton instead of the empty-state fallback to avoid a misleading flash.
-  if (preview === undefined || (hasHandle && preview === null)) {
+  // Loading: bulk fetch in flight. Once it resolves, `preview` will be a row
+  // or null and we drop into the render branches below.
+  if (preview === undefined) {
     return (
       <div className="mt-2 min-h-[148px] animate-pulse rounded-md border border-[var(--border)] bg-[var(--cream)]/40 p-2">
         <div className="flex items-center gap-2">
