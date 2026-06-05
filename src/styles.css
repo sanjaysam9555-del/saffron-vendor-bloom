@@ -324,3 +324,60 @@ button:active, a:active, [role="button"]:active {
 @media (prefers-reduced-motion: reduce) {
   .animate-buzz { animation: none !important; }
 }
+
+/* ---------------------------------------------------------------- */
+/* View Transitions API — cross-fade between routes where supported. */
+/* Enabled via `defaultViewTransition: true` in src/router.tsx.      */
+/* ---------------------------------------------------------------- */
+@keyframes vt-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes vt-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+::view-transition-old(root) {
+  animation: vt-fade-out 180ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+::view-transition-new(root) {
+  animation: vt-fade-in 240ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Scroll-driven reveal utility. Uses native scroll timelines where
+   supported (Chromium 115+); a JS IntersectionObserver fallback lives in
+   src/hooks/use-reveal-on-scroll.ts for browsers without support. */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: fade-up 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@supports (animation-timeline: view()) {
+  .reveal-on-scroll {
+    animation-timeline: view();
+    animation-range: entry 5% cover 25%;
+  }
+}
+
+/* Global reduced-motion safeguard — disables non-essential motion
+   (component-specific overrides above already opt out individually,
+   this is the catch-all). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+  .reveal-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
