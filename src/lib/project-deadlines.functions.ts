@@ -53,12 +53,11 @@ export const listProjectCategoryDeadlines = createServerFn({ method: "GET" })
   .handler(async ({ context, data }) => {
     await assertCanRead(context.userId, data.project_id);
     const staff = await isStaff(context.userId);
-    // Clients only get scheduling-relevant fields. Internal notes and budget
-    // figures (notes, planned_amount, actual_amount_override, created_by) are
-    // staff-only.
+    // Clients see scheduling + budget fields (planned/actual). Internal notes
+    // and created_by remain staff-only.
     const cols = staff
       ? "id, project_id, category, due_date, criticality, notes, planned_amount, actual_amount_override, updated_at"
-      : "id, project_id, category, due_date, criticality, updated_at";
+      : "id, project_id, category, due_date, criticality, planned_amount, actual_amount_override, updated_at";
     const { data: rows, error } = await supabaseAdmin
       .from("project_category_deadlines")
       .select(cols as string)
@@ -66,12 +65,7 @@ export const listProjectCategoryDeadlines = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     const list = (rows ?? []) as unknown as CategoryDeadline[];
     if (!staff) {
-      return list.map((r) => ({
-        ...r,
-        notes: null,
-        planned_amount: null,
-        actual_amount_override: null,
-      }));
+      return list.map((r) => ({ ...r, notes: null }));
     }
     return list;
   });
