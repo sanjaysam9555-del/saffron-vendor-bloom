@@ -1,94 +1,45 @@
-## Goal
+## Problem
 
-Replace the current bucket-stack Timeline (Overdue / Needs deadline / Booked stacked cards) on the Budget & Deadlines tab with a true date-anchored vertical ribbon, matching the selected "Chronological vertical ribbon" direction. Used by both admin (`/admin/projects/$id`) and client (`/client`).
+On the client-side Time tab (both Timeline and Table views), every row shows "—" for **Planned Budget** and **Actual Cost**, and the header totals come out as ₹0.
 
-## Scope
+## Root Cause
 
-- Only the Timeline content inside `VendorTimeline.tsx`. Header, tabs, table view, and inline editor sheet stay untouched.
-- Keep all existing data, edit behavior, and permissions. This is a presentation refactor.
+`src/lib/project-deadlines.functions.ts` → `listProjectCategoryDeadlines` intentionally strips `planned_amount` and `actual_amount_override` for non-staff callers:
 
-## Layout
-
-```text
-┌─ Heading row ──────────────────────────────────────────────┐
-│  Budget & Deadlines                Planned  Actual  Variance│
-│  Wedding Day: Jul 7, 2026 — 32 days to go                  │
-└────────────────────────────────────────────────────────────┘
-
-       date side          ●          card side
-   ┌─────────────┐        │        ┌──────────────┐
-   │  OVERDUE    │        │        │ Anchors &    │
-   │  Jun 6 2026 │────────●────────│ Emcees · HIGH│
-   │  yesterday  │        │        │ Planned ₹30K │
-   └─────────────┘        │        └──────────────┘
-                          │
-              ── To Be Scheduled ──
-              ┌──────────┐  ┌──────────┐
-              │ Content  │  │ DJs &    │
-              │ Creators │  │ Live …   │
-              └──────────┘  └──────────┘
-                          │
-   ┌──────────────┐       │       ┌─────────────┐
-   │ Invites &    │───────●───────│ COMPLETED   │
-   │ Stationery   │       │       │ May 20 2026 │
-   │ Booked: …    │       │       └─────────────┘
-                          │
-                          ◆
-                  The Wedding Day
-                    Jul 7, 2026
+```ts
+const cols = staff
+  ? "..., planned_amount, actual_amount_override, ..."
+  : "id, project_id, category, due_date, criticality, updated_at";
+...
+if (!staff) {
+  return list.map((r) => ({ ...r, notes: null, planned_amount: null, actual_amount_override: null }));
+}
 ```
 
-- Central vertical spine on `md+`, single column on mobile.
-- Each scheduled category = one row with the date/status label on one side and the detail card on the other, connected by a dot on the spine. Rows alternate sides chronologically.
-- A "To Be Scheduled" band sits in date order at "today" (or just after overdue), holding all categories with `due_date = null` in a 2-col grid.
-- "Wedding Day" rendered as a centered terminus marker at the bottom.
-- Overall container width capped (max-w-5xl), generous vertical rhythm.
+So `buildTimelineItems` receives `planned_amount: null` for every category on the client, and the `VendorTimeline` totals/rows render "—" / ₹0. The auto-actual (`closed_amount_auto`) is already wired through `getMyProject.quote_summary.closed_amount`, so once `planned_amount` and `actual_amount_override` are returned, both Planned and Actual numbers will populate for clients.
 
-## Row variants
+## Fix
 
-1. **Overdue** — terracotta dot, terracotta left border on card, "OVERDUE" pill, `"Was due X days ago"` label.
-2. **Upcoming (scheduled, not booked)** — outlined terracotta dot, neutral card, `"In X days"` label, criticality pill (LOW/MEDIUM/HIGH).
-3. **Booked** — sage dot, sage left border, faded card (`opacity-80` until hover), "BOOKED · {vendor name}" pill, shows Planned + Actual (+ MANUAL tag if applicable).
-4. **Unscheduled** — lives inside the "To Be Scheduled" band, no spine dot, "Set a deadline" prompt + edit pencil.
-5. **Wedding day terminus** — centered heart/diamond marker, display serif label.
+Expose `planned_amount` and `actual_amount_override` to clients in `listProjectCategoryDeadlines`. Keep `notes` and `created_by` staff-only (those are internal planner-only fields).
 
-Side alternation: index-based (even → date left / card right, odd → flipped) within each scheduled section. Unscheduled band spans full width.
+### Change — `src/lib/project-deadlines.functions.ts`
 
-## Sort & section order
+- Select `planned_amount` and `actual_amount_override` for both staff and clients.
+- Keep `notes` blanked for clients (still staff-only).
+- Update the inline comment to reflect the new policy: budget figures are visible to clients; only internal notes are staff-only.
 
-1. Header summary (Planned, Actual, Variance — pulled from existing totals).
-2. Overdue rows, ascending by due date.
-3. Upcoming rows (not booked, not overdue), ascending by due date — months interleaved naturally; no per-month sub-header in v1.
-4. "To Be Scheduled" band (unscheduled categories).
-5. Booked rows, ascending by due date (or by booked date when no due date).
-6. Wedding Day terminus.
+No schema change, no RLS change (the function already runs as `supabaseAdmin` with explicit `assertCanRead`), no client component changes — `VendorTimeline` already renders these fields when present and `getMyProject` already returns `closed_amount` in `quote_summary`.
 
-## Files
+## Out of Scope
 
-- `src/components/timeline/VendorTimeline.tsx` — rewrite render. Keep existing data fetching, `buildTimelineItems` consumption, and the edit-sheet wiring.
-- `src/components/timeline/build-timeline-items.ts` — add a `section: 'overdue' | 'upcoming' | 'unscheduled' | 'booked'` discriminator and `daysFromToday` helper so the renderer doesn't recompute. Keep existing bucket field for the Table view.
-- `src/components/timeline/TimelineRow.tsx` (new) — single row component handling the three scheduled variants + side flip.
-- `src/components/timeline/TimelineUnscheduled.tsx` (new) — the "To Be Scheduled" band.
-- `src/components/timeline/TimelineWeddingMarker.tsx` (new) — terminus.
-- `src/styles.css` — add semantic tokens if any are missing: `--timeline-spine`, `--status-overdue`, `--status-booked` (sage). Reuse existing terracotta/cream tokens; no raw hex in components.
+- Admin Timeline / Table views (already working).
+- Editing budgets from the client side — clients remain read-only.
+- Exposing `notes` or `created_by` to clients.
+- Any RLS policy change on `project_category_deadlines`.
 
-No backend, route, or schema changes. No changes to the Table view, edit sheet, or `UrgencyStrip`.
+## Verification
 
-## Interaction & accessibility
-
-- Click anywhere on a row card → opens the same edit sheet currently used (admin) / read-only details (client).
-- "Set a deadline" on unscheduled cards opens the same edit sheet pre-focused on the date field.
-- Spine and dots are decorative (`aria-hidden`). Each row is a `<article>` with accessible heading + visible status pill so the order makes sense without color.
-- Reduced-motion: stagger animation disabled.
-
-## Motion (subtle, on mount only)
-
-- Spine draws top-to-bottom (`scaleY 0 → 1`, 400ms).
-- Dots fade/scale in with 60ms stagger.
-- Wedding marker pulses once. No hover animation beyond the existing card shadow lift.
-
-## Out of scope
-
-- No new edit affordances, no new data fields, no permissions changes.
-- Table view, urgency strip, vendor cards, and the wider project page are untouched.
-- Month sub-headers, filtering, and zoom controls — deferred.
+After the change, on the client Time tab:
+- Header shows real Planned, Actual, Variance totals.
+- Each category row shows Planned Budget and Actual Cost (auto from closed quotes, or the override if set).
+- Table view footer totals match.
