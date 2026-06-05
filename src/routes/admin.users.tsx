@@ -14,7 +14,7 @@ import {
   setUserPassword,
   setUserDisplayName,
   deleteUser,
-} from "@/server/admin-users.functions";
+} from "@/lib/admin-users.functions";
 
 export const Route = createFileRoute("/admin/users")({
   head: () => ({

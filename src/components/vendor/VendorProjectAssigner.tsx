@@ -16,7 +16,7 @@ import {
   assignVendorToProject,
   unassignVendorFromProject,
   listVendorProjectAssignments,
-} from "@/server/projects.functions";
+} from "@/lib/projects.functions";
 
 interface Props {
   vendorId: string;

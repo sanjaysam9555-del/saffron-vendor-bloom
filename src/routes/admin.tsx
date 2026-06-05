@@ -8,7 +8,7 @@ import { VendorsPane } from "@/routes/admin.index";
 import { ProjectsPane } from "@/routes/admin.projects.index";
 import { useAuth } from "@/lib/auth";
 import { listVendors } from "@/lib/vendor-api";
-import { listProjectsOverview } from "@/server/projects.functions";
+import { listProjectsOverview } from "@/lib/projects.functions";
 
 /**
  * Pathless layout for everything under /admin/*.

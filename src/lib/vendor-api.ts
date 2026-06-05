@@ -7,7 +7,7 @@ import {
   deleteVendorServer,
   listVendorsServer,
   updateVendorServer,
-} from "@/server/vendors.functions";
+} from "@/lib/vendors.functions";
 
 export async function listVendors(): Promise<Vendor[]> {
   return (await listVendorsServer()) as Vendor[];

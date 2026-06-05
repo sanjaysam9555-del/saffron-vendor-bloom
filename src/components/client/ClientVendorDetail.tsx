@@ -9,7 +9,7 @@ import { SignedQuoteFileViewer } from "@/components/admin/SignedQuoteFileViewer"
 import { formatFileSize } from "@/lib/vendor-files-api";
 import { ClientStatusSelect } from "./ClientStatusSelect";
 import { useQuery } from "@tanstack/react-query";
-import { listMyProjectVendorQuotes, getProjectVendorQuotesForPreview } from "@/server/projects.functions";
+import { listMyProjectVendorQuotes, getProjectVendorQuotesForPreview } from "@/lib/projects.functions";
 import { formatINR, type QuoteFile, type ProjectVendorQuote } from "@/lib/quote-types";
 import { VendorCommentsThread } from "./VendorCommentsThread";
 import { useClientPreview } from "@/lib/client-preview";

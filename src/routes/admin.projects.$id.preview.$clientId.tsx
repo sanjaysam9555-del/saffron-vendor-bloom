@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Eye } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { ClientPreviewProvider } from "@/lib/client-preview";
-import { getProjectAsClientView } from "@/server/projects.functions";
+import { getProjectAsClientView } from "@/lib/projects.functions";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
 import { useInstagramPreviewsBulk, useAutoEnsureMissingPreviews } from "@/hooks/use-instagram-previews";
 import type { ClientVendor } from "@/lib/project-types";

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { ClientVendorStatus } from "@/lib/client-status";
 import type { ClientVendor } from "@/lib/project-types";
-import { setMyVendorStatus } from "@/server/projects.functions";
+import { setMyVendorStatus } from "@/lib/projects.functions";
 import { useClientPreview } from "@/lib/client-preview";
 
 interface Variables {

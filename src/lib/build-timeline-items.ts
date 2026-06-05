@@ -1,4 +1,4 @@
-import type { CategoryDeadline } from "@/server/project-deadlines.functions";
+import type { CategoryDeadline } from "@/lib/project-deadlines.functions";
 import type { TimelineItem } from "@/lib/urgency";
 
 interface VendorLike {

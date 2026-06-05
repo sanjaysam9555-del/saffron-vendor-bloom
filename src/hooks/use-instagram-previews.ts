@@ -16,7 +16,7 @@ import {
   getInstagramBackfillStatus,
   type VendorInstagramPreview,
   type InstagramBackfillJob,
-} from "@/server/instagram-preview.functions";
+} from "@/lib/instagram-preview.functions";
 import { normalizeInstagramHandle } from "@/lib/instagram";
 
 // ---------------------------------------------------------------------------

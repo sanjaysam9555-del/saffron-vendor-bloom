@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
-import { createProject } from "@/server/projects.functions";
+import { createProject } from "@/lib/projects.functions";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 
 interface Props {

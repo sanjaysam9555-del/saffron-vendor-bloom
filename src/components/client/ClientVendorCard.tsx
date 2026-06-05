@@ -6,7 +6,7 @@ import { MapPin, Instagram, Link as LinkIcon, Paperclip, Globe, Star, FileText, 
 import { instagramUrl } from "@/lib/instagram";
 import { formatINR, formatINRShort } from "@/lib/quote-types";
 import { VendorInstagramCardStrip } from "@/components/vendor/VendorInstagramPreview";
-import type { VendorInstagramPreview } from "@/server/instagram-preview.functions";
+import type { VendorInstagramPreview } from "@/lib/instagram-preview.functions";
 
 interface Props {
   vendor: ClientVendor;
