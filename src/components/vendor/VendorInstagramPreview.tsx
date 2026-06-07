@@ -175,7 +175,7 @@ export function VendorInstagramDetailBlock({ vendorId, handle, canRefresh = fals
             href={`https://www.instagram.com/${handle}/`}
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-2 underline hover:text-[var(--terracotta)]"
+            className="ml-2 underline break-all hover:text-[var(--terracotta)]"
           >
             Open @{handle} on Instagram
           </a>
