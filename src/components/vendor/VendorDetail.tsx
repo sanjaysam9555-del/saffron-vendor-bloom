@@ -259,16 +259,16 @@ function Row({ icon, label, value, link, copy, className }: { icon?: React.React
     setTimeout(() => setCopied(false), 1500);
   };
   return (
-    <div className={`rounded-lg bg-[var(--cream-deep)] p-3 ${className ?? ""}`}>
+    <div className={`rounded-lg bg-[var(--cream-deep)] p-3 min-w-0 ${className ?? ""}`}>
       <div className="mb-0.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
         {icon && <span className="[&>svg]:h-3 [&>svg]:w-3">{icon}</span>}
         {label}
       </div>
-      <div className="flex items-center justify-between gap-2 text-sm text-[var(--charcoal)]/80">
+      <div className="flex min-w-0 items-center justify-between gap-2 text-sm text-[var(--charcoal)]/80">
         {link ? (
-          <a href={link} target="_blank" rel="noreferrer" className="truncate hover:text-[var(--terracotta)] hover:underline">{value}</a>
+          <a href={link} target="_blank" rel="noreferrer" className="min-w-0 truncate hover:text-[var(--terracotta)] hover:underline">{value}</a>
         ) : (
-          <span className="truncate">{value}</span>
+          <span className="min-w-0 truncate">{value}</span>
         )}
         {copy && (
           <button onClick={handleCopy} className="shrink-0 rounded p-1 hover:bg-[var(--cream-deep)]">
