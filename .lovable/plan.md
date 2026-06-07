@@ -1,45 +1,13 @@
-## Problem
+## Fix mobile horizontal overflow in Vendor Detail modal
 
-On the client-side Time tab (both Timeline and Table views), every row shows "—" for **Planned Budget** and **Actual Cost**, and the header totals come out as ₹0.
+### Problem
+On mobile, the vendor detail card's content (Price text, Remarks, Instagram URL) extends beyond the right edge of the modal. Cause: grid cells and value containers don't constrain their min-width, and long unbroken strings (URLs, long sentences using `truncate` in a flex row) push past the cell. Inside a CSS grid, items default to `min-width: auto`, so `truncate`/`overflow-hidden` on children doesn't actually constrain them — the cell grows to fit the content.
 
-## Root Cause
+### Changes — `src/components/vendor/VendorDetail.tsx` only
+1. Add `min-w-0` to each grid cell (the `Row` wrapper `div`) so children can shrink below content width.
+2. Add `min-w-0` to the inner flex row that holds the value + copy button, so `truncate` actually clips.
+3. For the Remarks block (which uses `whitespace-pre-wrap`), add `break-words` / `overflow-wrap-anywhere` so long unbroken strings wrap instead of overflowing.
+4. For the Instagram preview "No preview cached yet … long URL" block in `VendorInstagramDetailBlock`, ensure the URL wraps (`break-all` on the anchor) — confirm by reading that file; if it's the source of the long URL overflow, apply the same fix there.
 
-`src/lib/project-deadlines.functions.ts` → `listProjectCategoryDeadlines` intentionally strips `planned_amount` and `actual_amount_override` for non-staff callers:
-
-```ts
-const cols = staff
-  ? "..., planned_amount, actual_amount_override, ..."
-  : "id, project_id, category, due_date, criticality, updated_at";
-...
-if (!staff) {
-  return list.map((r) => ({ ...r, notes: null, planned_amount: null, actual_amount_override: null }));
-}
-```
-
-So `buildTimelineItems` receives `planned_amount: null` for every category on the client, and the `VendorTimeline` totals/rows render "—" / ₹0. The auto-actual (`closed_amount_auto`) is already wired through `getMyProject.quote_summary.closed_amount`, so once `planned_amount` and `actual_amount_override` are returned, both Planned and Actual numbers will populate for clients.
-
-## Fix
-
-Expose `planned_amount` and `actual_amount_override` to clients in `listProjectCategoryDeadlines`. Keep `notes` and `created_by` staff-only (those are internal planner-only fields).
-
-### Change — `src/lib/project-deadlines.functions.ts`
-
-- Select `planned_amount` and `actual_amount_override` for both staff and clients.
-- Keep `notes` blanked for clients (still staff-only).
-- Update the inline comment to reflect the new policy: budget figures are visible to clients; only internal notes are staff-only.
-
-No schema change, no RLS change (the function already runs as `supabaseAdmin` with explicit `assertCanRead`), no client component changes — `VendorTimeline` already renders these fields when present and `getMyProject` already returns `closed_amount` in `quote_summary`.
-
-## Out of Scope
-
-- Admin Timeline / Table views (already working).
-- Editing budgets from the client side — clients remain read-only.
-- Exposing `notes` or `created_by` to clients.
-- Any RLS policy change on `project_category_deadlines`.
-
-## Verification
-
-After the change, on the client Time tab:
-- Header shows real Planned, Actual, Variance totals.
-- Each category row shows Planned Budget and Actual Cost (auto from closed quotes, or the override if set).
-- Table view footer totals match.
+### Out of scope
+- No layout/structure changes, no desktop changes, no logic changes. Pure CSS class fix.
