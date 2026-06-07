@@ -149,9 +149,9 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
           )}
 
           {vendor.remarks && (
-            <div className="sm:col-span-2 rounded-lg bg-[var(--cream-deep)] p-3">
+            <div className="sm:col-span-2 min-w-0 rounded-lg bg-[var(--cream-deep)] p-3">
               <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">Remarks</div>
-              <div className="text-sm text-[var(--charcoal)]/80 whitespace-pre-wrap">{vendor.remarks}</div>
+              <div className="text-sm text-[var(--charcoal)]/80 whitespace-pre-wrap break-words">{vendor.remarks}</div>
             </div>
           )}
 
