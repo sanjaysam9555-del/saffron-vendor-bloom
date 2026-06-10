@@ -92,7 +92,7 @@ function ClientPortalPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [detail, setDetail] = useState<ClientVendor | null>(null);
-  const [view, setView] = useState<ViewMode>("grid");
+  const [view, setView] = useState<ViewMode>("timeline");
 
   // Restore + persist view preference.
   useEffect(() => {
