@@ -54,9 +54,12 @@ type SubView = "timeline" | "table";
 
 export function VendorTimeline({ projectId, weddingDate, items, mode, registerRowRef }: Props) {
   const [sub, setSub] = useState<SubView>("timeline");
+  const [addOpen, setAddOpen] = useState(false);
   const now = useNow();
   const sorted = useMemo(() => sortItems(items, now), [items, now]);
   const unsetCount = items.filter((i) => !i.due_date && !i.booked).length;
+  const existingCategories = useMemo(() => items.map((i) => i.category), [items]);
+
 
   return (
     <div className="mt-2">
