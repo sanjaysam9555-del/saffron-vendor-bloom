@@ -302,7 +302,7 @@ function ClientPortalPage() {
                 </button>
                 <button
                   role="tab"
-                  aria-label="Timeline view"
+                  aria-label="Overview"
                   aria-selected={view === "timeline"}
                   onClick={() => setView("timeline")}
                   className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:flex-none sm:gap-1.5 sm:px-2 sm:py-1.5 ${
@@ -311,7 +311,7 @@ function ClientPortalPage() {
                       : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
                   }`}
                 >
-                  <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Time</span>
+                  <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Overview</span>
                 </button>
               </div>
             </div>
