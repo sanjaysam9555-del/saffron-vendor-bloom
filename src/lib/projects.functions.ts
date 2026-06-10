@@ -7,9 +7,16 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 async function requireClientUser(): Promise<{ userId: string }> {
   const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  if (!token) throw new Error("Authentication is still loading. Please try again.");
+  if (!token) {
+    // Transient: client middleware hadn't attached the bearer yet. Surface
+    // a retry-friendly message so the caller can show a toast and let the
+    // user retry, instead of being interpreted as "session expired".
+    throw new Error("Please try that again in a moment.");
+  }
   const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-  if (userError || !userData.user) throw new Error("Authentication is still loading. Please try again.");
+  if (userError || !userData.user) {
+    throw new Error("Please try that again in a moment.");
+  }
   const userId = userData.user.id;
 
   const { data: roleRow, error: roleError } = await supabaseAdmin
