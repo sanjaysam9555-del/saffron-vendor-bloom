@@ -1328,7 +1328,7 @@ function HorizontalCard({
       ref={(el) => registerRowRef?.(item.category, el as unknown as HTMLDivElement | null)}
       data-category={item.category}
       style={style}
-      className={`group rounded-md bg-white p-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-shadow hover:shadow-md ${
+      className={`group rounded-md border border-[var(--champagne)]/70 bg-white p-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] ring-1 ring-[var(--cream-deep)] transition-shadow hover:shadow-md hover:ring-[var(--champagne)] ${
         isEditing ? "ring-2 ring-[var(--terracotta)]" : ""
       } ${variant === "booked" ? "opacity-95" : ""} ${mode === "admin" ? "cursor-pointer" : ""}`}
       onClick={mode === "admin" ? onEdit : undefined}
