@@ -359,7 +359,7 @@ function ProjectSectionTabs({
           <VendorTimeline
             projectId={projectId}
             weddingDate={weddingDate}
-            items={buildTimelineItems(vendors, deadlines)}
+            items={buildTimelineItems(vendors, deadlines, "admin")}
             mode="admin"
           />
         )}
