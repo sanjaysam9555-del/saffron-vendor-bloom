@@ -1,6 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 const ALLOWED_HOST_SUFFIXES = [".cdninstagram.com", ".fbcdn.net"];
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Accept, Origin",
+  "Cross-Origin-Resource-Policy": "cross-origin",
+} as const;
+
+function fallbackImage(reason: string): Response {
+  return new Response(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1"/>',
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "image/svg+xml; charset=utf-8",
+        "Cache-Control": "public, max-age=300, s-maxage=300",
+        "X-Instagram-Image-Proxy": reason,
+        ...CORS_HEADERS,
+      },
+    },
+  );
+}
 
 function isAllowed(url: URL): boolean {
   if (url.protocol !== "https:") return false;
@@ -11,23 +32,27 @@ function isAllowed(url: URL): boolean {
 export const Route = createFileRoute("/api/public/instagram-image")({
   server: {
     handlers: {
+      OPTIONS: async () => new Response(null, { status: 204, headers: CORS_HEADERS }),
       GET: async ({ request }) => {
         const reqUrl = new URL(request.url);
         const target = reqUrl.searchParams.get("url");
-        if (!target) return new Response("Missing url", { status: 400 });
+        if (!target) return fallbackImage("missing-url");
 
         let parsed: URL;
         try {
           parsed = new URL(target);
         } catch {
-          return new Response("Invalid url", { status: 400 });
+          return fallbackImage("invalid-url");
         }
         if (!isAllowed(parsed)) {
-          return new Response("Host not allowed", { status: 403 });
+          return fallbackImage("host-not-allowed");
         }
 
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10_000);
         try {
           const upstream = await fetch(parsed.toString(), {
+            signal: controller.signal,
             headers: {
               "User-Agent":
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -37,12 +62,12 @@ export const Route = createFileRoute("/api/public/instagram-image")({
           });
 
           if (!upstream.ok || !upstream.body) {
-            return new Response("Upstream error", { status: 502 });
+            return fallbackImage(`upstream-${upstream.status || "empty"}`);
           }
 
           const contentType = upstream.headers.get("content-type") ?? "image/jpeg";
-          if (!contentType.startsWith("image/")) {
-            return new Response("Not an image", { status: 415 });
+          if (!contentType.toLowerCase().startsWith("image/")) {
+            return fallbackImage("not-image");
           }
 
           return new Response(upstream.body, {
@@ -53,13 +78,14 @@ export const Route = createFileRoute("/api/public/instagram-image")({
               // can keep them in browser + edge caches for a week.
               "Cache-Control":
                 "public, max-age=604800, s-maxage=604800, immutable, stale-while-revalidate=86400",
-              "Access-Control-Allow-Origin": "*",
-              "Cross-Origin-Resource-Policy": "cross-origin",
+              ...CORS_HEADERS,
               Vary: "Accept",
             },
           });
         } catch {
-          return new Response("Fetch failed", { status: 502 });
+          return fallbackImage("fetch-failed");
+        } finally {
+          clearTimeout(timeout);
         }
       },
     },
