@@ -104,5 +104,22 @@ export function buildTimelineItems(
       actual_amount_override: dl?.actual_amount_override ?? null,
     });
   }
+  // Include planner-added categories that don't yet have any vendor assigned.
+  for (const dl of deadlines) {
+    if (byCat.has(dl.category)) continue;
+    out.push({
+      category: dl.category,
+      vendor_count: 0,
+      due_date: dl.due_date ?? null,
+      criticality: dl.criticality ?? "medium",
+      notes: dl.notes ?? null,
+      booked: false,
+      booked_vendor_name: null,
+      planned_amount: dl.planned_amount ?? null,
+      closed_amount_auto: null,
+      actual_amount_override: dl.actual_amount_override ?? null,
+    });
+  }
   return out;
 }
+

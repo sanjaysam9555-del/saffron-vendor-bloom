@@ -7,10 +7,13 @@ import {
   ListChecks,
   AlertTriangle,
   Pencil,
+  Plus,
   Save,
   X,
   Heart,
 } from "lucide-react";
+import { useAllCategories } from "@/lib/categories";
+
 import {
   BUCKET_LABEL,
   BUCKET_TOKEN,
@@ -51,9 +54,12 @@ type SubView = "timeline" | "table";
 
 export function VendorTimeline({ projectId, weddingDate, items, mode, registerRowRef }: Props) {
   const [sub, setSub] = useState<SubView>("timeline");
+  const [addOpen, setAddOpen] = useState(false);
   const now = useNow();
   const sorted = useMemo(() => sortItems(items, now), [items, now]);
   const unsetCount = items.filter((i) => !i.due_date && !i.booked).length;
+  const existingCategories = useMemo(() => items.map((i) => i.category), [items]);
+
 
   return (
     <div className="mt-2">
@@ -64,35 +70,47 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
             Wedding day: {formatDueDate(weddingDate)}
           </p>
         </div>
-        <div
-          role="tablist"
-          className="inline-flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs sm:w-auto"
-        >
-          <button
-            role="tab"
-            aria-selected={sub === "timeline"}
-            onClick={() => setSub("timeline")}
-            className={`inline-flex flex-1 items-center justify-center gap-1.5 px-3 py-1.5 sm:flex-none ${
-              sub === "timeline"
-                ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-            }`}
+        <div className="flex flex-wrap items-center gap-2">
+          {mode === "admin" && (
+            <button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-[var(--terracotta)] bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
+            >
+              <Plus className="h-3.5 w-3.5" /> Add category to plan
+            </button>
+          )}
+          <div
+            role="tablist"
+            className="inline-flex overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs"
           >
-            <Clock className="h-3.5 w-3.5" /> Timeline
-          </button>
-          <button
-            role="tab"
-            aria-selected={sub === "table"}
-            onClick={() => setSub("table")}
-            className={`inline-flex flex-1 items-center justify-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 sm:flex-none ${
-              sub === "table"
-                ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-            }`}
-          >
-            <ListChecks className="h-3.5 w-3.5" /> Table
-          </button>
+            <button
+              role="tab"
+              aria-selected={sub === "timeline"}
+              onClick={() => setSub("timeline")}
+              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 ${
+                sub === "timeline"
+                  ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                  : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+              }`}
+            >
+              <Clock className="h-3.5 w-3.5" /> Timeline
+            </button>
+            <button
+              role="tab"
+              aria-selected={sub === "table"}
+              onClick={() => setSub("table")}
+              className={`inline-flex items-center justify-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 ${
+                sub === "table"
+                  ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                  : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+              }`}
+            >
+              <ListChecks className="h-3.5 w-3.5" /> Table
+            </button>
+          </div>
         </div>
+
       </div>
 
       {mode === "admin" && unsetCount > 0 && (
@@ -105,9 +123,10 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
       {items.length === 0 ? (
         <div className="rounded-md border border-dashed border-[var(--champagne)] bg-[var(--cream)] py-10 text-center text-sm text-[var(--charcoal)]/60">
           {mode === "admin"
-            ? "Assign vendors to this project to start tracking category deadlines."
+            ? "No categories yet. Assign vendors or use “Add category to plan” to start tracking deadlines."
             : "Your planner hasn't added any vendor categories yet."}
         </div>
+
       ) : sub === "timeline" ? (
         <>
           <div className="md:hidden">
@@ -140,6 +159,178 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
           registerRowRef={registerRowRef}
         />
       )}
+
+      {addOpen && (
+        <AddCategoryDialog
+          projectId={projectId}
+          existing={existingCategories}
+          onClose={() => setAddOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function AddCategoryDialog({
+  projectId,
+  existing,
+  onClose,
+}: {
+  projectId: string;
+  existing: string[];
+  onClose: () => void;
+}) {
+  const qc = useQueryClient();
+  const upsert = useServerFn(upsertCategoryDeadline);
+  const allCategories = useAllCategories();
+  const existingSet = useMemo(
+    () => new Set(existing.map((c) => c.toLowerCase())),
+    [existing],
+  );
+  const available = useMemo(
+    () => allCategories.filter((c) => !existingSet.has(c.toLowerCase())),
+    [allCategories, existingSet],
+  );
+  const [category, setCategory] = useState<string>(available[0] ?? "");
+  const [custom, setCustom] = useState("");
+  const [useCustom, setUseCustom] = useState(available.length === 0);
+  const [due, setDue] = useState("");
+  const [crit, setCrit] = useState<Criticality>("medium");
+  const [planned, setPlanned] = useState("");
+
+  const finalCategory = (useCustom ? custom : category).trim();
+  const isDup = !!finalCategory && existingSet.has(finalCategory.toLowerCase());
+  const canSave = finalCategory.length > 0 && !isDup;
+
+  const saveM = useMutation({
+    mutationFn: () =>
+      upsert({
+        data: {
+          project_id: projectId,
+          category: finalCategory,
+          due_date: due ? due : null,
+          criticality: crit,
+          notes: null,
+          planned_amount: (() => {
+            const n = Number(planned);
+            return planned.trim() && Number.isFinite(n) && n >= 0 ? n : null;
+          })(),
+          actual_amount_override: null,
+        },
+      }),
+    onSuccess: () => {
+      notifySuccess("Category added");
+      qc.invalidateQueries({ queryKey: ["project-deadlines", projectId] });
+      onClose();
+    },
+    onError: (e: unknown) => notifyError(e, "Could not add category"),
+  });
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md rounded-xl bg-[var(--cream)] p-5 text-[var(--charcoal)] shadow-2xl"
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="font-display text-lg">Add category to plan</h3>
+          <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="grid gap-3">
+          <label className="flex flex-col gap-1 text-xs">
+            <span className="text-[var(--charcoal)]/65">Category</span>
+            {!useCustom && available.length > 0 ? (
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+              >
+                {available.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={custom}
+                onChange={(e) => setCustom(e.target.value)}
+                placeholder="e.g. Wedding favours"
+                className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+              />
+            )}
+            <button
+              type="button"
+              onClick={() => setUseCustom((v) => !v)}
+              className="self-start text-[11px] text-[var(--terracotta)] hover:underline"
+            >
+              {useCustom ? "Pick from list" : "Type a custom name"}
+            </button>
+            {isDup && (
+              <span className="text-[11px] text-red-600">
+                This category is already on the plan.
+              </span>
+            )}
+          </label>
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1 text-xs">
+              <span className="text-[var(--charcoal)]/65">Due date</span>
+              <input
+                type="date"
+                value={due}
+                onChange={(e) => setDue(e.target.value)}
+                className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-xs">
+              <span className="text-[var(--charcoal)]/65">Criticality</span>
+              <select
+                value={crit}
+                onChange={(e) => setCrit(e.target.value as Criticality)}
+                className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </label>
+          </div>
+
+          <label className="flex flex-col gap-1 text-xs">
+            <span className="text-[var(--charcoal)]/65">Planned amount (₹, optional)</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              value={planned}
+              onChange={(e) => setPlanned(e.target.value)}
+              className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+            />
+          </label>
+        </div>
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:border-[var(--terracotta)]"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => saveM.mutate()}
+            disabled={!canSave || saveM.isPending}
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 disabled:opacity-50"
+          >
+            <Save className="h-3.5 w-3.5" /> Add
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
