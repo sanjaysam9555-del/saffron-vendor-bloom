@@ -109,14 +109,28 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
             : "Your planner hasn't added any vendor categories yet."}
         </div>
       ) : sub === "timeline" ? (
-        <TimelineRibbon
-          items={items}
-          projectId={projectId}
-          mode={mode}
-          weddingDate={weddingDate}
-          now={now}
-          registerRowRef={registerRowRef}
-        />
+        <>
+          <div className="md:hidden">
+            <TimelineRibbon
+              items={items}
+              projectId={projectId}
+              mode={mode}
+              weddingDate={weddingDate}
+              now={now}
+              registerRowRef={registerRowRef}
+            />
+          </div>
+          <div className="hidden md:block">
+            <HorizontalTimeline
+              items={items}
+              projectId={projectId}
+              mode={mode}
+              weddingDate={weddingDate}
+              now={now}
+              registerRowRef={registerRowRef}
+            />
+          </div>
+        </>
       ) : (
         <TableView
           items={sorted}
@@ -985,5 +999,372 @@ function TableRow({
         </tr>
       )}
     </>
+  );
+}
+
+
+/* ============================================================
+   HorizontalTimeline (desktop) — month axis + compact cards
+   ============================================================ */
+
+function HorizontalTimeline({
+  items,
+  projectId,
+  mode,
+  weddingDate,
+  now,
+  registerRowRef,
+}: {
+  items: TimelineItem[];
+  projectId: string;
+  mode: "admin" | "client";
+  weddingDate: string;
+  now: Date;
+  registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
+}) {
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+
+  const totals = useMemo(() => {
+    const planned = sumAmounts(items, (i) => i.planned_amount);
+    const actual = sumAmounts(items, (i) => resolveActual(i));
+    return { planned, actual, variance: actual - planned };
+  }, [items]);
+
+  const onAxis = useMemo(
+    () =>
+      items
+        .filter((i) => !!i.due_date)
+        .sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? "")),
+    [items],
+  );
+  const unscheduled = useMemo(
+    () => items.filter((i) => !i.due_date && !i.booked),
+    [items],
+  );
+
+  const wedding = new Date(weddingDate);
+  const earliestTime = Math.min(
+    now.getTime(),
+    wedding.getTime(),
+    ...onAxis.map((i) => new Date(i.due_date!).getTime()),
+  );
+  const earliest = new Date(earliestTime);
+  const start = new Date(earliest.getFullYear(), earliest.getMonth(), 1);
+  const latestTime = Math.max(
+    wedding.getTime(),
+    ...onAxis.map((i) => new Date(i.due_date!).getTime()),
+  );
+  const latest = new Date(latestTime);
+  const end = new Date(latest.getFullYear(), latest.getMonth() + 1, 0);
+
+  const DAY_MS = 86400000;
+  const totalDays = Math.max(30, Math.ceil((end.getTime() - start.getTime()) / DAY_MS));
+  const pxPerDay = 6;
+  const width = Math.max(900, totalDays * pxPerDay + 80);
+
+  const months: Date[] = [];
+  {
+    const m = new Date(start);
+    while (m <= end) {
+      months.push(new Date(m));
+      m.setMonth(m.getMonth() + 1);
+    }
+  }
+
+  const xFor = (d: string | Date) =>
+    ((new Date(d).getTime() - start.getTime()) / DAY_MS) * pxPerDay + 24;
+
+  const AXIS_Y = 180;
+  const CARD_W = 180;
+
+  // Alternate above/below; bump down if collision within 90px on same side.
+  type Placement = { item: TimelineItem; x: number; above: boolean; offset: number };
+  const placements: Placement[] = [];
+  let aboveCursor = 0;
+  let belowCursor = 0;
+  onAxis.forEach((item, idx) => {
+    const x = xFor(item.due_date!);
+    const above = idx % 2 === 0;
+    const cursorList = above ? placements.filter((p) => p.above) : placements.filter((p) => !p.above);
+    let offset = 0;
+    for (const p of cursorList) {
+      if (Math.abs(p.x - x) < CARD_W * 0.55 && p.offset === offset) {
+        offset += 132;
+      }
+    }
+    placements.push({ item, x, above, offset });
+    if (above) aboveCursor = Math.max(aboveCursor, offset);
+    else belowCursor = Math.max(belowCursor, offset);
+  });
+
+  const topPad = 24 + aboveCursor + 132;
+  const bottomPad = 24 + belowCursor + 132;
+  const containerHeight = topPad + bottomPad;
+  const axisY = topPad;
+
+  const editingItem = editingCategory
+    ? items.find((i) => i.category === editingCategory) ?? null
+    : null;
+
+  const todayX = xFor(now);
+  const weddingX = xFor(weddingDate);
+
+  return (
+    <div>
+      <RibbonHeader
+        weddingDate={weddingDate}
+        daysToWedding={daysBetween(now, wedding)}
+        totals={totals}
+      />
+
+      <div className="overflow-x-auto rounded-md border border-[var(--champagne)]/40 bg-[var(--cream)]/40 shadow-[inset_-12px_0_8px_-8px_rgba(0,0,0,0.06)]">
+        <div className="relative" style={{ width, height: containerHeight }}>
+          {/* axis */}
+          <div
+            aria-hidden
+            className="absolute left-0 right-0 h-px bg-[var(--champagne)]"
+            style={{ top: axisY }}
+          />
+
+          {/* month ticks + labels */}
+          {months.map((mm, idx) => {
+            const x = xFor(mm);
+            const showYear = mm.getMonth() === 0 || idx === 0;
+            return (
+              <div
+                key={mm.toISOString()}
+                className="absolute"
+                style={{ left: x, top: axisY }}
+              >
+                <div className="h-2 w-px bg-[var(--champagne)]" />
+                <div className="mt-1 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/55">
+                  {mm.toLocaleDateString(undefined, { month: "short" })}
+                  {showYear ? ` '${String(mm.getFullYear()).slice(2)}` : ""}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* today marker */}
+          {todayX >= 0 && todayX <= width && (
+            <div
+              className="absolute"
+              style={{ left: todayX, top: 8, bottom: 8 }}
+              aria-hidden
+            >
+              <div className="h-full w-px bg-[var(--terracotta)]/30" />
+              <div className="absolute -translate-x-1/2 rounded-full bg-[var(--terracotta)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white"
+                   style={{ top: 0 }}>
+                Today
+              </div>
+            </div>
+          )}
+
+          {/* wedding marker */}
+          <div
+            className="absolute flex flex-col items-center"
+            style={{ left: weddingX, top: axisY - 22, transform: "translateX(-50%)" }}
+          >
+            <div className="z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--terracotta)] text-[var(--cream)] shadow-lg">
+              <Heart className="h-5 w-5" />
+            </div>
+            <div className="mt-1 whitespace-nowrap text-[10px] font-bold uppercase tracking-wider text-[var(--terracotta)]">
+              {formatDueDate(weddingDate)}
+            </div>
+          </div>
+
+          {/* cards */}
+          {placements.map(({ item, x, above, offset }) => {
+            const variant: RibbonVariant = item.booked
+              ? "booked"
+              : classifyUrgency(item, now).bucket === "overdue"
+                ? "overdue"
+                : "upcoming";
+            const cardTop = above
+              ? axisY - 20 - offset - 110
+              : axisY + 20 + offset;
+            const connectorTop = above ? cardTop + 110 : axisY;
+            const connectorHeight = above ? axisY - (cardTop + 110) : cardTop - axisY;
+            return (
+              <div key={item.category}>
+                {/* connector */}
+                <div
+                  aria-hidden
+                  className="absolute w-px bg-[var(--champagne)]"
+                  style={{ left: x, top: connectorTop, height: Math.max(0, connectorHeight) }}
+                />
+                {/* dot */}
+                <span
+                  aria-hidden
+                  className="absolute z-10 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[var(--cream)]"
+                  style={{
+                    left: x,
+                    top: axisY,
+                    background:
+                      variant === "overdue"
+                        ? "var(--urgency-overdue)"
+                        : variant === "booked"
+                          ? "var(--urgency-booked)"
+                          : "var(--terracotta)",
+                  }}
+                />
+                <HorizontalCard
+                  item={item}
+                  variant={variant}
+                  now={now}
+                  mode={mode}
+                  onEdit={() =>
+                    setEditingCategory((cur) =>
+                      cur === item.category ? null : item.category,
+                    )
+                  }
+                  isEditing={editingCategory === item.category}
+                  registerRowRef={registerRowRef}
+                  style={{
+                    position: "absolute",
+                    left: x - CARD_W / 2,
+                    top: cardTop,
+                    width: CARD_W,
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* admin inline editor */}
+      {mode === "admin" && editingItem && (
+        <div className="mt-3 rounded-md border border-[var(--champagne)]/60 bg-white p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <h4 className="font-display text-base text-[var(--charcoal)]">
+              {editingItem.category}
+            </h4>
+            <button
+              onClick={() => setEditingCategory(null)}
+              className="rounded-md p-1 text-[var(--charcoal)]/50 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]"
+              aria-label="Close editor"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <DeadlineEditor
+            item={editingItem}
+            projectId={projectId}
+            onDone={() => setEditingCategory(null)}
+          />
+        </div>
+      )}
+
+      {unscheduled.length > 0 && (
+        <div className="mt-6">
+          <UnscheduledBand
+            items={unscheduled}
+            projectId={projectId}
+            mode={mode}
+            now={now}
+            registerRowRef={registerRowRef}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HorizontalCard({
+  item,
+  variant,
+  now,
+  mode,
+  onEdit,
+  isEditing,
+  registerRowRef,
+  style,
+}: {
+  item: TimelineItem;
+  variant: RibbonVariant;
+  now: Date;
+  mode: "admin" | "client";
+  onEdit: () => void;
+  isEditing: boolean;
+  registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
+  style?: React.CSSProperties;
+}) {
+  const { daysLeft } = classifyUrgency(item, now);
+  const accent =
+    variant === "overdue"
+      ? "var(--urgency-overdue)"
+      : variant === "booked"
+        ? "var(--urgency-booked)"
+        : "var(--terracotta)";
+  const pillLabel =
+    variant === "overdue"
+      ? "Overdue"
+      : variant === "booked"
+        ? "Booked"
+        : item.criticality.toUpperCase();
+  const pillBg =
+    variant === "overdue"
+      ? "var(--terracotta-soft)"
+      : variant === "booked"
+        ? "color-mix(in oklab, var(--urgency-booked) 12%, transparent)"
+        : item.criticality === "high"
+          ? "var(--criticality-high-bg)"
+          : item.criticality === "low"
+            ? "var(--criticality-low-bg)"
+            : "var(--criticality-med-bg)";
+
+  const subLine =
+    variant === "booked"
+      ? item.booked_vendor_name
+        ? `with ${item.booked_vendor_name}`
+        : "Confirmed"
+      : daysLeft !== null
+        ? daysLeftLabel(daysLeft)
+        : "";
+
+  return (
+    <article
+      ref={(el) => registerRowRef?.(item.category, el as unknown as HTMLDivElement | null)}
+      data-category={item.category}
+      style={style}
+      className={`group rounded-md bg-white p-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-shadow hover:shadow-md ${
+        isEditing ? "ring-2 ring-[var(--terracotta)]" : ""
+      } ${variant === "booked" ? "opacity-95" : ""} ${mode === "admin" ? "cursor-pointer" : ""}`}
+      onClick={mode === "admin" ? onEdit : undefined}
+    >
+      <div
+        className="mb-1.5 h-0.5 w-8 rounded-full"
+        style={{ background: accent }}
+      />
+      <div className="flex items-start justify-between gap-1.5">
+        <h4 className="truncate font-display text-sm leading-tight text-[var(--charcoal)]">
+          {item.category}
+        </h4>
+        <span
+          className="shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider"
+          style={{ background: pillBg, color: variant === "booked" ? "var(--urgency-booked)" : accent }}
+        >
+          {variant === "booked" && <CheckCircle2 className="mr-0.5 inline h-2.5 w-2.5 align-[-1px]" />}
+          {pillLabel}
+        </span>
+      </div>
+      <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/70">
+        {item.due_date ? formatDueDate(item.due_date) : "No date"}
+      </p>
+      {subLine && (
+        <p className="text-[10px] italic" style={{ color: accent }}>
+          {subLine}
+        </p>
+      )}
+      <div className="mt-1.5 flex items-center justify-between border-t border-[var(--cream-deep)] pt-1.5">
+        <span className="text-[9px] uppercase tracking-wider text-[var(--charcoal)]/45">
+          {item.planned_amount != null ? formatINR(item.planned_amount) : "—"}
+        </span>
+        <span className="text-[9px] text-[var(--charcoal)]/45">
+          {item.vendor_count} shortlisted
+        </span>
+      </div>
+    </article>
   );
 }
