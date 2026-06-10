@@ -70,35 +70,47 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
             Wedding day: {formatDueDate(weddingDate)}
           </p>
         </div>
-        <div
-          role="tablist"
-          className="inline-flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs sm:w-auto"
-        >
-          <button
-            role="tab"
-            aria-selected={sub === "timeline"}
-            onClick={() => setSub("timeline")}
-            className={`inline-flex flex-1 items-center justify-center gap-1.5 px-3 py-1.5 sm:flex-none ${
-              sub === "timeline"
-                ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-            }`}
+        <div className="flex flex-wrap items-center gap-2">
+          {mode === "admin" && (
+            <button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-[var(--terracotta)] bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
+            >
+              <Plus className="h-3.5 w-3.5" /> Add category to plan
+            </button>
+          )}
+          <div
+            role="tablist"
+            className="inline-flex overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs"
           >
-            <Clock className="h-3.5 w-3.5" /> Timeline
-          </button>
-          <button
-            role="tab"
-            aria-selected={sub === "table"}
-            onClick={() => setSub("table")}
-            className={`inline-flex flex-1 items-center justify-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 sm:flex-none ${
-              sub === "table"
-                ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-            }`}
-          >
-            <ListChecks className="h-3.5 w-3.5" /> Table
-          </button>
+            <button
+              role="tab"
+              aria-selected={sub === "timeline"}
+              onClick={() => setSub("timeline")}
+              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 ${
+                sub === "timeline"
+                  ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                  : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+              }`}
+            >
+              <Clock className="h-3.5 w-3.5" /> Timeline
+            </button>
+            <button
+              role="tab"
+              aria-selected={sub === "table"}
+              onClick={() => setSub("table")}
+              className={`inline-flex items-center justify-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 ${
+                sub === "table"
+                  ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                  : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+              }`}
+            >
+              <ListChecks className="h-3.5 w-3.5" /> Table
+            </button>
+          </div>
         </div>
+
       </div>
 
       {mode === "admin" && unsetCount > 0 && (
