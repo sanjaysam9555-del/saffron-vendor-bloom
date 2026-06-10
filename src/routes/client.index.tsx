@@ -263,29 +263,16 @@ function ClientPortalPage() {
               >
                 <button
                   role="tab"
-                  aria-label="Grid view"
-                  aria-selected={view === "grid"}
-                  onClick={() => setView("grid")}
+                  aria-label="Overview"
+                  aria-selected={view === "timeline"}
+                  onClick={() => setView("timeline")}
                   className={`inline-flex flex-1 items-center justify-center gap-1 px-1.5 py-1 transition-colors sm:flex-none sm:gap-1.5 sm:px-2 sm:py-1.5 ${
-                    view === "grid"
+                    view === "timeline"
                       ? "bg-[var(--charcoal)] text-[var(--cream)]"
                       : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
                   }`}
                 >
-                  <LayoutGrid className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Grid</span>
-                </button>
-                <button
-                  role="tab"
-                  aria-label="Board view"
-                  aria-selected={view === "board"}
-                  onClick={() => setView("board")}
-                  className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:flex-none sm:gap-1.5 sm:px-2 sm:py-1.5 ${
-                    view === "board"
-                      ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                      : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-                  }`}
-                >
-                  <Columns3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Board</span>
+                  <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Overview</span>
                 </button>
                 <button
                   role="tab"
@@ -302,17 +289,31 @@ function ClientPortalPage() {
                 </button>
                 <button
                   role="tab"
-                  aria-label="Overview"
-                  aria-selected={view === "timeline"}
-                  onClick={() => setView("timeline")}
+                  aria-label="Board view"
+                  aria-selected={view === "board"}
+                  onClick={() => setView("board")}
                   className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:flex-none sm:gap-1.5 sm:px-2 sm:py-1.5 ${
-                    view === "timeline"
+                    view === "board"
                       ? "bg-[var(--charcoal)] text-[var(--cream)]"
                       : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
                   }`}
                 >
-                  <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Overview</span>
+                  <Columns3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Board</span>
                 </button>
+                <button
+                  role="tab"
+                  aria-label="Vendor view"
+                  aria-selected={view === "grid"}
+                  onClick={() => setView("grid")}
+                  className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:flex-none sm:gap-1.5 sm:px-2 sm:py-1.5 ${
+                    view === "grid"
+                      ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                      : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                  }`}
+                >
+                  <LayoutGrid className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Vendor View</span>
+                </button>
+
               </div>
             </div>
           </div>
