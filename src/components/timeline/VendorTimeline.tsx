@@ -7,10 +7,13 @@ import {
   ListChecks,
   AlertTriangle,
   Pencil,
+  Plus,
   Save,
   X,
   Heart,
 } from "lucide-react";
+import { useAllCategories } from "@/lib/categories";
+
 import {
   BUCKET_LABEL,
   BUCKET_TOKEN,
