@@ -109,14 +109,28 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
             : "Your planner hasn't added any vendor categories yet."}
         </div>
       ) : sub === "timeline" ? (
-        <TimelineRibbon
-          items={items}
-          projectId={projectId}
-          mode={mode}
-          weddingDate={weddingDate}
-          now={now}
-          registerRowRef={registerRowRef}
-        />
+        <>
+          <div className="md:hidden">
+            <TimelineRibbon
+              items={items}
+              projectId={projectId}
+              mode={mode}
+              weddingDate={weddingDate}
+              now={now}
+              registerRowRef={registerRowRef}
+            />
+          </div>
+          <div className="hidden md:block">
+            <HorizontalTimeline
+              items={items}
+              projectId={projectId}
+              mode={mode}
+              weddingDate={weddingDate}
+              now={now}
+              registerRowRef={registerRowRef}
+            />
+          </div>
+        </>
       ) : (
         <TableView
           items={sorted}
