@@ -410,6 +410,12 @@ export function useAutoEnsureMissingPreviews(
 /**
  * Fire-and-forget scrape for a single vendor (e.g. right after creation).
  * Returns a stable callback safe to call from event handlers.
+ *
+ * After the scrape resolves we also invalidate the bulk-preview query so
+ * any list mounted under a *different* query key (e.g. the vendor list that
+ * just re-fetched with the new vendor id) picks up the freshly stored row.
+ * If the first attempt returns a non-`ok` row (Apify often warms up slowly
+ * for brand-new handles), retry once with `force: true` after ~12s.
  */
 export function useTriggerInstagramPreview() {
   const ensureFn = useServerFn(ensureVendorInstagramPreview);
@@ -418,9 +424,27 @@ export function useTriggerInstagramPreview() {
     if (!isValidInstagramHandle(handle)) return;
     const h = normalizeInstagramHandle(handle);
     if (!h) return;
+
+    const propagate = (row: VendorInstagramPreview | null | undefined) => {
+      if (row) patchBulkCaches(qc, row);
+      // Invalidate every bulk-preview query so lists fetched under a new
+      // key (added vendor id changes the sortedKey) pick up the new row.
+      qc.invalidateQueries({ queryKey: ["instagram-previews-bulk"] });
+    };
+
     void ensureFn({ data: { vendorId, handle: h, force: true } })
       .then((row) => {
-        if (row) patchBulkCaches(qc, row);
+        propagate(row);
+        if (!row || row.status !== "ok") {
+          // One delayed retry for slow-to-warm-up Apify scrapes.
+          window.setTimeout(() => {
+            void ensureFn({ data: { vendorId, handle: h, force: true } })
+              .then(propagate)
+              .catch(() => {
+                /* noop */
+              });
+          }, 12000);
+        }
       })
       .catch(() => {
         /* noop */
