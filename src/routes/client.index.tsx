@@ -112,7 +112,7 @@ function ClientPortalPage() {
     enabled: !!projectId,
   });
   const timelineItems = useMemo(
-    () => buildTimelineItems((data?.vendors ?? []) as ClientVendor[], deadlines),
+    () => buildTimelineItems((data?.vendors ?? []) as ClientVendor[], deadlines, "client"),
     [data?.vendors, deadlines],
   );
 
