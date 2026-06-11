@@ -187,13 +187,10 @@ function AddCategoryDialog({
     () => new Set(existing.map((c) => c.toLowerCase())),
     [existing],
   );
-  const available = useMemo(
-    () => allCategories.filter((c) => !existingSet.has(c.toLowerCase())),
-    [allCategories, existingSet],
-  );
-  const [category, setCategory] = useState<string>(available[0] ?? "");
+  const available = allCategories;
+  const [category, setCategory] = useState<string>(allCategories[0] ?? "");
   const [custom, setCustom] = useState("");
-  const [useCustom, setUseCustom] = useState(available.length === 0);
+  const [useCustom, setUseCustom] = useState(allCategories.length === 0);
   const [due, setDue] = useState("");
   const [crit, setCrit] = useState<Criticality>("medium");
   const [planned, setPlanned] = useState("");
