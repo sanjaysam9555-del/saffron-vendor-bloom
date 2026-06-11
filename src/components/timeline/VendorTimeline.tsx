@@ -469,13 +469,13 @@ function RibbonHeader({
         ? "Today"
         : `${-daysToWedding} day${daysToWedding === -1 ? "" : "s"} ago`;
   return (
-    <div className="mb-10 flex flex-col gap-5 border-b border-[var(--champagne)]/50 pb-6 md:flex-row md:items-end md:justify-between">
+    <div className="mb-10 flex flex-col items-center gap-5 border-b border-[var(--champagne)]/50 pb-6 text-center md:flex-row md:items-end md:justify-between md:text-left">
       <div>
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--terracotta)]">
           Wedding Day: {formatDueDate(weddingDate)} — {countdown}
         </p>
       </div>
-      <div className="flex gap-6 text-right text-sm md:gap-8">
+      <div className="flex justify-center gap-6 text-center text-sm md:justify-end md:gap-8 md:text-right">
         <div>
           <p className="mb-0.5 text-[9px] uppercase tracking-wider text-[var(--charcoal)]/55">
             Planned
