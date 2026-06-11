@@ -63,7 +63,7 @@ export function ClientSummaryView({ vendors, items, brideName, groomName, weddin
           </div>
           <div className="shrink-0 rounded-xl border border-[var(--cream)]/20 bg-[var(--cream)]/10 px-5 py-3 text-center backdrop-blur">
             <span className="block text-[9px] font-medium uppercase tracking-[0.18em] text-[var(--cream)]/70">
-              <CalendarHeart className="mr-1 inline h-3 w-3 text-[var(--gold)]" />
+              <CalendarHeart className="mr-1 inline h-3 w-3 text-[var(--cream)]" />
               Countdown
             </span>
             <span className="mt-1 block font-display text-3xl font-semibold text-[var(--cream)]">
