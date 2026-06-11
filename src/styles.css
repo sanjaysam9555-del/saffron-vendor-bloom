@@ -381,3 +381,75 @@ button:active, a:active, [role="button"]:active {
   }
 }
 
+
+/* ===========================================================
+   driver.js — Saffron tour theming
+   =========================================================== */
+.driver-popover.saffron-tour {
+  background: var(--cream);
+  color: var(--charcoal);
+  border: 1px solid var(--champagne);
+  border-radius: 12px;
+  box-shadow: 0 18px 48px -16px rgba(0, 0, 0, 0.25);
+  font-family: inherit;
+  max-width: 360px;
+}
+.driver-popover.saffron-tour .driver-popover-title {
+  font-family: var(--font-display, "Cormorant Garamond", serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--terracotta);
+  margin: 0 0 6px;
+}
+.driver-popover.saffron-tour .driver-popover-description {
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(20, 20, 20, 0.78);
+}
+.driver-popover.saffron-tour .driver-popover-footer {
+  margin-top: 14px;
+  gap: 6px;
+}
+.driver-popover.saffron-tour .driver-popover-progress-text {
+  color: rgba(20, 20, 20, 0.5);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.driver-popover.saffron-tour button.driver-popover-prev-btn,
+.driver-popover.saffron-tour button.driver-popover-next-btn,
+.driver-popover.saffron-tour button.driver-popover-close-btn {
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--charcoal);
+  text-shadow: none;
+  box-shadow: none;
+}
+.driver-popover.saffron-tour button.driver-popover-prev-btn:hover {
+  border-color: var(--terracotta);
+  color: var(--terracotta);
+}
+.driver-popover.saffron-tour button.driver-popover-next-btn {
+  background: var(--terracotta);
+  color: var(--cream);
+  border-color: var(--terracotta);
+}
+.driver-popover.saffron-tour button.driver-popover-next-btn:hover {
+  background: color-mix(in srgb, var(--terracotta) 90%, black);
+}
+.driver-popover.saffron-tour .driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: var(--cream);
+}
+.driver-popover.saffron-tour .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: var(--cream);
+}
+.driver-popover.saffron-tour .driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: var(--cream);
+}
+.driver-popover.saffron-tour .driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: var(--cream);
+}
