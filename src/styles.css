@@ -455,3 +455,10 @@ button:active, a:active, [role="button"]:active {
 .driver-popover.saffron-tour .driver-popover-arrow-side-right.driver-popover-arrow {
   border-right-color: var(--cream);
 }
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
