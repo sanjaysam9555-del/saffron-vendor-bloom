@@ -378,9 +378,14 @@ function ClientPortalPage() {
             </div>
           </div>
 
+          {view === "summary" && (
+            <SectionHelper storageKey="summary">
+              <strong className="font-medium text-[var(--charcoal)]">Summary</strong> — a snapshot of your wedding: countdown, vendor progress, booked categories and spend.
+            </SectionHelper>
+          )}
           {view === "timeline" && (
-            <SectionHelper storageKey="overview">
-              <strong className="font-medium text-[var(--charcoal)]">Overview</strong> — track per-category booking deadlines and budgets. Tap a row to expand details.
+            <SectionHelper storageKey="timeline">
+              <strong className="font-medium text-[var(--charcoal)]">Timeline</strong> — per-category booking deadlines and budgets on a visual track.
             </SectionHelper>
           )}
           {view === "table" && (
@@ -388,19 +393,19 @@ function ClientPortalPage() {
               <strong className="font-medium text-[var(--charcoal)]">Table</strong> — all your vendors in one sortable list. Quick way to compare prices and ratings.
             </SectionHelper>
           )}
-          {view === "board" && (
-            <SectionHelper storageKey="board">
-              <strong className="font-medium text-[var(--charcoal)]">Board</strong> — drag vendors between columns: We like it → Shortlisted → Finalised → Rejected.
+          {view === "category" && (
+            <SectionHelper storageKey="category">
+              <strong className="font-medium text-[var(--charcoal)]">Category</strong> — every wedding category with deadlines, status and budget, perfect for week-by-week planning.
             </SectionHelper>
           )}
           {view === "grid" && (
             <SectionHelper storageKey="grid">
-              <strong className="font-medium text-[var(--charcoal)]">Vendor View</strong> — browse rich cards with photos. Click any card for details, quotes and comments.
+              <strong className="font-medium text-[var(--charcoal)]">Vendors</strong> — browse rich cards with photos. Click any card for details, quotes and comments.
             </SectionHelper>
           )}
-          {view === "summary" && (
-            <SectionHelper storageKey="summary">
-              <strong className="font-medium text-[var(--charcoal)]">Summary</strong> — a snapshot of your wedding: countdown, vendor progress, booked categories and spend.
+          {view === "board" && (
+            <SectionHelper storageKey="board">
+              <strong className="font-medium text-[var(--charcoal)]">Board</strong> — drag vendors between columns: We like it → Shortlisted → Finalised → Rejected.
             </SectionHelper>
           )}
 
@@ -419,6 +424,16 @@ function ClientPortalPage() {
               items={timelineItems}
               mode="client"
               registerRowRef={registerRowRef}
+              forcedSub="timeline"
+            />
+          ) : view === "category" ? (
+            <VendorTimeline
+              projectId={projectId!}
+              weddingDate={project.wedding_date}
+              items={timelineItems}
+              mode="client"
+              registerRowRef={registerRowRef}
+              forcedSub="table"
             />
           ) : vendors.length === 0 ? (
             <EmptyState message="Your planner hasn't shared any vendors yet. Check back soon." />
