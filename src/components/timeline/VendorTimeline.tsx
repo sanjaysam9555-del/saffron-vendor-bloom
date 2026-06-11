@@ -86,6 +86,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
           >
             <button
               role="tab"
+              data-tour="overview-sub-timeline"
               aria-selected={sub === "timeline"}
               onClick={() => setSub("timeline")}
               className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 ${
@@ -98,6 +99,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
             </button>
             <button
               role="tab"
+              data-tour="overview-sub-table"
               aria-selected={sub === "table"}
               onClick={() => setSub("table")}
               className={`inline-flex items-center justify-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 ${
