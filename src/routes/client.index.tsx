@@ -220,15 +220,13 @@ function ClientPortalPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--cream)]">
-      <ClientTopNav onStartTour={tour.start} />
+      <ClientTopNav
+        onStartTour={tour.start}
+        attentionItems={timelineItems}
+        onAttentionChipClick={jumpToCategory}
+        onAttentionViewAll={() => setView("timeline")}
+      />
 
-      <div data-tour="urgency-strip">
-        <UrgencyStrip
-          items={timelineItems}
-          onChipClick={jumpToCategory}
-          onViewAll={() => setView("timeline")}
-        />
-      </div>
 
 
       <div className="mx-auto flex w-full max-w-[1600px] flex-1">
