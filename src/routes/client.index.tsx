@@ -272,83 +272,88 @@ function ClientPortalPage() {
                 )}
               </button>
               
-              <div
-                data-tour="view-toggle"
-                role="tablist"
-                aria-label="View"
-                className="inline-flex flex-1 items-stretch overflow-hidden rounded-md border border-[var(--border)] bg-white text-[10px] leading-none sm:flex-none sm:text-xs"
-              >
-                <button
-                  data-tour="view-toggle-timeline"
-                  role="tab"
-                  aria-label="Overview"
-                  aria-selected={view === "timeline"}
-                  onClick={() => setView("timeline")}
-                  className={`inline-flex flex-1 items-center justify-center gap-1 px-1.5 py-1 transition-colors sm:flex-none sm:gap-1.5 sm:px-2 sm:py-1.5 ${
-                    view === "timeline"
-                      ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                      : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-                  }`}
+              <div className="relative min-w-0 flex-1 sm:flex-none">
+                <div
+                  data-tour="view-toggle"
+                  role="tablist"
+                  aria-label="View"
+                  className="no-scrollbar flex snap-x snap-mandatory items-stretch overflow-x-auto rounded-md border border-[var(--border)] bg-white text-[10px] leading-none sm:overflow-visible sm:text-xs"
                 >
-                  <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Overview</span>
-                </button>
-                <button
-                  data-tour="view-toggle-table"
-                  role="tab"
-                  aria-label="Table view"
-                  aria-selected={view === "table"}
-                  onClick={() => setView("table")}
-                  className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:flex-none sm:gap-1.5 sm:px-2 sm:py-1.5 ${
-                    view === "table"
-                      ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                      : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-                  }`}
-                >
-                  <TableIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Table</span>
-                </button>
-                <button
-                  data-tour="view-toggle-board"
-                  role="tab"
-                  aria-label="Board view"
-                  aria-selected={view === "board"}
-                  onClick={() => setView("board")}
-                  className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:flex-none sm:gap-1.5 sm:px-2 sm:py-1.5 ${
-                    view === "board"
-                      ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                      : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-                  }`}
-                >
-                  <Columns3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Board</span>
-                </button>
-                <button
-                  data-tour="view-toggle-grid"
-                  role="tab"
-                  aria-label="Vendor view"
-                  aria-selected={view === "grid"}
-                  onClick={() => setView("grid")}
-                  className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:flex-none sm:gap-1.5 sm:px-2 sm:py-1.5 ${
-                    view === "grid"
-                      ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                      : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-                  }`}
-                >
-                  <LayoutGrid className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Vendor View</span>
-                </button>
-                <button
-                  data-tour="view-toggle-summary"
-                  role="tab"
-                  aria-label="Summary"
-                  aria-selected={view === "summary"}
-                  onClick={() => setView("summary")}
-                  className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:flex-none sm:gap-1.5 sm:px-2 sm:py-1.5 ${
-                    view === "summary"
-                      ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                      : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-                  }`}
-                >
-                  <Gauge className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Summary</span>
-                </button>
-
+                  <button
+                    data-tour="view-toggle-timeline"
+                    role="tab"
+                    aria-label="Overview"
+                    aria-selected={view === "timeline"}
+                    onClick={() => setView("timeline")}
+                    className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
+                      view === "timeline"
+                        ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                    }`}
+                  >
+                    <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Overview</span>
+                  </button>
+                  <button
+                    data-tour="view-toggle-table"
+                    role="tab"
+                    aria-label="Table view"
+                    aria-selected={view === "table"}
+                    onClick={() => setView("table")}
+                    className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
+                      view === "table"
+                        ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                    }`}
+                  >
+                    <TableIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Table</span>
+                  </button>
+                  <button
+                    data-tour="view-toggle-board"
+                    role="tab"
+                    aria-label="Board view"
+                    aria-selected={view === "board"}
+                    onClick={() => setView("board")}
+                    className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
+                      view === "board"
+                        ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                    }`}
+                  >
+                    <Columns3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Board</span>
+                  </button>
+                  <button
+                    data-tour="view-toggle-grid"
+                    role="tab"
+                    aria-label="Vendor view"
+                    aria-selected={view === "grid"}
+                    onClick={() => setView("grid")}
+                    className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
+                      view === "grid"
+                        ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                    }`}
+                  >
+                    <LayoutGrid className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Vendor View</span>
+                  </button>
+                  <button
+                    data-tour="view-toggle-summary"
+                    role="tab"
+                    aria-label="Summary"
+                    aria-selected={view === "summary"}
+                    onClick={() => setView("summary")}
+                    className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
+                      view === "summary"
+                        ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                    }`}
+                  >
+                    <Gauge className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Summary</span>
+                  </button>
+                </div>
+                <div
+                  className="pointer-events-none absolute inset-y-0 right-0 w-6 rounded-r-md bg-gradient-to-l from-[var(--cream)] to-transparent sm:hidden"
+                  aria-hidden
+                />
               </div>
             </div>
           </div>
