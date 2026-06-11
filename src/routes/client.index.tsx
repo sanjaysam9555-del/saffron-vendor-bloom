@@ -13,6 +13,7 @@ import {
   Clock,
   Mail,
   Gauge,
+  ListChecks,
 } from "lucide-react";
 import { ClientGate } from "@/components/ClientGate";
 import { useAuth } from "@/lib/auth";
