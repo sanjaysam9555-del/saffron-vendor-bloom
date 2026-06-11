@@ -1,57 +1,70 @@
-## Client Dashboard Refinements
+## Goal
+Stop the Filter + 5 view tabs from overlapping/clipping on mobile. Keep the segmented pill aesthetic, but let the row scroll horizontally with snap, and auto-scroll the active tab into view.
 
-### 1. Header cleanup (`ClientTopNav.tsx`)
-- Remove the search input from the header. Search is **moved into the filter sidebar** (`ClientSidebar.tsx`) as its top field, so name/handle/location search still works.
-- Remove the days-to-go chip from the header (desktop pill + mobile chip) — moves into a new summary tile.
-- Remove the desktop "Bride & Groom + date" block — moves into a new summary tile.
-- Reorder header right-side controls: **Notifications bell (left) → Take a tour → Sign out (far right)**.
-- Sign out becomes **icon-only on desktop too** (drop the "Sign out" label, keep tooltip + aria-label).
+## Changes (single file: `src/routes/client.index.tsx`)
 
-### 2. Search in sidebar (`ClientSidebar.tsx`)
-- Add a search input at the top of the filter panel (label "Search vendors", same icon + placeholder as before).
-- Wire to the existing `search` / `onSearchChange` state lifted in `client.index.tsx` (just rerouted from header to sidebar; no new state).
-- Mobile: sidebar already opens as a sheet on demand, so the search lives there too.
+### 1. Row container
+Currently the right-side container is `flex w-full ... sm:w-auto`, which forces all 6 controls to share 390px and clip.
 
-### 3. Summary tiles → 6 tiles (`ClientSummaryStats.tsx`)
-- Shrink padding/icon to fit 6 across: `grid-cols-2 sm:grid-cols-3 lg:grid-cols-6`.
-- Two new info tiles prepended (non-clickable, no hover lift):
-  1. **Couple + Date** — "Bride & Groom" (font-display) + formatted wedding date.
-  2. **Countdown** — "142 days to go" with `CalendarHeart` icon.
-- Existing 4 tiles (Vendors Shared, Your Picks, Booked Categories, Spend So Far) keep behavior, smaller sizing.
+Update to:
+- Keep `Filter` button pinned on the left with `shrink-0` (so it never scrolls away).
+- Wrap the view-toggle segmented control in a horizontally scrollable region.
 
-### 4. Attention bar position (`client.index.tsx`)
-- Order becomes: **Header → UrgencyStrip → Summary Tiles → View toggle → content**.
+```tsx
+<div className="flex w-full shrink-0 items-stretch gap-1.5 sm:w-auto sm:gap-2">
+  <button data-tour="filters-button" ... className="... shrink-0 lg:hidden">
+    {/* Filter */}
+  </button>
 
-### 5. Remove Status Legend
-- Delete the "Statuses" popover next to the view toggle.
-- Remove the `status-legend` step from `useClientTour.ts`.
+  {/* New scroll wrapper — mobile only behavior */}
+  <div className="relative min-w-0 flex-1 sm:flex-none">
+    <div
+      data-tour="view-toggle"
+      role="tablist"
+      aria-label="View"
+      className="no-scrollbar flex snap-x snap-mandatory items-stretch overflow-x-auto rounded-md border border-[var(--border)] bg-white text-[10px] leading-none sm:overflow-visible sm:text-xs"
+    >
+      {/* each tab gets: shrink-0 snap-start whitespace-nowrap, drop flex-1 */}
+    </div>
+    {/* subtle right-edge fade hint that more tabs exist (mobile only) */}
+    <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[var(--cream)] to-transparent sm:hidden" aria-hidden />
+  </div>
+</div>
+```
 
-### 6. Tour button + bell reorder
-- Covered in (1).
+### 2. Each tab button
+- Remove `flex-1` (was forcing equal widths and causing the squeeze).
+- Add `shrink-0 snap-start whitespace-nowrap`.
+- Bump horizontal padding slightly so labels breathe (`px-2.5 py-1.5`).
+- Keep current active/inactive styling and `data-tour` anchors untouched.
 
-### 7. Fix filters-button highlight in tour (desktop)
-- On desktop the filter trigger location differs from mobile. In `useClientTour.ts`, resolve the live element at runtime: prefer `[data-tour="filters-button"]`, fall back to `[data-tour="filters-panel"]` or the sidebar root if the button isn't in the DOM. Ensures the spotlight lands on a real element on both breakpoints.
-- Also verify `data-tour="filters-button"` is attached to a stable, always-rendered element (move it onto the desktop filter toggle if needed).
+### 3. Auto-scroll active tab into view
+Add a small effect after `view` state so the active tab scrolls into the visible region on mobile (and after the user changes view):
 
-### 8. Tour card typography (`src/styles.css`)
-- Update `.driver-popover.saffron-tour`:
-  - Title → `font-family: var(--font-display)` (brand display font used elsewhere).
-  - Body, buttons, progress text → brand body font.
+```tsx
+useEffect(() => {
+  const el = document.querySelector(
+    `[data-tour="view-toggle"] [aria-selected="true"]`
+  ) as HTMLElement | null;
+  el?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+}, [view]);
+```
 
-### 9. Add Overview sub-explainers
-- Keep the existing 4 view-toggle steps. Add **two new steps** when on Overview:
-  - **Timeline column** — explains deadlines / booked toggle / budget chips. Target a new `data-tour="overview-timeline-row"` on the first row in `VendorTimeline`.
-  - **Per-category vendor table** — explains the expanded vendor list inside Overview. Target a new `data-tour="overview-vendor-table"` (auto-expand the first category if collapsed).
-- Both steps use `onHighlightStarted: ensureView("timeline")`.
+### 4. Hide scrollbar utility
+Add a tiny `.no-scrollbar` utility (Tailwind v4 `@utility` in `src/styles.css`) so the scroll affordance stays clean:
 
-### Files
-**Edited**
-- `src/components/client/ClientTopNav.tsx` — strip search/date/countdown; reorder; icon-only sign out.
-- `src/components/client/ClientSidebar.tsx` — add search input at top, wired to lifted state.
-- `src/components/client/ClientSummaryStats.tsx` — 6-tile grid + 2 new info tiles.
-- `src/routes/client.index.tsx` — reorder UrgencyStrip above tiles; drop status-legend popover; pass couple/date/countdown to summary stats; route `search`/`onSearchChange` to sidebar instead of header.
-- `src/components/timeline/VendorTimeline.tsx` — add `data-tour` hooks for overview sub-steps.
-- `src/hooks/useClientTour.ts` — remove status-legend step; add 2 overview sub-steps; resilient filters target.
-- `src/styles.css` — brand fonts on `.saffron-tour`.
+```css
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+```
 
-**No new files. No backend changes.**
+## Out of scope
+- No change to desktop layout (`sm:` and above keep current sizing).
+- No change to which tabs exist, order, icons, or tour anchors.
+- Filter button behavior unchanged.
+
+## Files touched
+- `src/routes/client.index.tsx` — row wrapper, tab classes, scroll-into-view effect.
+- `src/styles.css` — `no-scrollbar` utility.
