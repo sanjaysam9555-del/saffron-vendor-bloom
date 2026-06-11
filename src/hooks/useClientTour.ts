@@ -94,7 +94,28 @@ export function useClientTour({ setView }: Options) {
         onHighlightStarted: () => ensureView("grid"),
       },
       {
-        element: '[data-tour="filters-button"]',
+        element: '[data-tour="overview-sub-timeline"]',
+        popover: popover(
+          "Overview · Timeline tab",
+          "Inside Overview, the Timeline tab shows each category on a horizontal track — see what's due soon and what's already booked at a glance.",
+        ),
+        onHighlightStarted: () => ensureView("timeline"),
+      },
+      {
+        element: '[data-tour="overview-sub-table"]',
+        popover: popover(
+          "Overview · Table tab",
+          "Switch to the Table tab inside Overview for a compact list of every category with deadlines, status and budget — perfect for week-by-week planning.",
+        ),
+        onHighlightStarted: () => ensureView("timeline"),
+      },
+      {
+        // Resolved at runtime — prefers the mobile filters button, falls back
+        // to the always-present desktop filters panel.
+        element: () =>
+          (document.querySelector('[data-tour="filters-button"]:not([hidden])') as HTMLElement | null)
+          ?? (document.querySelector('[data-tour="filters-panel"]') as HTMLElement | null)
+          ?? document.body,
         popover: popover(
           "Filters",
           "Narrow vendors by category or location. Useful when your folio has lots of options.",
@@ -112,13 +133,6 @@ export function useClientTour({ setView }: Options) {
         popover: popover(
           "Notifications",
           "Quote updates, comments from your planner, and important changes land here.",
-        ),
-      },
-      {
-        element: '[data-tour="status-legend"]',
-        popover: popover(
-          "What do the statuses mean?",
-          "Tap here any time to see what Liked / Shortlisted / Finalised / Rejected / Thinking mean — and how your planner uses them.",
         ),
       },
       {
