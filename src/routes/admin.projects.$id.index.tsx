@@ -77,41 +77,8 @@ function ProjectDetailPage() {
     queryFn: () => listProjectCategoryDeadlines({ data: { project_id: id } }),
   });
 
-  const [showAddClient, setShowAddClient] = useState(false);
-  const [credsOpen, setCredsOpen] = useState(false);
-  const [cEmail, setCEmail] = useState("");
-  const [cName, setCName] = useState("");
-  const [cPwd, setCPwd] = useState("");
-  const [cBusy, setCBusy] = useState(false);
-  const [cErr, setCErr] = useState<string | null>(null);
 
-  const addClient = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCErr(null);
-    setCBusy(true);
-    try {
-      await createProjectClient({
-        data: {
-          project_id: id,
-          email: cEmail.trim(),
-          password: cPwd,
-          display_name: cName.trim() || cEmail.split("@")[0],
-        },
-      });
-      notifySuccess("Client login created");
-      setCEmail("");
-      setCName("");
-      setCPwd("");
-      setShowAddClient(false);
-      await refresh();
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed";
-      setCErr(msg);
-      notifyError(e, msg);
-    } finally {
-      setCBusy(false);
-    }
-  };
+
 
   const removeVendor = async (vendor_id: string, vendor_name?: string) => {
     const ok = await confirmDelete({
