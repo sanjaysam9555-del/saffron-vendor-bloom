@@ -44,7 +44,7 @@ export function useClientTour({ setView }: Options) {
         element: '[data-tour="notifications-bell"]',
         popover: popover(
           "Needs your attention",
-          "Time-sensitive categories and new updates from your planner live inside the bell. The badge counts how many things need a look — open it to see the chips and jump straight to a category.",
+          "Time-sensitive categories and updates from your planner live inside the bell. Each category that needs a look appears as its own line — open the bell and tap one to jump straight to it.",
         ),
       },
       {
