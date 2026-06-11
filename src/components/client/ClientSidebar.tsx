@@ -169,8 +169,9 @@ export function ClientSidebar({
   if (collapsed) {
     return (
       <>
-        <aside className="hidden w-12 shrink-0 self-stretch border-r border-[var(--border)] bg-[var(--cream-deep)] py-4 transition-all duration-200 lg:block">
+        <aside data-tour="filters-panel" className="hidden w-12 shrink-0 self-stretch border-r border-[var(--border)] bg-[var(--cream-deep)] py-4 transition-all duration-200 lg:block">
           <button
+            data-tour="filters-button"
             onClick={onToggle}
             title="Expand filters"
             aria-label="Expand filters"
@@ -196,7 +197,7 @@ export function ClientSidebar({
 
   return (
     <>
-      <aside className="hidden w-64 shrink-0 self-stretch border-r border-[var(--border)] bg-[var(--cream-deep)] p-5 transition-all duration-200 lg:block">
+      <aside data-tour="filters-panel" className="hidden w-64 shrink-0 self-stretch border-r border-[var(--border)] bg-[var(--cream-deep)] p-5 transition-all duration-200 lg:block">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-[var(--terracotta)]">
             <Filter className="h-4 w-4" /> Filters
