@@ -112,7 +112,7 @@ function ClientPortalPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
-    if (stored === "grid" || stored === "board" || stored === "table" || stored === "timeline" || stored === "summary") setView(stored);
+    if (stored === "grid" || stored === "board" || stored === "table" || stored === "timeline" || stored === "summary" || stored === "category") setView(stored);
   }, []);
   useEffect(() => {
     if (typeof window === "undefined") return;
