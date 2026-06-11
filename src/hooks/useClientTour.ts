@@ -3,7 +3,7 @@ import { driver, type Driver, type DriveStep } from "driver.js";
 import "driver.js/dist/driver.css";
 import { markTourCompleted } from "@/components/client/ClientTourButton";
 
-type ClientView = "grid" | "board" | "table" | "timeline";
+type ClientView = "grid" | "board" | "table" | "timeline" | "summary";
 
 interface Options {
   setView: (v: ClientView) => void;
