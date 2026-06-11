@@ -237,7 +237,7 @@ function ProjectSectionTabs({
       >
         {tabBtn("vendors", "Assigned vendors", LayoutGrid)}
         {tabBtn("timeline", "Budget & Deadlines", Calendar)}
-        {tabBtn("details", "Project details", FileText)}
+        {tabBtn("details", "Project Details", FileText)}
       </div>
 
       <div className="mt-4">
