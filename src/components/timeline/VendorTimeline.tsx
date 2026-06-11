@@ -233,7 +233,7 @@ function AddCategoryDialog({
         className="w-full max-w-md rounded-xl bg-[var(--cream)] p-5 text-[var(--charcoal)] shadow-2xl"
       >
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-display text-lg">Add category to plan</h3>
+          <h3 className="font-display text-lg">Add Category To Plan</h3>
           <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]">
             <X className="h-4 w-4" />
           </button>
