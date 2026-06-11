@@ -185,3 +185,54 @@ function QuickAddVendorRow({ vendor: v, alreadyAssigned, isPending, onAdd }: Row
     </li>
   );
 }
+
+function igProxy(src: string): string {
+  if (/^https?:\/\/[^/]*(cdninstagram\.com|fbcdn\.net)/i.test(src)) {
+    return `/api/public/instagram-image?url=${encodeURIComponent(src)}`;
+  }
+  return src;
+}
+
+function CompactInstagramStrip({ preview }: { preview: PreviewData | null | undefined }) {
+  if (preview === undefined) {
+    return (
+      <div className="mt-1.5 flex items-center gap-1.5">
+        <div className="h-5 w-5 animate-pulse rounded-full bg-[var(--cream-deep)]" />
+        <div className="h-2 w-20 animate-pulse rounded bg-[var(--cream-deep)]" />
+      </div>
+    );
+  }
+  if (!preview) return null;
+  const thumbs = (preview.post_thumbnails ?? []).slice(0, 4);
+  const handle = preview.handle ?? "";
+  return (
+    <div className="mt-1.5 flex items-center gap-1.5">
+      {preview.avatar_url ? (
+        <img
+          src={igProxy(preview.avatar_url)}
+          alt=""
+          referrerPolicy="no-referrer"
+          className="h-5 w-5 shrink-0 rounded-full object-cover ring-1 ring-[var(--border)]"
+        />
+      ) : (
+        <Instagram className="h-3 w-3 shrink-0 text-[var(--terracotta)]" />
+      )}
+      {handle && (
+        <span className="truncate text-[10px] text-[var(--charcoal)]/65">@{handle}</span>
+      )}
+      {thumbs.length > 0 && (
+        <div className="ml-auto flex gap-0.5">
+          {thumbs.map((src, i) => (
+            <img
+              key={`${src}-${i}`}
+              src={igProxy(src)}
+              alt=""
+              referrerPolicy="no-referrer"
+              className="h-7 w-7 rounded-sm object-cover bg-[var(--cream-deep)]"
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
