@@ -235,7 +235,7 @@ function ProjectSectionTabs({
         role="tablist"
         className="inline-flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-sm sm:w-auto"
       >
-        {tabBtn("vendors", "Assigned vendors", LayoutGrid)}
+        {tabBtn("vendors", "Assigned Vendors", LayoutGrid)}
         {tabBtn("timeline", "Budget & Deadlines", Calendar)}
         {tabBtn("details", "Project Details", FileText)}
       </div>
