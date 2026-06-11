@@ -65,7 +65,7 @@ export function QuickAddVendorPanel({ projectId, assignedVendorIds }: Props) {
       >
         <span className="inline-flex items-center gap-2 text-sm font-medium text-[var(--charcoal)]">
           <Plus className="h-4 w-4 text-[var(--terracotta)]" />
-          Quick add vendor
+          + Add Vendors To This Project
         </span>
         <ChevronDown
           className={`h-4 w-4 text-[var(--charcoal)]/50 transition-transform ${open ? "rotate-180" : ""}`}
