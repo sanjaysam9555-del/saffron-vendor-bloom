@@ -325,6 +325,21 @@ button:active, a:active, [role="button"]:active {
   .animate-buzz { animation: none !important; }
 }
 
+/* Vertical marquee — translates from 0 to var(--marquee-y) and loops seamlessly. */
+@keyframes marquee-y {
+  from { transform: translateY(0); }
+  to   { transform: translateY(var(--marquee-y, -100%)); }
+}
+.animate-marquee-y {
+  animation-name: marquee-y;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee-y { animation: none !important; }
+}
+
 /* ---------------------------------------------------------------- */
 /* View Transitions API — cross-fade between routes where supported. */
 /* Enabled via `defaultViewTransition: true` in src/router.tsx.      */

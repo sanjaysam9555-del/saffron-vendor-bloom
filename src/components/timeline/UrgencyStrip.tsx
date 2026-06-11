@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { AlarmClock, ArrowRight } from "lucide-react";
+import { AlarmClock } from "lucide-react";
 import {
   BUCKET_LABEL,
   BUCKET_TOKEN,
@@ -11,6 +11,8 @@ import {
 } from "@/lib/urgency";
 
 const ATTENTION: UrgencyBucket[] = ["overdue", "urgent", "soon"];
+const ROW_HEIGHT = 44; // px per attention row
+const VISIBLE_ROWS = 3; // rows visible before auto-scroll kicks in
 
 interface Props {
   items: TimelineItem[];
@@ -19,7 +21,7 @@ interface Props {
   maxChips?: number;
 }
 
-export function UrgencyStrip({ items, onChipClick, onViewAll, maxChips = 6 }: Props) {
+export function UrgencyStrip({ items, onChipClick }: Props) {
   const now = useNow();
   const attention = useMemo(() => {
     const order: UrgencyBucket[] = ["overdue", "urgent", "soon"];
@@ -35,10 +37,15 @@ export function UrgencyStrip({ items, onChipClick, onViewAll, maxChips = 6 }: Pr
 
   if (attention.length === 0) return null;
 
-  const shown = attention.slice(0, maxChips);
-  const overflow = attention.length - shown.length;
   const hasOverdue = attention.some((x) => x.c.bucket === "overdue");
   const pulseColor = hasOverdue ? "var(--urgency-overdue)" : "var(--urgency-urgent)";
+
+  const shouldScroll = attention.length > VISIBLE_ROWS;
+  // Duplicate the list for a seamless marquee loop when scrolling.
+  const rendered = shouldScroll ? [...attention, ...attention] : attention;
+  // ~2.6s per row keeps the rotation legible.
+  const animationDuration = `${Math.max(8, attention.length * 2.6)}s`;
+  const viewportHeight = Math.min(attention.length, VISIBLE_ROWS) * ROW_HEIGHT;
 
   return (
     <div
@@ -49,7 +56,7 @@ export function UrgencyStrip({ items, onChipClick, onViewAll, maxChips = 6 }: Pr
         boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.02), 0 1px 0 rgba(0,0,0,0.02)",
       }}
     >
-      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:gap-3 sm:px-6">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-2 px-3 py-2.5 sm:px-4">
         {/* Label */}
         <div className="flex shrink-0 items-center gap-2">
           <span className="relative inline-flex h-5 w-5 items-center justify-center">
@@ -70,67 +77,82 @@ export function UrgencyStrip({ items, onChipClick, onViewAll, maxChips = 6 }: Pr
           </span>
         </div>
 
-        {/* Chip rail with edge fades */}
-        <div className="relative min-w-0 flex-1">
-          <div
-            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4"
-            style={{
-              background:
-                "linear-gradient(90deg, var(--cream) 0%, transparent 100%)",
-            }}
-          />
-          <div
-            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-4"
-            style={{
-              background:
-                "linear-gradient(270deg, var(--cream) 0%, transparent 100%)",
-            }}
-          />
-          <div className="flex items-center gap-1.5 overflow-x-auto px-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            {shown.map(({ it, c }) => {
+        {/* Vertical notification list (auto-scrolls when overflowing) */}
+        <div
+          className="group relative overflow-hidden"
+          style={{ height: viewportHeight }}
+        >
+          {shouldScroll && (
+            <>
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 z-10 h-4"
+                style={{
+                  background:
+                    "linear-gradient(180deg, var(--cream) 0%, transparent 100%)",
+                }}
+              />
+              <div
+                className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-4"
+                style={{
+                  background:
+                    "linear-gradient(0deg, var(--cream) 0%, transparent 100%)",
+                }}
+              />
+            </>
+          )}
+          <ul
+            className={`flex flex-col ${shouldScroll ? "animate-marquee-y group-hover:[animation-play-state:paused]" : ""}`}
+            style={
+              shouldScroll
+                ? {
+                    animationDuration,
+                    // Translate exactly the height of the first (non-duplicated) list.
+                    ["--marquee-y" as string]: `-${attention.length * ROW_HEIGHT}px`,
+                  }
+                : undefined
+            }
+          >
+            {rendered.map(({ it, c }, idx) => {
               const color = BUCKET_TOKEN[c.bucket];
               const isOverdue = c.bucket === "overdue";
               return (
-                <button
-                  key={it.category}
-                  type="button"
-                  onClick={() => onChipClick?.(it.category)}
-                  className={`group inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-white py-1 pl-2 pr-2.5 text-xs shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_4px_10px_rgba(0,0,0,0.06)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--terracotta)]/40 ${
-                    isOverdue ? "animate-pulse-subtle" : ""
-                  }`}
-                  style={{
-                    border: `1px solid color-mix(in oklab, ${color} 45%, transparent)`,
-                  }}
-                  aria-label={`${it.category}: ${BUCKET_LABEL[c.bucket]}, ${daysLeftLabel(c.daysLeft)}`}
-                >
-                  <span
-                    className="h-1.5 w-1.5 rounded-full"
-                    style={{ background: color }}
-                  />
-                  <span className="font-medium text-[var(--charcoal)]">
-                    {it.category}
-                  </span>
-                  <span className="text-[var(--charcoal)]/55">·</span>
-                  <span
-                    className="rounded-full px-1.5 py-px text-[10px] font-medium"
+                <li key={`${it.category}-${idx}`} style={{ height: ROW_HEIGHT }}>
+                  <button
+                    type="button"
+                    onClick={() => onChipClick?.(it.category)}
+                    className={`flex h-full w-full items-center gap-2.5 rounded-md bg-white/70 px-2.5 text-left text-xs shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition hover:bg-white hover:shadow-[0_4px_10px_rgba(0,0,0,0.06)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--terracotta)]/40 ${
+                      isOverdue ? "animate-pulse-subtle" : ""
+                    }`}
                     style={{
-                      background: `color-mix(in oklab, ${color} 14%, white)`,
-                      color: `color-mix(in oklab, ${color} 85%, var(--charcoal))`,
+                      border: `1px solid color-mix(in oklab, ${color} 35%, transparent)`,
                     }}
+                    aria-label={`${it.category}: ${BUCKET_LABEL[c.bucket]}, ${daysLeftLabel(c.daysLeft)}`}
                   >
-                    {daysLeftLabel(c.daysLeft)}
-                  </span>
-                </button>
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ background: color }}
+                    />
+                    <span className="min-w-0 flex-1 truncate font-medium text-[var(--charcoal)]">
+                      {it.category}
+                    </span>
+                    <span
+                      className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider"
+                      style={{
+                        background: `color-mix(in oklab, ${color} 14%, white)`,
+                        color: `color-mix(in oklab, ${color} 85%, var(--charcoal))`,
+                      }}
+                    >
+                      {BUCKET_LABEL[c.bucket]}
+                    </span>
+                    <span className="shrink-0 text-[10px] text-[var(--charcoal)]/60">
+                      {daysLeftLabel(c.daysLeft)}
+                    </span>
+                  </button>
+                </li>
               );
             })}
-            {overflow > 0 && (
-              <span className="shrink-0 px-1 text-[11px] text-[var(--charcoal)]/60">
-                +{overflow} more
-              </span>
-            )}
-          </div>
+          </ul>
         </div>
-
       </div>
     </div>
   );
