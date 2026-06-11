@@ -1265,28 +1265,33 @@ function HorizontalTimeline({
 
   const AXIS_Y = 180;
 
-  // Alternate above/below; bump down if collision within 90px on same side.
-  type Placement = { item: TimelineItem; x: number; above: boolean; offset: number };
+  // Lane packing: alternate above/below, then pack into lanes so cards never overlap.
+  const CARD_H = 118;
+  const LANE_GAP = 14;
+  const X_GAP = 12;
+  type Placement = { item: TimelineItem; x: number; above: boolean; lane: number };
+  const aboveLanes: number[] = []; // stores right-edge x of last card per lane
+  const belowLanes: number[] = [];
   const placements: Placement[] = [];
-  let aboveCursor = 0;
-  let belowCursor = 0;
   onAxis.forEach((item, idx) => {
     const x = xFor(item.due_date!);
     const above = idx % 2 === 0;
-    const cursorList = above ? placements.filter((p) => p.above) : placements.filter((p) => !p.above);
-    let offset = 0;
-    for (const p of cursorList) {
-      if (Math.abs(p.x - x) < CARD_W * 0.55 && p.offset === offset) {
-        offset += 132;
-      }
+    const lanes = above ? aboveLanes : belowLanes;
+    const leftEdge = x - CARD_W / 2;
+    const rightEdge = x + CARD_W / 2;
+    let lane = lanes.findIndex((rightX) => rightX + X_GAP <= leftEdge);
+    if (lane === -1) {
+      lane = lanes.length;
+      lanes.push(rightEdge);
+    } else {
+      lanes[lane] = rightEdge;
     }
-    placements.push({ item, x, above, offset });
-    if (above) aboveCursor = Math.max(aboveCursor, offset);
-    else belowCursor = Math.max(belowCursor, offset);
+    placements.push({ item, x, above, lane });
   });
 
-  const topPad = 24 + aboveCursor + 132;
-  const bottomPad = 24 + belowCursor + 132;
+  const AXIS_TO_CARD = 28; // space between axis line and nearest card edge (room for month labels)
+  const topPad = 24 + aboveLanes.length * (CARD_H + LANE_GAP) + AXIS_TO_CARD;
+  const bottomPad = AXIS_TO_CARD + belowLanes.length * (CARD_H + LANE_GAP) + 24;
   const containerHeight = topPad + bottomPad;
   const axisY = topPad;
 
