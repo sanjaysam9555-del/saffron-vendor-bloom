@@ -4,7 +4,16 @@ import { VirtualGrid } from "@/components/ui/VirtualGrid";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, LayoutGrid, Columns3, Filter as FilterIcon, Table as TableIcon, Clock } from "lucide-react";
+import {
+  Sparkles,
+  LayoutGrid,
+  Columns3,
+  Filter as FilterIcon,
+  Table as TableIcon,
+  Clock,
+  HelpCircle,
+  Mail,
+} from "lucide-react";
 import { ClientGate } from "@/components/ClientGate";
 import { useAuth } from "@/lib/auth";
 import { getMyProject } from "@/lib/projects.functions";
@@ -12,6 +21,10 @@ import { listProjectCategoryDeadlines } from "@/lib/project-deadlines.functions"
 import { ClientTopNav } from "@/components/client/ClientTopNav";
 import { ClientSidebar, type ClientFilterState } from "@/components/client/ClientSidebar";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
+import { ClientSummaryStats } from "@/components/client/ClientSummaryStats";
+import { SectionHelper } from "@/components/client/SectionHelper";
+import { useClientTour } from "@/hooks/useClientTour";
+import { CLIENT_STATUS_OPTIONS } from "@/lib/client-status";
 const ClientVendorDetail = lazy(() =>
   import("@/components/client/ClientVendorDetail").then((m) => ({ default: m.ClientVendorDetail })),
 );
@@ -93,6 +106,8 @@ function ClientPortalPage() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [detail, setDetail] = useState<ClientVendor | null>(null);
   const [view, setView] = useState<ViewMode>("timeline");
+  const [legendOpen, setLegendOpen] = useState(false);
+  const tour = useClientTour({ setView });
 
   // Restore + persist view preference.
   useEffect(() => {
