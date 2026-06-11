@@ -392,6 +392,27 @@ function ClientPortalPage() {
         </main>
       </div>
 
+      <footer className="mt-auto border-t border-[var(--border)] bg-[var(--cream-deep)]">
+        <div className="mx-auto flex max-w-[1600px] flex-col items-start gap-2 px-3 py-3 text-xs text-[var(--charcoal)]/70 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <span>
+            Need help understanding your folio?{" "}
+            <button
+              onClick={tour.start}
+              className="font-medium text-[var(--terracotta)] underline-offset-2 hover:underline"
+            >
+              Take the guided tour
+            </button>{" "}
+            or contact your Saffron planner.
+          </span>
+          <a
+            href="mailto:hello@saffronevents.in"
+            className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2.5 py-1 text-[var(--charcoal)]/80 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+          >
+            <Mail className="h-3 w-3" /> hello@saffronevents.in
+          </a>
+        </div>
+      </footer>
+
       {detail && (
         <Suspense fallback={null}>
           <ClientVendorDetail vendor={detail} onClose={() => setDetail(null)} />
@@ -400,6 +421,74 @@ function ClientPortalPage() {
 
     </div>
   );
+}
+
+function StatusLegend({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  return (
+    <div className="relative" data-tour="status-legend">
+      <button
+        type="button"
+        onClick={() => onOpenChange(!open)}
+        aria-label="What do the statuses mean?"
+        title="Status legend"
+        className="inline-flex h-full shrink-0 items-center justify-center gap-1 rounded-md border border-[var(--border)] bg-white px-2 py-1 text-[10px] text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:px-2.5 sm:py-1.5 sm:text-xs"
+      >
+        <HelpCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+        <span className="hidden sm:inline">Statuses</span>
+      </button>
+      {open && (
+        <>
+          <button
+            aria-hidden
+            tabIndex={-1}
+            onClick={() => onOpenChange(false)}
+            className="fixed inset-0 z-30 cursor-default"
+          />
+          <div
+            role="dialog"
+            className="absolute right-0 top-[calc(100%+6px)] z-40 w-64 rounded-lg border border-[var(--border)] bg-white p-3 text-xs shadow-lg animate-fade-in"
+          >
+            <div className="mb-2 font-display text-sm font-semibold text-[var(--charcoal)]">
+              What each status means
+            </div>
+            <ul className="space-y-1.5">
+              {CLIENT_STATUS_OPTIONS.map((opt) => (
+                <li key={opt.value} className="flex items-start gap-2">
+                  <span
+                    className="mt-1 inline-block h-2 w-2 shrink-0 rounded-full"
+                    style={{ background: opt.dot }}
+                  />
+                  <span>
+                    <span className="font-medium text-[var(--charcoal)]">{opt.label}</span>
+                    <span className="block text-[var(--charcoal)]/60">
+                      {describeStatus(opt.value)}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function describeStatus(v: string): string {
+  switch (v) {
+    case "like":
+      return "You're keen — planner keeps it in active rotation.";
+    case "shortlisted":
+      return "On your shortlist — planner prioritises quotes & follow-ups.";
+    case "finalised":
+      return "Booked or about to be booked. Counts toward your budget.";
+    case "rejected":
+      return "Not for you — moved to the bottom of every view.";
+    case "thinking":
+      return "Undecided — planner waits for your call.";
+    default:
+      return "";
+  }
 }
 
 function EmptyState({ message }: { message: string }) {
