@@ -89,7 +89,7 @@ function ClientPortalPage() {
 
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<ClientFilterState>({ category: null, locations: [] });
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [detail, setDetail] = useState<ClientVendor | null>(null);
   const [view, setView] = useState<ViewMode>("timeline");
@@ -234,11 +234,11 @@ function ClientPortalPage() {
                   </>
                 )}
               </h1>
-              <p className="mt-1 text-sm text-[var(--charcoal)]/65 sm:truncate">
-                {filters.category
-                  ? `${filtered.length} of ${vendors.length} vendor${vendors.length === 1 ? "" : "s"}`
-                  : "Here are the vendors we think will be perfect for your wedding."}
-              </p>
+              {filters.category && (
+                <p className="mt-1 text-sm text-[var(--charcoal)]/65 sm:truncate">
+                  {`${filtered.length} of ${vendors.length} vendor${vendors.length === 1 ? "" : "s"}`}
+                </p>
+              )}
             </div>
             <div className="flex w-full shrink-0 items-stretch gap-1.5 sm:w-auto sm:gap-2">
               <button
