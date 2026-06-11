@@ -273,7 +273,7 @@ function ClientPortalPage() {
                 }`}
               >
                 <FilterIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                <span>Filter</span>
+                <span className="hidden sm:inline">Filter</span>
                 {(filters.category || filters.locations.length > 0) && (
                   <span className="ml-0.5 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
                 )}
