@@ -51,8 +51,16 @@ export function useClientTour({ setView }: Options) {
         element: '[data-tour="view-toggle"]',
         popover: popover(
           "Switch how you view vendors",
-          "Same data, five lenses: Overview, Table, Board, Vendor View and Summary. Pick whichever helps you decide faster.",
+          "Same data, six lenses: Summary, Timeline, Table, Category, Vendors and Board. Pick whichever helps you decide faster.",
         ),
+      },
+      {
+        element: '[data-tour="view-toggle-summary"]',
+        popover: popover(
+          "Summary",
+          "A clean snapshot of your wedding — countdown, your picks, booked categories and spend, all in one place.",
+        ),
+        onHighlightStarted: () => ensureView("summary"),
       },
       {
         element: '[data-tour="view-toggle-timeline"]',
