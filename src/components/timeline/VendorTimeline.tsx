@@ -1367,17 +1367,18 @@ function HorizontalTimeline({
           </div>
 
           {/* cards */}
-          {placements.map(({ item, x, above, offset }) => {
+          {placements.map(({ item, x, above, lane }) => {
             const variant: RibbonVariant = item.booked
               ? "booked"
               : classifyUrgency(item, now).bucket === "overdue"
                 ? "overdue"
                 : "upcoming";
+            const laneOffset = lane * (CARD_H + LANE_GAP);
             const cardTop = above
-              ? axisY - 20 - offset - 110
-              : axisY + 20 + offset;
-            const connectorTop = above ? cardTop + 110 : axisY;
-            const connectorHeight = above ? axisY - (cardTop + 110) : cardTop - axisY;
+              ? axisY - AXIS_TO_CARD - laneOffset - CARD_H
+              : axisY + AXIS_TO_CARD + laneOffset;
+            const connectorTop = above ? cardTop + CARD_H : axisY;
+            const connectorHeight = above ? axisY - (cardTop + CARD_H) : cardTop - axisY;
             return (
               <div key={item.category}>
                 {/* connector */}
