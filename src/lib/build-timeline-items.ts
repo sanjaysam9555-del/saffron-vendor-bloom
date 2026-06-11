@@ -73,13 +73,14 @@ export function buildTimelineItems(
   if (mode === "client") {
     for (const dl of deadlines) {
       const info = byCat.get(dl.category) ?? EMPTY_INFO;
+      const manualClosed = dl.actual_amount_override != null;
       out.push({
         category: dl.category,
         vendor_count: info.count,
         due_date: dl.due_date ?? null,
         criticality: dl.criticality ?? "medium",
         notes: dl.notes ?? null,
-        booked: info.booked,
+        booked: info.booked || manualClosed,
         booked_vendor_name: info.bookedVendorName,
         planned_amount: dl.planned_amount ?? null,
         closed_amount_auto: info.closedAmount,
@@ -91,13 +92,14 @@ export function buildTimelineItems(
 
   for (const [category, info] of byCat) {
     const dl = dlMap.get(category);
+    const manualClosed = dl?.actual_amount_override != null;
     out.push({
       category,
       vendor_count: info.count,
       due_date: dl?.due_date ?? null,
       criticality: dl?.criticality ?? "medium",
       notes: dl?.notes ?? null,
-      booked: info.booked,
+      booked: info.booked || manualClosed,
       booked_vendor_name: info.bookedVendorName,
       planned_amount: dl?.planned_amount ?? null,
       closed_amount_auto: info.closedAmount,
@@ -107,13 +109,14 @@ export function buildTimelineItems(
   // Include planner-added categories that don't yet have any vendor assigned.
   for (const dl of deadlines) {
     if (byCat.has(dl.category)) continue;
+    const manualClosed = dl.actual_amount_override != null;
     out.push({
       category: dl.category,
       vendor_count: 0,
       due_date: dl.due_date ?? null,
       criticality: dl.criticality ?? "medium",
       notes: dl.notes ?? null,
-      booked: false,
+      booked: manualClosed,
       booked_vendor_name: null,
       planned_amount: dl.planned_amount ?? null,
       closed_amount_auto: null,
