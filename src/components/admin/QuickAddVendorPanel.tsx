@@ -180,9 +180,7 @@ function QuickAddVendorRow({ vendor: v, alreadyAssigned, isPending, onAdd }: Row
         )}
       </div>
 
-      {hasHandle && (
-        <VendorInstagramCardStrip preview={preview} hasHandle />
-      )}
+      {hasHandle && <CompactInstagramStrip preview={preview} />}
     </li>
   );
 }
