@@ -235,7 +235,7 @@ function ProjectSectionTabs({
         role="tablist"
         className="inline-flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-sm sm:w-auto"
       >
-        {tabBtn("vendors", "Assigned vendors", LayoutGrid)}
+        {tabBtn("vendors", "Assigned Vendors", LayoutGrid)}
         {tabBtn("timeline", "Budget & Deadlines", Calendar)}
         {tabBtn("details", "Project Details", FileText)}
       </div>
@@ -779,7 +779,7 @@ function AssignedVendorsSection({
       <QuickAddVendorPanel projectId={projectId} assignedVendorIds={assignedVendorIds} />
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div>
-          <h2 className="font-display text-2xl text-[var(--terracotta)] sm:text-xl">Assigned vendors ({vendors.length})</h2>
+          <h2 className="font-display text-2xl text-[var(--terracotta)] sm:text-xl">Assigned Vendors ({vendors.length})</h2>
           <p className="text-xs text-[var(--charcoal)]/55 my-[10px]">
             What the client has marked appears next to each vendor.
           </p>
