@@ -41,17 +41,17 @@ export function useClientTour({ setView }: Options) {
         ),
       },
       {
-        element: '[data-tour="summary-stats"]',
-        popover: popover(
-          "At-a-glance progress",
-          "Vendor counts, your shortlist, booked categories and spend — updated in real-time. Click any tile to jump to that view.",
-        ),
-      },
-      {
         element: '[data-tour="urgency-strip"]',
         popover: popover(
           "Needs your attention",
           "Time-sensitive categories surface here. Tap any chip to jump straight to that category in the Overview.",
+        ),
+      },
+      {
+        element: '[data-tour="view-toggle"]',
+        popover: popover(
+          "Switch how you view vendors",
+          "Same data, five lenses: Overview, Table, Board, Vendor View and Summary. Pick whichever helps you decide faster.",
         ),
       },
       {
