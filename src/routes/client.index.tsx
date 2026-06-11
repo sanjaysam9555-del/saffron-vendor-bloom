@@ -117,6 +117,13 @@ function ClientPortalPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(VIEW_STORAGE_KEY, view);
+    // Keep the active tab visible inside the horizontally scrollable toggle on mobile.
+    requestAnimationFrame(() => {
+      const el = document.querySelector(
+        '[data-tour="view-toggle"] [aria-selected="true"]',
+      ) as HTMLElement | null;
+      el?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    });
   }, [view]);
 
   // Booking-timeline data
