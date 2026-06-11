@@ -123,7 +123,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
       {items.length === 0 ? (
         <div className="rounded-md border border-dashed border-[var(--champagne)] bg-[var(--cream)] py-10 text-center text-sm text-[var(--charcoal)]/60">
           {mode === "admin"
-            ? "No categories yet. Assign vendors or use “Add category to plan” to start tracking deadlines."
+            ? "No categories yet. Assign vendors or use “Add Category To Plan” to start tracking deadlines."
             : "Your planner hasn't added any vendor categories yet."}
         </div>
 
