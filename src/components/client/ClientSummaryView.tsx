@@ -55,7 +55,7 @@ export function ClientSummaryView({ vendors, items, brideName, groomName, weddin
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(110% 75% at 100% 0%, color-mix(in oklab, var(--gold) 22%, transparent) 0%, transparent 55%), radial-gradient(90% 70% at 0% 100%, color-mix(in oklab, var(--terracotta) 18%, transparent) 0%, transparent 60%), linear-gradient(135deg, color-mix(in oklab, var(--champagne) 14%, transparent) 0%, transparent 60%)",
+              "radial-gradient(110% 75% at 100% 0%, color-mix(in oklab, var(--gold) 45%, transparent) 0%, transparent 55%), radial-gradient(90% 70% at 0% 100%, color-mix(in oklab, var(--terracotta) 40%, transparent) 0%, transparent 60%), linear-gradient(135deg, color-mix(in oklab, var(--champagne) 32%, transparent) 0%, transparent 60%)",
           }}
           aria-hidden
         />
