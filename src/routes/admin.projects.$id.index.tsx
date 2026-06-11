@@ -1085,118 +1085,12 @@ function VendorMetaRow({ vendor: v }: { vendor: any }) {
 
 interface ProjectHeaderProps {
   project: { id: string; bride_name: string; groom_name: string; wedding_date: string; notes: string | null; archived_at?: string | null };
-  canDelete: boolean;
-  onDelete: () => void;
-  onToggleArchived: (archived: boolean) => void;
-  onSaved: () => void;
 }
 
-function ProjectHeader({ project, canDelete, onDelete, onToggleArchived, onSaved }: ProjectHeaderProps) {
+function ProjectHeader({ project }: ProjectHeaderProps) {
   const isArchived = !!project.archived_at;
-  const [editing, setEditing] = useState(false);
-  const [bride, setBride] = useState(project.bride_name);
-  const [groom, setGroom] = useState(project.groom_name);
-  const [date, setDate] = useState(project.wedding_date?.slice(0, 10) ?? "");
-  const [notes, setNotes] = useState(project.notes ?? "");
-  const [busy, setBusy] = useState(false);
-
-  const startEdit = () => {
-    setBride(project.bride_name);
-    setGroom(project.groom_name);
-    setDate(project.wedding_date?.slice(0, 10) ?? "");
-    setNotes(project.notes ?? "");
-    setEditing(true);
-  };
-
-  const save = async () => {
-    if (!bride.trim() || !groom.trim() || !date) {
-      notifyError(null, "Bride name, groom name and wedding date are required");
-      return;
-    }
-    setBusy(true);
-    try {
-      await updateProject({
-        data: {
-          id: project.id,
-          bride_name: bride.trim(),
-          groom_name: groom.trim(),
-          wedding_date: date,
-          notes: notes.trim() || null,
-        },
-      });
-      notifySuccess("Project updated");
-      setEditing(false);
-      onSaved();
-    } catch (e) {
-      notifyError(e, "Could not update project");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  if (editing) {
-    return (
-      <div className="mt-4 rounded-lg border border-[var(--border)] bg-white p-4">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <label className="text-xs text-[var(--charcoal)]/70">
-            Bride name
-            <input
-              className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
-              value={bride}
-              onChange={(e) => setBride(e.target.value)}
-            />
-          </label>
-          <label className="text-xs text-[var(--charcoal)]/70">
-            Groom name
-            <input
-              className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
-              value={groom}
-              onChange={(e) => setGroom(e.target.value)}
-            />
-          </label>
-          <label className="text-xs text-[var(--charcoal)]/70">
-            Wedding date
-            <input
-              type="date"
-              className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </label>
-          <label className="sm:col-span-3 text-xs text-[var(--charcoal)]/70">
-            Notes
-            <textarea
-              className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm"
-              rows={3}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </label>
-        </div>
-        <div className="mt-3 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => setEditing(false)}
-            disabled={busy}
-            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--cream)]"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={save}
-            disabled={busy}
-            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 disabled:opacity-50"
-          >
-            <Check className="h-4 w-4" /> {busy ? "Saving…" : "Save"}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="relative mt-4 flex flex-col gap-3 pr-20 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:pr-0">
+    <div className="mt-4 flex flex-col gap-3">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="font-display text-2xl text-[var(--charcoal)] sm:text-3xl">
@@ -1214,35 +1108,7 @@ function ProjectHeader({ project, canDelete, onDelete, onToggleArchived, onSaved
         </div>
         {project.notes && <p className="mt-2 text-sm text-[var(--charcoal)]/70 whitespace-pre-wrap">{project.notes}</p>}
       </div>
-      <div className="absolute right-0 top-0 flex items-center gap-1.5 sm:static">
-        <button
-          onClick={startEdit}
-          aria-label="Edit project"
-          title="Edit project"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--border)] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:h-auto sm:w-auto sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-sm"
-        >
-          <Pencil className="h-4 w-4" /> <span className="hidden sm:inline">Edit</span>
-        </button>
-        <button
-          onClick={() => onToggleArchived(!isArchived)}
-          aria-label={isArchived ? "Restore project" : "Archive project"}
-          title={isArchived ? "Restore project" : "Archive project"}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--border)] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:h-auto sm:w-auto sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-sm"
-        >
-          {isArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
-          <span className="hidden sm:inline">{isArchived ? "Restore" : "Archive"}</span>
-        </button>
-        {canDelete && (
-          <button
-            onClick={onDelete}
-            aria-label="Delete project"
-            title="Delete project"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--terracotta)]/30 text-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] sm:h-auto sm:w-auto sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-sm"
-          >
-            <Trash2 className="h-4 w-4" /> <span className="hidden sm:inline">Delete</span>
-          </button>
-        )}
-      </div>
     </div>
   );
 }
+
