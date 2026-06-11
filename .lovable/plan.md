@@ -1,16 +1,35 @@
-## Problem
+## Goal
 
-In the desktop horizontal timeline, the first card ("Hotels & Venues" in the screenshot) is clipped on the left edge of the scroll container. The card is positioned at `left = x - CARD_W/2` where `x = days_from_start * 6 + 24`. Because the start of the axis only has 24px of left padding while a card is 180px wide (90px half-width), any item dated in the first ~11 days of the timeline range renders with a negative `left` and gets cut off.
+On the admin project page (`/admin/projects/:id`), add a search panel above the "Assigned vendors" section so an admin can quickly find a vendor in the library, preview it as a compact card, and add it to this project with one click.
 
-## Fix
+## UX
 
-In `HorizontalTimeline` inside `src/components/timeline/VendorTimeline.tsx`:
+Placement: at the top of the `AssignedVendorsSection` (above the heading/StatusCountsRow), inside a collapsible panel headed "Quick add vendor". Collapsed by default; opens with a "+ Add vendor" button so it doesn't crowd the page.
 
-1. Increase the axis left padding so the earliest card never starts before the visible area. Change the `+ 24` offset inside `xFor` to `CARD_W / 2 + 16` (= 106 px). Apply the same padding on the right side by adding `CARD_W / 2 + 16` to `width` instead of the current `+ 80`.
-2. Keep all existing positioning math (month ticks, today line, wedding marker, connectors) — they all derive from `xFor`, so bumping the offset shifts them consistently and nothing else needs to move.
+When opened:
+- A search input ("Search by vendor name, category, subcategory, location…"), autoFocus.
+- Below the input, live results render as compact preview cards (max ~8 visible, scrollable). Empty query shows a hint ("Type to search the vendor library"). No matches shows an empty state.
+- Each preview card shows: vendor name, category · subcategory, location, price_text, Google/Saffron rating chips — same visual language as the existing assigned-vendor list cards, but smaller.
+- Right side of each card has an action button:
+  - If the vendor is already assigned to this project → disabled "Added" pill (muted, with check).
+  - Otherwise → "Add to this project" button (terracotta, primary).
+- Clicking "Add to this project" calls `assignVendorToProject({ project_id: id, vendor_id: v.id })`, shows a success toast, optimistically marks the card as "Added", and invalidates `["project", id]` and `["vendor-project-assignments"]` so the Assigned vendors list updates immediately. The panel stays open so the admin can add several vendors in a row.
 
-No new tokens, no responsive logic changes, no behavior change beyond eliminating the left-edge clipping.
+## Data
+
+- Reuse existing `useVendors()` hook (already cached, staff-gated) to get the full vendor list.
+- Filter client-side on the search term across `vendor_name`, `category`, `subcategory`, `location` (case-insensitive). Debounce isn't needed — it's a local filter.
+- Compute the already-assigned set from `vendors` prop already in `AssignedVendorsSection` (it's the project's assigned vendors).
+- Mutation: `useMutation` wrapping `assignVendorToProject` with the same invalidations used by the existing remove flow.
+
+## Files
+
+- New component: `src/components/admin/QuickAddVendorPanel.tsx` — owns the collapsible panel, search input, results list, preview card, and the add mutation. Props: `{ projectId: string; assignedVendorIds: Set<string> }`.
+- Edit: `src/routes/admin.projects.$id.index.tsx` — render `<QuickAddVendorPanel projectId={projectId} assignedVendorIds={new Set(vendors.map(v => v.id))} />` inside `AssignedVendorsSection`, right above the header row (line ~645).
 
 ## Out of scope
 
-Mobile/vertical timeline, table view, and card collision rules.
+- Creating brand-new vendors from this panel (use the existing Vendor library flow).
+- Editing vendor fields inline.
+- Bulk add / multi-select.
+- Mobile-specific redesign beyond the standard responsive stacking already used in this page.

@@ -32,6 +32,7 @@ import { instagramUrl, normalizeInstagramHandle } from "@/lib/instagram";
 import { VendorTimeline } from "@/components/timeline/VendorTimeline";
 import { listProjectCategoryDeadlines } from "@/lib/project-deadlines.functions";
 import { buildTimelineItems } from "@/lib/build-timeline-items";
+import { QuickAddVendorPanel } from "@/components/admin/QuickAddVendorPanel";
 
 export const Route = createFileRoute("/admin/projects/$id/")({
   head: () => ({
@@ -642,8 +643,11 @@ function AssignedVendorsSection({
     return buckets;
   }, [vendors, selections]);
 
+  const assignedVendorIds = useMemo(() => new Set(vendors.map((v: any) => v.id)), [vendors]);
+
   return (
     <section className="mt-10">
+      <QuickAddVendorPanel projectId={projectId} assignedVendorIds={assignedVendorIds} />
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div>
           <h2 className="font-display text-2xl text-[var(--terracotta)] sm:text-xl">Assigned vendors ({vendors.length})</h2>
