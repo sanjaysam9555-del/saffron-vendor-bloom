@@ -16,7 +16,7 @@ interface Props {
 
 export function QuickAddVendorPanel({ projectId, assignedVendorIds }: Props) {
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
+  
   const [q, setQ] = useState("");
   const [justAdded, setJustAdded] = useState<Set<string>>(new Set());
   const [pendingId, setPendingId] = useState<string | null>(null);
