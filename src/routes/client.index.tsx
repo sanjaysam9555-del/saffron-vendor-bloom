@@ -466,10 +466,10 @@ function ClientPortalPage() {
             or contact your Saffron planner.
           </span>
           <a
-            href="mailto:hello@saffronevents.in"
+            href="mailto:info@saffronevents.in"
             className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2.5 py-1 text-[var(--charcoal)]/80 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
           >
-            <Mail className="h-3 w-3" /> hello@saffronevents.in
+            <Mail className="h-3 w-3" /> info@saffronevents.in
           </a>
         </div>
       </footer>
