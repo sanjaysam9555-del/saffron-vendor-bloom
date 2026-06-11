@@ -39,7 +39,7 @@ import { VendorTimeline } from "@/components/timeline/VendorTimeline";
 import { buildTimelineItems } from "@/lib/build-timeline-items";
 
 
-type ViewMode = "grid" | "board" | "table" | "timeline" | "summary";
+type ViewMode = "summary" | "timeline" | "table" | "category" | "grid" | "board";
 const VIEW_STORAGE_KEY = "saffron.client.viewMode";
 
 export const Route = createFileRoute("/client/")({
