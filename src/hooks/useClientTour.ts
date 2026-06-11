@@ -55,13 +55,6 @@ export function useClientTour({ setView }: Options) {
         ),
       },
       {
-        element: '[data-tour="view-toggle"]',
-        popover: popover(
-          "Switch how you view vendors",
-          "Same data, four lenses: Overview, Table, Board and Vendor View. Pick whichever helps you decide faster.",
-        ),
-      },
-      {
         element: '[data-tour="view-toggle-timeline"]',
         popover: popover(
           "Overview",
@@ -92,6 +85,14 @@ export function useClientTour({ setView }: Options) {
           "Browse rich vendor cards with photos, Instagram previews and quick actions.",
         ),
         onHighlightStarted: () => ensureView("grid"),
+      },
+      {
+        element: '[data-tour="view-toggle-summary"]',
+        popover: popover(
+          "Summary",
+          "A clean snapshot of your wedding — countdown, your picks, booked categories and spend, all in one place.",
+        ),
+        onHighlightStarted: () => ensureView("summary"),
       },
       {
         element: '[data-tour="overview-sub-timeline"]',
