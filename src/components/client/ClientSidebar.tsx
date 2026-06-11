@@ -1,4 +1,4 @@
-import { Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Filter, X, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import type { ClientVendor } from "@/lib/project-types";
 
 
@@ -15,6 +15,8 @@ interface Props {
   onToggle: () => void;
   mobileOpen?: boolean;
   onMobileClose?: () => void;
+  search: string;
+  onSearchChange: (v: string) => void;
 }
 
 export function ClientSidebar({
