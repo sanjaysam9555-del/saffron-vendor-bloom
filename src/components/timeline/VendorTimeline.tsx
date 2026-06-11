@@ -77,7 +77,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
               onClick={() => setAddOpen(true)}
               className="inline-flex items-center gap-1.5 rounded-md border border-[var(--terracotta)] bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
             >
-              <Plus className="h-3.5 w-3.5" /> Add category to plan
+              <Plus className="h-3.5 w-3.5" /> Add Category To Plan
             </button>
           )}
           <div
@@ -123,7 +123,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
       {items.length === 0 ? (
         <div className="rounded-md border border-dashed border-[var(--champagne)] bg-[var(--cream)] py-10 text-center text-sm text-[var(--charcoal)]/60">
           {mode === "admin"
-            ? "No categories yet. Assign vendors or use “Add category to plan” to start tracking deadlines."
+            ? "No categories yet. Assign vendors or use “Add Category To Plan” to start tracking deadlines."
             : "Your planner hasn't added any vendor categories yet."}
         </div>
 
@@ -233,7 +233,7 @@ function AddCategoryDialog({
         className="w-full max-w-md rounded-xl bg-[var(--cream)] p-5 text-[var(--charcoal)] shadow-2xl"
       >
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-display text-lg">Add category to plan</h3>
+          <h3 className="font-display text-lg">Add Category To Plan</h3>
           <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]">
             <X className="h-4 w-4" />
           </button>
