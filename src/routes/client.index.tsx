@@ -12,6 +12,7 @@ import {
   Table as TableIcon,
   Clock,
   Mail,
+  Gauge,
 } from "lucide-react";
 import { ClientGate } from "@/components/ClientGate";
 import { useAuth } from "@/lib/auth";
@@ -20,7 +21,7 @@ import { listProjectCategoryDeadlines } from "@/lib/project-deadlines.functions"
 import { ClientTopNav } from "@/components/client/ClientTopNav";
 import { ClientSidebar, type ClientFilterState } from "@/components/client/ClientSidebar";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
-import { ClientSummaryStats } from "@/components/client/ClientSummaryStats";
+import { ClientSummaryView } from "@/components/client/ClientSummaryView";
 import { SectionHelper } from "@/components/client/SectionHelper";
 import { useClientTour } from "@/hooks/useClientTour";
 const ClientVendorDetail = lazy(() =>
@@ -38,7 +39,7 @@ import { UrgencyStrip } from "@/components/timeline/UrgencyStrip";
 import { buildTimelineItems } from "@/lib/build-timeline-items";
 
 
-type ViewMode = "grid" | "board" | "table" | "timeline";
+type ViewMode = "grid" | "board" | "table" | "timeline" | "summary";
 const VIEW_STORAGE_KEY = "saffron.client.viewMode";
 
 export const Route = createFileRoute("/client/")({
@@ -111,7 +112,7 @@ function ClientPortalPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
-    if (stored === "grid" || stored === "board" || stored === "table" || stored === "timeline") setView(stored);
+    if (stored === "grid" || stored === "board" || stored === "table" || stored === "timeline" || stored === "summary") setView(stored);
   }, []);
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -222,14 +223,6 @@ function ClientPortalPage() {
         />
       </div>
 
-      <ClientSummaryStats
-        vendors={vendors}
-        items={timelineItems}
-        brideName={project.bride_name}
-        groomName={project.groom_name}
-        weddingDate={project.wedding_date}
-        onJump={setView}
-      />
 
       <div className="mx-auto flex w-full max-w-[1600px] flex-1">
         <ClientSidebar
@@ -341,6 +334,20 @@ function ClientPortalPage() {
                 >
                   <LayoutGrid className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Vendor View</span>
                 </button>
+                <button
+                  data-tour="view-toggle-summary"
+                  role="tab"
+                  aria-label="Summary"
+                  aria-selected={view === "summary"}
+                  onClick={() => setView("summary")}
+                  className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-1.5 py-1 transition-colors sm:flex-none sm:gap-1.5 sm:px-2 sm:py-1.5 ${
+                    view === "summary"
+                      ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                      : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                  }`}
+                >
+                  <Gauge className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Summary</span>
+                </button>
 
               </div>
             </div>
@@ -366,8 +373,21 @@ function ClientPortalPage() {
               <strong className="font-medium text-[var(--charcoal)]">Vendor View</strong> — browse rich cards with photos. Click any card for details, quotes and comments.
             </SectionHelper>
           )}
+          {view === "summary" && (
+            <SectionHelper storageKey="summary">
+              <strong className="font-medium text-[var(--charcoal)]">Summary</strong> — a snapshot of your wedding: countdown, vendor progress, booked categories and spend.
+            </SectionHelper>
+          )}
 
-          {view === "timeline" ? (
+          {view === "summary" ? (
+            <ClientSummaryView
+              vendors={vendors}
+              items={timelineItems}
+              brideName={project.bride_name}
+              groomName={project.groom_name}
+              weddingDate={project.wedding_date}
+            />
+          ) : view === "timeline" ? (
             <VendorTimeline
               projectId={projectId!}
               weddingDate={project.wedding_date}

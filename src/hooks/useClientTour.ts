@@ -3,7 +3,7 @@ import { driver, type Driver, type DriveStep } from "driver.js";
 import "driver.js/dist/driver.css";
 import { markTourCompleted } from "@/components/client/ClientTourButton";
 
-type ClientView = "grid" | "board" | "table" | "timeline";
+type ClientView = "grid" | "board" | "table" | "timeline" | "summary";
 
 interface Options {
   setView: (v: ClientView) => void;
@@ -41,13 +41,6 @@ export function useClientTour({ setView }: Options) {
         ),
       },
       {
-        element: '[data-tour="summary-stats"]',
-        popover: popover(
-          "At-a-glance progress",
-          "Vendor counts, your shortlist, booked categories and spend — updated in real-time. Click any tile to jump to that view.",
-        ),
-      },
-      {
         element: '[data-tour="urgency-strip"]',
         popover: popover(
           "Needs your attention",
@@ -58,7 +51,7 @@ export function useClientTour({ setView }: Options) {
         element: '[data-tour="view-toggle"]',
         popover: popover(
           "Switch how you view vendors",
-          "Same data, four lenses: Overview, Table, Board and Vendor View. Pick whichever helps you decide faster.",
+          "Same data, five lenses: Overview, Table, Board, Vendor View and Summary. Pick whichever helps you decide faster.",
         ),
       },
       {
@@ -92,6 +85,14 @@ export function useClientTour({ setView }: Options) {
           "Browse rich vendor cards with photos, Instagram previews and quick actions.",
         ),
         onHighlightStarted: () => ensureView("grid"),
+      },
+      {
+        element: '[data-tour="view-toggle-summary"]',
+        popover: popover(
+          "Summary",
+          "A clean snapshot of your wedding — countdown, your picks, booked categories and spend, all in one place.",
+        ),
+        onHighlightStarted: () => ensureView("summary"),
       },
       {
         element: '[data-tour="overview-sub-timeline"]',
