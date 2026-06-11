@@ -131,14 +131,6 @@ export function UrgencyStrip({ items, onChipClick, onViewAll, maxChips = 6 }: Pr
           </div>
         </div>
 
-        {/* View all */}
-        <button
-          type="button"
-          onClick={() => (onViewAll ? onViewAll() : onChipClick?.(attention[0].it.category))}
-          className="hidden shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-[var(--terracotta)] hover:bg-white sm:inline-flex"
-        >
-          View all <ArrowRight className="h-3 w-3" />
-        </button>
       </div>
     </div>
   );
