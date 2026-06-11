@@ -188,6 +188,12 @@ function ProjectDetailPage() {
 
 function ProjectSectionTabs({
   projectId,
+  project,
+  clients,
+  canDelete,
+  onDelete,
+  onToggleArchived,
+  onSaved,
   vendors,
   selections,
   deadlines,
@@ -195,54 +201,55 @@ function ProjectSectionTabs({
   onRemoveVendor,
 }: {
   projectId: string;
+  project: any;
+  clients: any[];
+  canDelete: boolean;
+  onDelete: () => void;
+  onToggleArchived: (archived: boolean) => void;
+  onSaved: () => void;
   vendors: any[];
   selections: Record<string, Selection[]>;
   deadlines: any[];
   weddingDate: string;
   onRemoveVendor: (id: string, name: string) => void;
 }) {
-  const [tab, setTab] = useState<"vendors" | "timeline">("vendors");
+  const [tab, setTab] = useState<"vendors" | "timeline" | "details">("vendors");
+  const tabBtn = (key: "vendors" | "timeline" | "details", label: string, Icon: any) => (
+    <button
+      key={key}
+      role="tab"
+      aria-selected={tab === key}
+      onClick={() => setTab(key)}
+      className={`inline-flex flex-1 items-center justify-center gap-1.5 border-l border-[var(--border)] px-4 py-2 first:border-l-0 sm:flex-none ${
+        tab === key
+          ? "bg-[var(--terracotta)] text-[var(--cream)]"
+          : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
+      }`}
+    >
+      <Icon className="h-4 w-4" /> {label}
+    </button>
+  );
   return (
     <section className="mt-10">
       <div
         role="tablist"
         className="inline-flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-sm sm:w-auto"
       >
-        <button
-          role="tab"
-          aria-selected={tab === "vendors"}
-          onClick={() => setTab("vendors")}
-          className={`inline-flex flex-1 items-center justify-center gap-1.5 px-4 py-2 sm:flex-none ${
-            tab === "vendors"
-              ? "bg-[var(--terracotta)] text-[var(--cream)]"
-              : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
-          }`}
-        >
-          <LayoutGrid className="h-4 w-4" /> Assigned vendors
-        </button>
-        <button
-          role="tab"
-          aria-selected={tab === "timeline"}
-          onClick={() => setTab("timeline")}
-          className={`inline-flex flex-1 items-center justify-center gap-1.5 border-l border-[var(--border)] px-4 py-2 sm:flex-none ${
-            tab === "timeline"
-              ? "bg-[var(--terracotta)] text-[var(--cream)]"
-              : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
-          }`}
-        >
-          <Calendar className="h-4 w-4" /> Budget &amp; Deadlines
-        </button>
+        {tabBtn("vendors", "Assigned vendors", LayoutGrid)}
+        {tabBtn("timeline", "Budget & Deadlines", Calendar)}
+        {tabBtn("details", "Project details", FileText)}
       </div>
 
       <div className="mt-4">
-        {tab === "vendors" ? (
+        {tab === "vendors" && (
           <AssignedVendorsSection
             projectId={projectId}
             vendors={vendors}
             selections={selections}
             onRemove={onRemoveVendor}
           />
-        ) : (
+        )}
+        {tab === "timeline" && (
           <VendorTimeline
             projectId={projectId}
             weddingDate={weddingDate}
@@ -250,8 +257,244 @@ function ProjectSectionTabs({
             mode="admin"
           />
         )}
+        {tab === "details" && (
+          <ProjectDetailsTab
+            projectId={projectId}
+            project={project}
+            clients={clients}
+            canDelete={canDelete}
+            onDelete={onDelete}
+            onToggleArchived={onToggleArchived}
+            onSaved={onSaved}
+          />
+        )}
       </div>
     </section>
+  );
+}
+
+function ProjectDetailsTab({
+  projectId,
+  project,
+  clients,
+  canDelete,
+  onDelete,
+  onToggleArchived,
+  onSaved,
+}: {
+  projectId: string;
+  project: any;
+  clients: any[];
+  canDelete: boolean;
+  onDelete: () => void;
+  onToggleArchived: (archived: boolean) => void;
+  onSaved: () => void;
+}) {
+  const isArchived = !!project.archived_at;
+  const [bride, setBride] = useState(project.bride_name);
+  const [groom, setGroom] = useState(project.groom_name);
+  const [date, setDate] = useState(project.wedding_date?.slice(0, 10) ?? "");
+  const [notes, setNotes] = useState(project.notes ?? "");
+  const [busy, setBusy] = useState(false);
+
+  const dirty =
+    bride.trim() !== project.bride_name ||
+    groom.trim() !== project.groom_name ||
+    date !== (project.wedding_date?.slice(0, 10) ?? "") ||
+    (notes ?? "").trim() !== (project.notes ?? "");
+
+  const save = async () => {
+    if (!bride.trim() || !groom.trim() || !date) {
+      notifyError(null, "Bride name, groom name and wedding date are required");
+      return;
+    }
+    setBusy(true);
+    try {
+      await updateProject({
+        data: {
+          id: project.id,
+          bride_name: bride.trim(),
+          groom_name: groom.trim(),
+          wedding_date: date,
+          notes: notes.trim() || null,
+        },
+      });
+      notifySuccess("Project updated");
+      onSaved();
+    } catch (e) {
+      notifyError(e, "Could not update project");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const [showAddClient, setShowAddClient] = useState(false);
+  const [cEmail, setCEmail] = useState("");
+  const [cName, setCName] = useState("");
+  const [cPwd, setCPwd] = useState("");
+  const [cBusy, setCBusy] = useState(false);
+  const [cErr, setCErr] = useState<string | null>(null);
+
+  const addClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCErr(null);
+    setCBusy(true);
+    try {
+      await createProjectClient({
+        data: {
+          project_id: projectId,
+          email: cEmail.trim(),
+          password: cPwd,
+          display_name: cName.trim() || cEmail.split("@")[0],
+        },
+      });
+      notifySuccess("Client login created");
+      setCEmail("");
+      setCName("");
+      setCPwd("");
+      setShowAddClient(false);
+      onSaved();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed";
+      setCErr(msg);
+      notifyError(e, msg);
+    } finally {
+      setCBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-lg border border-[var(--border)] bg-white p-4">
+        <div className="mb-3 flex items-center gap-2">
+          <Pencil className="h-4 w-4 text-[var(--terracotta)]" />
+          <h2 className="font-display text-base sm:text-lg text-[var(--charcoal)]">Edit details</h2>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <label className="text-xs text-[var(--charcoal)]/70">
+            Bride name
+            <input className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm" value={bride} onChange={(e) => setBride(e.target.value)} />
+          </label>
+          <label className="text-xs text-[var(--charcoal)]/70">
+            Groom name
+            <input className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm" value={groom} onChange={(e) => setGroom(e.target.value)} />
+          </label>
+          <label className="text-xs text-[var(--charcoal)]/70">
+            Wedding date
+            <input type="date" className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm" value={date} onChange={(e) => setDate(e.target.value)} />
+          </label>
+          <label className="sm:col-span-3 text-xs text-[var(--charcoal)]/70">
+            Notes
+            <textarea className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </label>
+        </div>
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            onClick={save}
+            disabled={busy || !dirty}
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 disabled:opacity-50"
+          >
+            <Check className="h-4 w-4" /> {busy ? "Saving…" : "Save changes"}
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-[var(--border)] bg-white p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <KeyRound className="h-4 w-4 text-[var(--terracotta)]" />
+            <h2 className="font-display text-base sm:text-lg text-[var(--charcoal)]">Client credentials</h2>
+            <span className="rounded-full bg-[var(--cream)] px-2 py-0.5 text-[11px] text-[var(--charcoal)]/65">
+              {clients.length} {clients.length === 1 ? "login" : "logins"}
+            </span>
+          </div>
+          <button
+            onClick={() => setShowAddClient((s) => !s)}
+            className="inline-flex items-center justify-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
+          >
+            <UserPlus className="h-4 w-4" /> Add Client Login
+          </button>
+        </div>
+        <p className="text-xs text-[var(--charcoal)]/55">
+          Share these credentials with the client. They sign in at <code>/login</code>.
+        </p>
+
+        {showAddClient && (
+          <form onSubmit={addClient} className="mt-3 grid gap-2 rounded-lg border border-[var(--border)] bg-[var(--cream)]/40 p-4 sm:grid-cols-3">
+            <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" placeholder="Display name" value={cName} onChange={(e) => setCName(e.target.value)} />
+            <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" type="email" required placeholder="Email" value={cEmail} onChange={(e) => setCEmail(e.target.value)} />
+            <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" required minLength={6} type="password" placeholder="Password (min 6)" value={cPwd} onChange={(e) => setCPwd(e.target.value)} autoComplete="new-password" />
+            {cErr && <div className="sm:col-span-3 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{cErr}</div>}
+            <div className="sm:col-span-3 flex gap-2">
+              <button type="submit" disabled={cBusy} className="flex-1 rounded-md bg-[var(--charcoal)] px-3 py-2 text-sm text-white hover:opacity-90 disabled:opacity-50">
+                {cBusy ? "Creating…" : "Create"}
+              </button>
+              <button type="button" onClick={() => setShowAddClient(false)} className="rounded-md border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--cream)]">
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+
+        <div className="mt-3 rounded-lg border border-[var(--border)] bg-white overflow-hidden">
+          {clients.length === 0 ? (
+            <div className="p-6 text-sm text-[var(--charcoal)]/60">No client login yet.</div>
+          ) : (
+            <div className="overflow-x-auto touch-pan-x" style={{ WebkitOverflowScrolling: "touch" }}>
+              <table className="w-full min-w-[560px] text-sm">
+                <thead className="bg-[var(--cream)] text-left text-xs uppercase tracking-wider text-[var(--charcoal)]/60">
+                  <tr>
+                    <th className="px-4 py-2.5">Display Name</th>
+                    <th className="px-4 py-2.5">Email</th>
+                    <th className="px-4 py-2.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clients.map((c: any) => (
+                    <ClientRow key={c.id} c={c} projectId={projectId} onChanged={onSaved} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-[var(--border)] bg-white p-4">
+        <div className="mb-3 flex items-center gap-2">
+          <Archive className="h-4 w-4 text-[var(--charcoal)]/70" />
+          <h2 className="font-display text-base sm:text-lg text-[var(--charcoal)]">Project lifecycle</h2>
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm text-[var(--charcoal)]/70">
+            {isArchived
+              ? "This project is archived. Restore it to bring it back to the active list."
+              : "Archive when the wedding is over to keep it out of the active list. You can restore anytime."}
+          </div>
+          <button
+            onClick={() => onToggleArchived(!isArchived)}
+            className="inline-flex items-center justify-center gap-1.5 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--charcoal)]/80 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+          >
+            {isArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+            {isArchived ? "Restore project" : "Archive project"}
+          </button>
+        </div>
+        {canDelete && (
+          <div className="mt-4 flex flex-col gap-3 border-t border-[var(--border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm text-red-700">
+              Delete this project permanently. Client logins will also be removed. This cannot be undone.
+            </div>
+            <button
+              onClick={onDelete}
+              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" /> Delete project
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
