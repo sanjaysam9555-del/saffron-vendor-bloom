@@ -50,8 +50,16 @@ export function ClientSummaryView({ vendors, items, brideName, groomName, weddin
   return (
     <div className="animate-fade-in space-y-6">
       {/* Hero band */}
-      <section className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--terracotta-soft)] via-white to-[var(--cream-deep)] px-6 py-8 sm:px-10 sm:py-10">
-        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[var(--terracotta)]/10 blur-3xl" aria-hidden />
+      <section className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--cream-deep)] px-6 py-8 sm:px-10 sm:py-10">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-70"
+          style={{
+            background:
+              "radial-gradient(120% 80% at 0% 0%, color-mix(in oklab, var(--terracotta) 10%, transparent) 0%, transparent 55%), radial-gradient(90% 70% at 100% 100%, color-mix(in oklab, var(--champagne) 35%, transparent) 0%, transparent 60%)",
+          }}
+          aria-hidden
+        />
+        <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[var(--terracotta)]/30 to-transparent" aria-hidden />
         <div className="relative flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <span className="inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--terracotta)]">
@@ -62,7 +70,7 @@ export function ClientSummaryView({ vendors, items, brideName, groomName, weddin
             </h2>
             <p className="mt-1 text-sm text-[var(--charcoal)]/65">{dateFmt}</p>
           </div>
-          <div className="shrink-0 rounded-xl border border-[var(--border)] bg-white/80 px-5 py-3 text-center backdrop-blur">
+          <div className="shrink-0 rounded-xl border border-[var(--border)] bg-white/90 px-5 py-3 text-center shadow-[0_1px_0_rgba(0,0,0,0.02)] backdrop-blur">
             <span className="block text-[9px] font-medium uppercase tracking-[0.18em] text-[var(--charcoal)]/55">
               <CalendarHeart className="mr-1 inline h-3 w-3 text-[var(--terracotta)]" />
               Countdown
