@@ -121,3 +121,68 @@ export function QuickAddVendorPanel({ projectId, assignedVendorIds }: Props) {
     </div>
   );
 }
+
+interface RowProps {
+  vendor: Vendor;
+  alreadyAssigned: boolean;
+  isPending: boolean;
+  onAdd: () => void;
+}
+
+function QuickAddVendorRow({ vendor: v, alreadyAssigned, isPending, onAdd }: RowProps) {
+  const hasHandle = !!(v.instagram_handle && v.instagram_handle.trim());
+  const { data: preview } = useEnsureInstagramPreview(v.id, v.instagram_handle);
+
+  return (
+    <li className="rounded-md border border-[var(--border)] bg-white p-2.5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
+            {v.category}
+            {v.subcategory ? ` · ${v.subcategory}` : ""}
+          </div>
+          <div className="truncate text-sm font-medium text-[var(--charcoal)]">
+            {v.vendor_name}
+          </div>
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[var(--charcoal)]/65">
+            {v.location && <span>{v.location}</span>}
+            {v.price_text && (
+              <span className="text-[var(--terracotta)]">{v.price_text}</span>
+            )}
+            {v.google_rating != null && (
+              <span className="inline-flex items-center gap-0.5">
+                <Star className="h-2.5 w-2.5 fill-current text-amber-500" />
+                {v.google_rating}
+              </span>
+            )}
+            {v.saffron_rating != null && (
+              <span className="inline-flex items-center gap-0.5 text-[var(--terracotta)]">
+                <Star className="h-2.5 w-2.5 fill-current" />
+                {v.saffron_rating}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {alreadyAssigned ? (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[var(--cream)] px-2.5 py-1 text-[11px] font-medium text-[var(--charcoal)]/60">
+            <Check className="h-3 w-3" /> Added
+          </span>
+        ) : (
+          <button
+            onClick={onAdd}
+            disabled={isPending}
+            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--terracotta)] bg-[var(--terracotta)] px-2.5 py-1 text-[11px] font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 disabled:opacity-60"
+          >
+            <Plus className="h-3 w-3" />
+            {isPending ? "Adding…" : "Add to this project"}
+          </button>
+        )}
+      </div>
+
+      {hasHandle && (
+        <VendorInstagramCardStrip preview={preview} hasHandle />
+      )}
+    </li>
+  );
+}
