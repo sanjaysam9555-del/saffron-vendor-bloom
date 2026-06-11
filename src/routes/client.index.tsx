@@ -13,6 +13,7 @@ import {
   Clock,
   Mail,
   Gauge,
+  ListChecks,
 } from "lucide-react";
 import { ClientGate } from "@/components/ClientGate";
 import { useAuth } from "@/lib/auth";
@@ -39,7 +40,7 @@ import { VendorTimeline } from "@/components/timeline/VendorTimeline";
 import { buildTimelineItems } from "@/lib/build-timeline-items";
 
 
-type ViewMode = "grid" | "board" | "table" | "timeline" | "summary";
+type ViewMode = "summary" | "timeline" | "table" | "category" | "grid" | "board";
 const VIEW_STORAGE_KEY = "saffron.client.viewMode";
 
 export const Route = createFileRoute("/client/")({
@@ -112,7 +113,7 @@ function ClientPortalPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
-    if (stored === "grid" || stored === "board" || stored === "table" || stored === "timeline" || stored === "summary") setView(stored);
+    if (stored === "grid" || stored === "board" || stored === "table" || stored === "timeline" || stored === "summary" || stored === "category") setView(stored);
   }, []);
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -285,23 +286,37 @@ function ClientPortalPage() {
                   className="no-scrollbar flex snap-x snap-mandatory items-stretch overflow-x-auto rounded-md border border-[var(--border)] bg-white text-[10px] leading-none sm:overflow-visible sm:text-xs"
                 >
                   <button
+                    data-tour="view-toggle-summary"
+                    role="tab"
+                    aria-label="Summary"
+                    aria-selected={view === "summary"}
+                    onClick={() => setView("summary")}
+                    className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
+                      view === "summary"
+                        ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                    }`}
+                  >
+                    <Gauge className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Summary</span>
+                  </button>
+                  <button
                     data-tour="view-toggle-timeline"
                     role="tab"
-                    aria-label="Overview"
+                    aria-label="Timeline"
                     aria-selected={view === "timeline"}
                     onClick={() => setView("timeline")}
-                    className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
+                    className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
                       view === "timeline"
                         ? "bg-[var(--charcoal)] text-[var(--cream)]"
                         : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
                     }`}
                   >
-                    <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Overview</span>
+                    <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Timeline</span>
                   </button>
                   <button
                     data-tour="view-toggle-table"
                     role="tab"
-                    aria-label="Table view"
+                    aria-label="Table"
                     aria-selected={view === "table"}
                     onClick={() => setView("table")}
                     className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
@@ -313,9 +328,37 @@ function ClientPortalPage() {
                     <TableIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Table</span>
                   </button>
                   <button
+                    data-tour="view-toggle-category"
+                    role="tab"
+                    aria-label="Category"
+                    aria-selected={view === "category"}
+                    onClick={() => setView("category")}
+                    className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
+                      view === "category"
+                        ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                    }`}
+                  >
+                    <ListChecks className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Category</span>
+                  </button>
+                  <button
+                    data-tour="view-toggle-grid"
+                    role="tab"
+                    aria-label="Vendors"
+                    aria-selected={view === "grid"}
+                    onClick={() => setView("grid")}
+                    className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
+                      view === "grid"
+                        ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                    }`}
+                  >
+                    <LayoutGrid className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Vendors</span>
+                  </button>
+                  <button
                     data-tour="view-toggle-board"
                     role="tab"
-                    aria-label="Board view"
+                    aria-label="Board"
                     aria-selected={view === "board"}
                     onClick={() => setView("board")}
                     className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
@@ -326,34 +369,6 @@ function ClientPortalPage() {
                   >
                     <Columns3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Board</span>
                   </button>
-                  <button
-                    data-tour="view-toggle-grid"
-                    role="tab"
-                    aria-label="Vendor view"
-                    aria-selected={view === "grid"}
-                    onClick={() => setView("grid")}
-                    className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
-                      view === "grid"
-                        ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-                    }`}
-                  >
-                    <LayoutGrid className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Vendor View</span>
-                  </button>
-                  <button
-                    data-tour="view-toggle-summary"
-                    role="tab"
-                    aria-label="Summary"
-                    aria-selected={view === "summary"}
-                    onClick={() => setView("summary")}
-                    className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
-                      view === "summary"
-                        ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-                    }`}
-                  >
-                    <Gauge className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Summary</span>
-                  </button>
                 </div>
                 <div
                   className="pointer-events-none absolute inset-y-0 right-0 w-6 rounded-r-md bg-gradient-to-l from-[var(--cream)] to-transparent sm:hidden"
@@ -363,9 +378,14 @@ function ClientPortalPage() {
             </div>
           </div>
 
+          {view === "summary" && (
+            <SectionHelper storageKey="summary">
+              <strong className="font-medium text-[var(--charcoal)]">Summary</strong> — a snapshot of your wedding: countdown, vendor progress, booked categories and spend.
+            </SectionHelper>
+          )}
           {view === "timeline" && (
-            <SectionHelper storageKey="overview">
-              <strong className="font-medium text-[var(--charcoal)]">Overview</strong> — track per-category booking deadlines and budgets. Tap a row to expand details.
+            <SectionHelper storageKey="timeline">
+              <strong className="font-medium text-[var(--charcoal)]">Timeline</strong> — per-category booking deadlines and budgets on a visual track.
             </SectionHelper>
           )}
           {view === "table" && (
@@ -373,19 +393,19 @@ function ClientPortalPage() {
               <strong className="font-medium text-[var(--charcoal)]">Table</strong> — all your vendors in one sortable list. Quick way to compare prices and ratings.
             </SectionHelper>
           )}
-          {view === "board" && (
-            <SectionHelper storageKey="board">
-              <strong className="font-medium text-[var(--charcoal)]">Board</strong> — drag vendors between columns: We like it → Shortlisted → Finalised → Rejected.
+          {view === "category" && (
+            <SectionHelper storageKey="category">
+              <strong className="font-medium text-[var(--charcoal)]">Category</strong> — every wedding category with deadlines, status and budget, perfect for week-by-week planning.
             </SectionHelper>
           )}
           {view === "grid" && (
             <SectionHelper storageKey="grid">
-              <strong className="font-medium text-[var(--charcoal)]">Vendor View</strong> — browse rich cards with photos. Click any card for details, quotes and comments.
+              <strong className="font-medium text-[var(--charcoal)]">Vendors</strong> — browse rich cards with photos. Click any card for details, quotes and comments.
             </SectionHelper>
           )}
-          {view === "summary" && (
-            <SectionHelper storageKey="summary">
-              <strong className="font-medium text-[var(--charcoal)]">Summary</strong> — a snapshot of your wedding: countdown, vendor progress, booked categories and spend.
+          {view === "board" && (
+            <SectionHelper storageKey="board">
+              <strong className="font-medium text-[var(--charcoal)]">Board</strong> — drag vendors between columns: We like it → Shortlisted → Finalised → Rejected.
             </SectionHelper>
           )}
 
@@ -404,6 +424,16 @@ function ClientPortalPage() {
               items={timelineItems}
               mode="client"
               registerRowRef={registerRowRef}
+              forcedSub="timeline"
+            />
+          ) : view === "category" ? (
+            <VendorTimeline
+              projectId={projectId!}
+              weddingDate={project.wedding_date}
+              items={timelineItems}
+              mode="client"
+              registerRowRef={registerRowRef}
+              forcedSub="table"
             />
           ) : vendors.length === 0 ? (
             <EmptyState message="Your planner hasn't shared any vendors yet. Check back soon." />

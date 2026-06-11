@@ -3,7 +3,7 @@ import { driver, type Driver, type DriveStep } from "driver.js";
 import "driver.js/dist/driver.css";
 import { markTourCompleted } from "@/components/client/ClientTourButton";
 
-type ClientView = "grid" | "board" | "table" | "timeline" | "summary";
+type ClientView = "grid" | "board" | "table" | "timeline" | "summary" | "category";
 
 interface Options {
   setView: (v: ClientView) => void;
@@ -51,14 +51,22 @@ export function useClientTour({ setView }: Options) {
         element: '[data-tour="view-toggle"]',
         popover: popover(
           "Switch how you view vendors",
-          "Same data, five lenses: Overview, Table, Board, Vendor View and Summary. Pick whichever helps you decide faster.",
+          "Same data, six lenses: Summary, Timeline, Table, Category, Vendors and Board. Pick whichever helps you decide faster.",
         ),
+      },
+      {
+        element: '[data-tour="view-toggle-summary"]',
+        popover: popover(
+          "Summary",
+          "A clean snapshot of your wedding — countdown, your picks, booked categories and spend, all in one place.",
+        ),
+        onHighlightStarted: () => ensureView("summary"),
       },
       {
         element: '[data-tour="view-toggle-timeline"]',
         popover: popover(
-          "Overview",
-          "Track per-category booking deadlines and budgets. Great for week-to-week planning with your Saffron team.",
+          "Timeline",
+          "Per-category booking deadlines and budgets shown on a horizontal track — see what's due soon and what's already booked at a glance.",
         ),
         onHighlightStarted: () => ensureView("timeline"),
       },
@@ -71,44 +79,28 @@ export function useClientTour({ setView }: Options) {
         onHighlightStarted: () => ensureView("table"),
       },
       {
+        element: '[data-tour="view-toggle-category"]',
+        popover: popover(
+          "Category",
+          "A compact list of every wedding category with deadlines, status and budget — perfect for week-by-week planning.",
+        ),
+        onHighlightStarted: () => ensureView("category"),
+      },
+      {
+        element: '[data-tour="view-toggle-grid"]',
+        popover: popover(
+          "Vendors",
+          "Browse rich vendor cards with photos, Instagram previews and quick actions.",
+        ),
+        onHighlightStarted: () => ensureView("grid"),
+      },
+      {
         element: '[data-tour="view-toggle-board"]',
         popover: popover(
           "Board",
           "A Kanban board to move vendors across stages: We like it → Shortlisted → Finalised → Rejected.",
         ),
         onHighlightStarted: () => ensureView("board"),
-      },
-      {
-        element: '[data-tour="view-toggle-grid"]',
-        popover: popover(
-          "Vendor View",
-          "Browse rich vendor cards with photos, Instagram previews and quick actions.",
-        ),
-        onHighlightStarted: () => ensureView("grid"),
-      },
-      {
-        element: '[data-tour="view-toggle-summary"]',
-        popover: popover(
-          "Summary",
-          "A clean snapshot of your wedding — countdown, your picks, booked categories and spend, all in one place.",
-        ),
-        onHighlightStarted: () => ensureView("summary"),
-      },
-      {
-        element: '[data-tour="overview-sub-timeline"]',
-        popover: popover(
-          "Overview · Timeline tab",
-          "Inside Overview, the Timeline tab shows each category on a horizontal track — see what's due soon and what's already booked at a glance.",
-        ),
-        onHighlightStarted: () => ensureView("timeline"),
-      },
-      {
-        element: '[data-tour="overview-sub-table"]',
-        popover: popover(
-          "Overview · Table tab",
-          "Switch to the Table tab inside Overview for a compact list of every category with deadlines, status and budget — perfect for week-by-week planning.",
-        ),
-        onHighlightStarted: () => ensureView("timeline"),
       },
       {
         // Resolved at runtime — prefers the mobile filters button, falls back
