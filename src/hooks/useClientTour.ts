@@ -147,8 +147,8 @@ export function useClientTour({ setView }: Options) {
     // Filter out steps whose target element doesn't currently exist
     // (defensive — driver.js otherwise throws).
     const liveSteps = steps.filter((s) => {
+      if (typeof s.element === "function") return true;
       if (typeof s.element !== "string") return true;
-      // If a step has an onHighlightStarted that switches view, keep it.
       if (s.onHighlightStarted) return true;
       return !!document.querySelector(s.element);
     });
