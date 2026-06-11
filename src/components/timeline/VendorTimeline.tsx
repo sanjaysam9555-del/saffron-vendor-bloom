@@ -77,7 +77,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
               onClick={() => setAddOpen(true)}
               className="inline-flex items-center gap-1.5 rounded-md border border-[var(--terracotta)] bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
             >
-              <Plus className="h-3.5 w-3.5" /> Add category to plan
+              <Plus className="h-3.5 w-3.5" /> Add Category To Plan
             </button>
           )}
           <div
