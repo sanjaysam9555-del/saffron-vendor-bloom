@@ -4,7 +4,16 @@ import { VirtualGrid } from "@/components/ui/VirtualGrid";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, LayoutGrid, Columns3, Filter as FilterIcon, Table as TableIcon, Clock } from "lucide-react";
+import {
+  Sparkles,
+  LayoutGrid,
+  Columns3,
+  Filter as FilterIcon,
+  Table as TableIcon,
+  Clock,
+  HelpCircle,
+  Mail,
+} from "lucide-react";
 import { ClientGate } from "@/components/ClientGate";
 import { useAuth } from "@/lib/auth";
 import { getMyProject } from "@/lib/projects.functions";
@@ -12,6 +21,10 @@ import { listProjectCategoryDeadlines } from "@/lib/project-deadlines.functions"
 import { ClientTopNav } from "@/components/client/ClientTopNav";
 import { ClientSidebar, type ClientFilterState } from "@/components/client/ClientSidebar";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
+import { ClientSummaryStats } from "@/components/client/ClientSummaryStats";
+import { SectionHelper } from "@/components/client/SectionHelper";
+import { useClientTour } from "@/hooks/useClientTour";
+import { CLIENT_STATUS_OPTIONS } from "@/lib/client-status";
 const ClientVendorDetail = lazy(() =>
   import("@/components/client/ClientVendorDetail").then((m) => ({ default: m.ClientVendorDetail })),
 );
@@ -93,6 +106,8 @@ function ClientPortalPage() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [detail, setDetail] = useState<ClientVendor | null>(null);
   const [view, setView] = useState<ViewMode>("timeline");
+  const [legendOpen, setLegendOpen] = useState(false);
+  const tour = useClientTour({ setView });
 
   // Restore + persist view preference.
   useEffect(() => {
@@ -205,13 +220,18 @@ function ClientPortalPage() {
         brideName={project.bride_name}
         groomName={project.groom_name}
         weddingDate={project.wedding_date}
+        onStartTour={tour.start}
       />
 
-      <UrgencyStrip
-        items={timelineItems}
-        onChipClick={jumpToCategory}
-        onViewAll={() => setView("timeline")}
-      />
+      <ClientSummaryStats vendors={vendors} items={timelineItems} onJump={setView} />
+
+      <div data-tour="urgency-strip">
+        <UrgencyStrip
+          items={timelineItems}
+          onChipClick={jumpToCategory}
+          onViewAll={() => setView("timeline")}
+        />
+      </div>
 
       <div className="mx-auto flex w-full max-w-[1600px] flex-1">
         <ClientSidebar
@@ -225,7 +245,7 @@ function ClientPortalPage() {
         />
 
         <main className="min-w-0 flex-1 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
-          <div className="mb-5 flex flex-col items-start gap-3 animate-fade-up sm:flex-row sm:flex-nowrap sm:items-end sm:justify-between sm:gap-3">
+          <div className="mb-3 flex flex-col items-start gap-3 animate-fade-up sm:flex-row sm:flex-nowrap sm:items-end sm:justify-between sm:gap-3">
             <div className="min-w-0 w-full sm:w-auto">
               <h1 className="brand-line truncate font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
                 {filters.category ?? (
@@ -242,6 +262,7 @@ function ClientPortalPage() {
             </div>
             <div className="flex w-full shrink-0 items-stretch gap-1.5 sm:w-auto sm:gap-2">
               <button
+                data-tour="filters-button"
                 onClick={() => setMobileFiltersOpen(true)}
                 aria-label="Filters"
                 className={`relative inline-flex shrink-0 items-center justify-center gap-1 rounded-md border px-2 py-1 text-[10px] font-medium leading-none sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs lg:hidden ${
@@ -256,12 +277,15 @@ function ClientPortalPage() {
                   <span className="ml-0.5 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
                 )}
               </button>
+              <StatusLegend open={legendOpen} onOpenChange={setLegendOpen} />
               <div
+                data-tour="view-toggle"
                 role="tablist"
                 aria-label="View"
                 className="inline-flex flex-1 items-stretch overflow-hidden rounded-md border border-[var(--border)] bg-white text-[10px] leading-none sm:flex-none sm:text-xs"
               >
                 <button
+                  data-tour="view-toggle-timeline"
                   role="tab"
                   aria-label="Overview"
                   aria-selected={view === "timeline"}
@@ -275,6 +299,7 @@ function ClientPortalPage() {
                   <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Overview</span>
                 </button>
                 <button
+                  data-tour="view-toggle-table"
                   role="tab"
                   aria-label="Table view"
                   aria-selected={view === "table"}
@@ -288,6 +313,7 @@ function ClientPortalPage() {
                   <TableIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Table</span>
                 </button>
                 <button
+                  data-tour="view-toggle-board"
                   role="tab"
                   aria-label="Board view"
                   aria-selected={view === "board"}
@@ -301,6 +327,7 @@ function ClientPortalPage() {
                   <Columns3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Board</span>
                 </button>
                 <button
+                  data-tour="view-toggle-grid"
                   role="tab"
                   aria-label="Vendor view"
                   aria-selected={view === "grid"}
@@ -317,6 +344,27 @@ function ClientPortalPage() {
               </div>
             </div>
           </div>
+
+          {view === "timeline" && (
+            <SectionHelper storageKey="overview">
+              <strong className="font-medium text-[var(--charcoal)]">Overview</strong> — track per-category booking deadlines and budgets. Tap a row to expand details.
+            </SectionHelper>
+          )}
+          {view === "table" && (
+            <SectionHelper storageKey="table">
+              <strong className="font-medium text-[var(--charcoal)]">Table</strong> — all your vendors in one sortable list. Quick way to compare prices and ratings.
+            </SectionHelper>
+          )}
+          {view === "board" && (
+            <SectionHelper storageKey="board">
+              <strong className="font-medium text-[var(--charcoal)]">Board</strong> — drag vendors between columns: We like it → Shortlisted → Finalised → Rejected.
+            </SectionHelper>
+          )}
+          {view === "grid" && (
+            <SectionHelper storageKey="grid">
+              <strong className="font-medium text-[var(--charcoal)]">Vendor View</strong> — browse rich cards with photos. Click any card for details, quotes and comments.
+            </SectionHelper>
+          )}
 
           {view === "timeline" ? (
             <VendorTimeline
@@ -344,6 +392,27 @@ function ClientPortalPage() {
         </main>
       </div>
 
+      <footer className="mt-auto border-t border-[var(--border)] bg-[var(--cream-deep)]">
+        <div className="mx-auto flex max-w-[1600px] flex-col items-start gap-2 px-3 py-3 text-xs text-[var(--charcoal)]/70 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <span>
+            Need help understanding your folio?{" "}
+            <button
+              onClick={tour.start}
+              className="font-medium text-[var(--terracotta)] underline-offset-2 hover:underline"
+            >
+              Take the guided tour
+            </button>{" "}
+            or contact your Saffron planner.
+          </span>
+          <a
+            href="mailto:hello@saffronevents.in"
+            className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2.5 py-1 text-[var(--charcoal)]/80 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+          >
+            <Mail className="h-3 w-3" /> hello@saffronevents.in
+          </a>
+        </div>
+      </footer>
+
       {detail && (
         <Suspense fallback={null}>
           <ClientVendorDetail vendor={detail} onClose={() => setDetail(null)} />
@@ -352,6 +421,74 @@ function ClientPortalPage() {
 
     </div>
   );
+}
+
+function StatusLegend({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  return (
+    <div className="relative" data-tour="status-legend">
+      <button
+        type="button"
+        onClick={() => onOpenChange(!open)}
+        aria-label="What do the statuses mean?"
+        title="Status legend"
+        className="inline-flex h-full shrink-0 items-center justify-center gap-1 rounded-md border border-[var(--border)] bg-white px-2 py-1 text-[10px] text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:px-2.5 sm:py-1.5 sm:text-xs"
+      >
+        <HelpCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+        <span className="hidden sm:inline">Statuses</span>
+      </button>
+      {open && (
+        <>
+          <button
+            aria-hidden
+            tabIndex={-1}
+            onClick={() => onOpenChange(false)}
+            className="fixed inset-0 z-30 cursor-default"
+          />
+          <div
+            role="dialog"
+            className="absolute right-0 top-[calc(100%+6px)] z-40 w-64 rounded-lg border border-[var(--border)] bg-white p-3 text-xs shadow-lg animate-fade-in"
+          >
+            <div className="mb-2 font-display text-sm font-semibold text-[var(--charcoal)]">
+              What each status means
+            </div>
+            <ul className="space-y-1.5">
+              {CLIENT_STATUS_OPTIONS.map((opt) => (
+                <li key={opt.value} className="flex items-start gap-2">
+                  <span
+                    className="mt-1 inline-block h-2 w-2 shrink-0 rounded-full"
+                    style={{ background: opt.dot }}
+                  />
+                  <span>
+                    <span className="font-medium text-[var(--charcoal)]">{opt.label}</span>
+                    <span className="block text-[var(--charcoal)]/60">
+                      {describeStatus(opt.value)}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function describeStatus(v: string): string {
+  switch (v) {
+    case "like":
+      return "You're keen — planner keeps it in active rotation.";
+    case "shortlisted":
+      return "On your shortlist — planner prioritises quotes & follow-ups.";
+    case "finalised":
+      return "Booked or about to be booked. Counts toward your budget.";
+    case "rejected":
+      return "Not for you — moved to the bottom of every view.";
+    case "thinking":
+      return "Undecided — planner waits for your call.";
+    default:
+      return "";
+  }
 }
 
 function EmptyState({ message }: { message: string }) {
