@@ -5,7 +5,8 @@ import { useVendors } from "@/hooks/useVendorData";
 import { useEnsureInstagramPreview } from "@/hooks/use-instagram-previews";
 import { assignVendorToProject } from "@/lib/projects.functions";
 import { notifyError, notifySuccess } from "@/lib/ui/feedback";
-import { VendorInstagramCardStrip } from "@/components/vendor/VendorInstagramPreview";
+import { Instagram } from "lucide-react";
+import type { VendorInstagramPreview as PreviewData } from "@/lib/instagram-preview.functions";
 import type { Vendor } from "@/lib/vendor-types";
 
 interface Props {
