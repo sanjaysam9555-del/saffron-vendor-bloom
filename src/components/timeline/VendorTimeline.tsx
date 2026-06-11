@@ -1265,7 +1265,6 @@ function HorizontalTimeline({
     ((new Date(d).getTime() - start.getTime()) / DAY_MS) * pxPerDay + EDGE_PAD;
 
   const AXIS_Y = 180;
-  const CARD_W = 180;
 
   // Alternate above/below; bump down if collision within 90px on same side.
   type Placement = { item: TimelineItem; x: number; above: boolean; offset: number };
