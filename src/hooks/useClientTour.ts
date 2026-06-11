@@ -130,13 +130,6 @@ export function useClientTour({ setView }: Options) {
         ),
       },
       {
-        element: '[data-tour="notifications-bell"]',
-        popover: popover(
-          "Notifications",
-          "Quote updates, comments from your planner, and important changes land here.",
-        ),
-      },
-      {
         element: '[data-tour="tour-button"]',
         popover: popover(
           "Re-take this tour any time",
