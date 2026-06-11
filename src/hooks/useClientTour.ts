@@ -94,7 +94,28 @@ export function useClientTour({ setView }: Options) {
         onHighlightStarted: () => ensureView("grid"),
       },
       {
-        element: '[data-tour="filters-button"]',
+        element: '[data-tour="overview-sub-timeline"]',
+        popover: popover(
+          "Overview · Timeline tab",
+          "Inside Overview, the Timeline tab shows each category on a horizontal track — see what's due soon and what's already booked at a glance.",
+        ),
+        onHighlightStarted: () => ensureView("timeline"),
+      },
+      {
+        element: '[data-tour="overview-sub-table"]',
+        popover: popover(
+          "Overview · Table tab",
+          "Switch to the Table tab inside Overview for a compact list of every category with deadlines, status and budget — perfect for week-by-week planning.",
+        ),
+        onHighlightStarted: () => ensureView("timeline"),
+      },
+      {
+        // Resolved at runtime — prefers the mobile filters button, falls back
+        // to the always-present desktop filters panel.
+        element: () =>
+          (document.querySelector('[data-tour="filters-button"]:not([hidden])') as HTMLElement | null)
+          ?? (document.querySelector('[data-tour="filters-panel"]') as HTMLElement | null)
+          ?? document.body,
         popover: popover(
           "Filters",
           "Narrow vendors by category or location. Useful when your folio has lots of options.",
@@ -115,13 +136,6 @@ export function useClientTour({ setView }: Options) {
         ),
       },
       {
-        element: '[data-tour="status-legend"]',
-        popover: popover(
-          "What do the statuses mean?",
-          "Tap here any time to see what Liked / Shortlisted / Finalised / Rejected / Thinking mean — and how your planner uses them.",
-        ),
-      },
-      {
         element: '[data-tour="tour-button"]',
         popover: popover(
           "Re-take this tour any time",
@@ -133,8 +147,8 @@ export function useClientTour({ setView }: Options) {
     // Filter out steps whose target element doesn't currently exist
     // (defensive — driver.js otherwise throws).
     const liveSteps = steps.filter((s) => {
+      if (typeof s.element === "function") return true;
       if (typeof s.element !== "string") return true;
-      // If a step has an onHighlightStarted that switches view, keep it.
       if (s.onHighlightStarted) return true;
       return !!document.querySelector(s.element);
     });

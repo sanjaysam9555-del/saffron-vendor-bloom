@@ -1,83 +1,57 @@
-## Client Dashboard: Informational Upgrades + Guided Tour
+## Client Dashboard Refinements
 
-Two parts: (A) make the dashboard self-explanatory at a glance, and (B) add a "Tour" button in the header that launches a step-by-step guided walkthrough on demand.
+### 1. Header cleanup (`ClientTopNav.tsx`)
+- Remove the search input from the header. Search is **moved into the filter sidebar** (`ClientSidebar.tsx`) as its top field, so name/handle/location search still works.
+- Remove the days-to-go chip from the header (desktop pill + mobile chip) — moves into a new summary tile.
+- Remove the desktop "Bride & Groom + date" block — moves into a new summary tile.
+- Reorder header right-side controls: **Notifications bell (left) → Take a tour → Sign out (far right)**.
+- Sign out becomes **icon-only on desktop too** (drop the "Sign out" label, keep tooltip + aria-label).
 
----
+### 2. Search in sidebar (`ClientSidebar.tsx`)
+- Add a search input at the top of the filter panel (label "Search vendors", same icon + placeholder as before).
+- Wire to the existing `search` / `onSearchChange` state lifted in `client.index.tsx` (just rerouted from header to sidebar; no new state).
+- Mobile: sidebar already opens as a sheet on demand, so the search lives there too.
 
-### Part A — Make the dashboard more informational
+### 3. Summary tiles → 6 tiles (`ClientSummaryStats.tsx`)
+- Shrink padding/icon to fit 6 across: `grid-cols-2 sm:grid-cols-3 lg:grid-cols-6`.
+- Two new info tiles prepended (non-clickable, no hover lift):
+  1. **Couple + Date** — "Bride & Groom" (font-display) + formatted wedding date.
+  2. **Countdown** — "142 days to go" with `CalendarHeart` icon.
+- Existing 4 tiles (Vendors Shared, Your Picks, Booked Categories, Spend So Far) keep behavior, smaller sizing.
 
-1. **Header context strip (under `ClientTopNav`)**
-   - Days-to-wedding chip (e.g., "142 days to go"), event location if present, and personalized greeting on mobile (currently desktop only).
-   - Tiny progress meter: "X of Y categories booked" from existing `timelineItems` (`booked === true`).
+### 4. Attention bar position (`client.index.tsx`)
+- Order becomes: **Header → UrgencyStrip → Summary Tiles → View toggle → content**.
 
-2. **At-a-glance summary band (above Urgency Strip)** — 4 compact stat tiles (responsive 4-col → 2×2 on mobile):
-   - **Total Vendors Shared**
-   - **Shortlisted / Approved** (counts from `client_status`)
-   - **Booked Categories** (`booked` true / total)
-   - **Budget Snapshot** (sum of `actual_amount_override ?? closed_amount_auto`; hidden when no amounts)
-   - Each tile clickable: jumps to relevant view (e.g., "Booked" → Overview, "Shortlisted" → Board).
+### 5. Remove Status Legend
+- Delete the "Statuses" popover next to the view toggle.
+- Remove the `status-legend` step from `useClientTour.ts`.
 
-3. **Section descriptions (dismissible inline subtitles)**
-   - Overview: "Track booking deadlines and budgets per category."
-   - Table: "All vendors in a sortable list — quickly compare and act."
-   - Board: "Drag vendors across stages: Shared → Shortlisted → Approved → Rejected."
-   - Vendor View: "Browse vendor cards with photos, links, and quick actions."
-   - Dismiss state per-view in `localStorage`.
+### 6. Tour button + bell reorder
+- Covered in (1).
 
-4. **Status legend popover** — small "?" pill near the view toggle explaining Shared / Shortlisted / Approved / Rejected.
+### 7. Fix filters-button highlight in tour (desktop)
+- On desktop the filter trigger location differs from mobile. In `useClientTour.ts`, resolve the live element at runtime: prefer `[data-tour="filters-button"]`, fall back to `[data-tour="filters-panel"]` or the sidebar root if the button isn't in the DOM. Ensures the spotlight lands on a real element on both breakpoints.
+- Also verify `data-tour="filters-button"` is attached to a stable, always-rendered element (move it onto the desktop filter toggle if needed).
 
-5. **Footer help row** — "Need help? Contact your planner" with planner contact (single source of truth).
+### 8. Tour card typography (`src/styles.css`)
+- Update `.driver-popover.saffron-tour`:
+  - Title → `font-family: var(--font-display)` (brand display font used elsewhere).
+  - Body, buttons, progress text → brand body font.
 
----
-
-### Part B — Guided Tour (on-demand, never auto)
-
-**Trigger:** "Take a tour" button in `ClientTopNav` (left of notifications). Icon `Compass`, label hidden on mobile. Clicking always restarts from step 1. `localStorage` only stores `tourLastCompletedAt` to render a subtle ✓ next to the button.
-
-**Library:** `driver.js` (~5KB, CSS-selector based). `bun add driver.js`. Themed via `src/styles.css` `.saffron-tour` overrides (terracotta accents, cream bg, `font-display` titles, rounded-md).
-
-**Steps** (each spotlights a `data-tour="..."` attribute added to existing components — no layout changes):
-
-| # | Target | Title | Body |
-|---|---|---|---|
-| 1 | `header-greeting` | Welcome to your Vendor Folio | Intro + tour purpose |
-| 2 | `summary-stats` | At-a-glance progress | Vendor counts, booking, budget |
-| 3 | `urgency-strip` | Needs your attention | Time-sensitive chips → jump to category |
-| 4 | `view-toggle` | Switch how you view vendors | 4 view modes |
-| 5 | `view-toggle-timeline` | Overview | Budgets + deadlines per category |
-| 6 | `view-toggle-table` | Table | Compare side-by-side |
-| 7 | `view-toggle-board` | Board | Drag Shared → Shortlisted → Approved → Rejected |
-| 8 | `view-toggle-grid` | Vendor View | Photo cards + Instagram previews |
-| 9 | `filters-button` | Filters | Narrow by category/location |
-| 10 | `search-input` | Search | Find by name, handle, location |
-| 11 | `notifications-bell` | Notifications | Planner comments, quote updates |
-| 12 | `vendor-card-first` | Vendor cards | Click to view details, quotes, comment to planner |
-| 13 | `tour-button` | Re-take any time | Restart whenever |
-
-Steps targeting elements not currently visible auto-switch the view first. Controls: Skip / Prev / Next / ESC. SR-only step counter ("Step 4 of 13"), focus trap.
-
----
+### 9. Add Overview sub-explainers
+- Keep the existing 4 view-toggle steps. Add **two new steps** when on Overview:
+  - **Timeline column** — explains deadlines / booked toggle / budget chips. Target a new `data-tour="overview-timeline-row"` on the first row in `VendorTimeline`.
+  - **Per-category vendor table** — explains the expanded vendor list inside Overview. Target a new `data-tour="overview-vendor-table"` (auto-expand the first category if collapsed).
+- Both steps use `onHighlightStarted: ensureView("timeline")`.
 
 ### Files
-
-**New**
-- `src/hooks/useClientTour.ts` — builds steps, controls driver instance, switches views between steps.
-- `src/components/client/ClientSummaryStats.tsx` — the 4 stat tiles.
-- `src/components/client/ClientTourButton.tsx` — header button + completion tick.
-- `src/components/client/SectionHelper.tsx` — dismissible per-view subtitle.
-
 **Edited**
-- `src/components/client/ClientTopNav.tsx` — Tour button + days-to-wedding chip + mobile greeting.
-- `src/routes/client.index.tsx` — mount summary stats, status-legend popover, footer help row, section helpers, `data-tour` attributes.
-- `src/components/timeline/VendorTimeline.tsx` (client mode only) — `data-tour="overview"` on header.
-- `src/components/client/ClientSidebar.tsx` — `data-tour="filters-panel"`.
-- `src/styles.css` — driver.js theme overrides.
+- `src/components/client/ClientTopNav.tsx` — strip search/date/countdown; reorder; icon-only sign out.
+- `src/components/client/ClientSidebar.tsx` — add search input at top, wired to lifted state.
+- `src/components/client/ClientSummaryStats.tsx` — 6-tile grid + 2 new info tiles.
+- `src/routes/client.index.tsx` — reorder UrgencyStrip above tiles; drop status-legend popover; pass couple/date/countdown to summary stats; route `search`/`onSearchChange` to sidebar instead of header.
+- `src/components/timeline/VendorTimeline.tsx` — add `data-tour` hooks for overview sub-steps.
+- `src/hooks/useClientTour.ts` — remove status-legend step; add 2 overview sub-steps; resilient filters target.
+- `src/styles.css` — brand fonts on `.saffron-tour`.
 
-**Deps:** `driver.js`. **No backend changes** — all data derives from existing queries.
-
----
-
-### Out of scope (follow-ups)
-- Standalone Help Center page with screenshots/video.
-- In-app messaging with planner.
-- Tour analytics persistence.
+**No new files. No backend changes.**
