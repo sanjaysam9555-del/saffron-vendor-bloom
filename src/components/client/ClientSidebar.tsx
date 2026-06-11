@@ -27,6 +27,8 @@ export function ClientSidebar({
   onToggle,
   mobileOpen = false,
   onMobileClose,
+  search,
+  onSearchChange,
 }: Props) {
   const counts = vendors.reduce<Record<string, number>>((acc, v) => {
     acc[v.category] = (acc[v.category] ?? 0) + 1;
@@ -54,6 +56,24 @@ export function ClientSidebar({
 
   const Body = (
     <>
+      <div className="mb-5">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">
+          Search
+        </div>
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/40" />
+          <input
+            data-tour="search-input"
+            type="text"
+            placeholder="Search your vendors…"
+            aria-label="Search your vendors"
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="w-full rounded-md border border-[var(--border)] bg-white py-1.5 pl-8 pr-2 text-sm text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/40 focus:border-[var(--terracotta)] focus:outline-none focus:ring-2 focus:ring-[var(--terracotta-soft)]"
+          />
+        </div>
+      </div>
+
       <div className="mb-6">
         <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">
           Category
