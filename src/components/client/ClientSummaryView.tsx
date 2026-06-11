@@ -123,8 +123,8 @@ export function ClientSummaryView({ vendors, items, brideName, groomName, weddin
             tone="pending"
             items={categoriesPending.map((i) => ({
               name: i.category,
-              meta: i.deadline
-                ? `Due ${new Date(i.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`
+              meta: i.due_date
+                ? `Due ${new Date(i.due_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`
                 : "No deadline set",
             }))}
             emptyText="Every category is booked. You're all set!"
