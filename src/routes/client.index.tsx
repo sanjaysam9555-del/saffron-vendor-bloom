@@ -106,7 +106,7 @@ function ClientPortalPage() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [detail, setDetail] = useState<ClientVendor | null>(null);
   const [view, setView] = useState<ViewMode>("timeline");
-  const [legendOpen, setLegendOpen] = useState(false);
+  
   const tour = useClientTour({ setView });
 
   // Restore + persist view preference.
@@ -280,7 +280,7 @@ function ClientPortalPage() {
                   <span className="ml-0.5 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
                 )}
               </button>
-              <StatusLegend open={legendOpen} onOpenChange={setLegendOpen} />
+              
               <div
                 data-tour="view-toggle"
                 role="tablist"
