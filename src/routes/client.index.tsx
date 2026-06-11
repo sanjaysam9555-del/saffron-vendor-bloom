@@ -214,16 +214,7 @@ function ClientPortalPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--cream)]">
-      <ClientTopNav
-        search={search}
-        onSearchChange={setSearch}
-        brideName={project.bride_name}
-        groomName={project.groom_name}
-        weddingDate={project.wedding_date}
-        onStartTour={tour.start}
-      />
-
-      <ClientSummaryStats vendors={vendors} items={timelineItems} onJump={setView} />
+      <ClientTopNav onStartTour={tour.start} />
 
       <div data-tour="urgency-strip">
         <UrgencyStrip
@@ -232,6 +223,15 @@ function ClientPortalPage() {
           onViewAll={() => setView("timeline")}
         />
       </div>
+
+      <ClientSummaryStats
+        vendors={vendors}
+        items={timelineItems}
+        brideName={project.bride_name}
+        groomName={project.groom_name}
+        weddingDate={project.wedding_date}
+        onJump={setView}
+      />
 
       <div className="mx-auto flex w-full max-w-[1600px] flex-1">
         <ClientSidebar
@@ -242,7 +242,10 @@ function ClientPortalPage() {
           onToggle={() => setSidebarCollapsed((c) => !c)}
           mobileOpen={mobileFiltersOpen}
           onMobileClose={() => setMobileFiltersOpen(false)}
+          search={search}
+          onSearchChange={setSearch}
         />
+
 
         <main className="min-w-0 flex-1 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
           <div className="mb-3 flex flex-col items-start gap-3 animate-fade-up sm:flex-row sm:flex-nowrap sm:items-end sm:justify-between sm:gap-3">
