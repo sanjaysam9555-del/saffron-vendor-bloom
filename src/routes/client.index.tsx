@@ -220,13 +220,18 @@ function ClientPortalPage() {
         brideName={project.bride_name}
         groomName={project.groom_name}
         weddingDate={project.wedding_date}
+        onStartTour={tour.start}
       />
 
-      <UrgencyStrip
-        items={timelineItems}
-        onChipClick={jumpToCategory}
-        onViewAll={() => setView("timeline")}
-      />
+      <ClientSummaryStats vendors={vendors} items={timelineItems} onJump={setView} />
+
+      <div data-tour="urgency-strip">
+        <UrgencyStrip
+          items={timelineItems}
+          onChipClick={jumpToCategory}
+          onViewAll={() => setView("timeline")}
+        />
+      </div>
 
       <div className="mx-auto flex w-full max-w-[1600px] flex-1">
         <ClientSidebar
@@ -240,7 +245,7 @@ function ClientPortalPage() {
         />
 
         <main className="min-w-0 flex-1 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
-          <div className="mb-5 flex flex-col items-start gap-3 animate-fade-up sm:flex-row sm:flex-nowrap sm:items-end sm:justify-between sm:gap-3">
+          <div className="mb-3 flex flex-col items-start gap-3 animate-fade-up sm:flex-row sm:flex-nowrap sm:items-end sm:justify-between sm:gap-3">
             <div className="min-w-0 w-full sm:w-auto">
               <h1 className="brand-line truncate font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
                 {filters.category ?? (
@@ -257,6 +262,7 @@ function ClientPortalPage() {
             </div>
             <div className="flex w-full shrink-0 items-stretch gap-1.5 sm:w-auto sm:gap-2">
               <button
+                data-tour="filters-button"
                 onClick={() => setMobileFiltersOpen(true)}
                 aria-label="Filters"
                 className={`relative inline-flex shrink-0 items-center justify-center gap-1 rounded-md border px-2 py-1 text-[10px] font-medium leading-none sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs lg:hidden ${
@@ -271,12 +277,15 @@ function ClientPortalPage() {
                   <span className="ml-0.5 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
                 )}
               </button>
+              <StatusLegend open={legendOpen} onOpenChange={setLegendOpen} />
               <div
+                data-tour="view-toggle"
                 role="tablist"
                 aria-label="View"
                 className="inline-flex flex-1 items-stretch overflow-hidden rounded-md border border-[var(--border)] bg-white text-[10px] leading-none sm:flex-none sm:text-xs"
               >
                 <button
+                  data-tour="view-toggle-timeline"
                   role="tab"
                   aria-label="Overview"
                   aria-selected={view === "timeline"}
@@ -290,6 +299,7 @@ function ClientPortalPage() {
                   <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Overview</span>
                 </button>
                 <button
+                  data-tour="view-toggle-table"
                   role="tab"
                   aria-label="Table view"
                   aria-selected={view === "table"}
@@ -303,6 +313,7 @@ function ClientPortalPage() {
                   <TableIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Table</span>
                 </button>
                 <button
+                  data-tour="view-toggle-board"
                   role="tab"
                   aria-label="Board view"
                   aria-selected={view === "board"}
@@ -316,6 +327,7 @@ function ClientPortalPage() {
                   <Columns3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Board</span>
                 </button>
                 <button
+                  data-tour="view-toggle-grid"
                   role="tab"
                   aria-label="Vendor view"
                   aria-selected={view === "grid"}
@@ -332,6 +344,27 @@ function ClientPortalPage() {
               </div>
             </div>
           </div>
+
+          {view === "timeline" && (
+            <SectionHelper storageKey="overview">
+              <strong className="font-medium text-[var(--charcoal)]">Overview</strong> — track per-category booking deadlines and budgets. Tap a row to expand details.
+            </SectionHelper>
+          )}
+          {view === "table" && (
+            <SectionHelper storageKey="table">
+              <strong className="font-medium text-[var(--charcoal)]">Table</strong> — all your vendors in one sortable list. Quick way to compare prices and ratings.
+            </SectionHelper>
+          )}
+          {view === "board" && (
+            <SectionHelper storageKey="board">
+              <strong className="font-medium text-[var(--charcoal)]">Board</strong> — drag vendors between columns: We like it → Shortlisted → Finalised → Rejected.
+            </SectionHelper>
+          )}
+          {view === "grid" && (
+            <SectionHelper storageKey="grid">
+              <strong className="font-medium text-[var(--charcoal)]">Vendor View</strong> — browse rich cards with photos. Click any card for details, quotes and comments.
+            </SectionHelper>
+          )}
 
           {view === "timeline" ? (
             <VendorTimeline
