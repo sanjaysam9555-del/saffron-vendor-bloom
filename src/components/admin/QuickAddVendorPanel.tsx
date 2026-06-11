@@ -2,8 +2,10 @@ import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronDown, Plus, Search, Star, X } from "lucide-react";
 import { useVendors } from "@/hooks/useVendorData";
+import { useEnsureInstagramPreview } from "@/hooks/use-instagram-previews";
 import { assignVendorToProject } from "@/lib/projects.functions";
 import { notifyError, notifySuccess } from "@/lib/ui/feedback";
+import { VendorInstagramCardStrip } from "@/components/vendor/VendorInstagramPreview";
 import type { Vendor } from "@/lib/vendor-types";
 
 interface Props {
