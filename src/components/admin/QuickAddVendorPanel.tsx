@@ -58,65 +58,49 @@ export function QuickAddVendorPanel({ projectId, assignedVendorIds }: Props) {
   };
 
   return (
-    <div className="mb-4 rounded-lg border border-[var(--border)] bg-white">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left"
-      >
-        <span className="inline-flex items-center gap-2 text-sm font-medium text-[var(--charcoal)]">
-          <Plus className="h-4 w-4 text-[var(--terracotta)]" />
-          Add Vendors To This Project
-        </span>
-        <ChevronDown
-          className={`h-4 w-4 text-[var(--charcoal)]/50 transition-transform ${open ? "rotate-180" : ""}`}
+    <div className="mb-4 rounded-lg border border-[var(--border)] bg-white p-3">
+      <div className="flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--cream)]/40 px-2.5 py-1.5">
+        <Search className="h-4 w-4 shrink-0 text-[var(--charcoal)]/40" />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Add Vendors To This Project"
+          className="w-full bg-transparent text-sm placeholder:text-[var(--charcoal)]/60 focus:outline-none"
         />
-      </button>
+        {q && (
+          <button
+            onClick={() => setQ("")}
+            className="rounded p-0.5 text-[var(--charcoal)]/50 hover:bg-white hover:text-[var(--charcoal)]"
+            title="Clear"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
 
-      {open && (
-        <div className="border-t border-[var(--border)] p-3">
-          <div className="flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--cream)]/40 px-2.5 py-1.5">
-            <Search className="h-4 w-4 shrink-0 text-[var(--charcoal)]/40" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search by vendor name, category, subcategory, location…"
-              className="w-full bg-transparent text-sm focus:outline-none"
-              autoFocus
-            />
-            {q && (
-              <button
-                onClick={() => setQ("")}
-                className="rounded p-0.5 text-[var(--charcoal)]/50 hover:bg-white hover:text-[var(--charcoal)]"
-                title="Clear"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-
-          <div className="mt-2 max-h-[360px] overflow-y-auto">
-            {!q.trim() ? (
-              <div className="px-2 py-6 text-center text-xs text-[var(--charcoal)]/55">
-                {isLoading ? "Loading vendor library…" : "Type to search the vendor library."}
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="px-2 py-6 text-center text-xs text-[var(--charcoal)]/55">
-                No vendors match “{q}”.
-              </div>
-            ) : (
-              <ul className="flex flex-col gap-1.5">
-                {filtered.map((v) => (
-                  <QuickAddVendorRow
-                    key={v.id}
-                    vendor={v}
-                    alreadyAssigned={assignedVendorIds.has(v.id) || justAdded.has(v.id)}
-                    isPending={pendingId === v.id}
-                    onAdd={() => handleAdd(v.id)}
-                  />
-                ))}
-              </ul>
-            )}
-          </div>
+      {q.trim() && (
+        <div className="mt-2 max-h-[360px] overflow-y-auto">
+          {isLoading ? (
+            <div className="px-2 py-6 text-center text-xs text-[var(--charcoal)]/55">
+              Loading vendor library…
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="px-2 py-6 text-center text-xs text-[var(--charcoal)]/55">
+              No vendors match “{q}”.
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-1.5">
+              {filtered.map((v) => (
+                <QuickAddVendorRow
+                  key={v.id}
+                  vendor={v}
+                  alreadyAssigned={assignedVendorIds.has(v.id) || justAdded.has(v.id)}
+                  isPending={pendingId === v.id}
+                  onAdd={() => handleAdd(v.id)}
+                />
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </div>
