@@ -48,12 +48,15 @@ interface Props {
   mode: "admin" | "client";
   /** Optional ref for scroll-to from urgency strip. */
   registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
+  /** Force the inner sub-view and hide the local toggle. */
+  forcedSub?: SubView;
 }
 
 type SubView = "timeline" | "table";
 
-export function VendorTimeline({ projectId, weddingDate, items, mode, registerRowRef }: Props) {
-  const [sub, setSub] = useState<SubView>("timeline");
+export function VendorTimeline({ projectId, weddingDate, items, mode, registerRowRef, forcedSub }: Props) {
+  const [subState, setSub] = useState<SubView>("timeline");
+  const sub = forcedSub ?? subState;
   const [addOpen, setAddOpen] = useState(false);
   const now = useNow();
   const sorted = useMemo(() => sortItems(items, now), [items, now]);
@@ -80,37 +83,37 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
               <Plus className="h-3.5 w-3.5" /> Add Category To Plan
             </button>
           )}
-          <div
-            role="tablist"
-            className="inline-flex flex-col overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs sm:flex-row"
-          >
-            <button
-              role="tab"
-              data-tour="overview-sub-timeline"
-              aria-selected={sub === "timeline"}
-              onClick={() => setSub("timeline")}
-              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 ${
-                sub === "timeline"
-                  ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                  : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-              }`}
+          {!forcedSub && (
+            <div
+              role="tablist"
+              className="inline-flex flex-col overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs sm:flex-row"
             >
-              <Clock className="h-3.5 w-3.5" /> Timeline
-            </button>
-            <button
-              role="tab"
-              data-tour="overview-sub-table"
-              aria-selected={sub === "table"}
-              onClick={() => setSub("table")}
-              className={`inline-flex items-center justify-center gap-1.5 border-t border-[var(--border)] px-3 py-1.5 sm:border-l sm:border-t-0 ${
-                sub === "table"
-                  ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                  : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-              }`}
-            >
-              <ListChecks className="h-3.5 w-3.5" /> Table
-            </button>
-          </div>
+              <button
+                role="tab"
+                aria-selected={sub === "timeline"}
+                onClick={() => setSub("timeline")}
+                className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 ${
+                  sub === "timeline"
+                    ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                    : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                }`}
+              >
+                <Clock className="h-3.5 w-3.5" /> Timeline
+              </button>
+              <button
+                role="tab"
+                aria-selected={sub === "table"}
+                onClick={() => setSub("table")}
+                className={`inline-flex items-center justify-center gap-1.5 border-t border-[var(--border)] px-3 py-1.5 sm:border-l sm:border-t-0 ${
+                  sub === "table"
+                    ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                    : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                }`}
+              >
+                <ListChecks className="h-3.5 w-3.5" /> Table
+              </button>
+            </div>
+          )}
         </div>
 
       </div>
