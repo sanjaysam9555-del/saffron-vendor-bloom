@@ -50,31 +50,20 @@ export function ClientSummaryView({ vendors, items, brideName, groomName, weddin
   return (
     <div className="animate-fade-in space-y-6">
       {/* Hero band */}
-      <section className="relative overflow-hidden rounded-2xl border border-[var(--charcoal)]/40 bg-[var(--charcoal)] px-6 py-8 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.45)] sm:px-10 sm:py-10">
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(110% 75% at 100% 0%, color-mix(in oklab, var(--terracotta) 90%, transparent) 0%, transparent 55%), radial-gradient(90% 70% at 0% 100%, color-mix(in oklab, var(--terracotta) 70%, transparent) 0%, transparent 60%), linear-gradient(135deg, color-mix(in oklab, var(--terracotta) 45%, transparent) 0%, transparent 65%)",
-          }}
-          aria-hidden
-        />
-        <div className="pointer-events-none absolute inset-0 bg-[var(--charcoal)]/35" aria-hidden />
-        <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[var(--gold)]/70 to-transparent" aria-hidden />
-        <div className="pointer-events-none absolute inset-x-8 bottom-0 h-px bg-gradient-to-r from-transparent via-[var(--terracotta)]/50 to-transparent" aria-hidden />
+      <section className="relative overflow-hidden rounded-2xl border border-[var(--terracotta)] bg-[var(--terracotta)] px-6 py-8 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.35)] sm:px-10 sm:py-10">
         <div className="relative flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--gold)]">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--cream)]/85">
               <Sparkles className="h-3 w-3" /> The Wedding Of
             </span>
             <h2 className="mt-2 font-display text-3xl font-semibold text-[var(--cream)] sm:text-4xl">
-              {brideName} <span className="text-[var(--gold)]">&amp;</span> {groomName}
+              {brideName} <span className="text-[var(--cream)]/80">&amp;</span> {groomName}
             </h2>
-            <p className="mt-1 text-sm text-[var(--cream)]/75">{dateFmt}</p>
+            <p className="mt-1 text-sm text-[var(--cream)]/80">{dateFmt}</p>
           </div>
-          <div className="shrink-0 rounded-xl border border-[var(--cream)]/15 bg-[var(--charcoal)]/55 px-5 py-3 text-center shadow-[0_1px_0_rgba(255,255,255,0.04)] backdrop-blur">
+          <div className="shrink-0 rounded-xl border border-[var(--cream)]/20 bg-[var(--cream)]/10 px-5 py-3 text-center backdrop-blur">
             <span className="block text-[9px] font-medium uppercase tracking-[0.18em] text-[var(--cream)]/70">
-              <CalendarHeart className="mr-1 inline h-3 w-3 text-[var(--gold)]" />
+              <CalendarHeart className="mr-1 inline h-3 w-3 text-[var(--cream)]" />
               Countdown
             </span>
             <span className="mt-1 block font-display text-3xl font-semibold text-[var(--cream)]">
