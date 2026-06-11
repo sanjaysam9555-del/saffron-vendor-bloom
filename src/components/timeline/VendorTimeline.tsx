@@ -63,7 +63,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
 
   return (
     <div className="mt-2">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 flex flex-row items-start justify-between gap-3 sm:items-center">
         <div>
           <h2 className="font-display text-2xl text-[var(--terracotta)] sm:text-xl">Budget &amp; Deadlines</h2>
           <p className="mt-0.5 text-xs text-[var(--charcoal)]/65">
@@ -82,7 +82,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
           )}
           <div
             role="tablist"
-            className="inline-flex overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs"
+            className="inline-flex flex-col overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs sm:flex-row"
           >
             <button
               role="tab"
@@ -102,7 +102,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
               data-tour="overview-sub-table"
               aria-selected={sub === "table"}
               onClick={() => setSub("table")}
-              className={`inline-flex items-center justify-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 ${
+              className={`inline-flex items-center justify-center gap-1.5 border-t border-[var(--border)] px-3 py-1.5 sm:border-l sm:border-t-0 ${
                 sub === "table"
                   ? "bg-[var(--charcoal)] text-[var(--cream)]"
                   : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
