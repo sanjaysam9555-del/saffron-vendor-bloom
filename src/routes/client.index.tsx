@@ -12,6 +12,7 @@ import {
   Table as TableIcon,
   Clock,
   Mail,
+  Gauge,
 } from "lucide-react";
 import { ClientGate } from "@/components/ClientGate";
 import { useAuth } from "@/lib/auth";
@@ -20,7 +21,7 @@ import { listProjectCategoryDeadlines } from "@/lib/project-deadlines.functions"
 import { ClientTopNav } from "@/components/client/ClientTopNav";
 import { ClientSidebar, type ClientFilterState } from "@/components/client/ClientSidebar";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
-import { ClientSummaryStats } from "@/components/client/ClientSummaryStats";
+import { ClientSummaryView } from "@/components/client/ClientSummaryView";
 import { SectionHelper } from "@/components/client/SectionHelper";
 import { useClientTour } from "@/hooks/useClientTour";
 const ClientVendorDetail = lazy(() =>
@@ -38,7 +39,7 @@ import { UrgencyStrip } from "@/components/timeline/UrgencyStrip";
 import { buildTimelineItems } from "@/lib/build-timeline-items";
 
 
-type ViewMode = "grid" | "board" | "table" | "timeline";
+type ViewMode = "grid" | "board" | "table" | "timeline" | "summary";
 const VIEW_STORAGE_KEY = "saffron.client.viewMode";
 
 export const Route = createFileRoute("/client/")({
@@ -111,7 +112,7 @@ function ClientPortalPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
-    if (stored === "grid" || stored === "board" || stored === "table" || stored === "timeline") setView(stored);
+    if (stored === "grid" || stored === "board" || stored === "table" || stored === "timeline" || stored === "summary") setView(stored);
   }, []);
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -222,14 +223,6 @@ function ClientPortalPage() {
         />
       </div>
 
-      <ClientSummaryStats
-        vendors={vendors}
-        items={timelineItems}
-        brideName={project.bride_name}
-        groomName={project.groom_name}
-        weddingDate={project.wedding_date}
-        onJump={setView}
-      />
 
       <div className="mx-auto flex w-full max-w-[1600px] flex-1">
         <ClientSidebar
