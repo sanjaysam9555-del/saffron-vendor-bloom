@@ -50,16 +50,17 @@ export function ClientSummaryView({ vendors, items, brideName, groomName, weddin
   return (
     <div className="animate-fade-in space-y-6">
       {/* Hero band */}
-      <section className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--cream-deep)] px-6 py-8 sm:px-10 sm:py-10">
+      <section className="relative overflow-hidden rounded-2xl border border-[var(--champagne)]/60 bg-[var(--cream)] px-6 py-8 shadow-[0_1px_0_rgba(0,0,0,0.02)] sm:px-10 sm:py-10">
         <div
-          className="pointer-events-none absolute inset-0 opacity-70"
+          className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(120% 80% at 0% 0%, color-mix(in oklab, var(--terracotta) 10%, transparent) 0%, transparent 55%), radial-gradient(90% 70% at 100% 100%, color-mix(in oklab, var(--champagne) 35%, transparent) 0%, transparent 60%)",
+              "radial-gradient(110% 75% at 100% 0%, color-mix(in oklab, var(--gold) 22%, transparent) 0%, transparent 55%), radial-gradient(90% 70% at 0% 100%, color-mix(in oklab, var(--terracotta) 18%, transparent) 0%, transparent 60%), linear-gradient(135deg, color-mix(in oklab, var(--champagne) 14%, transparent) 0%, transparent 60%)",
           }}
           aria-hidden
         />
-        <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[var(--terracotta)]/30 to-transparent" aria-hidden />
+        <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[var(--gold)]/50 to-transparent" aria-hidden />
+        <div className="pointer-events-none absolute inset-x-8 bottom-0 h-px bg-gradient-to-r from-transparent via-[var(--terracotta)]/25 to-transparent" aria-hidden />
         <div className="relative flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <span className="inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--terracotta)]">
