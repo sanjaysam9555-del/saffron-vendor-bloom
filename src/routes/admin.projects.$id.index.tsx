@@ -32,6 +32,7 @@ import { instagramUrl, normalizeInstagramHandle } from "@/lib/instagram";
 import { VendorTimeline } from "@/components/timeline/VendorTimeline";
 import { listProjectCategoryDeadlines } from "@/lib/project-deadlines.functions";
 import { buildTimelineItems } from "@/lib/build-timeline-items";
+import { QuickAddVendorPanel } from "@/components/admin/QuickAddVendorPanel";
 
 export const Route = createFileRoute("/admin/projects/$id/")({
   head: () => ({
