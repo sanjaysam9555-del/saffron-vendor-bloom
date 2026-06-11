@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bell } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { UrgencyStrip } from "@/components/timeline/UrgencyStrip";
+import { classifyUrgency, useNow, type TimelineItem, type UrgencyBucket } from "@/lib/urgency";
 
 interface NotificationRow {
   id: string;
@@ -26,6 +28,12 @@ interface NotificationRow {
   created_at: string;
 }
 
+interface Props {
+  attentionItems: TimelineItem[];
+  onAttentionChipClick: (category: string) => void;
+  onAttentionViewAll: () => void;
+}
+
 function timeAgo(iso: string) {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
   if (s < 60) return `${s}s`;
@@ -34,13 +42,29 @@ function timeAgo(iso: string) {
   return `${Math.floor(s / 86400)}d`;
 }
 
-export function ClientNotificationsBell() {
+const ATTENTION_BUCKETS: UrgencyBucket[] = ["overdue", "urgent", "soon"];
+
+export function ClientNotificationsBell({
+  attentionItems,
+  onAttentionChipClick,
+  onAttentionViewAll,
+}: Props) {
   const { user } = useAuth();
   const userId = user?.id;
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [open, setOpen] = useState(false);
+  const now = useNow();
 
-  const unread = items.filter((i) => !i.read_at).length;
+  const attentionCount = useMemo(
+    () =>
+      attentionItems.filter((it) =>
+        ATTENTION_BUCKETS.includes(classifyUrgency(it, now).bucket),
+      ).length,
+    [attentionItems, now],
+  );
+
+  const unreadNotifs = items.filter((i) => !i.read_at).length;
+  const totalBadge = unreadNotifs + attentionCount;
 
   const refresh = async () => {
     try {
@@ -101,17 +125,35 @@ export function ClientNotificationsBell() {
           className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-[var(--charcoal)]/70 transition hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
         >
           <Bell className="h-4 w-4" />
-          {unread > 0 && (
+          {totalBadge > 0 && (
             <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-[16px] items-center justify-center rounded-full bg-[var(--terracotta)] px-1 text-[10px] font-semibold leading-4 text-white">
-              {unread > 9 ? "9+" : unread}
+              {totalBadge > 9 ? "9+" : totalBadge}
             </span>
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[360px] p-0">
+      <PopoverContent align="end" className="w-[min(92vw,380px)] overflow-hidden p-0">
+        {/* Pinned attention strip */}
+        {attentionCount > 0 && (
+          <div className="sticky top-0 z-10 border-b border-[var(--border)]">
+            <UrgencyStrip
+              items={attentionItems}
+              onChipClick={(cat) => {
+                setOpen(false);
+                onAttentionChipClick(cat);
+              }}
+              onViewAll={() => {
+                setOpen(false);
+                onAttentionViewAll();
+              }}
+              maxChips={6}
+            />
+          </div>
+        )}
+
         <div className="flex items-center justify-between border-b px-3 py-2">
           <div className="text-sm font-semibold">Notifications</div>
-          {unread > 0 && (
+          {unreadNotifs > 0 && (
             <button
               onClick={markAll}
               className="text-xs text-[var(--terracotta)] hover:underline"
@@ -120,7 +162,7 @@ export function ClientNotificationsBell() {
             </button>
           )}
         </div>
-        <div className="max-h-[420px] overflow-y-auto">
+        <div className="max-h-[360px] overflow-y-auto">
           {items.length === 0 ? (
             <div className="px-3 py-8 text-center text-sm text-muted-foreground">
               No notifications yet.

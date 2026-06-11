@@ -4,12 +4,21 @@ import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { ClientNotificationsBell } from "./ClientNotificationsBell";
 import { ClientTourButton } from "./ClientTourButton";
+import type { TimelineItem } from "@/lib/urgency";
 
 interface Props {
   onStartTour: () => void;
+  attentionItems: TimelineItem[];
+  onAttentionChipClick: (category: string) => void;
+  onAttentionViewAll: () => void;
 }
 
-export function ClientTopNav({ onStartTour }: Props) {
+export function ClientTopNav({
+  onStartTour,
+  attentionItems,
+  onAttentionChipClick,
+  onAttentionViewAll,
+}: Props) {
   const { signOut } = useAuth();
   const confirm = useConfirm();
   const handleSignOut = async () => {
@@ -37,7 +46,11 @@ export function ClientTopNav({ onStartTour }: Props) {
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-2.5">
           <span data-tour="notifications-bell" className="inline-flex">
-            <ClientNotificationsBell />
+            <ClientNotificationsBell
+              attentionItems={attentionItems}
+              onAttentionChipClick={onAttentionChipClick}
+              onAttentionViewAll={onAttentionViewAll}
+            />
           </span>
           <ClientTourButton onStart={onStartTour} />
           <button

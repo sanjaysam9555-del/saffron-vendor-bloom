@@ -35,7 +35,7 @@ import { ClientVendorTable } from "@/components/client/ClientVendorTable";
 import type { ClientVendor } from "@/lib/project-types";
 import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
 import { VendorTimeline } from "@/components/timeline/VendorTimeline";
-import { UrgencyStrip } from "@/components/timeline/UrgencyStrip";
+
 import { buildTimelineItems } from "@/lib/build-timeline-items";
 
 
@@ -220,15 +220,13 @@ function ClientPortalPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--cream)]">
-      <ClientTopNav onStartTour={tour.start} />
+      <ClientTopNav
+        onStartTour={tour.start}
+        attentionItems={timelineItems}
+        onAttentionChipClick={jumpToCategory}
+        onAttentionViewAll={() => setView("timeline")}
+      />
 
-      <div data-tour="urgency-strip">
-        <UrgencyStrip
-          items={timelineItems}
-          onChipClick={jumpToCategory}
-          onViewAll={() => setView("timeline")}
-        />
-      </div>
 
 
       <div className="mx-auto flex w-full max-w-[1600px] flex-1">

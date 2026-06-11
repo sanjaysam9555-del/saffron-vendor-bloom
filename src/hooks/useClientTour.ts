@@ -41,10 +41,10 @@ export function useClientTour({ setView }: Options) {
         ),
       },
       {
-        element: '[data-tour="urgency-strip"]',
+        element: '[data-tour="notifications-bell"]',
         popover: popover(
           "Needs your attention",
-          "Time-sensitive categories surface here. Tap any chip to jump straight to that category in the Overview.",
+          "Time-sensitive categories and new updates from your planner live inside the bell. The badge counts how many things need a look — open it to see the chips and jump straight to a category.",
         ),
       },
       {
@@ -127,13 +127,6 @@ export function useClientTour({ setView }: Options) {
         popover: popover(
           "Search",
           "Find any vendor instantly by name, Instagram handle, subcategory or location.",
-        ),
-      },
-      {
-        element: '[data-tour="notifications-bell"]',
-        popover: popover(
-          "Notifications",
-          "Quote updates, comments from your planner, and important changes land here.",
         ),
       },
       {
