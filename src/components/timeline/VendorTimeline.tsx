@@ -1248,7 +1248,9 @@ function HorizontalTimeline({
   const DAY_MS = 86400000;
   const totalDays = Math.max(30, Math.ceil((end.getTime() - start.getTime()) / DAY_MS));
   const pxPerDay = 6;
-  const width = Math.max(900, totalDays * pxPerDay + 80);
+  const CARD_W = 180;
+  const EDGE_PAD = CARD_W / 2 + 16;
+  const width = Math.max(900, totalDays * pxPerDay + EDGE_PAD * 2);
 
   const months: Date[] = [];
   {
@@ -1260,7 +1262,7 @@ function HorizontalTimeline({
   }
 
   const xFor = (d: string | Date) =>
-    ((new Date(d).getTime() - start.getTime()) / DAY_MS) * pxPerDay + 24;
+    ((new Date(d).getTime() - start.getTime()) / DAY_MS) * pxPerDay + EDGE_PAD;
 
   const AXIS_Y = 180;
   const CARD_W = 180;

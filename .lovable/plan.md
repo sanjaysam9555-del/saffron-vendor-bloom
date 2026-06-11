@@ -1,19 +1,16 @@
 ## Problem
 
-In the admin view of a project's timeline, clicking **"Add category to plan"** opens a dialog whose category dropdown hides any category that's already in the timeline. Because the timeline includes every category that has vendors assigned (not just deadline rows), many master-list categories disappear from the dropdown — making it look like only a few categories are available.
+In the desktop horizontal timeline, the first card ("Hotels & Venues" in the screenshot) is clipped on the left edge of the scroll container. The card is positioned at `left = x - CARD_W/2` where `x = days_from_start * 6 + 24`. Because the start of the axis only has 24px of left padding while a card is 180px wide (90px half-width), any item dated in the first ~11 days of the timeline range renders with a negative `left` and gets cut off.
 
 ## Fix
 
-In `src/components/timeline/VendorTimeline.tsx` → `AddCategoryDialog`:
+In `HorizontalTimeline` inside `src/components/timeline/VendorTimeline.tsx`:
 
-1. **Stop filtering the dropdown by `existing`.** Render the full `useAllCategories()` list, so admins always see every category from the master list (base + custom).
-2. **Keep the duplicate guard.** When the selected category is already on the plan, still show the existing "This category is already on the plan." warning and disable Save — so the dropdown is complete but we don't accidentally overwrite an existing deadline row.
-3. **Default `useCustom` to false** whenever the master list has any categories (it currently flips to custom-input mode if `available` is empty, which can happen spuriously now that filtering changes).
-4. **Initial `category` value** = first item of the full categories list (not the filtered one).
+1. Increase the axis left padding so the earliest card never starts before the visible area. Change the `+ 24` offset inside `xFor` to `CARD_W / 2 + 16` (= 106 px). Apply the same padding on the right side by adding `CARD_W / 2 + 16` to `width` instead of the current `+ 80`.
+2. Keep all existing positioning math (month ticks, today line, wedding marker, connectors) — they all derive from `xFor`, so bumping the offset shifts them consistently and nothing else needs to move.
 
-No backend, schema, server-function, or styling changes. The `existing` prop stays — it's still used to compute `isDup`.
+No new tokens, no responsive logic changes, no behavior change beyond eliminating the left-edge clipping.
 
 ## Out of scope
 
-- Adding/renaming categories from this dialog (the existing "Type a custom name" toggle still covers ad-hoc entries).
-- Changes to the timeline filtering logic or to client-mode behaviour.
+Mobile/vertical timeline, table view, and card collision rules.
