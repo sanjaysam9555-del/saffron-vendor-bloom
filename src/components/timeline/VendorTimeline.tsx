@@ -107,13 +107,13 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
           {!forcedSub && (
             <div
               role="tablist"
-              className="inline-flex flex-col overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs sm:flex-row"
+              className="col-span-2 inline-flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs sm:w-auto"
             >
               <button
                 role="tab"
                 aria-selected={sub === "timeline"}
                 onClick={() => setSub("timeline")}
-                className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 ${
+                className={`inline-flex flex-1 items-center justify-center gap-1.5 px-3 py-1.5 sm:flex-none ${
                   sub === "timeline"
                     ? "bg-[var(--charcoal)] text-[var(--cream)]"
                     : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
@@ -125,7 +125,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
                 role="tab"
                 aria-selected={sub === "table"}
                 onClick={() => setSub("table")}
-                className={`inline-flex items-center justify-center gap-1.5 border-t border-[var(--border)] px-3 py-1.5 sm:border-l sm:border-t-0 ${
+                className={`inline-flex flex-1 items-center justify-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 sm:flex-none ${
                   sub === "table"
                     ? "bg-[var(--charcoal)] text-[var(--cream)]"
                     : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
