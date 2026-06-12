@@ -701,11 +701,19 @@ function RibbonRow({
           </div>
 
           {editing && mode === "admin" && (
-            <DeadlineEditor
-              item={item}
-              projectId={projectId}
-              onDone={() => setEditing(false)}
-            />
+            item.kind === "other" ? (
+              <OtherExpenseEditor
+                item={item}
+                projectId={projectId}
+                onDone={() => setEditing(false)}
+              />
+            ) : (
+              <DeadlineEditor
+                item={item}
+                projectId={projectId}
+                onDone={() => setEditing(false)}
+              />
+            )
           )}
         </article>
       </div>
