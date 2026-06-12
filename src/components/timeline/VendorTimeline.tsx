@@ -85,7 +85,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
   return (
     <div className="mt-2">
       <div className="mb-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-end">
-        <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
           {mode === "admin" && (
             <>
               <button
