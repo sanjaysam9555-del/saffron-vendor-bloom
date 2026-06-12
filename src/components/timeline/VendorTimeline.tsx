@@ -1279,22 +1279,19 @@ function OtherTableRow({
   item,
   projectId,
   mode,
+  now,
   registerRowRef,
 }: {
   item: TimelineItem;
   projectId: string;
   mode: "admin" | "client";
+  now: Date;
   registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const { bucket, daysLeft } = classifyUrgency(item, now);
+  const color = BUCKET_TOKEN[bucket];
   const actual = resolveActual(item);
-  const accent = "var(--champagne)";
-  const critClass =
-    item.criticality === "high"
-      ? "bg-[var(--criticality-high-bg)] text-[var(--terracotta)]"
-      : item.criticality === "low"
-        ? "bg-[var(--criticality-low-bg)] text-[var(--charcoal)]/60"
-        : "bg-[var(--criticality-med-bg)] text-[var(--charcoal)]/80";
 
   return (
     <>
@@ -1303,29 +1300,23 @@ function OtherTableRow({
           registerRowRef?.(item.category, el as unknown as HTMLDivElement | null)
         }
         data-category={item.category}
-        className="border-t border-[var(--border)] bg-[var(--cream)]/30"
-        style={{ borderLeft: `3px solid ${accent}` }}
+        className="border-t border-[var(--border)]"
+        style={{ borderLeft: `3px solid ${color}` }}
       >
         <td className="px-3 py-2 font-medium">{item.category}</td>
-        <td className="px-3 py-2">
-          <span className="inline-flex items-center rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/65">
-            Others
-          </span>
+        <td className="px-3 py-2">NA</td>
+        <td className="px-3 py-2">{item.due_date ? formatDueDate(item.due_date) : "—"}</td>
+        <td className="px-3 py-2" style={{ color }}>
+          {item.booked ? "—" : daysLeft === null ? "—" : daysLeftLabel(daysLeft)}
         </td>
-        <td className="px-3 py-2 text-[var(--charcoal)]/50">—</td>
-        <td className="px-3 py-2 text-[var(--charcoal)]/50">—</td>
-        <td className="px-3 py-2">
-          <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${critClass}`}>
-            {item.criticality}
-          </span>
-        </td>
+        <td className="px-3 py-2 capitalize">{item.criticality}</td>
         <td className="px-3 py-2">
           {item.booked ? (
             <span className="inline-flex items-center gap-1 text-emerald-700">
               <CheckCircle2 className="h-3.5 w-3.5" /> Booked
             </span>
           ) : (
-            <span className="text-[var(--charcoal)]/60">Pending</span>
+            BUCKET_LABEL[bucket]
           )}
         </td>
         <td className="px-3 py-2 text-right tabular-nums">
