@@ -59,8 +59,8 @@ export const listProjectOtherExpenses = createServerFn({ method: "GET" })
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const cols = staff
-      ? "id, project_id, label, planned_amount, actual_amount, notes, sort_order, updated_at"
-      : "id, project_id, label, planned_amount, actual_amount, sort_order, updated_at";
+      ? "id, project_id, label, planned_amount, actual_amount, notes, sort_order, criticality, booked, updated_at"
+      : "id, project_id, label, planned_amount, actual_amount, sort_order, criticality, booked, updated_at";
     const { data: rows, error } = await supabaseAdmin
       .from("project_other_expenses")
       .select(cols as string)
