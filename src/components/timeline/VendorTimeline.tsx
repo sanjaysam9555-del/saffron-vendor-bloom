@@ -67,10 +67,19 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
   const [subState, setSub] = useState<SubView>("timeline");
   const sub = forcedSub ?? subState;
   const [addOpen, setAddOpen] = useState(false);
+  const [addOtherOpen, setAddOtherOpen] = useState(false);
   const now = useNow();
+  // Timeline visuals (ribbon / horizontal / urgency) ignore "other" expense
+  // rows — they have no due date and are not actual vendor categories.
+  const vendorOnly = useMemo(() => items.filter((i) => i.kind !== "other"), [items]);
   const sorted = useMemo(() => sortItems(items, now), [items, now]);
-  const unsetCount = items.filter((i) => !i.due_date && !i.booked).length;
-  const existingCategories = useMemo(() => items.map((i) => i.category), [items]);
+  const unsetCount = vendorOnly.filter((i) => !i.due_date && !i.booked).length;
+  const existingCategories = useMemo(() => vendorOnly.map((i) => i.category), [vendorOnly]);
+  const existingOtherLabels = useMemo(
+    () =>
+      items.filter((i) => i.kind === "other").map((i) => i.category),
+    [items],
+  );
 
 
   return (
@@ -78,13 +87,22 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
       <div className="mb-4 flex flex-row items-start justify-end gap-3 sm:items-center">
         <div className="flex flex-wrap items-center gap-2">
           {mode === "admin" && (
-            <button
-              type="button"
-              onClick={() => setAddOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-[var(--terracotta)] bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
-            >
-              <Plus className="h-3.5 w-3.5" /> Add Category To Plan
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => setAddOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-[var(--terracotta)] bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
+              >
+                <Plus className="h-3.5 w-3.5" /> Add Category To Plan
+              </button>
+              <button
+                type="button"
+                onClick={() => setAddOtherOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--charcoal)]/80 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+              >
+                <Plus className="h-3.5 w-3.5" /> Add Other Expense
+              </button>
+            </>
           )}
           {!forcedSub && (
             <div
@@ -139,7 +157,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
         <>
           <div className="md:hidden">
             <TimelineRibbon
-              items={items}
+              items={vendorOnly}
               projectId={projectId}
               mode={mode}
               weddingDate={weddingDate}
@@ -149,7 +167,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
           </div>
           <div className="hidden md:block">
             <HorizontalTimeline
-              items={items}
+              items={vendorOnly}
               projectId={projectId}
               mode={mode}
               weddingDate={weddingDate}
@@ -165,6 +183,15 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
           mode={mode}
           now={now}
           registerRowRef={registerRowRef}
+          onAddOther={mode === "admin" ? () => setAddOtherOpen(true) : undefined}
+        />
+      )}
+
+      {addOtherOpen && mode === "admin" && (
+        <AddOtherExpenseDialog
+          projectId={projectId}
+          existingLabels={existingOtherLabels}
+          onClose={() => setAddOtherOpen(false)}
         />
       )}
 
