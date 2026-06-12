@@ -1,70 +1,33 @@
-## Goal
-Stop the Filter + 5 view tabs from overlapping/clipping on mobile. Keep the segmented pill aesthetic, but let the row scroll horizontally with snap, and auto-scroll the active tab into view.
+## Problem
 
-## Changes (single file: `src/routes/client.index.tsx`)
+In the client view, the inline deadline editor (rendered inside each category card on the Timeline) overflows the card width. The "Actual Cost" field visibly bleeds past the right edge of the card, and the Save button drops outside the dotted card boundary.
 
-### 1. Row container
-Currently the right-side container is `flex w-full ... sm:w-auto`, which forces all 6 controls to share 390px and clip.
+Root cause is in `src/components/timeline/VendorTimeline.tsx` around line 954, the `DeadlineEditor` row:
 
-Update to:
-- Keep `Filter` button pinned on the left with `shrink-0` (so it never scrolls away).
-- Wrap the view-toggle segmented control in a horizontally scrollable region.
-
-```tsx
-<div className="flex w-full shrink-0 items-stretch gap-1.5 sm:w-auto sm:gap-2">
-  <button data-tour="filters-button" ... className="... shrink-0 lg:hidden">
-    {/* Filter */}
-  </button>
-
-  {/* New scroll wrapper — mobile only behavior */}
-  <div className="relative min-w-0 flex-1 sm:flex-none">
-    <div
-      data-tour="view-toggle"
-      role="tablist"
-      aria-label="View"
-      className="no-scrollbar flex snap-x snap-mandatory items-stretch overflow-x-auto rounded-md border border-[var(--border)] bg-white text-[10px] leading-none sm:overflow-visible sm:text-xs"
-    >
-      {/* each tab gets: shrink-0 snap-start whitespace-nowrap, drop flex-1 */}
-    </div>
-    {/* subtle right-edge fade hint that more tabs exist (mobile only) */}
-    <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[var(--cream)] to-transparent sm:hidden" aria-hidden />
-  </div>
-</div>
+```
+sm:grid-cols-[auto_auto_auto_auto_1fr_auto]
 ```
 
-### 2. Each tab button
-- Remove `flex-1` (was forcing equal widths and causing the squeeze).
-- Add `shrink-0 snap-start whitespace-nowrap`.
-- Bump horizontal padding slightly so labels breathe (`px-2.5 py-1.5`).
-- Keep current active/inactive styling and `data-tour` anchors untouched.
+combined with fixed-width inputs (`w-32` on Planned Budget, `w-36` on Actual Cost) and no `min-w-0` on the grid children. At the card's available width (~720px on this viewport) the sum of intrinsic column widths exceeds the container, so the grid overflows horizontally instead of wrapping.
 
-### 3. Auto-scroll active tab into view
-Add a small effect after `view` state so the active tab scrolls into the visible region on mobile (and after the user changes view):
+## Fix (frontend-only, presentation)
 
-```tsx
-useEffect(() => {
-  const el = document.querySelector(
-    `[data-tour="view-toggle"] [aria-selected="true"]`
-  ) as HTMLElement | null;
-  el?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-}, [view]);
-```
+In `src/components/timeline/VendorTimeline.tsx`, update the `DeadlineEditor` container and field cells so the row fits inside the card and wraps gracefully on narrower widths:
 
-### 4. Hide scrollbar utility
-Add a tiny `.no-scrollbar` utility (Tailwind v4 `@utility` in `src/styles.css`) so the scroll affordance stays clean:
+1. Replace the grid template with a responsive layout that wraps:
+   - Mobile: 2 columns (current behavior is fine).
+   - `sm`: 3 columns.
+   - `lg`: a single row using `auto` for date / criticality / amounts and `1fr` for Notes, with the action buttons in their own row that right-aligns.
+   - Add `min-w-0` to each `<label>` cell so inputs can shrink.
 
-```css
-@utility no-scrollbar {
-  scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
-}
-```
+2. Remove the fixed `w-32` / `w-36` on the Planned Budget and Actual Cost inputs; let them be `w-full` and shrink with the column.
 
-## Out of scope
-- No change to desktop layout (`sm:` and above keep current sizing).
-- No change to which tabs exist, order, icons, or tour anchors.
-- Filter button behavior unchanged.
+3. Move the Save/Clear buttons into their own row that spans the full width and right-aligns, so they never push the form off the card on intermediate widths.
 
-## Files touched
-- `src/routes/client.index.tsx` — row wrapper, tab classes, scroll-into-view effect.
-- `src/styles.css` — `no-scrollbar` utility.
+No business logic, no server function, no schema changes. Pure CSS / Tailwind tweak inside `DeadlineEditor`.
+
+## Verification
+
+- Reload `/client`, expand a category card on desktop (~838px viewport from the screenshot) and confirm no horizontal overflow of the cream editor block.
+- Resize to ~400px mobile width: fields stack to 2 columns, nothing overflows.
+- Resize to ~1200px: fields sit on one row, Notes takes the remaining space, Save/Clear pinned right.
