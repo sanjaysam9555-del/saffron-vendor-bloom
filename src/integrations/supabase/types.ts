@@ -376,8 +376,10 @@ export type Database = {
       project_other_expenses: {
         Row: {
           actual_amount: number | null
+          booked: boolean
           created_at: string
           created_by: string | null
+          criticality: string
           id: string
           label: string
           notes: string | null
@@ -388,8 +390,10 @@ export type Database = {
         }
         Insert: {
           actual_amount?: number | null
+          booked?: boolean
           created_at?: string
           created_by?: string | null
+          criticality?: string
           id?: string
           label: string
           notes?: string | null
@@ -400,8 +404,10 @@ export type Database = {
         }
         Update: {
           actual_amount?: number | null
+          booked?: boolean
           created_at?: string
           created_by?: string | null
+          criticality?: string
           id?: string
           label?: string
           notes?: string | null
