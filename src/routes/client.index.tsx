@@ -19,6 +19,7 @@ import { ClientGate } from "@/components/ClientGate";
 import { useAuth } from "@/lib/auth";
 import { getMyProject } from "@/lib/projects.functions";
 import { listProjectCategoryDeadlines } from "@/lib/project-deadlines.functions";
+import { listProjectOtherExpenses } from "@/lib/project-other-expenses.functions";
 import { ClientTopNav } from "@/components/client/ClientTopNav";
 import { ClientSidebar, type ClientFilterState } from "@/components/client/ClientSidebar";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
