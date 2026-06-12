@@ -140,13 +140,12 @@ function ClientPortalPage() {
     queryFn: () => listProjectOtherExpenses({ data: { project_id: projectId! } }),
     enabled: !!projectId,
   });
-  const otherExpensesActuals = useMemo(
-    () => otherExpenses.reduce((s, r) => s + (r.actual_amount ?? 0), 0),
-    [otherExpenses],
-  );
   const timelineItems = useMemo(
-    () => buildTimelineItems((data?.vendors ?? []) as ClientVendor[], deadlines, "client"),
-    [data?.vendors, deadlines],
+    () => [
+      ...buildTimelineItems((data?.vendors ?? []) as ClientVendor[], deadlines, "client"),
+      ...otherExpensesAsTimelineItems(otherExpenses),
+    ],
+    [data?.vendors, deadlines, otherExpenses],
   );
 
   // Refs to category rows so the urgency strip can scroll to them.
