@@ -9,8 +9,6 @@ interface Props {
   brideName: string;
   groomName: string;
   weddingDate: string;
-  /** Sum of non-vendor "Other expenses" actuals to include in spend totals. */
-  extraActuals?: number;
 }
 
 function daysUntil(iso: string): number {
