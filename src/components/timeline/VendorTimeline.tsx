@@ -640,7 +640,7 @@ function RibbonRow({
                 {item.category}
               </h4>
               <p className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
-                {item.vendor_count} shortlisted
+                {item.kind === "other" ? "Other expense" : `${item.vendor_count} shortlisted`}
                 {item.notes ? ` · ${item.notes}` : ""}
               </p>
             </div>
