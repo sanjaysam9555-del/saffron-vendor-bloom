@@ -139,11 +139,11 @@ export function otherExpensesAsTimelineItems(
     category: r.label,
     vendor_count: 0,
     due_date: null,
-    criticality: "low",
+    criticality: r.criticality ?? "medium",
     notes: r.notes ?? null,
-    // Treated as settled line items so they count toward the "Booked" tally
-    // and don't appear in urgency / "needs attention" surfaces.
-    booked: true,
+    // Reflect the planner-set "booked" flag so unbooked Others surface in
+    // urgency / "needs attention" while still staying off scheduled views.
+    booked: r.booked ?? true,
     booked_vendor_name: null,
     planned_amount: r.planned_amount,
     closed_amount_auto: r.actual_amount,
