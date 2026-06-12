@@ -412,31 +412,40 @@ function ClientPortalPage() {
           )}
 
           {view === "summary" ? (
-            <ClientSummaryView
-              vendors={vendors}
-              items={timelineItems}
-              brideName={project.bride_name}
-              groomName={project.groom_name}
-              weddingDate={project.wedding_date}
-            />
+            <>
+              <ClientSummaryView
+                vendors={vendors}
+                items={timelineItems}
+                brideName={project.bride_name}
+                groomName={project.groom_name}
+                weddingDate={project.wedding_date}
+              />
+              <OtherExpensesPanel projectId={projectId!} mode="client" />
+            </>
           ) : view === "timeline" ? (
-            <VendorTimeline
-              projectId={projectId!}
-              weddingDate={project.wedding_date}
-              items={timelineItems}
-              mode="client"
-              registerRowRef={registerRowRef}
-              forcedSub="timeline"
-            />
+            <>
+              <VendorTimeline
+                projectId={projectId!}
+                weddingDate={project.wedding_date}
+                items={timelineItems}
+                mode="client"
+                registerRowRef={registerRowRef}
+                forcedSub="timeline"
+              />
+              <OtherExpensesPanel projectId={projectId!} mode="client" />
+            </>
           ) : view === "category" ? (
-            <VendorTimeline
-              projectId={projectId!}
-              weddingDate={project.wedding_date}
-              items={timelineItems}
-              mode="client"
-              registerRowRef={registerRowRef}
-              forcedSub="table"
-            />
+            <>
+              <VendorTimeline
+                projectId={projectId!}
+                weddingDate={project.wedding_date}
+                items={timelineItems}
+                mode="client"
+                registerRowRef={registerRowRef}
+                forcedSub="table"
+              />
+              <OtherExpensesPanel projectId={projectId!} mode="client" />
+            </>
           ) : vendors.length === 0 ? (
             <EmptyState message="Your planner hasn't shared any vendors yet. Check back soon." />
           ) : filtered.length === 0 ? (
