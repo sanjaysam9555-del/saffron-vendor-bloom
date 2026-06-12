@@ -158,7 +158,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
         <>
           <div className="md:hidden">
             <TimelineRibbon
-              items={vendorOnly}
+              items={sorted}
               projectId={projectId}
               mode={mode}
               weddingDate={weddingDate}
@@ -168,7 +168,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
           </div>
           <div className="hidden md:block">
             <HorizontalTimeline
-              items={vendorOnly}
+              items={sorted}
               projectId={projectId}
               mode={mode}
               weddingDate={weddingDate}
