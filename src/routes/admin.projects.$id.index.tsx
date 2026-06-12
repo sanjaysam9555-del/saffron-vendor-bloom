@@ -204,6 +204,7 @@ function ProjectSectionTabs({
   vendors,
   selections,
   deadlines,
+  otherExpenses,
   weddingDate,
   onRemoveVendor,
 }: {
@@ -217,6 +218,7 @@ function ProjectSectionTabs({
   vendors: any[];
   selections: Record<string, Selection[]>;
   deadlines: any[];
+  otherExpenses: any[];
   weddingDate: string;
   onRemoveVendor: (id: string, name: string) => void;
 }) {
@@ -235,6 +237,13 @@ function ProjectSectionTabs({
     >
       <Icon className="h-4 w-4" /> {label}
     </button>
+  );
+  const timelineItems = useMemo(
+    () => [
+      ...buildTimelineItems(vendors, deadlines, "admin"),
+      ...otherExpensesAsTimelineItems(otherExpenses),
+    ],
+    [vendors, deadlines, otherExpenses],
   );
   return (
     <section className="mt-10">
@@ -257,15 +266,12 @@ function ProjectSectionTabs({
           />
         )}
         {tab === "timeline" && (
-          <>
-            <VendorTimeline
-              projectId={projectId}
-              weddingDate={weddingDate}
-              items={buildTimelineItems(vendors, deadlines, "admin")}
-              mode="admin"
-            />
-            <OtherExpensesPanel projectId={projectId} mode="admin" />
-          </>
+          <VendorTimeline
+            projectId={projectId}
+            weddingDate={weddingDate}
+            items={timelineItems}
+            mode="admin"
+          />
         )}
         {tab === "details" && (
           <ProjectDetailsTab
