@@ -1594,7 +1594,7 @@ function AddOtherExpenseDialog({
           </button>
         </div>
         <p className="mb-3 text-xs text-[var(--charcoal)]/55">
-          Non-vendor line items (e.g. Dhol Wala, Heaters, Transport). They appear in the budget table but not on the timeline.
+          Non-vendor line items (e.g. Dhol Wala, Heaters, Transport). They appear alongside vendor categories on the timeline and in the budget table.
         </p>
         <div className="mb-3 flex flex-wrap gap-1.5">
           <span className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">Quick:</span>
