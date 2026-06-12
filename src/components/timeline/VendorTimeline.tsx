@@ -1568,7 +1568,7 @@ function AddOtherExpenseDialog({
           notes: notes.trim() ? notes.trim() : null,
           sort_order: existingLabels.length,
           criticality: crit,
-          booked,
+          due_date: due ? due : null,
         },
       }),
     onSuccess: () => {
