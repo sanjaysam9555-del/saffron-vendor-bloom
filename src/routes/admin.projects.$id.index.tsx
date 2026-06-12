@@ -229,7 +229,7 @@ function ProjectSectionTabs({
       role="tab"
       aria-selected={tab === key}
       onClick={() => setTab(key)}
-      className={`inline-flex flex-1 items-center justify-center gap-1.5 border-l border-[var(--border)] px-4 py-2 first:border-l-0 sm:flex-none ${
+      className={`inline-flex flex-1 items-center justify-center gap-1.5 border-l border-[var(--border)] px-4 py-2 first:border-l-0 ${
         tab === key
           ? "bg-[var(--terracotta)] text-[var(--cream)]"
           : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
@@ -249,7 +249,7 @@ function ProjectSectionTabs({
     <section className="mt-10">
       <div
         role="tablist"
-        className="inline-flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-sm sm:w-auto"
+        className="flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-sm"
       >
         {tabBtn("vendors", "Assigned Vendors", LayoutGrid)}
         {tabBtn("timeline", "Budget & Deadlines", Calendar)}
