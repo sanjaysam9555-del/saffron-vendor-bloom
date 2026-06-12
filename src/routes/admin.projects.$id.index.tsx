@@ -249,7 +249,7 @@ function ProjectSectionTabs({
     <section className="mt-10">
       <div
         role="tablist"
-        className="inline-flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-sm sm:w-auto"
+        className="flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-sm"
       >
         {tabBtn("vendors", "Assigned Vendors", LayoutGrid)}
         {tabBtn("timeline", "Budget & Deadlines", Calendar)}
