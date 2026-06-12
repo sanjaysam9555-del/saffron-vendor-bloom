@@ -373,6 +373,53 @@ export type Database = {
           },
         ]
       }
+      project_other_expenses: {
+        Row: {
+          actual_amount: number | null
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string
+          notes: string | null
+          planned_amount: number | null
+          project_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          actual_amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label: string
+          notes?: string | null
+          planned_amount?: number | null
+          project_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          actual_amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          notes?: string | null
+          planned_amount?: number | null
+          project_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_other_expenses_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_vendor_comments: {
         Row: {
           body: string

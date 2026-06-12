@@ -30,6 +30,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { VendorCommentsThread } from "@/components/client/VendorCommentsThread";
 import { instagramUrl, normalizeInstagramHandle } from "@/lib/instagram";
 import { VendorTimeline } from "@/components/timeline/VendorTimeline";
+import { OtherExpensesPanel } from "@/components/timeline/OtherExpensesPanel";
 import { listProjectCategoryDeadlines } from "@/lib/project-deadlines.functions";
 import { buildTimelineItems } from "@/lib/build-timeline-items";
 import { QuickAddVendorPanel } from "@/components/admin/QuickAddVendorPanel";
@@ -70,6 +71,7 @@ function ProjectDetailPage() {
     { table: "client_vendor_status", invalidate: [["project", id]] },
     { table: "vendors", invalidate: [["project", id]] },
     { table: "project_category_deadlines", filter: `project_id=eq.${id}`, invalidate: [["project-deadlines", id]] },
+    { table: "project_other_expenses", filter: `project_id=eq.${id}`, invalidate: [["project-other-expenses", id]] },
   ]);
 
   const { data: deadlines = [] } = useQuery({
@@ -250,12 +252,15 @@ function ProjectSectionTabs({
           />
         )}
         {tab === "timeline" && (
-          <VendorTimeline
-            projectId={projectId}
-            weddingDate={weddingDate}
-            items={buildTimelineItems(vendors, deadlines, "admin")}
-            mode="admin"
-          />
+          <>
+            <VendorTimeline
+              projectId={projectId}
+              weddingDate={weddingDate}
+              items={buildTimelineItems(vendors, deadlines, "admin")}
+              mode="admin"
+            />
+            <OtherExpensesPanel projectId={projectId} mode="admin" />
+          </>
         )}
         {tab === "details" && (
           <ProjectDetailsTab

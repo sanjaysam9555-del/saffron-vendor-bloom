@@ -19,6 +19,7 @@ import { ClientGate } from "@/components/ClientGate";
 import { useAuth } from "@/lib/auth";
 import { getMyProject } from "@/lib/projects.functions";
 import { listProjectCategoryDeadlines } from "@/lib/project-deadlines.functions";
+import { listProjectOtherExpenses } from "@/lib/project-other-expenses.functions";
 import { ClientTopNav } from "@/components/client/ClientTopNav";
 import { ClientSidebar, type ClientFilterState } from "@/components/client/ClientSidebar";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
@@ -36,6 +37,7 @@ import { ClientVendorTable } from "@/components/client/ClientVendorTable";
 import type { ClientVendor } from "@/lib/project-types";
 import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
 import { VendorTimeline } from "@/components/timeline/VendorTimeline";
+import { OtherExpensesPanel } from "@/components/timeline/OtherExpensesPanel";
 
 import { buildTimelineItems } from "@/lib/build-timeline-items";
 
@@ -93,6 +95,7 @@ function ClientPortalPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "client_vendor_status" }, invalidateProject)
       .on("postgres_changes", { event: "*", schema: "public", table: "vendors" }, invalidateProject)
       .on("postgres_changes", { event: "*", schema: "public", table: "project_category_deadlines", filter: `project_id=eq.${projectId}` }, () => queue([["project-deadlines", projectId]]))
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_other_expenses", filter: `project_id=eq.${projectId}` }, () => queue([["project-other-expenses", projectId]]))
       .subscribe();
     return () => {
       if (timer) window.clearTimeout(timer);
@@ -133,6 +136,15 @@ function ClientPortalPage() {
     queryFn: () => listProjectCategoryDeadlines({ data: { project_id: projectId! } }),
     enabled: !!projectId,
   });
+  const { data: otherExpenses = [] } = useQuery({
+    queryKey: ["project-other-expenses", projectId],
+    queryFn: () => listProjectOtherExpenses({ data: { project_id: projectId! } }),
+    enabled: !!projectId,
+  });
+  const otherExpensesActuals = useMemo(
+    () => otherExpenses.reduce((s, r) => s + (r.actual_amount ?? 0), 0),
+    [otherExpenses],
+  );
   const timelineItems = useMemo(
     () => buildTimelineItems((data?.vendors ?? []) as ClientVendor[], deadlines, "client"),
     [data?.vendors, deadlines],
@@ -410,31 +422,41 @@ function ClientPortalPage() {
           )}
 
           {view === "summary" ? (
-            <ClientSummaryView
-              vendors={vendors}
-              items={timelineItems}
-              brideName={project.bride_name}
-              groomName={project.groom_name}
-              weddingDate={project.wedding_date}
-            />
+            <>
+              <ClientSummaryView
+                vendors={vendors}
+                items={timelineItems}
+                brideName={project.bride_name}
+                groomName={project.groom_name}
+                weddingDate={project.wedding_date}
+                extraActuals={otherExpensesActuals}
+              />
+              <OtherExpensesPanel projectId={projectId!} mode="client" />
+            </>
           ) : view === "timeline" ? (
-            <VendorTimeline
-              projectId={projectId!}
-              weddingDate={project.wedding_date}
-              items={timelineItems}
-              mode="client"
-              registerRowRef={registerRowRef}
-              forcedSub="timeline"
-            />
+            <>
+              <VendorTimeline
+                projectId={projectId!}
+                weddingDate={project.wedding_date}
+                items={timelineItems}
+                mode="client"
+                registerRowRef={registerRowRef}
+                forcedSub="timeline"
+              />
+              <OtherExpensesPanel projectId={projectId!} mode="client" />
+            </>
           ) : view === "category" ? (
-            <VendorTimeline
-              projectId={projectId!}
-              weddingDate={project.wedding_date}
-              items={timelineItems}
-              mode="client"
-              registerRowRef={registerRowRef}
-              forcedSub="table"
-            />
+            <>
+              <VendorTimeline
+                projectId={projectId!}
+                weddingDate={project.wedding_date}
+                items={timelineItems}
+                mode="client"
+                registerRowRef={registerRowRef}
+                forcedSub="table"
+              />
+              <OtherExpensesPanel projectId={projectId!} mode="client" />
+            </>
           ) : vendors.length === 0 ? (
             <EmptyState message="Your planner hasn't shared any vendors yet. Check back soon." />
           ) : filtered.length === 0 ? (

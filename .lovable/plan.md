@@ -1,33 +1,76 @@
-## Problem
+## Goal
 
-In the client view, the inline deadline editor (rendered inside each category card on the Timeline) overflows the card width. The "Actual Cost" field visibly bleeds past the right edge of the card, and the Save button drops outside the dotted card boundary.
+Track non-vendor line items (Dhol Wala, Heaters, Coolers, Transport, "Other") per project — they have **planned** and **actual** cost only. They roll up into budget totals but **never** appear in the timeline ribbon or urgency strip.
 
-Root cause is in `src/components/timeline/VendorTimeline.tsx` around line 954, the `DeadlineEditor` row:
+## Why a new table (not extending `project_category_deadlines`)
 
-```
-sm:grid-cols-[auto_auto_auto_auto_1fr_auto]
-```
+The existing deadlines table is the source of truth for what shows on the timeline. Reusing it with a "hide me" flag would mean filtering it out of `buildTimelineItems`, the urgency strip, the notifications, and the deadline editor — and we'd still have to special-case the missing `due_date` and `criticality` everywhere. Cleaner to keep the two concerns separate.
 
-combined with fixed-width inputs (`w-32` on Planned Budget, `w-36` on Actual Cost) and no `min-w-0` on the grid children. At the card's available width (~720px on this viewport) the sum of intrinsic column widths exceeds the container, so the grid overflows horizontally instead of wrapping.
+## Data model
 
-## Fix (frontend-only, presentation)
+New table `project_other_expenses`:
 
-In `src/components/timeline/VendorTimeline.tsx`, update the `DeadlineEditor` container and field cells so the row fits inside the card and wraps gracefully on narrower widths:
+| column | type | notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `project_id` | uuid fk → `projects.id` on delete cascade | |
+| `label` | text not null | e.g. "Dhol Wala", "Transport" |
+| `planned_amount` | numeric null | INR |
+| `actual_amount` | numeric null | INR (entered manually, no auto-resolve) |
+| `notes` | text null | staff-only |
+| `sort_order` | int default 0 | for stable ordering |
+| `created_by`, `created_at`, `updated_at` | standard | `touch_updated_at` trigger |
 
-1. Replace the grid template with a responsive layout that wraps:
-   - Mobile: 2 columns (current behavior is fine).
-   - `sm`: 3 columns.
-   - `lg`: a single row using `auto` for date / criticality / amounts and `1fr` for Notes, with the action buttons in their own row that right-aligns.
-   - Add `min-w-0` to each `<label>` cell so inputs can shrink.
+Indexes: `(project_id)`, unique `(project_id, lower(label))` to prevent dupes.
 
-2. Remove the fixed `w-32` / `w-36` on the Planned Budget and Actual Cost inputs; let them be `w-full` and shrink with the column.
+GRANTs + RLS:
+- `GRANT SELECT, INSERT, UPDATE, DELETE` to `authenticated`; `GRANT ALL` to `service_role`.
+- Policies (using existing helpers `has_role` and `has_project_access`):
+  - Staff (admin/employee) full read/write.
+  - Clients SELECT only when `has_project_access(auth.uid(), project_id)`.
+  - No anon access.
 
-3. Move the Save/Clear buttons into their own row that spans the full width and right-aligns, so they never push the form off the card on intermediate widths.
+## Server functions
 
-No business logic, no server function, no schema changes. Pure CSS / Tailwind tweak inside `DeadlineEditor`.
+New file `src/lib/project-other-expenses.functions.ts`:
+- `listProjectOtherExpenses({ project_id })` — staff sees all columns; clients see all except `notes` (mirrors deadlines pattern).
+- `upsertProjectOtherExpense({ project_id, id?, label, planned_amount, actual_amount, notes, sort_order })` — staff only.
+- `deleteProjectOtherExpense({ id })` — admin only (matches existing deadline delete).
+
+All use `requireSupabaseAuth` + `attachAuthToken`; admin/staff checks via `has_role`/`has_project_access`.
+
+## Admin UI
+
+Inside `/admin/projects/$id` → **Budget & Deadlines** tab, below the existing `VendorTimeline`, add a new section **"Other expenses"**:
+- Card with a small table: Label · Planned (₹) · Actual (₹) · Notes · row actions (save/delete).
+- "+ Add expense" inline row at the bottom (label + planned + actual + notes + save).
+- Five suggested presets shown as quick-add chips on first use: Dhol Wala, Heaters, Coolers, Transport, Other expense. Clicking a chip prefills `label` in the add row — user can still type anything.
+- Edits use the same optimistic-mutation pattern as the deadline editor.
+
+New component: `src/components/timeline/OtherExpensesPanel.tsx`.
+
+## Client UI
+
+In `/client` Budget/Summary area, show the same "Other expenses" list as a **read-only** card (label · planned · actual). Hidden if the project has zero rows. Included in the budget totals tile (`ClientSummaryStats`):
+- `actuals` gets `+ sum(actual_amount)` from other-expenses.
+- Planned-vs-actual rollup in `VendorTimeline`'s TableView footer adds the same.
+
+The timeline ribbon, urgency strip, "needs attention" notifications, and category cards stay untouched — these items have no due date and no vendor list.
+
+## Files to add / change
+
+- `supabase/migrations/<new>.sql` — table, grants, RLS, trigger.
+- `src/lib/project-other-expenses.functions.ts` — server fns.
+- `src/components/timeline/OtherExpensesPanel.tsx` — shared admin/client panel (mode prop).
+- `src/routes/admin.projects.$id.index.tsx` — render `OtherExpensesPanel mode="admin"` under the timeline tab.
+- `src/routes/client.index.tsx` — fetch other-expenses, render `OtherExpensesPanel mode="client"` in the Budget view.
+- `src/components/client/ClientSummaryStats.tsx` — extend `actuals` with other-expenses sum.
+- `src/components/timeline/VendorTimeline.tsx` (TableView totals) — extend planned/actual totals with other-expenses sum (passed in as a prop).
+- Realtime: register `project_other_expenses` in the existing `useRealtimeInvalidate` setups for both admin and client.
 
 ## Verification
 
-- Reload `/client`, expand a category card on desktop (~838px viewport from the screenshot) and confirm no horizontal overflow of the cream editor block.
-- Resize to ~400px mobile width: fields stack to 2 columns, nothing overflows.
-- Resize to ~1200px: fields sit on one row, Notes takes the remaining space, Save/Clear pinned right.
+- Admin adds "Dhol Wala — planned 8000, actual 7500" → row persists, totals on the Budget tab footer rise by those amounts.
+- Client logs in → sees the same row read-only in Budget, totals tile reflects it; timeline ribbon and "needs attention" are unchanged (no new category appears).
+- Delete row (admin) → disappears for client on next realtime tick.
+- Try to upsert as a client via devtools → 403/Forbidden.
