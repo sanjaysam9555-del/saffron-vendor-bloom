@@ -1541,7 +1541,7 @@ function AddOtherExpenseDialog({
   const [actual, setActual] = useState("");
   const [notes, setNotes] = useState("");
   const [crit, setCrit] = useState<Criticality>("medium");
-  const [booked, setBooked] = useState<boolean>(false);
+  const [due, setDue] = useState<string>("");
 
   const existingSet = useMemo(
     () => new Set(existingLabels.map((l) => l.toLowerCase().trim())),
