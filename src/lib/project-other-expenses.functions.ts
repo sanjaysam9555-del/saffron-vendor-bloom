@@ -84,6 +84,8 @@ export const upsertProjectOtherExpense = createServerFn({ method: "POST" })
         actual_amount: z.number().min(0).max(1_000_000_000).nullable(),
         notes: z.string().max(1000).nullable().optional(),
         sort_order: z.number().int().min(0).max(10_000).optional(),
+        criticality: z.enum(["low", "medium", "high"]).optional(),
+        booked: z.boolean().optional(),
       })
       .parse(d),
   )
@@ -99,6 +101,8 @@ export const upsertProjectOtherExpense = createServerFn({ method: "POST" })
           actual_amount: data.actual_amount,
           notes: data.notes ?? null,
           sort_order: data.sort_order ?? 0,
+          criticality: data.criticality ?? "medium",
+          booked: data.booked ?? true,
         })
         .eq("id", data.id)
         .eq("project_id", data.project_id);
@@ -114,6 +118,8 @@ export const upsertProjectOtherExpense = createServerFn({ method: "POST" })
         actual_amount: data.actual_amount,
         notes: data.notes ?? null,
         sort_order: data.sort_order ?? 0,
+        criticality: data.criticality ?? "medium",
+        booked: data.booked ?? true,
         created_by: context.userId,
       })
       .select("id")
