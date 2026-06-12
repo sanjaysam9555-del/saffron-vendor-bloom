@@ -22,7 +22,6 @@ interface Props {
 const QUICK_PRESETS = ["Dhol Wala", "Heaters", "Coolers", "Transport", "Other expense"];
 
 export function OtherExpensesPanel({ projectId, mode }: Props) {
-  const qc = useQueryClient();
   const queryKey = useMemo(() => ["project-other-expenses", projectId], [projectId]);
   const listFn = useServerFn(listProjectOtherExpenses);
 
