@@ -107,7 +107,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
           {!forcedSub && (
             <div
               role="tablist"
-              className="inline-flex flex-col overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs sm:flex-row"
+              className="col-span-2 inline-flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs sm:w-auto"
             >
               <button
                 role="tab"
