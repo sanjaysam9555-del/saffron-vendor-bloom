@@ -2084,7 +2084,7 @@ function HorizontalCard({
           {item.planned_amount != null ? formatINR(item.planned_amount) : "—"}
         </span>
         <span className="text-[9px] text-[var(--charcoal)]/45">
-          {item.vendor_count} shortlisted
+          {item.kind === "other" ? "Other expense" : `${item.vendor_count} shortlisted`}
         </span>
       </div>
     </article>
