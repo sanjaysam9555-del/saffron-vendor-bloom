@@ -1,4 +1,5 @@
 import type { CategoryDeadline } from "@/lib/project-deadlines.functions";
+import type { OtherExpense } from "@/lib/project-other-expenses.functions";
 import type { TimelineItem } from "@/lib/urgency";
 
 interface VendorLike {
