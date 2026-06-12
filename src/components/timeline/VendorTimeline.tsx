@@ -835,7 +835,7 @@ function UnscheduledCard({
         </span>
       </div>
       <p className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/50">
-        {item.vendor_count} shortlisted
+        {item.kind === "other" ? "Other expense" : `${item.vendor_count} shortlisted`}
       </p>
       <div className="mt-3 flex items-center justify-between">
         <p className="text-[10px] italic font-medium text-[var(--terracotta)]">
