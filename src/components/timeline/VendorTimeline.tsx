@@ -1081,12 +1081,14 @@ function TableView({
   mode,
   now,
   registerRowRef,
+  onAddOther,
 }: {
   items: TimelineItem[];
   projectId: string;
   mode: "admin" | "client";
   now: Date;
   registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
+  onAddOther?: () => void;
 }) {
   const totalPlanned = sumAmounts(items, (i) => i.planned_amount);
   const totalActual = sumAmounts(items, (i) => resolveActual(i));
@@ -1099,50 +1101,73 @@ function TableView({
         : "text-[var(--charcoal)]/70";
   const colSpan = mode === "admin" ? 9 : 8;
   return (
-    <div className="overflow-x-auto rounded-md border border-[var(--border)] shadow-[inset_-12px_0_8px_-8px_rgba(0,0,0,0.08)]">
-      <table className="w-full min-w-[820px] text-sm">
-        <thead className="bg-[var(--cream)] text-left text-xs uppercase tracking-wider text-[var(--charcoal)]/60">
-          <tr>
-            <th className="px-3 py-2">Category</th>
-            <th className="px-3 py-2">Vendors</th>
-            <th className="px-3 py-2">Due date</th>
-            <th className="px-3 py-2">Days left</th>
-            <th className="px-3 py-2">Criticality</th>
-            <th className="px-3 py-2">Status</th>
-            <th className="px-3 py-2 text-right">Planned Budget</th>
-            <th className="px-3 py-2 text-right">Actual Cost</th>
-            {mode === "admin" && <th className="px-3 py-2"></th>}
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => (
-            <TableRow
-              key={item.category}
-              item={item}
-              projectId={projectId}
-              mode={mode}
-              now={now}
-              registerRowRef={registerRowRef}
-            />
-          ))}
-        </tbody>
-        <tfoot className="bg-[var(--cream)] text-sm">
-          <tr className="border-t-2 border-[var(--border)]">
-            <td className="px-3 py-2 font-semibold uppercase tracking-wider text-xs text-[var(--charcoal)]/70" colSpan={6}>
-              Totals
-            </td>
-            <td className="px-3 py-2 text-right font-semibold">{formatINR(totalPlanned)}</td>
-            <td className="px-3 py-2 text-right font-semibold">{formatINR(totalActual)}</td>
-            {mode === "admin" && <td className="px-3 py-2" />}
-          </tr>
-          <tr>
-            <td className={`px-3 pb-2 text-right text-xs font-medium ${varColor}`} colSpan={colSpan}>
-              Variance: {variance >= 0 ? "+" : "−"}
-              {formatINR(Math.abs(variance))}
-            </td>
-          </tr>
-        </tfoot>
-      </table>
+    <div className="space-y-2">
+      <div className="overflow-x-auto rounded-md border border-[var(--border)] shadow-[inset_-12px_0_8px_-8px_rgba(0,0,0,0.08)]">
+        <table className="w-full min-w-[820px] text-sm">
+          <thead className="bg-[var(--cream)] text-left text-xs uppercase tracking-wider text-[var(--charcoal)]/60">
+            <tr>
+              <th className="px-3 py-2">Category</th>
+              <th className="px-3 py-2">Vendors</th>
+              <th className="px-3 py-2">Due date</th>
+              <th className="px-3 py-2">Days left</th>
+              <th className="px-3 py-2">Criticality</th>
+              <th className="px-3 py-2">Status</th>
+              <th className="px-3 py-2 text-right">Planned Budget</th>
+              <th className="px-3 py-2 text-right">Actual Cost</th>
+              {mode === "admin" && <th className="px-3 py-2"></th>}
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) =>
+              item.kind === "other" ? (
+                <OtherTableRow
+                  key={`other-${item.other_expense_id ?? item.category}`}
+                  item={item}
+                  projectId={projectId}
+                  mode={mode}
+                  registerRowRef={registerRowRef}
+                />
+              ) : (
+                <TableRow
+                  key={item.category}
+                  item={item}
+                  projectId={projectId}
+                  mode={mode}
+                  now={now}
+                  registerRowRef={registerRowRef}
+                />
+              ),
+            )}
+          </tbody>
+          <tfoot className="bg-[var(--cream)] text-sm">
+            <tr className="border-t-2 border-[var(--border)]">
+              <td className="px-3 py-2 font-semibold uppercase tracking-wider text-xs text-[var(--charcoal)]/70" colSpan={6}>
+                Totals
+              </td>
+              <td className="px-3 py-2 text-right font-semibold">{formatINR(totalPlanned)}</td>
+              <td className="px-3 py-2 text-right font-semibold">{formatINR(totalActual)}</td>
+              {mode === "admin" && <td className="px-3 py-2" />}
+            </tr>
+            <tr>
+              <td className={`px-3 pb-2 text-right text-xs font-medium ${varColor}`} colSpan={colSpan}>
+                Variance: {variance >= 0 ? "+" : "−"}
+                {formatINR(Math.abs(variance))}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      {mode === "admin" && onAddOther && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={onAddOther}
+            className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-[var(--champagne)] bg-[var(--cream)]/40 px-3 py-1.5 text-xs text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+          >
+            <Plus className="h-3.5 w-3.5" /> Add Other Expense
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -1225,6 +1250,370 @@ function TableRow({
         </tr>
       )}
     </>
+  );
+}
+
+/* ============================================================
+   Other Expense row + editor (table-only, non-vendor line items)
+   ============================================================ */
+
+function OtherTableRow({
+  item,
+  projectId,
+  mode,
+  registerRowRef,
+}: {
+  item: TimelineItem;
+  projectId: string;
+  mode: "admin" | "client";
+  registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const isAdmin = useIsAdmin();
+  const confirmDelete = useConfirmDelete();
+  const qc = useQueryClient();
+  const del = useServerFn(deleteProjectOtherExpense);
+  const deleteM = useMutation({
+    mutationFn: () => del({ data: { id: item.other_expense_id! } }),
+    onSuccess: () => {
+      notifySuccess("Expense deleted");
+      qc.invalidateQueries({ queryKey: ["project-other-expenses", projectId] });
+    },
+    onError: (e) => notifyError(e, "Could not delete"),
+  });
+
+  const actual = resolveActual(item);
+  const accent = "var(--champagne)";
+
+  return (
+    <>
+      <tr
+        ref={(el) =>
+          registerRowRef?.(item.category, el as unknown as HTMLDivElement | null)
+        }
+        data-category={item.category}
+        className="border-t border-[var(--border)] bg-[var(--cream)]/30"
+        style={{ borderLeft: `3px solid ${accent}` }}
+      >
+        <td className="px-3 py-2 font-medium">{item.category}</td>
+        <td className="px-3 py-2">
+          <span className="inline-flex items-center rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/65">
+            Others
+          </span>
+        </td>
+        <td className="px-3 py-2 text-[var(--charcoal)]/50">—</td>
+        <td className="px-3 py-2 text-[var(--charcoal)]/50">—</td>
+        <td className="px-3 py-2 text-[var(--charcoal)]/50">—</td>
+        <td className="px-3 py-2 text-[var(--charcoal)]/50">—</td>
+        <td className="px-3 py-2 text-right tabular-nums">
+          {item.planned_amount != null ? formatINR(item.planned_amount) : "—"}
+        </td>
+        <td className="px-3 py-2 text-right tabular-nums">
+          {actual != null ? formatINR(actual) : "—"}
+        </td>
+        {mode === "admin" && (
+          <td className="px-3 py-2 text-right">
+            <div className="flex items-center justify-end gap-1.5">
+              <button
+                onClick={() => setEditing((e) => !e)}
+                className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1 text-xs hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+              >
+                {editing ? "Close" : "Edit"}
+              </button>
+              {isAdmin && (
+                <button
+                  onClick={async () => {
+                    const ok = await confirmDelete({
+                      title: `Delete "${item.category}"?`,
+                      description: "This expense will be removed from the project.",
+                      confirmLabel: "Delete",
+                    });
+                    if (ok) deleteM.mutate();
+                  }}
+                  disabled={deleteM.isPending}
+                  className="inline-flex items-center justify-center rounded-md border border-[var(--border)] p-1 text-[var(--charcoal)]/60 hover:border-red-500 hover:text-red-600 disabled:opacity-50"
+                  aria-label="Delete expense"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          </td>
+        )}
+      </tr>
+      {editing && mode === "admin" && (
+        <tr>
+          <td colSpan={9} className="bg-[var(--cream)] px-3 py-2">
+            <OtherExpenseEditor
+              item={item}
+              projectId={projectId}
+              onDone={() => setEditing(false)}
+            />
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+function OtherExpenseEditor({
+  item,
+  projectId,
+  onDone,
+}: {
+  item: TimelineItem;
+  projectId: string;
+  onDone: () => void;
+}) {
+  const qc = useQueryClient();
+  const upsert = useServerFn(upsertProjectOtherExpense);
+  const [label, setLabel] = useState(item.category);
+  const [planned, setPlanned] = useState(
+    item.planned_amount != null ? String(item.planned_amount) : "",
+  );
+  const [actual, setActual] = useState(
+    item.closed_amount_auto != null ? String(item.closed_amount_auto) : "",
+  );
+  const [notes, setNotes] = useState(item.notes ?? "");
+
+  const parseAmount = (raw: string): number | null => {
+    const t = raw.trim();
+    if (!t) return null;
+    const n = Number(t);
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  };
+
+  const saveM = useMutation({
+    mutationFn: () =>
+      upsert({
+        data: {
+          id: item.other_expense_id!,
+          project_id: projectId,
+          label: label.trim(),
+          planned_amount: parseAmount(planned),
+          actual_amount: parseAmount(actual),
+          notes: notes.trim() ? notes.trim() : null,
+        },
+      }),
+    onSuccess: () => {
+      notifySuccess("Saved");
+      qc.invalidateQueries({ queryKey: ["project-other-expenses", projectId] });
+      onDone();
+    },
+    onError: (e) => notifyError(e, "Could not save"),
+  });
+
+  const canSave = label.trim().length > 0 && !saveM.isPending;
+
+  return (
+    <div className="rounded-md bg-[var(--cream)] p-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)]">
+        <label className="col-span-2 flex min-w-0 flex-col gap-1 text-xs sm:col-span-1">
+          <span className="text-[var(--charcoal)]/65">Label</span>
+          <input
+            type="text"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+          />
+        </label>
+        <label className="flex min-w-0 flex-col gap-1 text-xs">
+          <span className="text-[var(--charcoal)]/65">Planned (₹)</span>
+          <input
+            type="number"
+            min={0}
+            value={planned}
+            onChange={(e) => setPlanned(e.target.value)}
+            placeholder="0"
+            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+          />
+        </label>
+        <label className="flex min-w-0 flex-col gap-1 text-xs">
+          <span className="text-[var(--charcoal)]/65">Actual (₹)</span>
+          <input
+            type="number"
+            min={0}
+            value={actual}
+            onChange={(e) => setActual(e.target.value)}
+            placeholder="0"
+            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+          />
+        </label>
+        <label className="col-span-2 flex min-w-0 flex-col gap-1 text-xs sm:col-span-1">
+          <span className="text-[var(--charcoal)]/65">Notes</span>
+          <input
+            type="text"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Optional"
+            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+          />
+        </label>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+        <button
+          onClick={onDone}
+          className="rounded-md border border-[var(--border)] px-2 py-1.5 text-xs hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => saveM.mutate()}
+          disabled={!canSave}
+          className="inline-flex items-center gap-1 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-60"
+        >
+          <Save className="h-3 w-3" /> Save
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AddOtherExpenseDialog({
+  projectId,
+  existingLabels,
+  onClose,
+}: {
+  projectId: string;
+  existingLabels: string[];
+  onClose: () => void;
+}) {
+  const qc = useQueryClient();
+  const upsert = useServerFn(upsertProjectOtherExpense);
+  const [label, setLabel] = useState("");
+  const [planned, setPlanned] = useState("");
+  const [actual, setActual] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const existingSet = useMemo(
+    () => new Set(existingLabels.map((l) => l.toLowerCase().trim())),
+    [existingLabels],
+  );
+  const trimmed = label.trim();
+  const dup = trimmed !== "" && existingSet.has(trimmed.toLowerCase());
+
+  const parseAmount = (raw: string): number | null => {
+    const t = raw.trim();
+    if (!t) return null;
+    const n = Number(t);
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  };
+
+  const m = useMutation({
+    mutationFn: () =>
+      upsert({
+        data: {
+          project_id: projectId,
+          label: trimmed,
+          planned_amount: parseAmount(planned),
+          actual_amount: parseAmount(actual),
+          notes: notes.trim() ? notes.trim() : null,
+          sort_order: existingLabels.length,
+        },
+      }),
+    onSuccess: () => {
+      notifySuccess("Expense added");
+      qc.invalidateQueries({ queryKey: ["project-other-expenses", projectId] });
+      onClose();
+    },
+    onError: (e) => notifyError(e, "Could not add expense"),
+  });
+
+  const canSave = trimmed.length > 0 && !dup && !m.isPending;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="font-display text-base text-[var(--charcoal)]">Add other expense</h3>
+          <button onClick={onClose} className="rounded-md p-1 text-[var(--charcoal)]/50 hover:bg-[var(--cream)]" aria-label="Close">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <p className="mb-3 text-xs text-[var(--charcoal)]/55">
+          Non-vendor line items (e.g. Dhol Wala, Heaters, Transport). They appear in the budget table but not on the timeline.
+        </p>
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          <span className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">Quick:</span>
+          {OTHER_PRESETS.filter((p) => !existingSet.has(p.toLowerCase())).map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setLabel(p)}
+              className="rounded-full border border-[var(--border)] bg-white px-2.5 py-0.5 text-[11px] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+        <div className="space-y-2">
+          <label className="flex flex-col gap-1 text-xs">
+            <span className="text-[var(--charcoal)]/65">Label</span>
+            <input
+              type="text"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="e.g. Heaters"
+              className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+              autoFocus
+            />
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="flex flex-col gap-1 text-xs">
+              <span className="text-[var(--charcoal)]/65">Planned (₹)</span>
+              <input
+                type="number"
+                min={0}
+                value={planned}
+                onChange={(e) => setPlanned(e.target.value)}
+                placeholder="0"
+                className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-xs">
+              <span className="text-[var(--charcoal)]/65">Actual (₹)</span>
+              <input
+                type="number"
+                min={0}
+                value={actual}
+                onChange={(e) => setActual(e.target.value)}
+                placeholder="0"
+                className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+              />
+            </label>
+          </div>
+          <label className="flex flex-col gap-1 text-xs">
+            <span className="text-[var(--charcoal)]/65">Notes</span>
+            <input
+              type="text"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Optional"
+              className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+            />
+          </label>
+        </div>
+        {dup && <p className="mt-2 text-[11px] text-red-600">An expense with this label already exists.</p>}
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => m.mutate()}
+            disabled={!canSave}
+            className="inline-flex items-center gap-1 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-60"
+          >
+            <Plus className="h-3 w-3" /> Add
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
