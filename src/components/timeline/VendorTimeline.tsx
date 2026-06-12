@@ -113,7 +113,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
                 role="tab"
                 aria-selected={sub === "timeline"}
                 onClick={() => setSub("timeline")}
-                className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 ${
+                className={`inline-flex flex-1 items-center justify-center gap-1.5 px-3 py-1.5 sm:flex-none ${
                   sub === "timeline"
                     ? "bg-[var(--charcoal)] text-[var(--cream)]"
                     : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
