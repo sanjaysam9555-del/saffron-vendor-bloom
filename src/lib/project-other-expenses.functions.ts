@@ -87,12 +87,17 @@ export const upsertProjectOtherExpense = createServerFn({ method: "POST" })
         sort_order: z.number().int().min(0).max(10_000).optional(),
         criticality: z.enum(["low", "medium", "high"]).optional(),
         booked: z.boolean().optional(),
+        due_date: z.string().nullable().optional(),
       })
       .parse(d),
   )
   .handler(async ({ context, data }) => {
     if (!(await isStaff(context.userId))) throw new Error("Forbidden: staff only");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // For "other" expenses there is no quote/closing flow: entering an actual
+    // amount auto-marks the row as booked.
+    const isBooked = data.actual_amount != null ? true : (data.booked ?? false);
+    const dueDate = data.due_date && data.due_date.length > 0 ? data.due_date : null;
     if (data.id) {
       const { error } = await supabaseAdmin
         .from("project_other_expenses")
@@ -103,7 +108,8 @@ export const upsertProjectOtherExpense = createServerFn({ method: "POST" })
           notes: data.notes ?? null,
           sort_order: data.sort_order ?? 0,
           criticality: data.criticality ?? "medium",
-          booked: data.booked ?? true,
+          booked: isBooked,
+          due_date: dueDate,
         })
         .eq("id", data.id)
         .eq("project_id", data.project_id);
@@ -120,7 +126,8 @@ export const upsertProjectOtherExpense = createServerFn({ method: "POST" })
         notes: data.notes ?? null,
         sort_order: data.sort_order ?? 0,
         criticality: data.criticality ?? "medium",
-        booked: data.booked ?? true,
+        booked: isBooked,
+        due_date: dueDate,
         created_by: context.userId,
       })
       .select("id")
