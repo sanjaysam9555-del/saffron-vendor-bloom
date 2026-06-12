@@ -136,6 +136,15 @@ function ClientPortalPage() {
     queryFn: () => listProjectCategoryDeadlines({ data: { project_id: projectId! } }),
     enabled: !!projectId,
   });
+  const { data: otherExpenses = [] } = useQuery({
+    queryKey: ["project-other-expenses", projectId],
+    queryFn: () => listProjectOtherExpenses({ data: { project_id: projectId! } }),
+    enabled: !!projectId,
+  });
+  const otherExpensesActuals = useMemo(
+    () => otherExpenses.reduce((s, r) => s + (r.actual_amount ?? 0), 0),
+    [otherExpenses],
+  );
   const timelineItems = useMemo(
     () => buildTimelineItems((data?.vendors ?? []) as ClientVendor[], deadlines, "client"),
     [data?.vendors, deadlines],
