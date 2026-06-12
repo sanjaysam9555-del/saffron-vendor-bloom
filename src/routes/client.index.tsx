@@ -94,6 +94,7 @@ function ClientPortalPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "client_vendor_status" }, invalidateProject)
       .on("postgres_changes", { event: "*", schema: "public", table: "vendors" }, invalidateProject)
       .on("postgres_changes", { event: "*", schema: "public", table: "project_category_deadlines", filter: `project_id=eq.${projectId}` }, () => queue([["project-deadlines", projectId]]))
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_other_expenses", filter: `project_id=eq.${projectId}` }, () => queue([["project-other-expenses", projectId]]))
       .subscribe();
     return () => {
       if (timer) window.clearTimeout(timer);
