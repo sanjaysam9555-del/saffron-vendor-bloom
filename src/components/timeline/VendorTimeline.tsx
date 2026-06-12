@@ -1962,11 +1962,19 @@ function HorizontalTimeline({
               <X className="h-4 w-4" />
             </button>
           </div>
-          <DeadlineEditor
-            item={editingItem}
-            projectId={projectId}
-            onDone={() => setEditingCategory(null)}
-          />
+          {editingItem.kind === "other" ? (
+            <OtherExpenseEditor
+              item={editingItem}
+              projectId={projectId}
+              onDone={() => setEditingCategory(null)}
+            />
+          ) : (
+            <DeadlineEditor
+              item={editingItem}
+              projectId={projectId}
+              onDone={() => setEditingCategory(null)}
+            />
+          )}
         </div>
       )}
 
