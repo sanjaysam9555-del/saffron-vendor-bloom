@@ -251,12 +251,15 @@ function ProjectSectionTabs({
           />
         )}
         {tab === "timeline" && (
-          <VendorTimeline
-            projectId={projectId}
-            weddingDate={weddingDate}
-            items={buildTimelineItems(vendors, deadlines, "admin")}
-            mode="admin"
-          />
+          <>
+            <VendorTimeline
+              projectId={projectId}
+              weddingDate={weddingDate}
+              items={buildTimelineItems(vendors, deadlines, "admin")}
+              mode="admin"
+            />
+            <OtherExpensesPanel projectId={projectId} mode="admin" />
+          </>
         )}
         {tab === "details" && (
           <ProjectDetailsTab
