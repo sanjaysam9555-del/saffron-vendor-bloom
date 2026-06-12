@@ -22,6 +22,10 @@ export interface TimelineItem {
   planned_amount: number | null;
   closed_amount_auto: number | null;
   actual_amount_override: number | null;
+  /** "vendor" (default) for vendor categories; "other" for non-vendor expense rows. */
+  kind?: "vendor" | "other";
+  /** When kind === "other", the project_other_expenses.id this row maps to. */
+  other_expense_id?: string;
 }
 
 const BUCKET_ORDER: UrgencyBucket[] = [
