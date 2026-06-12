@@ -9,6 +9,7 @@ import {
   Pencil,
   Plus,
   Save,
+  Trash2,
   X,
   Heart,
 } from "lucide-react";
@@ -30,8 +31,16 @@ import {
   upsertCategoryDeadline,
   deleteCategoryDeadline,
 } from "@/lib/project-deadlines.functions";
+import {
+  upsertProjectOtherExpense,
+  deleteProjectOtherExpense,
+} from "@/lib/project-other-expenses.functions";
+import { useConfirmDelete } from "@/components/ui/confirm-dialog";
+import { useIsAdmin } from "@/lib/auth";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { formatINR } from "@/lib/quote-types";
+
+const OTHER_PRESETS = ["Dhol Wala", "Heaters", "Coolers", "Transport", "Other expense"];
 
 function resolveActual(item: TimelineItem): number | null {
   return item.actual_amount_override ?? item.closed_amount_auto;
