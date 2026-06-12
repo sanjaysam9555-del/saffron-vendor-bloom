@@ -429,6 +429,7 @@ function ClientPortalPage() {
                 brideName={project.bride_name}
                 groomName={project.groom_name}
                 weddingDate={project.wedding_date}
+                extraActuals={otherExpensesActuals}
               />
               <OtherExpensesPanel projectId={projectId!} mode="client" />
             </>
