@@ -183,6 +183,7 @@ function ProjectDetailPage() {
           vendors={vendors}
           selections={selections}
           deadlines={deadlines}
+          otherExpenses={otherExpenses}
           weddingDate={project.wedding_date}
           onRemoveVendor={removeVendor}
         />
