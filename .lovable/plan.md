@@ -1,76 +1,87 @@
 ## Goal
 
-Track non-vendor line items (Dhol Wala, Heaters, Coolers, Transport, "Other") per project — they have **planned** and **actual** cost only. They roll up into budget totals but **never** appear in the timeline ribbon or urgency strip.
+Stop showing "Other expenses" as a separate panel. Treat each row in `project_other_expenses` as a line item in the existing Budget & Deadlines table (same layout as Hotels & Venues), with admin edit/delete inline, and add their amounts to the dashboard totals. They stay **off** the timeline ribbon, urgency strip, category cards, and horizontal timeline — table only, as you said.
 
-## Why a new table (not extending `project_category_deadlines`)
+## What the user will see
 
-The existing deadlines table is the source of truth for what shows on the timeline. Reusing it with a "hide me" flag would mean filtering it out of `buildTimelineItems`, the urgency strip, the notifications, and the deadline editor — and we'd still have to special-case the missing `due_date` and `criticality` everywhere. Cleaner to keep the two concerns separate.
+### Budget table (admin and client)
+A new row per "other" expense alongside vendor categories. Columns reuse the existing layout:
 
-## Data model
+```
+Category          | Vendors | Due date | Days left | Criticality | Status | Planned | Actual    | (admin: actions)
+------------------+---------+----------+-----------+-------------+--------+---------+-----------+------------------
+Hotels & Venues   |    3    | 12 Jul   |  30 days  | High        | Plan…  | ₹2.0L   | ₹1.8L     | Edit
+Dhol Wala         | Others  |    —     |    —      |    —        |   —    | ₹15,000 | ₹15,000   | Edit  Delete
+Transport         | Others  |    —     |    —      |    —        |   —    | ₹40,000 | ₹38,000   | Edit  Delete
+```
 
-New table `project_other_expenses`:
+- "Vendors" cell shows the label **Others** (not a number) for these rows, with a subtle pill style so they're visually distinguishable.
+- Due date / Days left / Criticality / Status all render `—` because these aren't scheduled.
+- Totals row at the bottom of the table includes Other rows (planned + actual).
 
-| column | type | notes |
-|---|---|---|
-| `id` | uuid pk | |
-| `project_id` | uuid fk → `projects.id` on delete cascade | |
-| `label` | text not null | e.g. "Dhol Wala", "Transport" |
-| `planned_amount` | numeric null | INR |
-| `actual_amount` | numeric null | INR (entered manually, no auto-resolve) |
-| `notes` | text null | staff-only |
-| `sort_order` | int default 0 | for stable ordering |
-| `created_by`, `created_at`, `updated_at` | standard | `touch_updated_at` trigger |
+### Admin controls
+- A small "+ Add other expense" button above the table (admin only) opens an inline editor row with the same quick-add chips (Dhol Wala / Heaters / Coolers / Transport / Other expense) and Label / Planned / Actual / Notes inputs.
+- "Edit" on an Other row expands an inline editor (Label, Planned, Actual, Notes) — same UX shape as the vendor `DeadlineEditor`, just without the date/criticality/booking fields.
+- "Delete" button (admin only, with confirm) calls the existing `deleteProjectOtherExpense` fn.
 
-Indexes: `(project_id)`, unique `(project_id, lower(label))` to prevent dupes.
+### Dashboard tiles
+- "Booked" tile: each Other expense counts as 1 booked row (since there's nothing to schedule), so the `X / Y` reflects them.
+- "Spend" tile: includes the sum of Other actuals (already partially wired via `extraActuals`; switch to deriving from the merged items list instead).
+- Vendor folio count tile is unchanged (it counts `ClientVendor` records, which Others aren't).
 
-GRANTs + RLS:
-- `GRANT SELECT, INSERT, UPDATE, DELETE` to `authenticated`; `GRANT ALL` to `service_role`.
-- Policies (using existing helpers `has_role` and `has_project_access`):
-  - Staff (admin/employee) full read/write.
-  - Clients SELECT only when `has_project_access(auth.uid(), project_id)`.
-  - No anon access.
+## Technical notes
 
-## Server functions
+### Data shape
+Extend `TimelineItem` (`src/lib/urgency.ts`) with two optional fields:
+- `kind?: "vendor" | "other"` (default `"vendor"`)
+- `other_expense_id?: string` (so admin edit/delete know the row id)
 
-New file `src/lib/project-other-expenses.functions.ts`:
-- `listProjectOtherExpenses({ project_id })` — staff sees all columns; clients see all except `notes` (mirrors deadlines pattern).
-- `upsertProjectOtherExpense({ project_id, id?, label, planned_amount, actual_amount, notes, sort_order })` — staff only.
-- `deleteProjectOtherExpense({ id })` — admin only (matches existing deadline delete).
+### Merge point
+In `src/routes/admin.projects.$id.index.tsx` and `src/routes/client.index.tsx`, the existing query that builds the `items: TimelineItem[]` already runs `listProjectOtherExpenses` for `extraActuals`. Map those rows into synthetic `TimelineItem`s:
 
-All use `requireSupabaseAuth` + `attachAuthToken`; admin/staff checks via `has_role`/`has_project_access`.
+```ts
+const otherItems: TimelineItem[] = otherExpenses.map(e => ({
+  category: e.label,
+  vendor_count: 0,
+  due_date: null,
+  criticality: "low",
+  notes: e.notes,
+  booked: true,                   // not scheduled; treated as a settled line
+  booked_vendor_name: null,
+  planned_amount: e.planned_amount,
+  closed_amount_auto: e.actual_amount,
+  actual_amount_override: null,
+  kind: "other",
+  other_expense_id: e.id,
+}))
+const mergedItems = [...vendorItems, ...otherItems]
+```
 
-## Admin UI
+### View filtering
+Helpers that drive the timeline visuals filter Others out:
+- `HorizontalTimeline`, vertical timeline, category cards, `UrgencyStrip`, and the "needs attention" notification builders all consume `items.filter(i => i.kind !== "other")`.
+- `TableView` and dashboard total reducers consume the full `mergedItems`.
 
-Inside `/admin/projects/$id` → **Budget & Deadlines** tab, below the existing `VendorTimeline`, add a new section **"Other expenses"**:
-- Card with a small table: Label · Planned (₹) · Actual (₹) · Notes · row actions (save/delete).
-- "+ Add expense" inline row at the bottom (label + planned + actual + notes + save).
-- Five suggested presets shown as quick-add chips on first use: Dhol Wala, Heaters, Coolers, Transport, Other expense. Clicking a chip prefills `label` in the add row — user can still type anything.
-- Edits use the same optimistic-mutation pattern as the deadline editor.
+### TableView changes (`src/components/timeline/VendorTimeline.tsx`)
+- `TableRow`: when `item.kind === "other"`, render "Others" pill in the Vendors cell, `—` for date/days/criticality/status, and swap the edit panel for a new lightweight `OtherExpenseEditor` (label + planned + actual + notes). Add a Delete button in the actions cell next to Edit (admin only).
+- `OtherExpenseEditor` wraps `upsertProjectOtherExpense` (already exists) using the row's `other_expense_id`.
+- Above the table in admin mode, render an "+ Add other expense" button that toggles an inline add row using the same editor with no id (insert path).
 
-New component: `src/components/timeline/OtherExpensesPanel.tsx`.
+### Files touched
+- `src/lib/urgency.ts` — extend `TimelineItem`.
+- `src/components/timeline/VendorTimeline.tsx` — TableView row variant, inline editor, "+ Add other expense", filter out `"other"` from non-table views, include Others in totals.
+- `src/routes/admin.projects.$id.index.tsx` — merge Others into items; remove `OtherExpensesPanel`; drop `extraActuals` plumbing.
+- `src/routes/client.index.tsx` — same merge; remove panel; drop `extraActuals`.
+- `src/components/client/ClientSummaryView.tsx` — drop `extraActuals` prop now that items carry the data.
+- `src/components/client/ClientSummaryStats.tsx` — no change to logic (already sums actuals across items), totals automatically include Others.
+- Delete `src/components/timeline/OtherExpensesPanel.tsx`.
 
-## Client UI
+### Server / DB
+No schema or server-function changes — `listProjectOtherExpenses`, `upsertProjectOtherExpense`, `deleteProjectOtherExpense` already cover everything. Realtime invalidation for `project_other_expenses` stays as-is.
 
-In `/client` Budget/Summary area, show the same "Other expenses" list as a **read-only** card (label · planned · actual). Hidden if the project has zero rows. Included in the budget totals tile (`ClientSummaryStats`):
-- `actuals` gets `+ sum(actual_amount)` from other-expenses.
-- Planned-vs-actual rollup in `VendorTimeline`'s TableView footer adds the same.
-
-The timeline ribbon, urgency strip, "needs attention" notifications, and category cards stay untouched — these items have no due date and no vendor list.
-
-## Files to add / change
-
-- `supabase/migrations/<new>.sql` — table, grants, RLS, trigger.
-- `src/lib/project-other-expenses.functions.ts` — server fns.
-- `src/components/timeline/OtherExpensesPanel.tsx` — shared admin/client panel (mode prop).
-- `src/routes/admin.projects.$id.index.tsx` — render `OtherExpensesPanel mode="admin"` under the timeline tab.
-- `src/routes/client.index.tsx` — fetch other-expenses, render `OtherExpensesPanel mode="client"` in the Budget view.
-- `src/components/client/ClientSummaryStats.tsx` — extend `actuals` with other-expenses sum.
-- `src/components/timeline/VendorTimeline.tsx` (TableView totals) — extend planned/actual totals with other-expenses sum (passed in as a prop).
-- Realtime: register `project_other_expenses` in the existing `useRealtimeInvalidate` setups for both admin and client.
-
-## Verification
-
-- Admin adds "Dhol Wala — planned 8000, actual 7500" → row persists, totals on the Budget tab footer rise by those amounts.
-- Client logs in → sees the same row read-only in Budget, totals tile reflects it; timeline ribbon and "needs attention" are unchanged (no new category appears).
-- Delete row (admin) → disappears for client on next realtime tick.
-- Try to upsert as a client via devtools → 403/Forbidden.
+### Verification
+- Admin adds "Heaters ₹10,000 planned / ₹9,500 actual" → appears as a table row with "Others" pill, Spend tile rises by ₹9,500, Booked count includes it.
+- Admin edits actual to ₹11,000 → table + dashboard update; client view mirrors via realtime.
+- Admin deletes the row → confirm dialog → row disappears for both admin and client; totals drop.
+- Timeline ribbon, urgency strip, category cards, and "needs attention" notifications show no "Heaters" entry.
+- Client cannot edit or delete (no actions column for them on those rows; server fns still enforce).

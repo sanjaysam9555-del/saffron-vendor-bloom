@@ -30,9 +30,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { VendorCommentsThread } from "@/components/client/VendorCommentsThread";
 import { instagramUrl, normalizeInstagramHandle } from "@/lib/instagram";
 import { VendorTimeline } from "@/components/timeline/VendorTimeline";
-import { OtherExpensesPanel } from "@/components/timeline/OtherExpensesPanel";
 import { listProjectCategoryDeadlines } from "@/lib/project-deadlines.functions";
-import { buildTimelineItems } from "@/lib/build-timeline-items";
+import { listProjectOtherExpenses } from "@/lib/project-other-expenses.functions";
+import { buildTimelineItems, otherExpensesAsTimelineItems } from "@/lib/build-timeline-items";
 import { QuickAddVendorPanel } from "@/components/admin/QuickAddVendorPanel";
 
 export const Route = createFileRoute("/admin/projects/$id/")({
@@ -77,6 +77,10 @@ function ProjectDetailPage() {
   const { data: deadlines = [] } = useQuery({
     queryKey: ["project-deadlines", id],
     queryFn: () => listProjectCategoryDeadlines({ data: { project_id: id } }),
+  });
+  const { data: otherExpenses = [] } = useQuery({
+    queryKey: ["project-other-expenses", id],
+    queryFn: () => listProjectOtherExpenses({ data: { project_id: id } }),
   });
 
 
@@ -179,6 +183,7 @@ function ProjectDetailPage() {
           vendors={vendors}
           selections={selections}
           deadlines={deadlines}
+          otherExpenses={otherExpenses}
           weddingDate={project.wedding_date}
           onRemoveVendor={removeVendor}
         />
@@ -199,6 +204,7 @@ function ProjectSectionTabs({
   vendors,
   selections,
   deadlines,
+  otherExpenses,
   weddingDate,
   onRemoveVendor,
 }: {
@@ -212,6 +218,7 @@ function ProjectSectionTabs({
   vendors: any[];
   selections: Record<string, Selection[]>;
   deadlines: any[];
+  otherExpenses: any[];
   weddingDate: string;
   onRemoveVendor: (id: string, name: string) => void;
 }) {
@@ -230,6 +237,13 @@ function ProjectSectionTabs({
     >
       <Icon className="h-4 w-4" /> {label}
     </button>
+  );
+  const timelineItems = useMemo(
+    () => [
+      ...buildTimelineItems(vendors, deadlines, "admin"),
+      ...otherExpensesAsTimelineItems(otherExpenses),
+    ],
+    [vendors, deadlines, otherExpenses],
   );
   return (
     <section className="mt-10">
@@ -252,15 +266,12 @@ function ProjectSectionTabs({
           />
         )}
         {tab === "timeline" && (
-          <>
-            <VendorTimeline
-              projectId={projectId}
-              weddingDate={weddingDate}
-              items={buildTimelineItems(vendors, deadlines, "admin")}
-              mode="admin"
-            />
-            <OtherExpensesPanel projectId={projectId} mode="admin" />
-          </>
+          <VendorTimeline
+            projectId={projectId}
+            weddingDate={weddingDate}
+            items={timelineItems}
+            mode="admin"
+          />
         )}
         {tab === "details" && (
           <ProjectDetailsTab
