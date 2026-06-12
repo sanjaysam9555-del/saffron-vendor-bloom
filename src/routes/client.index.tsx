@@ -420,41 +420,31 @@ function ClientPortalPage() {
           )}
 
           {view === "summary" ? (
-            <>
-              <ClientSummaryView
-                vendors={vendors}
-                items={timelineItems}
-                brideName={project.bride_name}
-                groomName={project.groom_name}
-                weddingDate={project.wedding_date}
-                extraActuals={otherExpensesActuals}
-              />
-              <OtherExpensesPanel projectId={projectId!} mode="client" />
-            </>
+            <ClientSummaryView
+              vendors={vendors}
+              items={timelineItems}
+              brideName={project.bride_name}
+              groomName={project.groom_name}
+              weddingDate={project.wedding_date}
+            />
           ) : view === "timeline" ? (
-            <>
-              <VendorTimeline
-                projectId={projectId!}
-                weddingDate={project.wedding_date}
-                items={timelineItems}
-                mode="client"
-                registerRowRef={registerRowRef}
-                forcedSub="timeline"
-              />
-              <OtherExpensesPanel projectId={projectId!} mode="client" />
-            </>
+            <VendorTimeline
+              projectId={projectId!}
+              weddingDate={project.wedding_date}
+              items={timelineItems}
+              mode="client"
+              registerRowRef={registerRowRef}
+              forcedSub="timeline"
+            />
           ) : view === "category" ? (
-            <>
-              <VendorTimeline
-                projectId={projectId!}
-                weddingDate={project.wedding_date}
-                items={timelineItems}
-                mode="client"
-                registerRowRef={registerRowRef}
-                forcedSub="table"
-              />
-              <OtherExpensesPanel projectId={projectId!} mode="client" />
-            </>
+            <VendorTimeline
+              projectId={projectId!}
+              weddingDate={project.wedding_date}
+              items={timelineItems}
+              mode="client"
+              registerRowRef={registerRowRef}
+              forcedSub="table"
+            />
           ) : vendors.length === 0 ? (
             <EmptyState message="Your planner hasn't shared any vendors yet. Check back soon." />
           ) : filtered.length === 0 ? (
