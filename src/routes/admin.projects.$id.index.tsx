@@ -78,6 +78,10 @@ function ProjectDetailPage() {
     queryKey: ["project-deadlines", id],
     queryFn: () => listProjectCategoryDeadlines({ data: { project_id: id } }),
   });
+  const { data: otherExpenses = [] } = useQuery({
+    queryKey: ["project-other-expenses", id],
+    queryFn: () => listProjectOtherExpenses({ data: { project_id: id } }),
+  });
 
 
 
