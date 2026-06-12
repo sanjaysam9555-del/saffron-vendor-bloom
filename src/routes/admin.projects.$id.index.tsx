@@ -30,6 +30,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { VendorCommentsThread } from "@/components/client/VendorCommentsThread";
 import { instagramUrl, normalizeInstagramHandle } from "@/lib/instagram";
 import { VendorTimeline } from "@/components/timeline/VendorTimeline";
+import { OtherExpensesPanel } from "@/components/timeline/OtherExpensesPanel";
 import { listProjectCategoryDeadlines } from "@/lib/project-deadlines.functions";
 import { buildTimelineItems } from "@/lib/build-timeline-items";
 import { QuickAddVendorPanel } from "@/components/admin/QuickAddVendorPanel";
