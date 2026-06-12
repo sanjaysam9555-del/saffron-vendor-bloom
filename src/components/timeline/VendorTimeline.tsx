@@ -1659,17 +1659,18 @@ function AddOtherExpenseDialog({
               </select>
             </label>
             <label className="flex flex-col gap-1 text-xs">
-              <span className="text-[var(--charcoal)]/65">Status</span>
-              <select
-                value={booked ? "booked" : "pending"}
-                onChange={(e) => setBooked(e.target.value === "booked")}
+              <span className="text-[var(--charcoal)]/65">Due date</span>
+              <input
+                type="date"
+                value={due}
+                onChange={(e) => setDue(e.target.value)}
                 className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
-              >
-                <option value="pending">Pending</option>
-                <option value="booked">Booked</option>
-              </select>
+              />
             </label>
           </div>
+          <p className="text-[11px] italic text-[var(--charcoal)]/55">
+            Entering an actual amount marks this expense as booked.
+          </p>
           <label className="flex flex-col gap-1 text-xs">
             <span className="text-[var(--charcoal)]/65">Notes</span>
             <input
