@@ -11,6 +11,8 @@ export interface OtherExpense {
   actual_amount: number | null;
   notes: string | null;
   sort_order: number;
+  criticality: "low" | "medium" | "high";
+  booked: boolean;
   updated_at: string;
 }
 
@@ -57,8 +59,8 @@ export const listProjectOtherExpenses = createServerFn({ method: "GET" })
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const cols = staff
-      ? "id, project_id, label, planned_amount, actual_amount, notes, sort_order, updated_at"
-      : "id, project_id, label, planned_amount, actual_amount, sort_order, updated_at";
+      ? "id, project_id, label, planned_amount, actual_amount, notes, sort_order, criticality, booked, updated_at"
+      : "id, project_id, label, planned_amount, actual_amount, sort_order, criticality, booked, updated_at";
     const { data: rows, error } = await supabaseAdmin
       .from("project_other_expenses")
       .select(cols as string)
@@ -82,6 +84,8 @@ export const upsertProjectOtherExpense = createServerFn({ method: "POST" })
         actual_amount: z.number().min(0).max(1_000_000_000).nullable(),
         notes: z.string().max(1000).nullable().optional(),
         sort_order: z.number().int().min(0).max(10_000).optional(),
+        criticality: z.enum(["low", "medium", "high"]).optional(),
+        booked: z.boolean().optional(),
       })
       .parse(d),
   )
@@ -97,6 +101,8 @@ export const upsertProjectOtherExpense = createServerFn({ method: "POST" })
           actual_amount: data.actual_amount,
           notes: data.notes ?? null,
           sort_order: data.sort_order ?? 0,
+          criticality: data.criticality ?? "medium",
+          booked: data.booked ?? true,
         })
         .eq("id", data.id)
         .eq("project_id", data.project_id);
@@ -112,6 +118,8 @@ export const upsertProjectOtherExpense = createServerFn({ method: "POST" })
         actual_amount: data.actual_amount,
         notes: data.notes ?? null,
         sort_order: data.sort_order ?? 0,
+        criticality: data.criticality ?? "medium",
+        booked: data.booked ?? true,
         created_by: context.userId,
       })
       .select("id")

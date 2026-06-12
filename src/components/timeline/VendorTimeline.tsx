@@ -1269,21 +1269,14 @@ function OtherTableRow({
   registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
 }) {
   const [editing, setEditing] = useState(false);
-  const isAdmin = useIsAdmin();
-  const confirmDelete = useConfirmDelete();
-  const qc = useQueryClient();
-  const del = useServerFn(deleteProjectOtherExpense);
-  const deleteM = useMutation({
-    mutationFn: () => del({ data: { id: item.other_expense_id! } }),
-    onSuccess: () => {
-      notifySuccess("Expense deleted");
-      qc.invalidateQueries({ queryKey: ["project-other-expenses", projectId] });
-    },
-    onError: (e) => notifyError(e, "Could not delete"),
-  });
-
   const actual = resolveActual(item);
   const accent = "var(--champagne)";
+  const critClass =
+    item.criticality === "high"
+      ? "bg-[var(--criticality-high-bg)] text-[var(--terracotta)]"
+      : item.criticality === "low"
+        ? "bg-[var(--criticality-low-bg)] text-[var(--charcoal)]/60"
+        : "bg-[var(--criticality-med-bg)] text-[var(--charcoal)]/80";
 
   return (
     <>
@@ -1303,8 +1296,20 @@ function OtherTableRow({
         </td>
         <td className="px-3 py-2 text-[var(--charcoal)]/50">—</td>
         <td className="px-3 py-2 text-[var(--charcoal)]/50">—</td>
-        <td className="px-3 py-2 text-[var(--charcoal)]/50">—</td>
-        <td className="px-3 py-2 text-[var(--charcoal)]/50">—</td>
+        <td className="px-3 py-2">
+          <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${critClass}`}>
+            {item.criticality}
+          </span>
+        </td>
+        <td className="px-3 py-2">
+          {item.booked ? (
+            <span className="inline-flex items-center gap-1 text-emerald-700">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Booked
+            </span>
+          ) : (
+            <span className="text-[var(--charcoal)]/60">Pending</span>
+          )}
+        </td>
         <td className="px-3 py-2 text-right tabular-nums">
           {item.planned_amount != null ? formatINR(item.planned_amount) : "—"}
         </td>
@@ -1313,31 +1318,12 @@ function OtherTableRow({
         </td>
         {mode === "admin" && (
           <td className="px-3 py-2 text-right">
-            <div className="flex items-center justify-end gap-1.5">
-              <button
-                onClick={() => setEditing((e) => !e)}
-                className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1 text-xs hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
-              >
-                {editing ? "Close" : "Edit"}
-              </button>
-              {isAdmin && (
-                <button
-                  onClick={async () => {
-                    const ok = await confirmDelete({
-                      title: `Delete "${item.category}"?`,
-                      description: "This expense will be removed from the project.",
-                      confirmLabel: "Delete",
-                    });
-                    if (ok) deleteM.mutate();
-                  }}
-                  disabled={deleteM.isPending}
-                  className="inline-flex items-center justify-center rounded-md border border-[var(--border)] p-1 text-[var(--charcoal)]/60 hover:border-red-500 hover:text-red-600 disabled:opacity-50"
-                  aria-label="Delete expense"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
+            <button
+              onClick={() => setEditing((e) => !e)}
+              className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1 text-xs hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+            >
+              {editing ? "Close" : "Edit"}
+            </button>
           </td>
         )}
       </tr>
@@ -1366,7 +1352,10 @@ function OtherExpenseEditor({
   onDone: () => void;
 }) {
   const qc = useQueryClient();
+  const isAdmin = useIsAdmin();
+  const confirmDelete = useConfirmDelete();
   const upsert = useServerFn(upsertProjectOtherExpense);
+  const del = useServerFn(deleteProjectOtherExpense);
   const [label, setLabel] = useState(item.category);
   const [planned, setPlanned] = useState(
     item.planned_amount != null ? String(item.planned_amount) : "",
@@ -1375,6 +1364,8 @@ function OtherExpenseEditor({
     item.closed_amount_auto != null ? String(item.closed_amount_auto) : "",
   );
   const [notes, setNotes] = useState(item.notes ?? "");
+  const [crit, setCrit] = useState<Criticality>(item.criticality);
+  const [booked, setBooked] = useState<boolean>(item.booked);
 
   const parseAmount = (raw: string): number | null => {
     const t = raw.trim();
@@ -1393,6 +1384,8 @@ function OtherExpenseEditor({
           planned_amount: parseAmount(planned),
           actual_amount: parseAmount(actual),
           notes: notes.trim() ? notes.trim() : null,
+          criticality: crit,
+          booked,
         },
       }),
     onSuccess: () => {
@@ -1403,11 +1396,21 @@ function OtherExpenseEditor({
     onError: (e) => notifyError(e, "Could not save"),
   });
 
+  const deleteM = useMutation({
+    mutationFn: () => del({ data: { id: item.other_expense_id! } }),
+    onSuccess: () => {
+      notifySuccess("Expense deleted");
+      qc.invalidateQueries({ queryKey: ["project-other-expenses", projectId] });
+      onDone();
+    },
+    onError: (e) => notifyError(e, "Could not delete"),
+  });
+
   const canSave = label.trim().length > 0 && !saveM.isPending;
 
   return (
     <div className="rounded-md bg-[var(--cream)] p-3">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)]">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)]">
         <label className="col-span-2 flex min-w-0 flex-col gap-1 text-xs sm:col-span-1">
           <span className="text-[var(--charcoal)]/65">Label</span>
           <input
@@ -1439,6 +1442,29 @@ function OtherExpenseEditor({
             className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
           />
         </label>
+        <label className="flex min-w-0 flex-col gap-1 text-xs">
+          <span className="text-[var(--charcoal)]/65">Criticality</span>
+          <select
+            value={crit}
+            onChange={(e) => setCrit(e.target.value as Criticality)}
+            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </label>
+        <label className="flex min-w-0 flex-col gap-1 text-xs">
+          <span className="text-[var(--charcoal)]/65">Status</span>
+          <select
+            value={booked ? "booked" : "pending"}
+            onChange={(e) => setBooked(e.target.value === "booked")}
+            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+          >
+            <option value="booked">Booked</option>
+            <option value="pending">Pending</option>
+          </select>
+        </label>
         <label className="col-span-2 flex min-w-0 flex-col gap-1 text-xs sm:col-span-1">
           <span className="text-[var(--charcoal)]/65">Notes</span>
           <input
@@ -1450,20 +1476,40 @@ function OtherExpenseEditor({
           />
         </label>
       </div>
-      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-        <button
-          onClick={onDone}
-          className="rounded-md border border-[var(--border)] px-2 py-1.5 text-xs hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() => saveM.mutate()}
-          disabled={!canSave}
-          className="inline-flex items-center gap-1 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-60"
-        >
-          <Save className="h-3 w-3" /> Save
-        </button>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          {isAdmin && item.other_expense_id && (
+            <button
+              onClick={async () => {
+                const ok = await confirmDelete({
+                  title: `Delete "${item.category}"?`,
+                  description: "This expense will be removed from the project.",
+                  confirmLabel: "Delete",
+                });
+                if (ok) deleteM.mutate();
+              }}
+              disabled={deleteM.isPending}
+              className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1.5 text-xs text-[var(--charcoal)]/70 hover:border-red-500 hover:text-red-600 disabled:opacity-50"
+            >
+              <Trash2 className="h-3 w-3" /> Delete
+            </button>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onDone}
+            className="rounded-md border border-[var(--border)] px-2 py-1.5 text-xs hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => saveM.mutate()}
+            disabled={!canSave}
+            className="inline-flex items-center gap-1 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-60"
+          >
+            <Save className="h-3 w-3" /> Save
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1484,6 +1530,8 @@ function AddOtherExpenseDialog({
   const [planned, setPlanned] = useState("");
   const [actual, setActual] = useState("");
   const [notes, setNotes] = useState("");
+  const [crit, setCrit] = useState<Criticality>("medium");
+  const [booked, setBooked] = useState<boolean>(false);
 
   const existingSet = useMemo(
     () => new Set(existingLabels.map((l) => l.toLowerCase().trim())),
@@ -1509,6 +1557,8 @@ function AddOtherExpenseDialog({
           actual_amount: parseAmount(actual),
           notes: notes.trim() ? notes.trim() : null,
           sort_order: existingLabels.length,
+          criticality: crit,
+          booked,
         },
       }),
     onSuccess: () => {
@@ -1583,6 +1633,31 @@ function AddOtherExpenseDialog({
                 placeholder="0"
                 className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
               />
+            </label>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="flex flex-col gap-1 text-xs">
+              <span className="text-[var(--charcoal)]/65">Criticality</span>
+              <select
+                value={crit}
+                onChange={(e) => setCrit(e.target.value as Criticality)}
+                className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-xs">
+              <span className="text-[var(--charcoal)]/65">Status</span>
+              <select
+                value={booked ? "booked" : "pending"}
+                onChange={(e) => setBooked(e.target.value === "booked")}
+                className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+              >
+                <option value="pending">Pending</option>
+                <option value="booked">Booked</option>
+              </select>
             </label>
           </div>
           <label className="flex flex-col gap-1 text-xs">
