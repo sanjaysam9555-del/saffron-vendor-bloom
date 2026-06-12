@@ -11,6 +11,8 @@ export interface OtherExpense {
   actual_amount: number | null;
   notes: string | null;
   sort_order: number;
+  criticality: "low" | "medium" | "high";
+  booked: boolean;
   updated_at: string;
 }
 
