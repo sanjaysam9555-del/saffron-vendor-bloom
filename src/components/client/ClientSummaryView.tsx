@@ -9,8 +9,6 @@ interface Props {
   brideName: string;
   groomName: string;
   weddingDate: string;
-  /** Sum of non-vendor "Other expenses" actuals to include in spend totals. */
-  extraActuals?: number;
 }
 
 function daysUntil(iso: string): number {
@@ -21,7 +19,7 @@ function daysUntil(iso: string): number {
   return Math.round((b - a) / 86400000);
 }
 
-export function ClientSummaryView({ vendors, items, brideName, groomName, weddingDate, extraActuals = 0 }: Props) {
+export function ClientSummaryView({ vendors, items, brideName, groomName, weddingDate }: Props) {
   const total = vendors.length;
   const shortlisted = vendors.filter(
     (v) => v.client_status === "shortlisted" || v.client_status === "finalised" || v.client_status === "like",
@@ -32,7 +30,7 @@ export function ClientSummaryView({ vendors, items, brideName, groomName, weddin
   const actuals = items.reduce(
     (s, i) => s + ((i.actual_amount_override ?? i.closed_amount_auto) ?? 0),
     0,
-  ) + extraActuals;
+  );
   const bookedPct = totalCats ? Math.round((bookedCats / totalCats) * 100) : 0;
 
   const dateFmt = new Date(weddingDate).toLocaleDateString("en-IN", {
