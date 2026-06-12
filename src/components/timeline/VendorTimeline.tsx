@@ -1374,7 +1374,7 @@ function OtherExpenseEditor({
   );
   const [notes, setNotes] = useState(item.notes ?? "");
   const [crit, setCrit] = useState<Criticality>(item.criticality);
-  const [booked, setBooked] = useState<boolean>(item.booked);
+  const [due, setDue] = useState<string>(item.due_date ?? "");
 
   const parseAmount = (raw: string): number | null => {
     const t = raw.trim();
@@ -1394,7 +1394,7 @@ function OtherExpenseEditor({
           actual_amount: parseAmount(actual),
           notes: notes.trim() ? notes.trim() : null,
           criticality: crit,
-          booked,
+          due_date: due ? due : null,
         },
       }),
     onSuccess: () => {
@@ -1430,6 +1430,27 @@ function OtherExpenseEditor({
           />
         </label>
         <label className="flex min-w-0 flex-col gap-1 text-xs">
+          <span className="text-[var(--charcoal)]/65">Due date</span>
+          <input
+            type="date"
+            value={due}
+            onChange={(e) => setDue(e.target.value)}
+            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+          />
+        </label>
+        <label className="flex min-w-0 flex-col gap-1 text-xs">
+          <span className="text-[var(--charcoal)]/65">Criticality</span>
+          <select
+            value={crit}
+            onChange={(e) => setCrit(e.target.value as Criticality)}
+            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </label>
+        <label className="flex min-w-0 flex-col gap-1 text-xs">
           <span className="text-[var(--charcoal)]/65">Planned (₹)</span>
           <input
             type="number"
@@ -1451,29 +1472,6 @@ function OtherExpenseEditor({
             className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
           />
         </label>
-        <label className="flex min-w-0 flex-col gap-1 text-xs">
-          <span className="text-[var(--charcoal)]/65">Criticality</span>
-          <select
-            value={crit}
-            onChange={(e) => setCrit(e.target.value as Criticality)}
-            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
-        </label>
-        <label className="flex min-w-0 flex-col gap-1 text-xs">
-          <span className="text-[var(--charcoal)]/65">Status</span>
-          <select
-            value={booked ? "booked" : "pending"}
-            onChange={(e) => setBooked(e.target.value === "booked")}
-            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
-          >
-            <option value="booked">Booked</option>
-            <option value="pending">Pending</option>
-          </select>
-        </label>
         <label className="col-span-2 flex min-w-0 flex-col gap-1 text-xs sm:col-span-1">
           <span className="text-[var(--charcoal)]/65">Notes</span>
           <input
@@ -1485,6 +1483,9 @@ function OtherExpenseEditor({
           />
         </label>
       </div>
+      <p className="mt-2 text-[11px] italic text-[var(--charcoal)]/55">
+        Entering an actual amount marks this expense as booked.
+      </p>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <div>
           {isAdmin && item.other_expense_id && (
