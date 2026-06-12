@@ -1142,6 +1142,7 @@ function TableView({
                   item={item}
                   projectId={projectId}
                   mode={mode}
+                  now={now}
                   registerRowRef={registerRowRef}
                 />
               ) : (
