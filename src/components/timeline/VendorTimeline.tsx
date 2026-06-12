@@ -69,8 +69,9 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
   const [addOpen, setAddOpen] = useState(false);
   const [addOtherOpen, setAddOtherOpen] = useState(false);
   const now = useNow();
-  // Timeline visuals (ribbon / horizontal / urgency) ignore "other" expense
-  // rows — they have no due date and are not actual vendor categories.
+  // Vendor-only subset is still used for "missing deadline" badges and the
+  // Add-Category duplicate check. Ribbon / horizontal / table all render the
+  // full item list so "other" expenses appear alongside vendor categories.
   const vendorOnly = useMemo(() => items.filter((i) => i.kind !== "other"), [items]);
   const sorted = useMemo(() => sortItems(items, now), [items, now]);
   const unsetCount = vendorOnly.filter((i) => !i.due_date && !i.booked).length;
