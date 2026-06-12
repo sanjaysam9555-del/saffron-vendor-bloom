@@ -13,6 +13,7 @@ export interface OtherExpense {
   sort_order: number;
   criticality: "low" | "medium" | "high";
   booked: boolean;
+  due_date: string | null;
   updated_at: string;
 }
 
