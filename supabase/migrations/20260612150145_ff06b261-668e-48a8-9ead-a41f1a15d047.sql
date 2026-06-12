@@ -1,0 +1,1 @@
+ALTER TABLE public.project_other_expenses ADD COLUMN IF NOT EXISTS due_date date;

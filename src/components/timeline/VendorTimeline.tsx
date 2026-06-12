@@ -69,8 +69,9 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
   const [addOpen, setAddOpen] = useState(false);
   const [addOtherOpen, setAddOtherOpen] = useState(false);
   const now = useNow();
-  // Timeline visuals (ribbon / horizontal / urgency) ignore "other" expense
-  // rows — they have no due date and are not actual vendor categories.
+  // Vendor-only subset is still used for "missing deadline" badges and the
+  // Add-Category duplicate check. Ribbon / horizontal / table all render the
+  // full item list so "other" expenses appear alongside vendor categories.
   const vendorOnly = useMemo(() => items.filter((i) => i.kind !== "other"), [items]);
   const sorted = useMemo(() => sortItems(items, now), [items, now]);
   const unsetCount = vendorOnly.filter((i) => !i.due_date && !i.booked).length;
@@ -157,7 +158,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
         <>
           <div className="md:hidden">
             <TimelineRibbon
-              items={vendorOnly}
+              items={sorted}
               projectId={projectId}
               mode={mode}
               weddingDate={weddingDate}
@@ -167,7 +168,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
           </div>
           <div className="hidden md:block">
             <HorizontalTimeline
-              items={vendorOnly}
+              items={sorted}
               projectId={projectId}
               mode={mode}
               weddingDate={weddingDate}
@@ -639,7 +640,7 @@ function RibbonRow({
                 {item.category}
               </h4>
               <p className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
-                {item.vendor_count} shortlisted
+                {item.kind === "other" ? "Other expense" : `${item.vendor_count} shortlisted`}
                 {item.notes ? ` · ${item.notes}` : ""}
               </p>
             </div>
@@ -700,11 +701,19 @@ function RibbonRow({
           </div>
 
           {editing && mode === "admin" && (
-            <DeadlineEditor
-              item={item}
-              projectId={projectId}
-              onDone={() => setEditing(false)}
-            />
+            item.kind === "other" ? (
+              <OtherExpenseEditor
+                item={item}
+                projectId={projectId}
+                onDone={() => setEditing(false)}
+              />
+            ) : (
+              <DeadlineEditor
+                item={item}
+                projectId={projectId}
+                onDone={() => setEditing(false)}
+              />
+            )
           )}
         </article>
       </div>
@@ -826,7 +835,7 @@ function UnscheduledCard({
         </span>
       </div>
       <p className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/50">
-        {item.vendor_count} shortlisted
+        {item.kind === "other" ? "Other expense" : `${item.vendor_count} shortlisted`}
       </p>
       <div className="mt-3 flex items-center justify-between">
         <p className="text-[10px] italic font-medium text-[var(--terracotta)]">
@@ -843,11 +852,19 @@ function UnscheduledCard({
         )}
       </div>
       {editing && mode === "admin" && (
-        <DeadlineEditor
-          item={item}
-          projectId={projectId}
-          onDone={() => setEditing(false)}
-        />
+        item.kind === "other" ? (
+          <OtherExpenseEditor
+            item={item}
+            projectId={projectId}
+            onDone={() => setEditing(false)}
+          />
+        ) : (
+          <DeadlineEditor
+            item={item}
+            projectId={projectId}
+            onDone={() => setEditing(false)}
+          />
+        )
       )}
     </div>
   );
@@ -1125,6 +1142,7 @@ function TableView({
                   item={item}
                   projectId={projectId}
                   mode={mode}
+                  now={now}
                   registerRowRef={registerRowRef}
                 />
               ) : (
@@ -1261,22 +1279,19 @@ function OtherTableRow({
   item,
   projectId,
   mode,
+  now,
   registerRowRef,
 }: {
   item: TimelineItem;
   projectId: string;
   mode: "admin" | "client";
+  now: Date;
   registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const { bucket, daysLeft } = classifyUrgency(item, now);
+  const color = BUCKET_TOKEN[bucket];
   const actual = resolveActual(item);
-  const accent = "var(--champagne)";
-  const critClass =
-    item.criticality === "high"
-      ? "bg-[var(--criticality-high-bg)] text-[var(--terracotta)]"
-      : item.criticality === "low"
-        ? "bg-[var(--criticality-low-bg)] text-[var(--charcoal)]/60"
-        : "bg-[var(--criticality-med-bg)] text-[var(--charcoal)]/80";
 
   return (
     <>
@@ -1285,29 +1300,23 @@ function OtherTableRow({
           registerRowRef?.(item.category, el as unknown as HTMLDivElement | null)
         }
         data-category={item.category}
-        className="border-t border-[var(--border)] bg-[var(--cream)]/30"
-        style={{ borderLeft: `3px solid ${accent}` }}
+        className="border-t border-[var(--border)]"
+        style={{ borderLeft: `3px solid ${color}` }}
       >
         <td className="px-3 py-2 font-medium">{item.category}</td>
-        <td className="px-3 py-2">
-          <span className="inline-flex items-center rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/65">
-            Others
-          </span>
+        <td className="px-3 py-2">NA</td>
+        <td className="px-3 py-2">{item.due_date ? formatDueDate(item.due_date) : "—"}</td>
+        <td className="px-3 py-2" style={{ color }}>
+          {item.booked ? "—" : daysLeft === null ? "—" : daysLeftLabel(daysLeft)}
         </td>
-        <td className="px-3 py-2 text-[var(--charcoal)]/50">—</td>
-        <td className="px-3 py-2 text-[var(--charcoal)]/50">—</td>
-        <td className="px-3 py-2">
-          <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${critClass}`}>
-            {item.criticality}
-          </span>
-        </td>
+        <td className="px-3 py-2 capitalize">{item.criticality}</td>
         <td className="px-3 py-2">
           {item.booked ? (
             <span className="inline-flex items-center gap-1 text-emerald-700">
               <CheckCircle2 className="h-3.5 w-3.5" /> Booked
             </span>
           ) : (
-            <span className="text-[var(--charcoal)]/60">Pending</span>
+            BUCKET_LABEL[bucket]
           )}
         </td>
         <td className="px-3 py-2 text-right tabular-nums">
@@ -1365,7 +1374,7 @@ function OtherExpenseEditor({
   );
   const [notes, setNotes] = useState(item.notes ?? "");
   const [crit, setCrit] = useState<Criticality>(item.criticality);
-  const [booked, setBooked] = useState<boolean>(item.booked);
+  const [due, setDue] = useState<string>(item.due_date ?? "");
 
   const parseAmount = (raw: string): number | null => {
     const t = raw.trim();
@@ -1385,7 +1394,7 @@ function OtherExpenseEditor({
           actual_amount: parseAmount(actual),
           notes: notes.trim() ? notes.trim() : null,
           criticality: crit,
-          booked,
+          due_date: due ? due : null,
         },
       }),
     onSuccess: () => {
@@ -1421,6 +1430,27 @@ function OtherExpenseEditor({
           />
         </label>
         <label className="flex min-w-0 flex-col gap-1 text-xs">
+          <span className="text-[var(--charcoal)]/65">Due date</span>
+          <input
+            type="date"
+            value={due}
+            onChange={(e) => setDue(e.target.value)}
+            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+          />
+        </label>
+        <label className="flex min-w-0 flex-col gap-1 text-xs">
+          <span className="text-[var(--charcoal)]/65">Criticality</span>
+          <select
+            value={crit}
+            onChange={(e) => setCrit(e.target.value as Criticality)}
+            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </label>
+        <label className="flex min-w-0 flex-col gap-1 text-xs">
           <span className="text-[var(--charcoal)]/65">Planned (₹)</span>
           <input
             type="number"
@@ -1442,29 +1472,6 @@ function OtherExpenseEditor({
             className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
           />
         </label>
-        <label className="flex min-w-0 flex-col gap-1 text-xs">
-          <span className="text-[var(--charcoal)]/65">Criticality</span>
-          <select
-            value={crit}
-            onChange={(e) => setCrit(e.target.value as Criticality)}
-            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
-        </label>
-        <label className="flex min-w-0 flex-col gap-1 text-xs">
-          <span className="text-[var(--charcoal)]/65">Status</span>
-          <select
-            value={booked ? "booked" : "pending"}
-            onChange={(e) => setBooked(e.target.value === "booked")}
-            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
-          >
-            <option value="booked">Booked</option>
-            <option value="pending">Pending</option>
-          </select>
-        </label>
         <label className="col-span-2 flex min-w-0 flex-col gap-1 text-xs sm:col-span-1">
           <span className="text-[var(--charcoal)]/65">Notes</span>
           <input
@@ -1476,6 +1483,9 @@ function OtherExpenseEditor({
           />
         </label>
       </div>
+      <p className="mt-2 text-[11px] italic text-[var(--charcoal)]/55">
+        Entering an actual amount marks this expense as booked.
+      </p>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <div>
           {isAdmin && item.other_expense_id && (
@@ -1531,7 +1541,7 @@ function AddOtherExpenseDialog({
   const [actual, setActual] = useState("");
   const [notes, setNotes] = useState("");
   const [crit, setCrit] = useState<Criticality>("medium");
-  const [booked, setBooked] = useState<boolean>(false);
+  const [due, setDue] = useState<string>("");
 
   const existingSet = useMemo(
     () => new Set(existingLabels.map((l) => l.toLowerCase().trim())),
@@ -1558,7 +1568,7 @@ function AddOtherExpenseDialog({
           notes: notes.trim() ? notes.trim() : null,
           sort_order: existingLabels.length,
           criticality: crit,
-          booked,
+          due_date: due ? due : null,
         },
       }),
     onSuccess: () => {
@@ -1584,7 +1594,7 @@ function AddOtherExpenseDialog({
           </button>
         </div>
         <p className="mb-3 text-xs text-[var(--charcoal)]/55">
-          Non-vendor line items (e.g. Dhol Wala, Heaters, Transport). They appear in the budget table but not on the timeline.
+          Non-vendor line items (e.g. Dhol Wala, Heaters, Transport). They appear alongside vendor categories on the timeline and in the budget table.
         </p>
         <div className="mb-3 flex flex-wrap gap-1.5">
           <span className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">Quick:</span>
@@ -1649,17 +1659,18 @@ function AddOtherExpenseDialog({
               </select>
             </label>
             <label className="flex flex-col gap-1 text-xs">
-              <span className="text-[var(--charcoal)]/65">Status</span>
-              <select
-                value={booked ? "booked" : "pending"}
-                onChange={(e) => setBooked(e.target.value === "booked")}
+              <span className="text-[var(--charcoal)]/65">Due date</span>
+              <input
+                type="date"
+                value={due}
+                onChange={(e) => setDue(e.target.value)}
                 className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
-              >
-                <option value="pending">Pending</option>
-                <option value="booked">Booked</option>
-              </select>
+              />
             </label>
           </div>
+          <p className="text-[11px] italic text-[var(--charcoal)]/55">
+            Entering an actual amount marks this expense as booked.
+          </p>
           <label className="flex flex-col gap-1 text-xs">
             <span className="text-[var(--charcoal)]/65">Notes</span>
             <input
@@ -1945,11 +1956,19 @@ function HorizontalTimeline({
               <X className="h-4 w-4" />
             </button>
           </div>
-          <DeadlineEditor
-            item={editingItem}
-            projectId={projectId}
-            onDone={() => setEditingCategory(null)}
-          />
+          {editingItem.kind === "other" ? (
+            <OtherExpenseEditor
+              item={editingItem}
+              projectId={projectId}
+              onDone={() => setEditingCategory(null)}
+            />
+          ) : (
+            <DeadlineEditor
+              item={editingItem}
+              projectId={projectId}
+              onDone={() => setEditingCategory(null)}
+            />
+          )}
         </div>
       )}
 
@@ -2059,7 +2078,7 @@ function HorizontalCard({
           {item.planned_amount != null ? formatINR(item.planned_amount) : "—"}
         </span>
         <span className="text-[9px] text-[var(--charcoal)]/45">
-          {item.vendor_count} shortlisted
+          {item.kind === "other" ? "Other expense" : `${item.vendor_count} shortlisted`}
         </span>
       </div>
     </article>

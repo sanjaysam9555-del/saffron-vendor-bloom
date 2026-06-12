@@ -380,6 +380,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           criticality: string
+          due_date: string | null
           id: string
           label: string
           notes: string | null
@@ -394,6 +395,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           criticality?: string
+          due_date?: string | null
           id?: string
           label: string
           notes?: string | null
@@ -408,6 +410,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           criticality?: string
+          due_date?: string | null
           id?: string
           label?: string
           notes?: string | null
