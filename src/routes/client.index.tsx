@@ -36,6 +36,7 @@ import { ClientVendorTable } from "@/components/client/ClientVendorTable";
 import type { ClientVendor } from "@/lib/project-types";
 import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
 import { VendorTimeline } from "@/components/timeline/VendorTimeline";
+import { OtherExpensesPanel } from "@/components/timeline/OtherExpensesPanel";
 
 import { buildTimelineItems } from "@/lib/build-timeline-items";
 
