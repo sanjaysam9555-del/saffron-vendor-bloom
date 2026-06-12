@@ -84,21 +84,21 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
 
   return (
     <div className="mt-2">
-      <div className="mb-4 flex flex-row items-start justify-end gap-3 sm:items-center">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="mb-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-end">
+        <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           {mode === "admin" && (
             <>
               <button
                 type="button"
                 onClick={() => setAddOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-md border border-[var(--terracotta)] bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
+                className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-[var(--terracotta)] bg-[var(--terracotta)] px-3 py-2 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 sm:w-auto sm:py-1.5"
               >
                 <Plus className="h-3.5 w-3.5" /> Add Category To Plan
               </button>
               <button
                 type="button"
                 onClick={() => setAddOtherOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--charcoal)]/80 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+                className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-3 py-2 text-xs font-medium text-[var(--charcoal)]/80 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] sm:w-auto sm:py-1.5"
               >
                 <Plus className="h-3.5 w-3.5" /> Add Other Expense
               </button>
