@@ -951,65 +951,67 @@ function DeadlineEditor({
   const autoActual = item.closed_amount_auto;
 
   return (
-    <div className="mt-3 grid gap-2 rounded-md bg-[var(--cream)] p-3 sm:grid-cols-[auto_auto_auto_auto_1fr_auto]">
-      <label className="flex flex-col gap-1 text-xs">
-        <span className="text-[var(--charcoal)]/65">Due date</span>
-        <input
-          type="date"
-          value={due}
-          onChange={(e) => setDue(e.target.value)}
-          className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-xs">
-        <span className="text-[var(--charcoal)]/65">Criticality</span>
-        <select
-          value={crit}
-          onChange={(e) => setCrit(e.target.value as Criticality)}
-          className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
-        >
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
-      </label>
-      <label className="flex flex-col gap-1 text-xs">
-        <span className="text-[var(--charcoal)]/65">Planned Budget (₹)</span>
-        <input
-          type="number"
-          min={0}
-          step="1"
-          value={planned}
-          onChange={(e) => setPlanned(e.target.value)}
-          placeholder="0"
-          className="w-32 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-xs">
-        <span className="text-[var(--charcoal)]/65">
-          Actual Cost(₹)
-        </span>
-        <input
-          type="number"
-          min={0}
-          step="1"
-          value={actualOverride}
-          onChange={(e) => setActualOverride(e.target.value)}
-          placeholder={autoActual != null ? `auto ${autoActual}` : "—"}
-          className="w-36 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-xs">
-        <span className="text-[var(--charcoal)]/65">Notes</span>
-        <input
-          type="text"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Optional"
-          className="rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
-        />
-      </label>
-      <div className="flex w-full items-end justify-end gap-2 sm:w-auto">
+    <div className="mt-3 rounded-md bg-[var(--cream)] p-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-[auto_auto_auto_auto_minmax(0,1fr)]">
+        <label className="flex min-w-0 flex-col gap-1 text-xs">
+          <span className="text-[var(--charcoal)]/65">Due date</span>
+          <input
+            type="date"
+            value={due}
+            onChange={(e) => setDue(e.target.value)}
+            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+          />
+        </label>
+        <label className="flex min-w-0 flex-col gap-1 text-xs">
+          <span className="text-[var(--charcoal)]/65">Criticality</span>
+          <select
+            value={crit}
+            onChange={(e) => setCrit(e.target.value as Criticality)}
+            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </label>
+        <label className="flex min-w-0 flex-col gap-1 text-xs">
+          <span className="text-[var(--charcoal)]/65">Planned Budget (₹)</span>
+          <input
+            type="number"
+            min={0}
+            step="1"
+            value={planned}
+            onChange={(e) => setPlanned(e.target.value)}
+            placeholder="0"
+            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+          />
+        </label>
+        <label className="flex min-w-0 flex-col gap-1 text-xs">
+          <span className="text-[var(--charcoal)]/65">
+            Actual Cost(₹)
+          </span>
+          <input
+            type="number"
+            min={0}
+            step="1"
+            value={actualOverride}
+            onChange={(e) => setActualOverride(e.target.value)}
+            placeholder={autoActual != null ? `auto ${autoActual}` : "—"}
+            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+          />
+        </label>
+        <label className="col-span-2 flex min-w-0 flex-col gap-1 text-xs sm:col-span-3 lg:col-span-1">
+          <span className="text-[var(--charcoal)]/65">Notes</span>
+          <input
+            type="text"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Optional"
+            className="w-full min-w-0 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+          />
+        </label>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
         <button
           onClick={() => saveM.mutate()}
           disabled={saveM.isPending}
@@ -1034,6 +1036,7 @@ function DeadlineEditor({
     </div>
   );
 }
+
 
 
 function TableView({
