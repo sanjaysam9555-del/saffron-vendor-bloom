@@ -127,3 +127,29 @@ export function buildTimelineItems(
   return out;
 }
 
+/**
+ * Map non-vendor "Other expenses" rows into synthetic TimelineItems so they
+ * appear in the budget table and roll up into dashboard totals, while staying
+ * off the scheduled timeline views.
+ */
+export function otherExpensesAsTimelineItems(
+  rows: OtherExpense[],
+): TimelineItem[] {
+  return rows.map((r) => ({
+    category: r.label,
+    vendor_count: 0,
+    due_date: null,
+    criticality: "low",
+    notes: r.notes ?? null,
+    // Treated as settled line items so they count toward the "Booked" tally
+    // and don't appear in urgency / "needs attention" surfaces.
+    booked: true,
+    booked_vendor_name: null,
+    planned_amount: r.planned_amount,
+    closed_amount_auto: r.actual_amount,
+    actual_amount_override: null,
+    kind: "other",
+    other_expense_id: r.id,
+  }));
+}
+
