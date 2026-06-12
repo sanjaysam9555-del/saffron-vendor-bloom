@@ -71,6 +71,7 @@ function ProjectDetailPage() {
     { table: "client_vendor_status", invalidate: [["project", id]] },
     { table: "vendors", invalidate: [["project", id]] },
     { table: "project_category_deadlines", filter: `project_id=eq.${id}`, invalidate: [["project-deadlines", id]] },
+    { table: "project_other_expenses", filter: `project_id=eq.${id}`, invalidate: [["project-other-expenses", id]] },
   ]);
 
   const { data: deadlines = [] } = useQuery({
