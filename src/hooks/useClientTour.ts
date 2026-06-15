@@ -36,7 +36,7 @@ export function useClientTour({ setView }: Options) {
       {
         element: '[data-tour="header-greeting"]',
         popover: popover(
-          "Welcome to your Vendor Folio",
+          "Welcome to your Exclusive Planning Studio",
           "This is your private wedding planning dashboard, curated by your Saffron planner. Let's take a quick tour so you know where everything lives.",
         ),
       },
