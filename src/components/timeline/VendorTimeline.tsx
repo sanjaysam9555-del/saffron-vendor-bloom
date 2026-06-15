@@ -39,6 +39,8 @@ import { useConfirmDelete } from "@/components/ui/confirm-dialog";
 import { useIsAdmin } from "@/lib/auth";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { FlipNumber } from "@/components/motion/FlipNumber";
+import { motion } from "motion/react";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { formatINR } from "@/lib/quote-types";
 
 const OTHER_PRESETS = ["Dhol Wala", "Heaters", "Coolers", "Transport", "Other expense"];
