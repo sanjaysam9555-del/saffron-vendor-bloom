@@ -51,6 +51,7 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
     enabled: !!projectId && !!vendor?.id,
   });
 
+  const reduced = useReducedMotion();
   if (!vendor) return null;
   const colors = CATEGORY_COLORS[vendor.category] ?? {
     bg: "bg-[var(--cream-deep)]",
@@ -64,14 +65,24 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
   ];
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-[var(--cream)] text-[oklch(0.18_0.01_60)] shadow-2xl"
+    <AnimatePresence>
+      <motion.div
+        key="vendor-detail-overlay"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18 }}
+        className="fixed inset-0 z-50 flex items-end justify-center bg-[color-mix(in_srgb,var(--charcoal)_70%,transparent)] backdrop-blur-sm sm:items-center sm:p-4"
+        onClick={onClose}
       >
+        <motion.div
+          onClick={(e) => e.stopPropagation()}
+          initial={reduced ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.97 }}
+          animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+          exit={reduced ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 240, damping: 26, mass: 0.7 }}
+          className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-2xl bg-[var(--cream)] text-[oklch(0.18_0.01_60)] shadow-2xl sm:rounded-xl"
+        >
         <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-[var(--border)] bg-[var(--cream)] px-6 py-4">
           <div>
             <div className="mb-1 flex flex-wrap items-center gap-1">
