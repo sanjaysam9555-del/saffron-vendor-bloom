@@ -1787,15 +1787,35 @@ function HorizontalTimeline({
   const aboveLanes: number[] = []; // stores right-edge x of last card per lane
   const belowLanes: number[] = [];
   const placements: Placement[] = [];
+
+  const weddingX = xFor(weddingDate);
+  // Reserve a horizontal clear zone around the wedding heart + date label
+  // so vendor cards on lane 0 never overlap the marker.
+  const WEDDING_RESERVE = 60;
+  const wReserveL = weddingX - WEDDING_RESERVE;
+  const wReserveR = weddingX + WEDDING_RESERVE;
+
   onAxis.forEach((item, idx) => {
     const x = xFor(item.due_date!);
     const above = idx % 2 === 0;
     const lanes = above ? aboveLanes : belowLanes;
     const leftEdge = x - CARD_W / 2;
     const rightEdge = x + CARD_W / 2;
-    let lane = lanes.findIndex((rightX) => rightX + X_GAP <= leftEdge);
+    const overlapsWedding = rightEdge > wReserveL && leftEdge < wReserveR;
+    let lane = lanes.findIndex((rightX, laneIdx) => {
+      if (rightX + X_GAP > leftEdge) return false;
+      // lane 0 (closest to axis) stays clear under/over the wedding marker
+      if (overlapsWedding && laneIdx === 0) return false;
+      return true;
+    });
     if (lane === -1) {
       lane = lanes.length;
+      // If this is the very first card and it would land on lane 0 over the
+      // wedding marker, bump it to lane 1 instead.
+      if (overlapsWedding && lane === 0) {
+        lanes.push(wReserveR); // mark lane 0 as occupied by the marker
+        lane = 1;
+      }
       lanes.push(rightEdge);
     } else {
       lanes[lane] = rightEdge;
@@ -1814,7 +1834,6 @@ function HorizontalTimeline({
     : null;
 
   const todayX = xFor(now);
-  const weddingX = xFor(weddingDate);
 
   return (
     <div>
