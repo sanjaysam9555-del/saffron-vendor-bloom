@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bell } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { FlipNumber } from "@/components/motion/FlipNumber";
 
 interface NotificationRow {
   id: string;
@@ -40,6 +41,8 @@ export function NotificationsBell() {
   const userId = user?.id;
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [open, setOpen] = useState(false);
+  const [shake, setShake] = useState(0); // bump to re-trigger CSS animation
+  const initialised = useRef(false);
 
   const unread = userId
     ? items.filter((i) => !i.read_by || !i.read_by[userId]).length
@@ -56,7 +59,9 @@ export function NotificationsBell() {
 
   useEffect(() => {
     if (!userId) return;
-    refresh();
+    refresh().then(() => {
+      initialised.current = true;
+    });
     const ch = supabase
       .channel("staff_notifications")
       .on(
@@ -66,6 +71,8 @@ export function NotificationsBell() {
           const row = payload.new as NotificationRow;
           setItems((prev) => [row, ...prev].slice(0, 30));
           toast.info(row.title);
+          // Only shake after the initial load (so first paint stays calm).
+          if (initialised.current) setShake((n) => n + 1);
         },
       )
       .subscribe();
@@ -106,10 +113,10 @@ export function NotificationsBell() {
           aria-label="Notifications"
           className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-[var(--charcoal)]/70 transition hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
         >
-          <Bell className="h-4 w-4" />
+          <Bell key={shake} className={shake ? "h-4 w-4 animate-bell-shake" : "h-4 w-4"} />
           {unread > 0 && (
             <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-[16px] items-center justify-center rounded-full bg-[var(--terracotta)] px-1 text-[10px] font-semibold leading-4 text-white">
-              {unread > 9 ? "9+" : unread}
+              {unread > 9 ? "9+" : <FlipNumber value={unread} duration={0.45} />}
             </span>
           )}
         </button>
