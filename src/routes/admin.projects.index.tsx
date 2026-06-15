@@ -168,7 +168,7 @@ function ProjectsListPage() {
       </div>
 
       <div className="mx-auto max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 animate-fade-up">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-baseline gap-3">
             <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
               Projects

@@ -211,7 +211,7 @@ function DashboardPage() {
         />
 
         <main className={`min-w-0 flex-1 px-3 py-4 sm:px-6 sm:py-5 lg:px-8 ${bulkMode ? "pb-28" : ""}`}>
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 animate-fade-up">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-baseline gap-3">
               <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
                 {filters.category ?? "All Vendors"}
@@ -431,7 +431,7 @@ function EmptyState({
   onAdd: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--champagne)] bg-white py-20 text-center animate-fade-up">
+    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--champagne)] bg-white py-20 text-center">
       <Sparkles className="mb-3 h-8 w-8 text-[var(--terracotta)] animate-pulse-subtle" />
       <h3 className="font-display text-2xl font-semibold text-[var(--charcoal)]">
         {category ? `No vendors in ${category} yet` : vendorsExist ? "No matching vendors" : "Your vendor book is empty"}
