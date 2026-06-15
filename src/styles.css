@@ -111,6 +111,7 @@
   }
   html {
     background-color: var(--color-background);
+    color-scheme: light;
   }
   body {
     background-color: var(--color-background);
