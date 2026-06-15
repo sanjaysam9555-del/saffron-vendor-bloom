@@ -1888,13 +1888,13 @@ function HorizontalTimeline({
 
           {/* wedding marker */}
           <div
-            className="absolute flex flex-col items-center"
+            className="absolute z-20 flex flex-col items-center"
             style={{ left: weddingX, top: axisY - 22, transform: "translateX(-50%)" }}
           >
             <div className="z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--terracotta)] text-[var(--cream)] shadow-lg">
               <Heart className="h-5 w-5" />
             </div>
-            <div className="mt-1 whitespace-nowrap text-[10px] font-bold uppercase tracking-wider text-[var(--terracotta)]">
+            <div className="mt-1 whitespace-nowrap rounded bg-[var(--cream)]/90 px-1 text-[10px] font-bold uppercase tracking-wider text-[var(--terracotta)]">
               {formatDueDate(weddingDate)}
             </div>
           </div>
