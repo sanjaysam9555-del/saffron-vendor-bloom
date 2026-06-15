@@ -255,7 +255,7 @@ function ClientPortalPage() {
 
 
         <main className="min-w-0 flex-1 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
-          <div className="mb-3 flex flex-col items-start gap-3 animate-fade-up sm:flex-row sm:flex-nowrap sm:items-end sm:justify-between sm:gap-3">
+          <div className="mb-3 flex flex-col items-start gap-3 sm:flex-row sm:flex-nowrap sm:items-end sm:justify-between sm:gap-3">
             <div className="min-w-0 w-full sm:w-auto">
               <h1 className="brand-line truncate font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
                 {filters.category ?? (
@@ -497,7 +497,7 @@ function ClientPortalPage() {
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--champagne)] bg-white py-20 text-center animate-fade-up">
+    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--champagne)] bg-white py-20 text-center">
       <Sparkles className="mb-3 h-8 w-8 text-[var(--terracotta)] animate-pulse-subtle" />
       <p className="text-sm text-[var(--charcoal)]/60">{message}</p>
     </div>

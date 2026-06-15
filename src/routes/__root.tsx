@@ -1,7 +1,6 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
 
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
@@ -10,8 +9,7 @@ import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { RouteProgress } from "@/components/RouteProgress";
 import { SplashScreen } from "@/components/SplashScreen";
 import { installChunkRecovery } from "@/lib/chunk-recover";
-import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import { fadeUp } from "@/lib/motion-presets";
+
 
 function NotFoundComponent() {
   return (
@@ -182,7 +180,7 @@ function RootComponent() {
         <ConfirmProvider>
           <RouteProgress />
           <SplashScreen />
-          <RouteFade />
+          <Outlet />
           <Toaster />
         </ConfirmProvider>
       </AuthProvider>
@@ -190,27 +188,3 @@ function RootComponent() {
   );
 }
 
-/**
- * Animates route changes with a soft fade + 4px slide. Keyed by the first
- * path segment so we don't re-animate on every param/search change.
- * Respects `prefers-reduced-motion`.
- */
-function RouteFade() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const section = pathname.split("/")[1] || "root";
-  const reduced = useReducedMotion();
-  const variants = fadeUp(reduced);
-  return (
-    <AnimatePresence mode="wait" initial={false}>
-      <motion.div
-        key={section}
-        variants={variants}
-        initial="hidden"
-        animate="show"
-        exit="hidden"
-      >
-        <Outlet />
-      </motion.div>
-    </AnimatePresence>
-  );
-}
