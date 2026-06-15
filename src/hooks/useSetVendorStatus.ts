@@ -4,6 +4,7 @@ import type { ClientVendorStatus } from "@/lib/client-status";
 import type { ClientVendor } from "@/lib/project-types";
 import { setMyVendorStatus } from "@/lib/projects.functions";
 import { useClientPreview } from "@/lib/client-preview";
+import { celebrateBooking } from "@/lib/celebrate";
 
 interface Variables {
   vendor_id: string;
