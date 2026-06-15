@@ -35,9 +35,12 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
           <Sparkles className="h-3 w-3 fill-current" /> Saffron's Pick
         </div>
       )}
-      <h3 className="mb-2 line-clamp-1 min-h-[1.75rem] font-display text-lg font-semibold leading-tight text-[var(--charcoal)]">
+      <motion.h3
+        layoutId={`vendor-title-${vendor.id}`}
+        className="mb-2 line-clamp-1 min-h-[1.75rem] font-display text-lg font-semibold leading-tight text-[var(--charcoal)]"
+      >
         {vendor.vendor_name}
-      </h3>
+      </motion.h3>
 
       <div className="mb-2 flex min-h-[1.5rem] flex-wrap gap-1">
         <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text}`}>
