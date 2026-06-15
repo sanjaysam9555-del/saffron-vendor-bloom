@@ -128,14 +128,20 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
       (adminCanDelete && !isPreview) ||
       (!isPreview && c.is_own);
     const isStaff = c.author_role === "staff";
+    const isNew = highlightIds.has(c.id);
     return (
-      <li
+      <motion.li
         key={c.id}
-        className={`rounded-md border p-2.5 text-sm ${
+        layout={!reduced}
+        initial={reduced ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.98 }}
+        animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+        exit={reduced ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.98 }}
+        transition={{ type: "spring", stiffness: 260, damping: 26 }}
+        className={`rounded-md border p-2.5 text-sm transition-shadow ${
           isStaff
             ? "border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)]/40"
             : "border-[var(--border)] bg-white"
-        }`}
+        } ${isNew ? "animate-ring-flash ring-1 ring-[var(--terracotta)]/40" : ""}`}
       >
         <div className="mb-0.5 flex items-baseline justify-between gap-2 text-[11px] text-[var(--charcoal)]/60">
           <span className="inline-flex items-center gap-1 font-medium text-[var(--charcoal)]/80">
@@ -176,7 +182,7 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
             )}
           </div>
         </div>
-      </li>
+      </motion.li>
     );
   };
 
