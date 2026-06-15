@@ -187,19 +187,26 @@ function RootComponent() {
 }
 
 /**
- * Wraps <Outlet /> with a keyed fade-in so route changes get a soft
- * entrance in browsers without View Transitions support (Firefox).
- * In Chromium/Safari TP, View Transitions handle the cross-fade and this
- * fade is harmless (200ms one-shot, GPU-only).
+ * Animates route changes with a soft fade + 4px slide. Keyed by the first
+ * path segment so we don't re-animate on every param/search change.
+ * Respects `prefers-reduced-motion`.
  */
 function RouteFade() {
-  // First path segment — keying on this avoids re-animating on every
-  // search-param or param change while still firing between sections.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const section = pathname.split("/")[1] || "root";
+  const reduced = useReducedMotion();
+  const variants = fadeUp(reduced);
   return (
-    <div key={section} className="animate-fade-in">
-      <Outlet />
-    </div>
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={section}
+        variants={variants}
+        initial="hidden"
+        animate="show"
+        exit="hidden"
+      >
+        <Outlet />
+      </motion.div>
+    </AnimatePresence>
   );
 }
