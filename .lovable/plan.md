@@ -1,41 +1,58 @@
-# Striking Animation Upgrades
+## Problem
 
-Five high-impact, distinctly on-brand motion additions. All respect `prefers-reduced-motion` via the existing `useReducedMotion` hook and degrade to instant state changes.
+When switching between Vendors, Projects, and a few other admin/client pages on mobile, the new page renders dim for a moment and only brightens after the user taps. The user expects pages to appear fully bright immediately.
 
----
+## Root cause
 
-## 1. Marigold petal shower on booking finalised
-Replace the generic confetti burst in `src/lib/celebrate.ts` with a custom canvas-confetti shape using marigold-petal SVG paths (saffron + deep orange + gold). Slower fall, gentle rotation drift, ~2s, single burst. Triggered from the existing `onSuccess` in `useSetVendorStatus.ts` — no new call sites.
+Two compounding things cause the dim flash:
 
-## 2. FLIP board card reorder (client side)
-In `ClientBoardColumn.tsx` / `ClientBoardCard.tsx`, wrap each card with Motion's `layout` prop and the column list with a shared `LayoutGroup`. When a vendor moves columns or reorders, sibling cards smoothly animate to new positions instead of snapping. Spring tuned warm (stiffness ~260, damping ~28).
+1. **Page-level fade-up animations** — Top-level wrappers on these routes use `animate-fade-up` (600ms keyframe going `opacity: 0 → 1`). Across `admin.index.tsx`, `admin.projects.index.tsx`, `admin.submissions.tsx`, `client.index.tsx`, etc., the page header/content starts invisible and fades up every time the route mounts, which on mobile reads as the whole screen going dim.
 
-## 3. Timeline rail draw-in
-In `VendorTimeline.tsx`, convert the connecting rail to an SVG path and animate `pathLength` from 0 → 1 on first mount (~900ms, ease-out). Marker dots fade/scale in staggered along the rail as it reaches them. Only on initial view per session (sessionStorage flag) so navigation back doesn't replay.
+2. **`useRevealOnScroll` on `ProjectCard`** — Each card starts with hardcoded `opacity-0` and only switches to `animate-fade-up` after the shared `IntersectionObserver` fires. On iOS Safari, after a same-origin route navigation, IO callbacks are commonly deferred until the next user gesture (tap/scroll). That's exactly the "becomes brighter after tap" behavior — the tap unblocks IO, the cards flip to visible.
 
-## 4. Shared-element vendor card → detail modal
-Use Motion `layoutId` to morph the vendor card's image + title smoothly into the `ClientVendorDetail` modal header on open, and back on close. Requires:
-- Matching `layoutId="vendor-image-{id}"` and `layoutId="vendor-title-{id}"` on both `ClientVendorCard.tsx` and `ClientVendorDetail.tsx`.
-- Modal mount wrapped in existing `AnimatePresence`.
-Fallback: standard scale-in already in place.
+`RouteFade` in `__root.tsx` also re-fades the whole `<Outlet />` whenever the first path segment changes (e.g. `/admin` → `/client`), adding another fade layer on top.
 
-## 5. Status pill morph
-In `ClientStatusSelect.tsx` / `ClientStatusPill.tsx` (and admin `ClientStatusPill.tsx`), when status changes:
-- Background color tweens (not snaps) via Motion.
-- Icon swap uses `AnimatePresence` with a small rotate+scale.
-- On transitions into a "positive" terminal state (approved/finalised), an SVG checkmark draws in (~250ms) and a soft ring-flash pulses once.
+## Fix
 
----
+Keep the polish on the *first* visit, but stop re-dimming on every navigation.
 
-## Technical notes
-- All work uses the already-installed `motion` + `canvas-confetti`. No new dependencies.
-- New helper: `src/lib/petal-shapes.ts` for the marigold SVG path strings.
-- Reduced motion: petals → none; FLIP → instant; rail draw → instant full rail; shared-element → standard fade; pill morph → instant color change (checkmark still shown, no draw animation).
-- No business-logic, schema, or data-flow changes. Purely presentation.
+### 1. Make `useRevealOnScroll` mobile-safe
 
-## Files touched
-**Edit:** `src/lib/celebrate.ts`, `src/components/client/ClientBoardColumn.tsx`, `src/components/client/ClientBoardCard.tsx`, `src/components/timeline/VendorTimeline.tsx`, `src/components/client/ClientVendorCard.tsx`, `src/components/client/ClientVendorDetail.tsx`, `src/components/client/ClientStatusSelect.tsx`, `src/components/admin/ClientStatusPill.tsx`
-**Create:** `src/lib/petal-shapes.ts`
+`src/hooks/use-reveal-on-scroll.ts`
+- Default `isVisible` to `true` on touch / coarse-pointer devices, OR
+- Schedule a `requestAnimationFrame` + `setTimeout(…, 50ms)` fallback that flips `isVisible` to `true` if IO hasn't fired yet (handles the iOS deferred-IO case).
+- Keep existing reduced-motion and no-IO fast paths.
 
-## Order of implementation
-1 → 5 → 3 → 2 → 4 (smallest blast radius first; shared-element last since it touches two components that must stay in sync).
+This removes the "stuck at opacity-0 until tap" failure mode without losing the scroll reveal on desktop.
+
+### 2. Drop the route-level fade-up on pages that re-mount on every nav
+
+Remove `animate-fade-up` from the *outer* container of:
+- `src/routes/admin.index.tsx` (vendors pane header at line 214, empty state at 434)
+- `src/routes/admin.projects.index.tsx` (header at line 171)
+- `src/routes/admin.submissions.tsx` (header at line 72)
+- `src/routes/client.index.tsx` (header at line 258, empty state at 500)
+
+Inner content (cards, toasts, helper banners) can keep their fade — the dim feeling comes from the whole page wrapper starting at `opacity: 0`.
+
+### 3. Soften `RouteFade` so it doesn't dim within a section
+
+`src/routes/__root.tsx` `RouteFade`
+- Either remove `RouteFade` entirely (rely on per-component reveals), or
+- Change `fadeUp` initial state for route transitions to `opacity: 1` (no fade) and only animate the 4px slide. This kills the full-screen dim on cross-section nav (e.g. `/admin` → `/client`) while keeping a subtle motion cue.
+
+We'll go with "remove `RouteFade`" since per-page reveals already provide motion and the wrapper is the main offender on mobile.
+
+### What is NOT changed
+
+- `SplashScreen` (first-load only, session-scoped — unrelated).
+- `RouteProgress` top bar (not a dimming source).
+- `ProjectCard` hover/transform transitions (purely interactive, not load-time).
+- Per-card staggered reveal on desktop (still works via IO).
+
+## Verification
+
+1. On mobile viewport (375×812), navigate Vendors ↔ Projects ↔ Submissions repeatedly — page should appear at full brightness immediately, no visible fade.
+2. Cards should be visible without a tap on iOS.
+3. Desktop scroll-reveal on long project grids should still animate as cards enter the viewport.
+4. First-time splash on cold load is unchanged.
