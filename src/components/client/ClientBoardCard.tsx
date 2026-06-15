@@ -1,8 +1,10 @@
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
+import { motion } from "motion/react";
 import { MapPin, Star, GripVertical, Sparkles } from "lucide-react";
 import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 interface Props {
   vendor: ClientVendor;
