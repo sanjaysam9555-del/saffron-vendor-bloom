@@ -27,6 +27,7 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
   const qc = useQueryClient();
   const confirmDelete = useConfirmDelete();
   const { isPreview } = useClientPreview();
+  const reduced = useReducedMotion();
   const canPost = !isPreview; // preview never posts
   const [body, setBody] = useState("");
   const [replyTo, setReplyTo] = useState<VendorComment | null>(null);
@@ -35,6 +36,34 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
     queryKey: ["vendor-comments", projectId, vendorId],
     queryFn: () => fetchVendorComments(projectId, vendorId),
   });
+
+  // Track which comment IDs have been seen across renders so freshly
+  // arriving ones can briefly highlight.
+  const seenIds = useRef<Set<string> | null>(null);
+  const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!seenIds.current) {
+      // First load — mark everything as seen, nothing highlights.
+      seenIds.current = new Set(comments.map((c) => c.id));
+      return;
+    }
+    const fresh = comments.filter((c) => !seenIds.current!.has(c.id)).map((c) => c.id);
+    if (fresh.length === 0) return;
+    fresh.forEach((id) => seenIds.current!.add(id));
+    setHighlightIds((prev) => {
+      const next = new Set(prev);
+      fresh.forEach((id) => next.add(id));
+      return next;
+    });
+    const t = window.setTimeout(() => {
+      setHighlightIds((prev) => {
+        const next = new Set(prev);
+        fresh.forEach((id) => next.delete(id));
+        return next;
+      });
+    }, 1600);
+    return () => window.clearTimeout(t);
+  }, [comments]);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["vendor-comments", projectId, vendorId] });
