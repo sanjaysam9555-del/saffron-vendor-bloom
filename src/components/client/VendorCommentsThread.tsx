@@ -202,16 +202,20 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
         </div>
       ) : (
         <ul className="space-y-2">
-          {roots.map((c) => (
-            <li key={c.id} className="space-y-2">
-              {renderComment(c)}
-              {(repliesByParent.get(c.id) ?? []).length > 0 && (
-                <ul className="ml-5 space-y-2 border-l-2 border-[var(--terracotta)]/20 pl-3">
-                  {(repliesByParent.get(c.id) ?? []).map((r) => renderComment(r, true))}
-                </ul>
-              )}
-            </li>
-          ))}
+          <AnimatePresence initial={false}>
+            {roots.map((c) => (
+              <li key={c.id} className="space-y-2">
+                {renderComment(c)}
+                {(repliesByParent.get(c.id) ?? []).length > 0 && (
+                  <ul className="ml-5 space-y-2 border-l-2 border-[var(--terracotta)]/20 pl-3">
+                    <AnimatePresence initial={false}>
+                      {(repliesByParent.get(c.id) ?? []).map((r) => renderComment(r, true))}
+                    </AnimatePresence>
+                  </ul>
+                )}
+              </li>
+            ))}
+          </AnimatePresence>
         </ul>
       )}
 
