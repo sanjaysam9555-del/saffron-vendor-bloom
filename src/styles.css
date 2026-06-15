@@ -419,7 +419,9 @@ button:active, a:active, [role="button"]:active {
   font-weight: 600;
   color: var(--terracotta);
   margin: 0 0 6px;
+  padding-right: 36px;
 }
+
 .driver-popover.saffron-tour .driver-popover-description {
   font-family: var(--font-sans, "Jost", system-ui, sans-serif);
   font-size: 13px;
