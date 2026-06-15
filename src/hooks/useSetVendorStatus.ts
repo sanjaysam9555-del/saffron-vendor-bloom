@@ -62,7 +62,12 @@ export function useSetVendorStatus() {
       if (ctx?.previous) qc.setQueryData(["my-project"], ctx.previous);
       toast.error(msg);
     },
-    onSuccess: () => {
+    onSuccess: (_data, vars, ctx) => {
+      // Wow moment: confetti when a vendor transitions into "finalised".
+      const prev = ctx?.previous?.vendors.find((v) => v.id === vars.vendor_id);
+      if (vars.status === "finalised" && prev?.client_status !== "finalised") {
+        celebrateBooking();
+      }
       qc.invalidateQueries({ queryKey: ["my-project"] });
     },
   });
