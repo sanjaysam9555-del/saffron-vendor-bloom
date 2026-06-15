@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2, MessageSquare, Loader2, Reply, Sparkles } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import {
   fetchVendorComments,
   postClientVendorComment,
@@ -11,6 +12,7 @@ import {
 import { useConfirmDelete } from "@/components/ui/confirm-dialog";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { useClientPreview } from "@/lib/client-preview";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 interface Props {
   projectId: string;
