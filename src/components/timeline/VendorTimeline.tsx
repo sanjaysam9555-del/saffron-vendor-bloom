@@ -417,15 +417,22 @@ function TimelineRibbon({
   // Continuous index for left/right alternation across scheduled rows only.
   let alt = 0;
 
+  const reduced = useReducedMotion();
+
   return (
     <div>
       <RibbonHeader weddingDate={weddingDate} daysToWedding={weddingDays} totals={totals} />
 
       <div className="relative">
-        <div
+        <motion.div
           aria-hidden
-          className="absolute top-4 bottom-4 w-px bg-[var(--champagne)]/60 left-[15px] md:left-1/2 md:-translate-x-1/2"
+          className="absolute top-4 bottom-4 w-px bg-[var(--champagne)]/60 left-[15px] md:left-1/2 md:-translate-x-1/2 origin-top"
+          initial={reduced ? { scaleY: 1 } : { scaleY: 0 }}
+          animate={{ scaleY: 1 }}
+          transition={{ duration: reduced ? 0 : 0.9, ease: [0.22, 1, 0.36, 1] }}
         />
+
+
 
         <div className="flex flex-col gap-10 py-2">
           {sections.overdue.map((item) => (
