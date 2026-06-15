@@ -217,7 +217,7 @@ export function ProjectCard({ project: p, canDelete, onArchiveToggle, onEdit, on
           </div>
           <div className="flex items-center gap-2">
             <span>Updated {relativeTime(p.updated_at)}</span>
-            <ArrowRight className="h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
+            <ArrowRight className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition-all duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-hover:text-[var(--terracotta)]" />
           </div>
         </div>
       </Link>
