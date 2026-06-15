@@ -1742,6 +1742,7 @@ function HorizontalTimeline({
   registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
 }) {
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const reduced = useReducedMotion();
 
   const totals = useMemo(() => {
     const planned = sumAmounts(items, (i) => i.planned_amount);
