@@ -1865,11 +1865,15 @@ function HorizontalTimeline({
       <div className="overflow-x-auto rounded-md border border-[var(--champagne)]/40 bg-[var(--cream)]/40 shadow-[inset_-12px_0_8px_-8px_rgba(0,0,0,0.06)]">
         <div className="relative" style={{ width, height: containerHeight }}>
           {/* axis */}
-          <div
+          <motion.div
             aria-hidden
-            className="absolute left-0 right-0 h-px bg-[var(--champagne)]"
+            className="absolute left-0 right-0 h-px bg-[var(--champagne)] origin-left"
             style={{ top: axisY }}
+            initial={reduced ? { scaleX: 1 } : { scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: reduced ? 0 : 0.9, ease: [0.22, 1, 0.36, 1] }}
           />
+
 
           {/* month ticks + labels */}
           {months.map((mm, idx) => {
