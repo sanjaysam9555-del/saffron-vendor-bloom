@@ -882,7 +882,7 @@ function UnscheduledCard({
 function WeddingMarker({ date }: { date: string }) {
   return (
     <div className="relative mt-6 flex flex-col items-center">
-      <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--terracotta)] text-[var(--cream)] shadow-lg">
+      <div className="animate-pulse-soft z-10 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--terracotta)] text-[var(--cream)] shadow-lg">
         <Heart className="h-6 w-6" />
       </div>
       <div className="mt-4 text-center">
