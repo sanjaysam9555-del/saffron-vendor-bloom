@@ -100,7 +100,7 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
                 </span>
               )}
             </div>
-            <h2 className="font-display text-3xl leading-tight">{vendor.vendor_name}</h2>
+            <motion.h2 layoutId={`vendor-title-${vendor.id}`} className="font-display text-3xl leading-tight">{vendor.vendor_name}</motion.h2>
           </div>
           <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]">
             <X className="h-5 w-5" />
