@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import { getClientStatusOption } from "@/lib/client-status";
