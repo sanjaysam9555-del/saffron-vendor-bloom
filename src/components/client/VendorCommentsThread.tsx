@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2, MessageSquare, Loader2, Reply, Sparkles } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import {
   fetchVendorComments,
   postClientVendorComment,
@@ -11,6 +12,7 @@ import {
 import { useConfirmDelete } from "@/components/ui/confirm-dialog";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { useClientPreview } from "@/lib/client-preview";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 interface Props {
   projectId: string;
@@ -25,6 +27,7 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
   const qc = useQueryClient();
   const confirmDelete = useConfirmDelete();
   const { isPreview } = useClientPreview();
+  const reduced = useReducedMotion();
   const canPost = !isPreview; // preview never posts
   const [body, setBody] = useState("");
   const [replyTo, setReplyTo] = useState<VendorComment | null>(null);
@@ -33,6 +36,34 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
     queryKey: ["vendor-comments", projectId, vendorId],
     queryFn: () => fetchVendorComments(projectId, vendorId),
   });
+
+  // Track which comment IDs have been seen across renders so freshly
+  // arriving ones can briefly highlight.
+  const seenIds = useRef<Set<string> | null>(null);
+  const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!seenIds.current) {
+      // First load — mark everything as seen, nothing highlights.
+      seenIds.current = new Set(comments.map((c) => c.id));
+      return;
+    }
+    const fresh = comments.filter((c) => !seenIds.current!.has(c.id)).map((c) => c.id);
+    if (fresh.length === 0) return;
+    fresh.forEach((id) => seenIds.current!.add(id));
+    setHighlightIds((prev) => {
+      const next = new Set(prev);
+      fresh.forEach((id) => next.add(id));
+      return next;
+    });
+    const t = window.setTimeout(() => {
+      setHighlightIds((prev) => {
+        const next = new Set(prev);
+        fresh.forEach((id) => next.delete(id));
+        return next;
+      });
+    }, 1600);
+    return () => window.clearTimeout(t);
+  }, [comments]);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["vendor-comments", projectId, vendorId] });
@@ -97,14 +128,20 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
       (adminCanDelete && !isPreview) ||
       (!isPreview && c.is_own);
     const isStaff = c.author_role === "staff";
+    const isNew = highlightIds.has(c.id);
     return (
-      <li
+      <motion.li
         key={c.id}
-        className={`rounded-md border p-2.5 text-sm ${
+        layout={!reduced}
+        initial={reduced ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.98 }}
+        animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+        exit={reduced ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.98 }}
+        transition={{ type: "spring", stiffness: 260, damping: 26 }}
+        className={`rounded-md border p-2.5 text-sm transition-shadow ${
           isStaff
             ? "border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)]/40"
             : "border-[var(--border)] bg-white"
-        }`}
+        } ${isNew ? "animate-ring-flash ring-1 ring-[var(--terracotta)]/40" : ""}`}
       >
         <div className="mb-0.5 flex items-baseline justify-between gap-2 text-[11px] text-[var(--charcoal)]/60">
           <span className="inline-flex items-center gap-1 font-medium text-[var(--charcoal)]/80">
@@ -145,7 +182,7 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
             )}
           </div>
         </div>
-      </li>
+      </motion.li>
     );
   };
 
@@ -165,16 +202,20 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
         </div>
       ) : (
         <ul className="space-y-2">
-          {roots.map((c) => (
-            <li key={c.id} className="space-y-2">
-              {renderComment(c)}
-              {(repliesByParent.get(c.id) ?? []).length > 0 && (
-                <ul className="ml-5 space-y-2 border-l-2 border-[var(--terracotta)]/20 pl-3">
-                  {(repliesByParent.get(c.id) ?? []).map((r) => renderComment(r, true))}
-                </ul>
-              )}
-            </li>
-          ))}
+          <AnimatePresence initial={false}>
+            {roots.map((c) => (
+              <li key={c.id} className="space-y-2">
+                {renderComment(c)}
+                {(repliesByParent.get(c.id) ?? []).length > 0 && (
+                  <ul className="ml-5 space-y-2 border-l-2 border-[var(--terracotta)]/20 pl-3">
+                    <AnimatePresence initial={false}>
+                      {(repliesByParent.get(c.id) ?? []).map((r) => renderComment(r, true))}
+                    </AnimatePresence>
+                  </ul>
+                )}
+              </li>
+            ))}
+          </AnimatePresence>
         </ul>
       )}
 

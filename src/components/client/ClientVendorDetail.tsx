@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import { X, MapPin, Instagram, Link as LinkIcon, Paperclip, FileText, Globe, Star, CircleCheck, Sparkles } from "lucide-react";
@@ -15,6 +16,7 @@ import { VendorCommentsThread } from "./VendorCommentsThread";
 import { useClientPreview } from "@/lib/client-preview";
 import { instagramDisplay, instagramUrl } from "@/lib/instagram";
 import { VendorInstagramDetailBlock } from "@/components/vendor/VendorInstagramPreview";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 interface Props {
   vendor: ClientVendor | null;
@@ -49,6 +51,7 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
     enabled: !!projectId && !!vendor?.id,
   });
 
+  const reduced = useReducedMotion();
   if (!vendor) return null;
   const colors = CATEGORY_COLORS[vendor.category] ?? {
     bg: "bg-[var(--cream-deep)]",
@@ -62,14 +65,24 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
   ];
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-[var(--cream)] text-[oklch(0.18_0.01_60)] shadow-2xl"
+    <AnimatePresence>
+      <motion.div
+        key="vendor-detail-overlay"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18 }}
+        className="fixed inset-0 z-50 flex items-end justify-center bg-[color-mix(in_srgb,var(--charcoal)_70%,transparent)] backdrop-blur-sm sm:items-center sm:p-4"
+        onClick={onClose}
       >
+        <motion.div
+          onClick={(e) => e.stopPropagation()}
+          initial={reduced ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.97 }}
+          animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+          exit={reduced ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 240, damping: 26, mass: 0.7 }}
+          className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-2xl bg-[var(--cream)] text-[oklch(0.18_0.01_60)] shadow-2xl sm:rounded-xl"
+        >
         <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-[var(--border)] bg-[var(--cream)] px-6 py-4">
           <div>
             <div className="mb-1 flex flex-wrap items-center gap-1">
@@ -212,35 +225,36 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
             <VendorCommentsThread projectId={projectId} vendorId={vendor.id} />
           </div>
         )}
-      </div>
+        </motion.div>
 
-      {viewing && (
-        (viewing.mime_type ?? "").toLowerCase().startsWith("image/") ||
-        /\.(jpe?g|png|webp|gif|avif|svg|bmp)$/i.test(viewing.file_name)
-      ) ? (
-        <AttachmentGalleryViewer
-          attachments={vendor.attachments}
-          initialId={viewing!.id}
-          onClose={() => setViewing(null)}
-        />
-      ) : viewing ? (
-        <SignedDocumentViewer
-          filePath={viewing.file_path}
-          fileName={viewing.file_name}
-          mimeType={viewing.mime_type}
-          onClose={() => setViewing(null)}
-        />
-      ) : null}
+        {viewing && (
+          (viewing.mime_type ?? "").toLowerCase().startsWith("image/") ||
+          /\.(jpe?g|png|webp|gif|avif|svg|bmp)$/i.test(viewing.file_name)
+        ) ? (
+          <AttachmentGalleryViewer
+            attachments={vendor.attachments}
+            initialId={viewing!.id}
+            onClose={() => setViewing(null)}
+          />
+        ) : viewing ? (
+          <SignedDocumentViewer
+            filePath={viewing.file_path}
+            fileName={viewing.file_name}
+            mimeType={viewing.mime_type}
+            onClose={() => setViewing(null)}
+          />
+        ) : null}
 
-      {viewingQuoteFile && (
-        <SignedQuoteFileViewer
-          filePath={viewingQuoteFile.file_path}
-          fileName={viewingQuoteFile.file_name}
-          mimeType={viewingQuoteFile.mime_type}
-          onClose={() => setViewingQuoteFile(null)}
-        />
-      )}
-    </div>
+        {viewingQuoteFile && (
+          <SignedQuoteFileViewer
+            filePath={viewingQuoteFile.file_path}
+            fileName={viewingQuoteFile.file_name}
+            mimeType={viewingQuoteFile.mime_type}
+            onClose={() => setViewingQuoteFile(null)}
+          />
+        )}
+      </motion.div>
+    </AnimatePresence>
   );
 }
 

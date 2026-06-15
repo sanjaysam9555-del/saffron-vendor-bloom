@@ -1,6 +1,7 @@
 import { useDroppable } from "@dnd-kit/core";
 import type { ReactNode } from "react";
 import type { ClientStatusOption } from "@/lib/client-status";
+import { FlipNumber } from "@/components/motion/FlipNumber";
 
 interface Props {
   id: string;
@@ -19,9 +20,9 @@ export function ClientBoardColumn({ id, option, count, children }: Props) {
   return (
     <div
       ref={setNodeRef}
-      className={`flex w-72 shrink-0 flex-col rounded-lg border bg-[var(--cream)]/50 transition-colors ${
+      className={`flex w-72 shrink-0 flex-col rounded-lg border bg-[var(--cream)]/50 transition-[border-color,background-color,transform,box-shadow] duration-200 ease-out ${
         isOver
-          ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)]/40"
+          ? "scale-[1.01] border-[var(--terracotta)] bg-[var(--terracotta-soft)]/40 shadow-[0_8px_24px_-12px_color-mix(in_srgb,var(--terracotta)_55%,transparent)]"
           : "border-[var(--border)]"
       }`}
     >
@@ -38,11 +39,11 @@ export function ClientBoardColumn({ id, option, count, children }: Props) {
             {option?.label ?? "No status"}
           </span>
         </div>
-        <span className="text-xs font-medium text-[var(--charcoal)]/55">{count}</span>
+        <span className="text-xs font-medium text-[var(--charcoal)]/55">
+          <FlipNumber value={count} duration={0.45} />
+        </span>
       </div>
-      <div className="flex-1 space-y-2 overflow-y-auto p-2">
-        {children}
-      </div>
+      <div className="flex-1 space-y-2 overflow-y-auto p-2">{children}</div>
     </div>
   );
 }
