@@ -477,3 +477,28 @@ button:active, a:active, [role="button"]:active {
     display: none;
   }
 }
+
+/* ----- Motion utilities (warm & lively) ----- */
+@keyframes pulse-soft {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.06); opacity: 0.92; }
+}
+.animate-pulse-soft { animation: pulse-soft 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+@keyframes ring-flash {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--terracotta) 55%, transparent); }
+  100% { box-shadow: 0 0 0 12px transparent; }
+}
+.animate-ring-flash { animation: ring-flash 1.1s ease-out; }
+
+/* Honour the user's reduced-motion preference everywhere. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-soft,
+  .animate-ring-flash { animation: none !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -38,6 +38,7 @@ import {
 import { useConfirmDelete } from "@/components/ui/confirm-dialog";
 import { useIsAdmin } from "@/lib/auth";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
+import { FlipNumber } from "@/components/motion/FlipNumber";
 import { formatINR } from "@/lib/quote-types";
 
 const OTHER_PRESETS = ["Dhol Wala", "Heaters", "Coolers", "Transport", "Other expense"];
@@ -496,17 +497,25 @@ function RibbonHeader({
       : totals.variance < 0
         ? "text-[var(--urgency-booked)]"
         : "text-[var(--charcoal)]/70";
-  const countdown =
+  const absDays = Math.abs(daysToWedding);
+  const dayLabel =
     daysToWedding > 0
-      ? `${daysToWedding} day${daysToWedding === 1 ? "" : "s"} to go`
+      ? `day${daysToWedding === 1 ? "" : "s"} to go`
       : daysToWedding === 0
-        ? "Today"
-        : `${-daysToWedding} day${daysToWedding === -1 ? "" : "s"} ago`;
+        ? "today"
+        : `day${daysToWedding === -1 ? "" : "s"} ago`;
   return (
     <div className="mb-10 flex flex-col items-center gap-5 border-b border-[var(--champagne)]/50 pb-6 text-center md:flex-row md:items-end md:justify-between md:text-left">
       <div>
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--terracotta)]">
-          Wedding Day: {formatDueDate(weddingDate)} — {countdown}
+          Wedding Day: {formatDueDate(weddingDate)} —{" "}
+          {daysToWedding === 0 ? (
+            "Today"
+          ) : (
+            <>
+              <FlipNumber value={absDays} /> {dayLabel}
+            </>
+          )}
         </p>
       </div>
       <div className="flex justify-center gap-6 text-center text-sm md:justify-end md:gap-8 md:text-right">
@@ -873,7 +882,7 @@ function UnscheduledCard({
 function WeddingMarker({ date }: { date: string }) {
   return (
     <div className="relative mt-6 flex flex-col items-center">
-      <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--terracotta)] text-[var(--cream)] shadow-lg">
+      <div className="animate-pulse-soft z-10 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--terracotta)] text-[var(--cream)] shadow-lg">
         <Heart className="h-6 w-6" />
       </div>
       <div className="mt-4 text-center">
@@ -1891,7 +1900,7 @@ function HorizontalTimeline({
             className="absolute z-20 flex flex-col items-center"
             style={{ left: weddingX, top: axisY - 22, transform: "translateX(-50%)" }}
           >
-            <div className="z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--terracotta)] text-[var(--cream)] shadow-lg">
+            <div className="animate-pulse-soft z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--terracotta)] text-[var(--cream)] shadow-lg">
               <Heart className="h-5 w-5" />
             </div>
             <div className="mt-1 whitespace-nowrap rounded bg-[var(--cream)]/90 px-1 text-[10px] font-bold uppercase tracking-wider text-[var(--terracotta)]">

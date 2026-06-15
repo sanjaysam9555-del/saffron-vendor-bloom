@@ -4,6 +4,7 @@ import type { ClientVendorStatus } from "@/lib/client-status";
 import type { ClientVendor } from "@/lib/project-types";
 import { setMyVendorStatus } from "@/lib/projects.functions";
 import { useClientPreview } from "@/lib/client-preview";
+import { celebrateBooking } from "@/lib/celebrate";
 
 interface Variables {
   vendor_id: string;
@@ -61,7 +62,12 @@ export function useSetVendorStatus() {
       if (ctx?.previous) qc.setQueryData(["my-project"], ctx.previous);
       toast.error(msg);
     },
-    onSuccess: () => {
+    onSuccess: (_data, vars, ctx) => {
+      // Wow moment: confetti when a vendor transitions into "finalised".
+      const prev = ctx?.previous?.vendors.find((v) => v.id === vars.vendor_id);
+      if (vars.status === "finalised" && prev?.client_status !== "finalised") {
+        celebrateBooking();
+      }
       qc.invalidateQueries({ queryKey: ["my-project"] });
     },
   });
