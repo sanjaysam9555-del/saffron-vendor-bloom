@@ -1,6 +1,7 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
@@ -9,6 +10,8 @@ import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { RouteProgress } from "@/components/RouteProgress";
 import { SplashScreen } from "@/components/SplashScreen";
 import { installChunkRecovery } from "@/lib/chunk-recover";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { fadeUp } from "@/lib/motion-presets";
 
 function NotFoundComponent() {
   return (
