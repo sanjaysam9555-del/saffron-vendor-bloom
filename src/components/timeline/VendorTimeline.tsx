@@ -39,6 +39,8 @@ import { useConfirmDelete } from "@/components/ui/confirm-dialog";
 import { useIsAdmin } from "@/lib/auth";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { FlipNumber } from "@/components/motion/FlipNumber";
+import { motion } from "motion/react";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { formatINR } from "@/lib/quote-types";
 
 const OTHER_PRESETS = ["Dhol Wala", "Heaters", "Coolers", "Transport", "Other expense"];
@@ -415,15 +417,22 @@ function TimelineRibbon({
   // Continuous index for left/right alternation across scheduled rows only.
   let alt = 0;
 
+  const reduced = useReducedMotion();
+
   return (
     <div>
       <RibbonHeader weddingDate={weddingDate} daysToWedding={weddingDays} totals={totals} />
 
       <div className="relative">
-        <div
+        <motion.div
           aria-hidden
-          className="absolute top-4 bottom-4 w-px bg-[var(--champagne)]/60 left-[15px] md:left-1/2 md:-translate-x-1/2"
+          className="absolute top-4 bottom-4 w-px bg-[var(--champagne)]/60 left-[15px] md:left-1/2 md:-translate-x-1/2 origin-top"
+          initial={reduced ? { scaleY: 1 } : { scaleY: 0 }}
+          animate={{ scaleY: 1 }}
+          transition={{ duration: reduced ? 0 : 0.9, ease: [0.22, 1, 0.36, 1] }}
         />
+
+
 
         <div className="flex flex-col gap-10 py-2">
           {sections.overdue.map((item) => (
@@ -1733,6 +1742,7 @@ function HorizontalTimeline({
   registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
 }) {
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const reduced = useReducedMotion();
 
   const totals = useMemo(() => {
     const planned = sumAmounts(items, (i) => i.planned_amount);
@@ -1855,11 +1865,15 @@ function HorizontalTimeline({
       <div className="overflow-x-auto rounded-md border border-[var(--champagne)]/40 bg-[var(--cream)]/40 shadow-[inset_-12px_0_8px_-8px_rgba(0,0,0,0.06)]">
         <div className="relative" style={{ width, height: containerHeight }}>
           {/* axis */}
-          <div
+          <motion.div
             aria-hidden
-            className="absolute left-0 right-0 h-px bg-[var(--champagne)]"
+            className="absolute left-0 right-0 h-px bg-[var(--champagne)] origin-left"
             style={{ top: axisY }}
+            initial={reduced ? { scaleX: 1 } : { scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: reduced ? 0 : 0.9, ease: [0.22, 1, 0.36, 1] }}
           />
+
 
           {/* month ticks + labels */}
           {months.map((mm, idx) => {

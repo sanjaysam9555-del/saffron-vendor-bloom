@@ -1,8 +1,9 @@
 import confetti from "canvas-confetti";
 import { prefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { getMarigoldShapes, MARIGOLD_COLORS } from "./petal-shapes";
 
 /**
- * Plays a short, warm confetti burst when a vendor is marked as booked.
+ * Plays a warm marigold-petal shower when a vendor is marked as booked.
  *
  * - Skipped entirely under `prefers-reduced-motion`.
  * - Origin defaults to the top-center of the viewport; pass `origin`
@@ -12,33 +13,38 @@ export function celebrateBooking(origin?: { x: number; y: number }) {
   if (typeof window === "undefined") return;
   if (prefersReducedMotion()) return;
 
-  const colors = ["#9F3822", "#C8743A", "#E7B36A", "#F5E3C2", "#FFFFFF"];
+  const shapes = getMarigoldShapes();
   const base = {
-    colors,
-    spread: 70,
-    startVelocity: 32,
-    ticks: 140,
-    gravity: 0.9,
-    scalar: 0.9,
+    colors: MARIGOLD_COLORS,
+    spread: 80,
+    startVelocity: 28,
+    ticks: 220,
+    gravity: 0.6, // slower fall — petals drift, not plummet
+    scalar: 1.15,
+    decay: 0.93,
     disableForReducedMotion: true,
-    origin: origin ?? { x: 0.5, y: 0.15 },
-  } as const;
+    origin: origin ?? { x: 0.5, y: 0.12 },
+    shapes: shapes.length > 0 ? shapes : (["circle"] as const),
+  } as Parameters<typeof confetti>[0];
 
-  confetti({ ...base, particleCount: 60, shapes: ["circle", "square"] });
-  // Heart-flavor follow-up burst, slightly delayed for depth.
+  // Main petal burst.
+  confetti({ ...base, particleCount: 70 });
+
+  // Soft follow-up drift for depth.
   window.setTimeout(() => {
     confetti({
       ...base,
-      particleCount: 24,
-      startVelocity: 22,
-      scalar: 1.1,
-      shapes: ["circle"],
+      particleCount: 28,
+      startVelocity: 18,
+      spread: 110,
+      scalar: 1.4,
+      gravity: 0.5,
     });
-  }, 120);
+  }, 180);
 }
 
 /**
- * Fires confetti centered on the bounding box of the given element.
+ * Fires the marigold shower centered on the bounding box of the given element.
  */
 export function celebrateFromElement(el: Element | null | undefined) {
   if (!el || typeof window === "undefined") return celebrateBooking();
