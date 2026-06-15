@@ -101,7 +101,7 @@ export function ProjectCard({ project: p, canDelete, onArchiveToggle, onEdit, on
     <div
       ref={ref}
       style={isVisible ? { animationDelay: `${Math.min(index, 12) * 40}ms` } : undefined}
-      className={`group relative flex h-full flex-col rounded-xl border border-[var(--border)] bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--terracotta)] hover:shadow-md ${isVisible ? "animate-fade-up" : "opacity-0"}`}
+      className={`group relative flex h-full flex-col rounded-xl border border-[var(--border)] bg-white p-4 shadow-sm transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 hover:border-[var(--terracotta)] hover:shadow-[0_12px_28px_-12px_color-mix(in_srgb,var(--terracotta)_45%,transparent)] hover:ring-1 hover:ring-[var(--terracotta-soft)] ${isVisible ? "animate-fade-up" : "opacity-0"}`}
     >
       {/* top-right menu */}
       <div className="absolute right-2 top-2 z-10">
