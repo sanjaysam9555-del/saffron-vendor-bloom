@@ -1,17 +1,29 @@
+import { AnimatePresence, motion } from "motion/react";
 import { CLIENT_STATUS_OPTIONS, getClientStatusOption, type ClientVendorStatus } from "@/lib/client-status";
 
 export function ClientStatusPill({ status, size = "sm" }: { status: ClientVendorStatus | string | null | undefined; size?: "xs" | "sm" }) {
   const opt = getClientStatusOption(status as ClientVendorStatus | null);
-  if (!opt) {
-    return (
-      <span className={`inline-flex items-center rounded-full bg-[var(--cream)] text-[var(--charcoal)]/55 ${size === "xs" ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-xs"}`}>
-        No response
-      </span>
-    );
-  }
+  const sizeCls = size === "xs" ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-xs";
+  const key = opt?.value ?? "none";
+
   return (
-    <span className={`inline-flex items-center rounded-full font-medium ${opt.pill} ${size === "xs" ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-xs"}`}>
-      {opt.label}
+    <span className="relative inline-flex">
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={key}
+          initial={{ opacity: 0, scale: 0.85, y: -2 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.85, y: 2 }}
+          transition={{ type: "spring", stiffness: 380, damping: 24 }}
+          className={
+            opt
+              ? `inline-flex items-center rounded-full font-medium ${opt.pill} ${sizeCls}`
+              : `inline-flex items-center rounded-full bg-[var(--cream)] text-[var(--charcoal)]/55 ${sizeCls}`
+          }
+        >
+          {opt ? opt.label : "No response"}
+        </motion.span>
+      </AnimatePresence>
     </span>
   );
 }
