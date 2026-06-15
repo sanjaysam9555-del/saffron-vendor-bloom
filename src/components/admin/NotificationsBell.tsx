@@ -41,6 +41,8 @@ export function NotificationsBell() {
   const userId = user?.id;
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [open, setOpen] = useState(false);
+  const [shake, setShake] = useState(0); // bump to re-trigger CSS animation
+  const initialised = useRef(false);
 
   const unread = userId
     ? items.filter((i) => !i.read_by || !i.read_by[userId]).length
@@ -57,7 +59,9 @@ export function NotificationsBell() {
 
   useEffect(() => {
     if (!userId) return;
-    refresh();
+    refresh().then(() => {
+      initialised.current = true;
+    });
     const ch = supabase
       .channel("staff_notifications")
       .on(
@@ -67,6 +71,8 @@ export function NotificationsBell() {
           const row = payload.new as NotificationRow;
           setItems((prev) => [row, ...prev].slice(0, 30));
           toast.info(row.title);
+          // Only shake after the initial load (so first paint stays calm).
+          if (initialised.current) setShake((n) => n + 1);
         },
       )
       .subscribe();
