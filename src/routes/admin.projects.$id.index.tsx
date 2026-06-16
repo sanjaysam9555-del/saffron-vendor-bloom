@@ -1011,17 +1011,17 @@ function AssignedVendorsSection({
           <table className="w-full min-w-[900px] text-sm">
             <thead className="bg-[var(--cream-deep)]/60 text-[10px] uppercase tracking-widest text-[var(--charcoal)]/55">
               <tr>
-                <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">Vendor</th>
-                <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">Category</th>
+                <SortableTh label="Vendor" sortKey="vendor" info={sortInfo("vendor")} onClick={toggleSort} />
+                <SortableTh label="Category" sortKey="category" info={sortInfo("category")} onClick={toggleSort} />
                 <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">Location</th>
                 <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">Client Status</th>
-                <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">Quotes</th>
+                <SortableTh label="Quotes" sortKey="quote" info={sortInfo("quote")} onClick={toggleSort} />
                 <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">Rating</th>
                 <th className="whitespace-nowrap px-3 py-2 text-right font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {vendors.map((v: any) => {
+              {sortedVendors.map((v: any) => {
                 const rows = selections[v.id] ?? [];
                 const primary = pickPrimary(rows);
                 return (
