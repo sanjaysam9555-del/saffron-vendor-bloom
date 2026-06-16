@@ -931,6 +931,106 @@ function AssignedVendorsSection({
             );
           })}
         </div>
+      ) : (
+        <div className="mt-4 overflow-x-auto rounded-lg border border-[var(--border)] bg-white">
+          <table className="w-full min-w-[900px] text-sm">
+            <thead className="bg-[var(--cream-deep)]/60 text-[10px] uppercase tracking-widest text-[var(--charcoal)]/55">
+              <tr>
+                <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">Vendor</th>
+                <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">Category</th>
+                <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">Location</th>
+                <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">Client Status</th>
+                <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">Quotes</th>
+                <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">Rating</th>
+                <th className="whitespace-nowrap px-3 py-2 text-right font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {vendors.map((v: any) => {
+                const rows = selections[v.id] ?? [];
+                const primary = pickPrimary(rows);
+                return (
+                  <tr key={v.id} className="border-t border-[var(--border)] hover:bg-[var(--cream-deep)]/30">
+                    <td className="align-top px-3 py-2">
+                      <div className="flex items-center gap-1.5">
+                        {v.is_saffron_pick && (
+                          <span title="Saffron's Pick" className="inline-flex items-center gap-0.5 rounded-full bg-[var(--terracotta)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--cream)]">
+                            <Sparkles className="h-2.5 w-2.5 fill-current" /> Pick
+                          </span>
+                        )}
+                        <span className="font-medium text-[var(--charcoal)]">{v.vendor_name}</span>
+                      </div>
+                      {(v.comment_count ?? 0) > 0 && (
+                        <div className="mt-1 inline-flex items-center gap-0.5 text-[10px] text-[var(--charcoal)]/55">
+                          <MessageSquare className="h-3 w-3" /> {v.comment_count}
+                        </div>
+                      )}
+                    </td>
+                    <td className="align-top px-3 py-2 text-[var(--charcoal)]/80">
+                      {v.category}
+                      {v.subcategory && (
+                        <div className="text-[10px] text-[var(--charcoal)]/55">{v.subcategory}</div>
+                      )}
+                    </td>
+                    <td className="align-top px-3 py-2 text-[var(--charcoal)]/75">{v.location ?? "—"}</td>
+                    <td className="align-top px-3 py-2">
+                      <div className="flex flex-wrap items-center gap-1">
+                        <ClientStatusPill status={primary?.status ?? null} />
+                        {rows.length > 1 && (
+                          <span className="text-[10px] text-[var(--charcoal)]/50" title={rows.map((r) => `${r.display_name || r.email}: ${r.status}`).join("\n")}>
+                            +{rows.length - 1}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="align-top px-3 py-2">
+                      <VendorQuotesPill
+                        projectId={projectId}
+                        vendorId={v.id}
+                        onOpen={() => setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null, autoOpenForm: false })}
+                      />
+                    </td>
+                    <td className="align-top px-3 py-2">
+                      {v.google_rating != null ? (
+                        <span className="inline-flex items-center gap-1 text-[var(--charcoal)]/80">
+                          <Star className="h-3.5 w-3.5 fill-[var(--terracotta)] text-[var(--terracotta)]" />
+                          {Number(v.google_rating).toFixed(1)}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-[var(--charcoal)]/45">—</span>
+                      )}
+                    </td>
+                    <td className="align-top px-3 py-2 text-right">
+                      <div className="inline-flex items-center gap-1">
+                        <button
+                          onClick={() => setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null, autoOpenForm: true })}
+                          className="rounded-md bg-[var(--terracotta)] px-2 py-1 text-[11px] font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
+                          title="Add a new quote"
+                        >
+                          <Plus className="inline h-3 w-3" /> Quote
+                        </button>
+                        <button
+                          onClick={() => setCommentsFor({ id: v.id, name: v.vendor_name })}
+                          className="rounded-md border border-[var(--border)] p-1.5 text-[var(--charcoal)]/65 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]"
+                          title="Comments"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => onRemove(v.id, v.vendor_name)}
+                          className="rounded-md p-1.5 text-[var(--charcoal)]/55 hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
+                          title="Remove from project"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {quotesFor && (
