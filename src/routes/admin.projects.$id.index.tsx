@@ -34,6 +34,7 @@ import { listProjectCategoryDeadlines } from "@/lib/project-deadlines.functions"
 import { listProjectOtherExpenses } from "@/lib/project-other-expenses.functions";
 import { buildTimelineItems, otherExpensesAsTimelineItems } from "@/lib/build-timeline-items";
 import { QuickAddVendorPanel } from "@/components/admin/QuickAddVendorPanel";
+import { ColumnFilter } from "@/components/ui/ColumnFilter";
 
 export const Route = createFileRoute("/admin/projects/$id/")({
   head: () => ({
@@ -782,6 +783,44 @@ function AssignedVendorsSection({
     return idx === -1 ? null : { dir: sorts[idx].dir, order: idx + 1 };
   };
 
+  // Per-column filters (multi-select). Empty array means "no filter".
+  const [catFilter, setCatFilter] = useState<string[]>([]);
+  const [locFilter, setLocFilter] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+
+  const categoryOptions = useMemo(() => {
+    const set = new Set<string>();
+    vendors.forEach((v: any) => { if (v.category) set.add(v.category); });
+    return Array.from(set).sort().map((c) => ({ value: c, label: c }));
+  }, [vendors]);
+  const locationOptions = useMemo(() => {
+    const set = new Set<string>();
+    vendors.forEach((v: any) => { if (v.location) set.add(v.location); });
+    return Array.from(set).sort().map((c) => ({ value: c, label: c }));
+  }, [vendors]);
+  const statusOptions = useMemo(
+    () => [
+      ...CLIENT_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label, dot: o.dot })),
+      { value: "__none__", label: "No response yet", dot: "#9ca3af" },
+    ],
+    [],
+  );
+
+  const filteredVendors = useMemo(() => {
+    return vendors.filter((v: any) => {
+      if (catFilter.length && !catFilter.includes(v.category)) return false;
+      if (locFilter.length && !locFilter.includes(v.location)) return false;
+      if (statusFilter.length) {
+        const rows = selections[v.id] ?? [];
+        const statuses = rows.map((r) => r.status);
+        const wantNone = statusFilter.includes("__none__");
+        const matchStatus = statuses.some((s) => statusFilter.includes(s));
+        if (!(matchStatus || (wantNone && statuses.length === 0))) return false;
+      }
+      return true;
+    });
+  }, [vendors, catFilter, locFilter, statusFilter, selections]);
+
   // Fetch quotes for every vendor (used by the table to sort by quote amount).
   // Shares query keys + 30s staleTime with VendorQuotesPill, so React Query
   // dedupes — no extra network when toggling views.
@@ -813,8 +852,8 @@ function AssignedVendorsSection({
   }, [vendors, quoteQueries]);
 
   const sortedVendors = useMemo(() => {
-    if (sorts.length === 0) return vendors;
-    const arr = [...vendors];
+    if (sorts.length === 0) return filteredVendors;
+    const arr = [...filteredVendors];
     arr.sort((a: any, b: any) => {
       for (const s of sorts) {
         let av: string | number = "";
@@ -835,7 +874,7 @@ function AssignedVendorsSection({
       return 0;
     });
     return arr;
-  }, [vendors, sorts, quoteAmountByVendor]);
+  }, [filteredVendors, sorts, quoteAmountByVendor]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { like: 0, shortlisted: 0, finalised: 0, rejected: 0, thinking: 0 };
@@ -1012,9 +1051,42 @@ function AssignedVendorsSection({
             <thead className="bg-[var(--cream-deep)]/60 text-[10px] uppercase tracking-widest text-[var(--charcoal)]/55">
               <tr>
                 <SortableTh label="Vendor" sortKey="vendor" info={sortInfo("vendor")} onClick={toggleSort} />
-                <SortableTh label="Category" sortKey="category" info={sortInfo("category")} onClick={toggleSort} />
-                <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">Location</th>
-                <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">Client Status</th>
+                <SortableTh
+                  label="Category"
+                  sortKey="category"
+                  info={sortInfo("category")}
+                  onClick={toggleSort}
+                  filter={
+                    <ColumnFilter
+                      label="Category"
+                      options={categoryOptions}
+                      selected={catFilter}
+                      onChange={setCatFilter}
+                    />
+                  }
+                />
+                <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">
+                  <span className="inline-flex items-center gap-1">
+                    Location
+                    <ColumnFilter
+                      label="Location"
+                      options={locationOptions}
+                      selected={locFilter}
+                      onChange={setLocFilter}
+                    />
+                  </span>
+                </th>
+                <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">
+                  <span className="inline-flex items-center gap-1">
+                    Client Status
+                    <ColumnFilter
+                      label="Client Status"
+                      options={statusOptions}
+                      selected={statusFilter}
+                      onChange={setStatusFilter}
+                    />
+                  </span>
+                </th>
                 <SortableTh label="Quotes" sortKey="quote" info={sortInfo("quote")} onClick={toggleSort} />
                 <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">Rating</th>
                 <th className="whitespace-nowrap px-3 py-2 text-right font-semibold">Actions</th>
@@ -1160,29 +1232,34 @@ function SortableTh({
   sortKey,
   info,
   onClick,
+  filter,
 }: {
   label: string;
   sortKey: "vendor" | "category" | "quote";
   info: { dir: "asc" | "desc"; order: number } | null;
   onClick: (key: "vendor" | "category" | "quote") => void;
+  filter?: React.ReactNode;
 }) {
   const Icon = info ? (info.dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
   return (
     <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">
-      <button
-        type="button"
-        onClick={() => onClick(sortKey)}
-        className={`inline-flex items-center gap-1 rounded px-1 py-0.5 transition hover:text-[var(--terracotta)] ${info ? "text-[var(--terracotta)]" : ""}`}
-        title="Click to sort. Click again to reverse, a third time to remove."
-      >
-        <span>{label}</span>
-        <Icon className="h-3 w-3" />
-        {info && (
-          <span className="ml-0.5 rounded-full bg-[var(--terracotta)] px-1 text-[9px] font-bold text-[var(--cream)]">
-            {info.order}
-          </span>
-        )}
-      </button>
+      <span className="inline-flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => onClick(sortKey)}
+          className={`inline-flex items-center gap-1 rounded px-1 py-0.5 transition hover:text-[var(--terracotta)] ${info ? "text-[var(--terracotta)]" : ""}`}
+          title="Click to sort. Click again to reverse, a third time to remove."
+        >
+          <span>{label}</span>
+          <Icon className="h-3 w-3" />
+          {info && (
+            <span className="ml-0.5 rounded-full bg-[var(--terracotta)] px-1 text-[9px] font-bold text-[var(--cream)]">
+              {info.order}
+            </span>
+          )}
+        </button>
+        {filter}
+      </span>
     </th>
   );
 }

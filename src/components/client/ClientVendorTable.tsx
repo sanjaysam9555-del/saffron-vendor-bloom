@@ -1,10 +1,12 @@
 import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import { getClientStatusOption } from "@/lib/client-status";
+import { CLIENT_STATUS_OPTIONS } from "@/lib/client-status";
 import { ClientStatusSelect } from "./ClientStatusSelect";
 import { CircleCheck, FileText, Star, Paperclip, MessageSquare, Sparkles } from "lucide-react";
 import { formatINR, formatINRShort, ordinal, buildQuoteSeqMap } from "@/lib/quote-types";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ColumnFilter } from "@/components/ui/ColumnFilter";
 
 interface Props {
   vendors: ClientVendor[];
@@ -12,29 +14,65 @@ interface Props {
 }
 
 export function ClientVendorTable({ vendors, onView }: Props) {
+  // Per-column filters (multi-select). Empty array means "no filter".
+  const [catFilter, setCatFilter] = useState<string[]>([]);
+  const [locFilter, setLocFilter] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+
+  const categoryOptions = useMemo(() => {
+    const set = new Set<string>();
+    vendors.forEach((v) => { if (v.category) set.add(v.category); });
+    return Array.from(set).sort().map((c) => ({ value: c, label: c }));
+  }, [vendors]);
+  const locationOptions = useMemo(() => {
+    const set = new Set<string>();
+    vendors.forEach((v) => { if (v.location) set.add(v.location); });
+    return Array.from(set).sort().map((c) => ({ value: c, label: c }));
+  }, [vendors]);
+  const statusOptions = useMemo(
+    () => [
+      ...CLIENT_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label, dot: o.dot })),
+      { value: "__none__", label: "No response yet", dot: "#9ca3af" },
+    ],
+    [],
+  );
+
+  const filteredVendors = useMemo(() => {
+    return vendors.filter((v) => {
+      if (catFilter.length && !catFilter.includes(v.category)) return false;
+      if (locFilter.length && !locFilter.includes(v.location ?? "")) return false;
+      if (statusFilter.length) {
+        const s = v.client_status ?? null;
+        const wantNone = statusFilter.includes("__none__");
+        if (!(s && statusFilter.includes(s)) && !(wantNone && !s)) return false;
+      }
+      return true;
+    });
+  }, [vendors, catFilter, locFilter, statusFilter]);
+
   // Incremental render — only mount the first N rows, then more on scroll.
   const BATCH = 80;
   const [visibleCount, setVisibleCount] = useState(BATCH);
   useEffect(() => {
     setVisibleCount(BATCH);
-  }, [vendors]);
+  }, [filteredVendors]);
   const sentinelRef = useRef<HTMLTableRowElement | null>(null);
   useEffect(() => {
-    if (visibleCount >= vendors.length) return;
+    if (visibleCount >= filteredVendors.length) return;
     const node = sentinelRef.current;
     if (!node) return;
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
-          setVisibleCount((c) => Math.min(c + BATCH, vendors.length));
+          setVisibleCount((c) => Math.min(c + BATCH, filteredVendors.length));
         }
       },
       { rootMargin: "600px 0px" },
     );
     io.observe(node);
     return () => io.disconnect();
-  }, [visibleCount, vendors.length]);
-  const visibleRows = vendors.slice(0, visibleCount);
+  }, [visibleCount, filteredVendors.length]);
+  const visibleRows = filteredVendors.slice(0, visibleCount);
 
   return (
     <div className="overflow-x-auto rounded-lg border border-[var(--border)] bg-white animate-fade-in">
@@ -42,9 +80,39 @@ export function ClientVendorTable({ vendors, onView }: Props) {
         <thead className="bg-[var(--cream-deep)]/60 text-[10px] uppercase tracking-widest text-[var(--charcoal)]/55">
           <tr>
             <Th>Vendor</Th>
-            <Th>Category</Th>
-            <Th>Location</Th>
-            <Th>Status</Th>
+            <Th>
+              <span className="inline-flex items-center gap-1">
+                Category
+                <ColumnFilter
+                  label="Category"
+                  options={categoryOptions}
+                  selected={catFilter}
+                  onChange={setCatFilter}
+                />
+              </span>
+            </Th>
+            <Th>
+              <span className="inline-flex items-center gap-1">
+                Location
+                <ColumnFilter
+                  label="Location"
+                  options={locationOptions}
+                  selected={locFilter}
+                  onChange={setLocFilter}
+                />
+              </span>
+            </Th>
+            <Th>
+              <span className="inline-flex items-center gap-1">
+                Status
+                <ColumnFilter
+                  label="Status"
+                  options={statusOptions}
+                  selected={statusFilter}
+                  onChange={setStatusFilter}
+                />
+              </span>
+            </Th>
             <Th>Quotes</Th>
             <Th>Rating</Th>
             <Th className="text-right">Actions</Th>
@@ -165,7 +233,7 @@ export function ClientVendorTable({ vendors, onView }: Props) {
               </tr>
             );
           })}
-          {visibleCount < vendors.length && (
+          {visibleCount < filteredVendors.length && (
             <tr ref={sentinelRef} aria-hidden>
               <td colSpan={7} className="h-10" />
             </tr>
