@@ -852,8 +852,8 @@ function AssignedVendorsSection({
   }, [vendors, quoteQueries]);
 
   const sortedVendors = useMemo(() => {
-    if (sorts.length === 0) return vendors;
-    const arr = [...vendors];
+    if (sorts.length === 0) return filteredVendors;
+    const arr = [...filteredVendors];
     arr.sort((a: any, b: any) => {
       for (const s of sorts) {
         let av: string | number = "";
@@ -874,7 +874,7 @@ function AssignedVendorsSection({
       return 0;
     });
     return arr;
-  }, [vendors, sorts, quoteAmountByVendor]);
+  }, [filteredVendors, sorts, quoteAmountByVendor]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { like: 0, shortlisted: 0, finalised: 0, rejected: 0, thinking: 0 };
