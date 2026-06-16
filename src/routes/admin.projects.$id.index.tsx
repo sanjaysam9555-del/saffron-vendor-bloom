@@ -758,7 +758,7 @@ function AssignedVendorsSection({
   selections: Record<string, Selection[]>;
   onRemove: (id: string, name: string) => void;
 }) {
-  const [view, setView] = useState<"list" | "grouped">("list");
+  const [view, setView] = useState<"list" | "grouped" | "table">("list");
   const [quotesFor, setQuotesFor] = useState<{ id: string; name: string; category: string | null; autoOpenForm?: boolean } | null>(null);
   const [commentsFor, setCommentsFor] = useState<{ id: string; name: string } | null>(null);
 
