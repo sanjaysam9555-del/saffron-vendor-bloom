@@ -1155,6 +1155,38 @@ function AssignedVendorsSection({
   );
 }
 
+function SortableTh({
+  label,
+  sortKey,
+  info,
+  onClick,
+}: {
+  label: string;
+  sortKey: "vendor" | "category" | "quote";
+  info: { dir: "asc" | "desc"; order: number } | null;
+  onClick: (key: "vendor" | "category" | "quote") => void;
+}) {
+  const Icon = info ? (info.dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
+  return (
+    <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">
+      <button
+        type="button"
+        onClick={() => onClick(sortKey)}
+        className={`inline-flex items-center gap-1 rounded px-1 py-0.5 transition hover:text-[var(--terracotta)] ${info ? "text-[var(--terracotta)]" : ""}`}
+        title="Click to sort. Click again to reverse, a third time to remove."
+      >
+        <span>{label}</span>
+        <Icon className="h-3 w-3" />
+        {info && (
+          <span className="ml-0.5 rounded-full bg-[var(--terracotta)] px-1 text-[9px] font-bold text-[var(--cream)]">
+            {info.order}
+          </span>
+        )}
+      </button>
+    </th>
+  );
+}
+
 function VendorQuotesPill({
   projectId,
   vendorId,
