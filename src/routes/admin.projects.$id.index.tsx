@@ -762,6 +762,81 @@ function AssignedVendorsSection({
   const [quotesFor, setQuotesFor] = useState<{ id: string; name: string; category: string | null; autoOpenForm?: boolean } | null>(null);
   const [commentsFor, setCommentsFor] = useState<{ id: string; name: string } | null>(null);
 
+  // Multi-column sort for the table view. Click a header to cycle:
+  // not-sorted → asc → desc → removed. Multiple columns combine in click order.
+  type SortKey = "vendor" | "category" | "quote";
+  const [sorts, setSorts] = useState<{ key: SortKey; dir: "asc" | "desc" }[]>([]);
+  const toggleSort = (key: SortKey) => {
+    setSorts((prev) => {
+      const idx = prev.findIndex((s) => s.key === key);
+      if (idx === -1) return [...prev, { key, dir: "asc" }];
+      const cur = prev[idx];
+      const next = [...prev];
+      if (cur.dir === "asc") next[idx] = { key, dir: "desc" };
+      else next.splice(idx, 1);
+      return next;
+    });
+  };
+  const sortInfo = (key: SortKey) => {
+    const idx = sorts.findIndex((s) => s.key === key);
+    return idx === -1 ? null : { dir: sorts[idx].dir, order: idx + 1 };
+  };
+
+  // Fetch quotes for every vendor (used by the table to sort by quote amount).
+  // Shares query keys + 30s staleTime with VendorQuotesPill, so React Query
+  // dedupes — no extra network when toggling views.
+  const quoteQueries = useQueries({
+    queries: vendors.map((v: any) => ({
+      queryKey: ["project-vendor-quotes", projectId, v.id],
+      queryFn: () => listProjectVendorQuotes(projectId, v.id),
+      staleTime: 30_000,
+      enabled: view === "table",
+    })),
+  });
+  const quoteAmountByVendor = useMemo(() => {
+    const map: Record<string, number> = {};
+    vendors.forEach((v: any, i: number) => {
+      const qs = (quoteQueries[i]?.data as any[]) ?? [];
+      if (qs.length === 0) {
+        map[v.id] = 0;
+        return;
+      }
+      const closed = qs.find((q) => q.is_final || q.status === "closed");
+      if (closed && closed.closed_amount != null) {
+        map[v.id] = Number(closed.closed_amount);
+        return;
+      }
+      const amounts = qs.map((q) => Number(q.quote_amount ?? 0)).filter((n) => !Number.isNaN(n));
+      map[v.id] = amounts.length ? Math.max(...amounts) : 0;
+    });
+    return map;
+  }, [vendors, quoteQueries]);
+
+  const sortedVendors = useMemo(() => {
+    if (sorts.length === 0) return vendors;
+    const arr = [...vendors];
+    arr.sort((a: any, b: any) => {
+      for (const s of sorts) {
+        let av: string | number = "";
+        let bv: string | number = "";
+        if (s.key === "vendor") {
+          av = (a.vendor_name ?? "").toLowerCase();
+          bv = (b.vendor_name ?? "").toLowerCase();
+        } else if (s.key === "category") {
+          av = (a.category ?? "").toLowerCase();
+          bv = (b.category ?? "").toLowerCase();
+        } else if (s.key === "quote") {
+          av = quoteAmountByVendor[a.id] ?? 0;
+          bv = quoteAmountByVendor[b.id] ?? 0;
+        }
+        if (av < bv) return s.dir === "asc" ? -1 : 1;
+        if (av > bv) return s.dir === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+    return arr;
+  }, [vendors, sorts, quoteAmountByVendor]);
+
   const counts = useMemo(() => {
     const c: Record<string, number> = { like: 0, shortlisted: 0, finalised: 0, rejected: 0, thinking: 0 };
     for (const v of vendors) {
