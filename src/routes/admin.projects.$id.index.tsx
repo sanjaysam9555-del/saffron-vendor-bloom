@@ -898,7 +898,7 @@ function AssignedVendorsSection({
             );
           })}
         </div>
-      ) : (
+      ) : view === "grouped" ? (
         <div className="mt-4 space-y-4">
           {(["finalised", "shortlisted", "like", "thinking", "rejected", "none"] as const).map((key) => {
             const items = grouped[key];
