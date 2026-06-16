@@ -34,6 +34,8 @@ import { listProjectCategoryDeadlines } from "@/lib/project-deadlines.functions"
 import { listProjectOtherExpenses } from "@/lib/project-other-expenses.functions";
 import { buildTimelineItems, otherExpensesAsTimelineItems } from "@/lib/build-timeline-items";
 import { QuickAddVendorPanel } from "@/components/admin/QuickAddVendorPanel";
+import { ColumnFilter } from "@/components/ui/ColumnFilter";
+import { CLIENT_STATUS_OPTIONS as CS_OPTS } from "@/lib/client-status";
 
 export const Route = createFileRoute("/admin/projects/$id/")({
   head: () => ({
