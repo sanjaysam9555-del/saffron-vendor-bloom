@@ -783,6 +783,44 @@ function AssignedVendorsSection({
     return idx === -1 ? null : { dir: sorts[idx].dir, order: idx + 1 };
   };
 
+  // Per-column filters (multi-select). Empty array means "no filter".
+  const [catFilter, setCatFilter] = useState<string[]>([]);
+  const [locFilter, setLocFilter] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+
+  const categoryOptions = useMemo(() => {
+    const set = new Set<string>();
+    vendors.forEach((v: any) => { if (v.category) set.add(v.category); });
+    return Array.from(set).sort().map((c) => ({ value: c, label: c }));
+  }, [vendors]);
+  const locationOptions = useMemo(() => {
+    const set = new Set<string>();
+    vendors.forEach((v: any) => { if (v.location) set.add(v.location); });
+    return Array.from(set).sort().map((c) => ({ value: c, label: c }));
+  }, [vendors]);
+  const statusOptions = useMemo(
+    () => [
+      ...CLIENT_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label, dot: o.dot })),
+      { value: "__none__", label: "No response yet", dot: "#9ca3af" },
+    ],
+    [],
+  );
+
+  const filteredVendors = useMemo(() => {
+    return vendors.filter((v: any) => {
+      if (catFilter.length && !catFilter.includes(v.category)) return false;
+      if (locFilter.length && !locFilter.includes(v.location)) return false;
+      if (statusFilter.length) {
+        const rows = selections[v.id] ?? [];
+        const statuses = rows.map((r) => r.status);
+        const wantNone = statusFilter.includes("__none__");
+        const matchStatus = statuses.some((s) => statusFilter.includes(s));
+        if (!(matchStatus || (wantNone && statuses.length === 0))) return false;
+      }
+      return true;
+    });
+  }, [vendors, catFilter, locFilter, statusFilter, selections]);
+
   // Fetch quotes for every vendor (used by the table to sort by quote amount).
   // Shares query keys + 30s staleTime with VendorQuotesPill, so React Query
   // dedupes — no extra network when toggling views.
