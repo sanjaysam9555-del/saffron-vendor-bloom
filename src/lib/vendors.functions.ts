@@ -132,9 +132,21 @@ export const bulkInsertVendorsServer = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await requireStaffUser();
     if (!data.rows.length) return 0;
-    const { error, count } = await supabaseAdmin.from("vendors").insert(data.rows, { count: "exact" });
+    const { data: inserted, error } = await supabaseAdmin
+      .from("vendors")
+      .insert(data.rows)
+      .select("id, instagram_handle");
     if (error) throw new Error(error.message);
-    return count ?? data.rows.length;
+    const rows = inserted ?? [];
+    // Trigger Instagram previews for inserted rows with handles (sequential to avoid Apify rate limits).
+    const withHandles = rows.filter((r: any) => !!r.instagram_handle);
+    if (withHandles.length > 0) {
+      const { triggerInstagramPreview } = await import("@/server/trigger-instagram-preview.server");
+      for (const r of withHandles) {
+        await triggerInstagramPreview(r.id as string, r.instagram_handle as string);
+      }
+    }
+    return rows.length;
   });
 
 export const bulkUpdateVendorsServer = createServerFn({ method: "POST" })
