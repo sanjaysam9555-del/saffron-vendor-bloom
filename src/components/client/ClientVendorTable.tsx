@@ -82,9 +82,9 @@ export function ClientVendorTable({ vendors, onView }: Props) {
             <Th>Vendor</Th>
             <Th>
               <span className="inline-flex items-center gap-1">
-                Category
+                Vendor Categories
                 <ColumnFilter
-                  label="Category"
+                  label="Vendor Categories"
                   options={categoryOptions}
                   selected={catFilter}
                   onChange={setCatFilter}
