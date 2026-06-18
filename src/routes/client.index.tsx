@@ -326,7 +326,7 @@ function ClientPortalPage() {
                   <button
                     data-tour="view-toggle-table"
                     role="tab"
-                    aria-label="Table"
+                    aria-label="Table View (Vendors)"
                     aria-selected={view === "table"}
                     onClick={() => setView("table")}
                     className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
@@ -400,7 +400,7 @@ function ClientPortalPage() {
           )}
           {view === "table" && (
             <SectionHelper storageKey="table">
-              <strong className="font-medium text-[var(--charcoal)]">Table</strong> — all your vendors in one sortable list. Quick way to compare prices and ratings.
+              <strong className="font-medium text-[var(--charcoal)]">Table View (Vendors)</strong> — all your vendors in one sortable list. Quick way to compare prices and ratings.
             </SectionHelper>
           )}
           {view === "category" && (
