@@ -105,6 +105,11 @@ export const updateVendorServer = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
+    // If the Instagram handle was set/changed, refresh the preview.
+    if (row?.id && data.input.instagram_handle) {
+      const { triggerInstagramPreview } = await import("@/server/trigger-instagram-preview.server");
+      await triggerInstagramPreview(row.id as string, data.input.instagram_handle);
+    }
     return row;
   });
 
