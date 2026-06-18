@@ -335,7 +335,7 @@ function ClientPortalPage() {
                         : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
                     }`}
                   >
-                    <TableIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Table</span>
+                    <TableIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Table View (Vendors)</span>
                   </button>
                   <button
                     data-tour="view-toggle-category"
