@@ -86,6 +86,10 @@ export const createVendorServer = createServerFn({ method: "POST" })
     await requireStaffUser();
     const { data: row, error } = await supabaseAdmin.from("vendors").insert(data).select().single();
     if (error) throw new Error(error.message);
+    if (row?.id && data.instagram_handle) {
+      const { triggerInstagramPreview } = await import("@/server/trigger-instagram-preview.server");
+      await triggerInstagramPreview(row.id as string, data.instagram_handle);
+    }
     return row;
   });
 
@@ -101,6 +105,11 @@ export const updateVendorServer = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
+    // If the Instagram handle was set/changed, refresh the preview.
+    if (row?.id && data.input.instagram_handle) {
+      const { triggerInstagramPreview } = await import("@/server/trigger-instagram-preview.server");
+      await triggerInstagramPreview(row.id as string, data.input.instagram_handle);
+    }
     return row;
   });
 
@@ -123,9 +132,21 @@ export const bulkInsertVendorsServer = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await requireStaffUser();
     if (!data.rows.length) return 0;
-    const { error, count } = await supabaseAdmin.from("vendors").insert(data.rows, { count: "exact" });
+    const { data: inserted, error } = await supabaseAdmin
+      .from("vendors")
+      .insert(data.rows)
+      .select("id, instagram_handle");
     if (error) throw new Error(error.message);
-    return count ?? data.rows.length;
+    const rows = inserted ?? [];
+    // Trigger Instagram previews for inserted rows with handles (sequential to avoid Apify rate limits).
+    const withHandles = rows.filter((r: any) => !!r.instagram_handle);
+    if (withHandles.length > 0) {
+      const { triggerInstagramPreview } = await import("@/server/trigger-instagram-preview.server");
+      for (const r of withHandles) {
+        await triggerInstagramPreview(r.id as string, r.instagram_handle as string);
+      }
+    }
+    return rows.length;
   });
 
 export const bulkUpdateVendorsServer = createServerFn({ method: "POST" })

@@ -238,6 +238,14 @@ export const Route = createFileRoute("/api/public/vendor-signup")({
           return jsonResponse({ ok: false, error: "upload_failed", message: "Could not upload your documents. Please try again." }, 500);
         }
 
+        // Kick off Instagram preview scrape (best-effort; never blocks success).
+        try {
+          const { triggerInstagramPreview } = await import("@/server/trigger-instagram-preview.server");
+          await triggerInstagramPreview(vendor.id, insertRow.instagram_handle);
+        } catch (e) {
+          console.error("[vendor-signup] instagram preview trigger failed", e);
+        }
+
         return jsonResponse({ ok: true }, 200);
       },
     },
