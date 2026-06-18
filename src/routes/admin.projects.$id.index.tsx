@@ -933,7 +933,7 @@ function AssignedVendorsSection({
             onClick={() => setView("table")}
             className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-2.5 py-1.5 sm:flex-none ${view === "table" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"}`}
           >
-            <TableIcon className="h-3.5 w-3.5" /> Table
+            <TableIcon className="h-3.5 w-3.5" /> <span>Table View (Vendors)</span>
           </button>
         </div>
       </div>
