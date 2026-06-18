@@ -324,20 +324,6 @@ function ClientPortalPage() {
                     <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Timeline</span>
                   </button>
                   <button
-                    data-tour="view-toggle-table"
-                    role="tab"
-                    aria-label="Table View (Vendors)"
-                    aria-selected={view === "table"}
-                    onClick={() => setView("table")}
-                    className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
-                      view === "table"
-                        ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
-                    }`}
-                  >
-                    <TableIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Table View (Vendors)</span>
-                  </button>
-                  <button
                     data-tour="view-toggle-category"
                     role="tab"
                     aria-label="Vendor Categories"
@@ -364,6 +350,20 @@ function ClientPortalPage() {
                     }`}
                   >
                     <LayoutGrid className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Thumbnail View (Vendors)</span>
+                  </button>
+                  <button
+                    data-tour="view-toggle-table"
+                    role="tab"
+                    aria-label="Table View (Vendors)"
+                    aria-selected={view === "table"}
+                    onClick={() => setView("table")}
+                    className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
+                      view === "table"
+                        ? "bg-[var(--charcoal)] text-[var(--cream)]"
+                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                    }`}
+                  >
+                    <TableIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Table View (Vendors)</span>
                   </button>
                   <button
                     data-tour="view-toggle-board"
