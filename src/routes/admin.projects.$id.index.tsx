@@ -919,7 +919,7 @@ function AssignedVendorsSection({
             onClick={() => setView("list")}
             className={`inline-flex flex-1 items-center justify-center gap-1 px-2.5 py-1.5 sm:flex-none ${view === "list" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"}`}
           >
-            <LayoutGrid className="h-3.5 w-3.5" /> List
+            <LayoutGrid className="h-3.5 w-3.5" /> <span>Thumbnail View (Vendors)</span>
           </button>
           <button
             onClick={() => setView("grouped")}
@@ -1052,13 +1052,13 @@ function AssignedVendorsSection({
               <tr>
                 <SortableTh label="Vendor" sortKey="vendor" info={sortInfo("vendor")} onClick={toggleSort} />
                 <SortableTh
-                  label="Category"
+                  label="Vendor Categories"
                   sortKey="category"
                   info={sortInfo("category")}
                   onClick={toggleSort}
                   filter={
                     <ColumnFilter
-                      label="Category"
+                      label="Vendor Categories"
                       options={categoryOptions}
                       selected={catFilter}
                       onChange={setCatFilter}

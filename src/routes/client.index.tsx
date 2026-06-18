@@ -340,7 +340,7 @@ function ClientPortalPage() {
                   <button
                     data-tour="view-toggle-category"
                     role="tab"
-                    aria-label="Category"
+                    aria-label="Vendor Categories"
                     aria-selected={view === "category"}
                     onClick={() => setView("category")}
                     className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
@@ -349,12 +349,12 @@ function ClientPortalPage() {
                         : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
                     }`}
                   >
-                    <ListChecks className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Category</span>
+                    <ListChecks className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Vendor Categories</span>
                   </button>
                   <button
                     data-tour="view-toggle-grid"
                     role="tab"
-                    aria-label="Vendors"
+                    aria-label="Thumbnail View (Vendors)"
                     aria-selected={view === "grid"}
                     onClick={() => setView("grid")}
                     className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
@@ -363,7 +363,7 @@ function ClientPortalPage() {
                         : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
                     }`}
                   >
-                    <LayoutGrid className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Vendors</span>
+                    <LayoutGrid className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Thumbnail View (Vendors)</span>
                   </button>
                   <button
                     data-tour="view-toggle-board"
@@ -405,12 +405,12 @@ function ClientPortalPage() {
           )}
           {view === "category" && (
             <SectionHelper storageKey="category">
-              <strong className="font-medium text-[var(--charcoal)]">Category</strong> — every wedding category with deadlines, status and budget, perfect for week-by-week planning.
+              <strong className="font-medium text-[var(--charcoal)]">Vendor Categories</strong> — every wedding category with deadlines, status and budget, perfect for week-by-week planning.
             </SectionHelper>
           )}
           {view === "grid" && (
             <SectionHelper storageKey="grid">
-              <strong className="font-medium text-[var(--charcoal)]">Vendors</strong> — browse rich cards with photos. Click any card for details, quotes and comments.
+              <strong className="font-medium text-[var(--charcoal)]">Thumbnail View (Vendors)</strong> — browse rich cards with photos. Click any card for details, quotes and comments.
             </SectionHelper>
           )}
           {view === "board" && (
