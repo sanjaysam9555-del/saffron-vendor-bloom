@@ -86,6 +86,10 @@ export const createVendorServer = createServerFn({ method: "POST" })
     await requireStaffUser();
     const { data: row, error } = await supabaseAdmin.from("vendors").insert(data).select().single();
     if (error) throw new Error(error.message);
+    if (row?.id && data.instagram_handle) {
+      const { triggerInstagramPreview } = await import("@/server/trigger-instagram-preview.server");
+      await triggerInstagramPreview(row.id as string, data.instagram_handle);
+    }
     return row;
   });
 
