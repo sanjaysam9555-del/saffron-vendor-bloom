@@ -27,9 +27,11 @@ interface VendorDetailProps {
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => Promise<void>;
+  vendors?: Vendor[];
+  onNavigate?: (vendor: Vendor) => void;
 }
 
-export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetailProps) {
+export function VendorDetail({ vendor, onClose, onEdit, onDelete, vendors, onNavigate }: VendorDetailProps) {
   const isAdmin = useIsAdmin();
   const { initialized, session } = useAuth();
   const authReady = initialized && !!session;
@@ -37,6 +39,39 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
   const [deleting, setDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [viewing, setViewing] = useState<VendorAttachment | null>(null);
+
+  const navIndex = vendor && vendors ? vendors.findIndex((v) => v.id === vendor.id) : -1;
+  const prevVendor = navIndex > 0 ? vendors![navIndex - 1] : null;
+  const nextVendor = navIndex >= 0 && vendors && navIndex < vendors.length - 1 ? vendors[navIndex + 1] : null;
+  const canNavigate = !!onNavigate && !!vendors && navIndex >= 0;
+
+  // Reset transient state when vendor changes (navigating prev/next).
+  useEffect(() => {
+    setConfirmDelete(false);
+    setDeleting(false);
+    setDeleted(false);
+    setViewing(null);
+  }, [vendor?.id]);
+
+  // Keyboard navigation.
+  useEffect(() => {
+    if (!canNavigate) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLElement) {
+        const tag = e.target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || e.target.isContentEditable) return;
+      }
+      if (e.key === "ArrowLeft" && prevVendor) {
+        e.preventDefault();
+        onNavigate!(prevVendor);
+      } else if (e.key === "ArrowRight" && nextVendor) {
+        e.preventDefault();
+        onNavigate!(nextVendor);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [canNavigate, prevVendor, nextVendor, onNavigate]);
 
   const handleConfirmDelete = async () => {
     if (deleting) return;
