@@ -1,58 +1,44 @@
-## Problem
+# Add Prev/Next Navigation in Vendor Detail Modals
 
-When switching between Vendors, Projects, and a few other admin/client pages on mobile, the new page renders dim for a moment and only brightens after the user taps. The user expects pages to appear fully bright immediately.
+When a user opens the detailed vendor view from any thumbnail/card/table list, add left/right arrow buttons so they can step through vendors without closing the modal.
 
-## Root cause
+## Scope
 
-Two compounding things cause the dim flash:
+Two detail modals, each opened from multiple places:
 
-1. **Page-level fade-up animations** — Top-level wrappers on these routes use `animate-fade-up` (600ms keyframe going `opacity: 0 → 1`). Across `admin.index.tsx`, `admin.projects.index.tsx`, `admin.submissions.tsx`, `client.index.tsx`, etc., the page header/content starts invisible and fades up every time the route mounts, which on mobile reads as the whole screen going dim.
+1. **Admin** — `src/components/vendor/VendorDetail.tsx`
+   - Opened from: `src/routes/admin.index.tsx` (main vendor library) and `src/routes/admin.projects.$id.index.tsx` (project's vendor views).
+2. **Client** — `src/components/client/ClientVendorDetail.tsx`
+   - Opened from: `src/routes/client.index.tsx` and `src/routes/admin.projects.$id.preview.$clientId.tsx`.
 
-2. **`useRevealOnScroll` on `ProjectCard`** — Each card starts with hardcoded `opacity-0` and only switches to `animate-fade-up` after the shared `IntersectionObserver` fires. On iOS Safari, after a same-origin route navigation, IO callbacks are commonly deferred until the next user gesture (tap/scroll). That's exactly the "becomes brighter after tap" behavior — the tap unblocks IO, the cards flip to visible.
+## Behavior
 
-`RouteFade` in `__root.tsx` also re-fades the whole `<Outlet />` whenever the first path segment changes (e.g. `/admin` → `/client`), adding another fade layer on top.
+- Two circular arrow buttons floating on the left and right edges of the modal (outside the card on desktop, inside on mobile).
+- "Previous" and "Next" cycle through the **same visible/filtered list** the user is currently looking at (so filters, sorting, and search are respected).
+- Disabled (greyed out) at the first/last vendor — no wrap-around.
+- Keyboard support: `←` / `→` while the modal is open. `Esc` continues to close.
+- A small "X of Y" counter sits next to the close button in the header.
+- Navigation simply swaps the vendor in the existing modal — no close/reopen flicker.
 
-## Fix
+## Technical Notes
 
-Keep the polish on the *first* visit, but stop re-dimming on every navigation.
+- Extend each modal's props with `vendors: Vendor[]` (the ordered, filtered list currently shown) plus `onNavigate: (vendor) => void`. Keep `vendor`/`onClose` as today.
+- At each call site, pass the same array that drives the cards/table/thumbnails (e.g. `filteredVendors`, `vendors` returned by the query/filter pipeline) so prev/next matches what the user sees.
+- Inside the modal, derive `index = vendors.findIndex(v => v.id === vendor.id)` and compute `prev`/`next`. Wire arrow buttons + a `useEffect` keydown listener on `ArrowLeft`/`ArrowRight` to call `onNavigate(prev|next)`.
+- Reset any internal modal state (e.g. delete-confirm, currently viewed attachment) when the vendor id changes.
+- No backend, query, or data-shape changes.
 
-### 1. Make `useRevealOnScroll` mobile-safe
+## Files Touched
 
-`src/hooks/use-reveal-on-scroll.ts`
-- Default `isVisible` to `true` on touch / coarse-pointer devices, OR
-- Schedule a `requestAnimationFrame` + `setTimeout(…, 50ms)` fallback that flips `isVisible` to `true` if IO hasn't fired yet (handles the iOS deferred-IO case).
-- Keep existing reduced-motion and no-IO fast paths.
+- `src/components/vendor/VendorDetail.tsx` — add nav buttons, counter, keyboard handler, prop changes.
+- `src/components/client/ClientVendorDetail.tsx` — same.
+- `src/routes/admin.index.tsx` — pass filtered vendor list + `onNavigate`.
+- `src/routes/admin.projects.$id.index.tsx` — same for thumbnail/table/board openers.
+- `src/routes/client.index.tsx` — pass filtered client-vendor list + `onNavigate`.
+- `src/routes/admin.projects.$id.preview.$clientId.tsx` — same.
 
-This removes the "stuck at opacity-0 until tap" failure mode without losing the scroll reveal on desktop.
+## Out of Scope
 
-### 2. Drop the route-level fade-up on pages that re-mount on every nav
-
-Remove `animate-fade-up` from the *outer* container of:
-- `src/routes/admin.index.tsx` (vendors pane header at line 214, empty state at 434)
-- `src/routes/admin.projects.index.tsx` (header at line 171)
-- `src/routes/admin.submissions.tsx` (header at line 72)
-- `src/routes/client.index.tsx` (header at line 258, empty state at 500)
-
-Inner content (cards, toasts, helper banners) can keep their fade — the dim feeling comes from the whole page wrapper starting at `opacity: 0`.
-
-### 3. Soften `RouteFade` so it doesn't dim within a section
-
-`src/routes/__root.tsx` `RouteFade`
-- Either remove `RouteFade` entirely (rely on per-component reveals), or
-- Change `fadeUp` initial state for route transitions to `opacity: 1` (no fade) and only animate the 4px slide. This kills the full-screen dim on cross-section nav (e.g. `/admin` → `/client`) while keeping a subtle motion cue.
-
-We'll go with "remove `RouteFade`" since per-page reveals already provide motion and the wrapper is the main offender on mobile.
-
-### What is NOT changed
-
-- `SplashScreen` (first-load only, session-scoped — unrelated).
-- `RouteProgress` top bar (not a dimming source).
-- `ProjectCard` hover/transform transitions (purely interactive, not load-time).
-- Per-card staggered reveal on desktop (still works via IO).
-
-## Verification
-
-1. On mobile viewport (375×812), navigate Vendors ↔ Projects ↔ Submissions repeatedly — page should appear at full brightness immediately, no visible fade.
-2. Cards should be visible without a tap on iOS.
-3. Desktop scroll-reveal on long project grids should still animate as cards enter the viewport.
-4. First-time splash on cold load is unchanged.
+- No changes to filters, sorting, or list rendering.
+- No swipe gestures on touch (can add later if desired).
+- Board view's drag-and-drop card flow is untouched; only its detail modal gains nav.

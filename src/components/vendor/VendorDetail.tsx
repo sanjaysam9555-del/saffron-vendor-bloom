@@ -1,10 +1,10 @@
 import type { Vendor } from "@/lib/vendor-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import {
-  X, MapPin, Phone, Mail, Instagram, Globe, Star, Sparkles, Pencil, Trash2, Copy, Check, Link as LinkIcon, Paperclip, FileText, Loader2,
+  X, MapPin, Phone, Mail, Instagram, Globe, Star, Sparkles, Pencil, Trash2, Copy, Check, Link as LinkIcon, Paperclip, FileText, Loader2, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   formatFileSize,
@@ -27,9 +27,11 @@ interface VendorDetailProps {
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => Promise<void>;
+  vendors?: Vendor[];
+  onNavigate?: (vendor: Vendor) => void;
 }
 
-export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetailProps) {
+export function VendorDetail({ vendor, onClose, onEdit, onDelete, vendors, onNavigate }: VendorDetailProps) {
   const isAdmin = useIsAdmin();
   const { initialized, session } = useAuth();
   const authReady = initialized && !!session;
@@ -37,6 +39,39 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
   const [deleting, setDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [viewing, setViewing] = useState<VendorAttachment | null>(null);
+
+  const navIndex = vendor && vendors ? vendors.findIndex((v) => v.id === vendor.id) : -1;
+  const prevVendor = navIndex > 0 ? vendors![navIndex - 1] : null;
+  const nextVendor = navIndex >= 0 && vendors && navIndex < vendors.length - 1 ? vendors[navIndex + 1] : null;
+  const canNavigate = !!onNavigate && !!vendors && navIndex >= 0;
+
+  // Reset transient state when vendor changes (navigating prev/next).
+  useEffect(() => {
+    setConfirmDelete(false);
+    setDeleting(false);
+    setDeleted(false);
+    setViewing(null);
+  }, [vendor?.id]);
+
+  // Keyboard navigation.
+  useEffect(() => {
+    if (!canNavigate) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLElement) {
+        const tag = e.target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || e.target.isContentEditable) return;
+      }
+      if (e.key === "ArrowLeft" && prevVendor) {
+        e.preventDefault();
+        onNavigate!(prevVendor);
+      } else if (e.key === "ArrowRight" && nextVendor) {
+        e.preventDefault();
+        onNavigate!(nextVendor);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [canNavigate, prevVendor, nextVendor, onNavigate]);
 
   const handleConfirmDelete = async () => {
     if (deleting) return;
@@ -79,6 +114,24 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
+      {canNavigate && prevVendor && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onNavigate!(prevVendor); }}
+          aria-label="Previous vendor"
+          className="absolute left-2 top-1/2 z-[51] -translate-y-1/2 rounded-full bg-white/90 p-2 text-[var(--charcoal)] shadow-lg hover:bg-white sm:left-6"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+      )}
+      {canNavigate && nextVendor && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onNavigate!(nextVendor); }}
+          aria-label="Next vendor"
+          className="absolute right-2 top-1/2 z-[51] -translate-y-1/2 rounded-full bg-white/90 p-2 text-[var(--charcoal)] shadow-lg hover:bg-white sm:right-6"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      )}
       <div
         onClick={(e) => e.stopPropagation()}
         className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-[var(--cream)] text-[oklch(0.18_0.01_60)] shadow-2xl"
@@ -116,8 +169,16 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete }: VendorDetail
               <BookedBadge vendorId={vendor.id} />
             </div>
           </div>
-          <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]"><X className="h-5 w-5" /></button>
+          <div className="flex items-center gap-2">
+            {canNavigate && (
+              <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-medium text-[var(--charcoal)]/65">
+                {navIndex + 1} / {vendors!.length}
+              </span>
+            )}
+            <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]"><X className="h-5 w-5" /></button>
+          </div>
         </div>
+
 
         <div className="grid gap-3 p-6 sm:grid-cols-2">
           <Row icon={<MapPin />} label="Location" value={vendor.location} />

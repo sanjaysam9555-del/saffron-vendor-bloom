@@ -110,9 +110,10 @@ function PreviewPage() {
 
         {detail && (
           <Suspense fallback={null}>
-            <ClientVendorDetail vendor={detail} onClose={() => setDetail(null)} />
+            <ClientVendorDetail vendor={detail} vendors={vendors} onNavigate={setDetail} onClose={() => setDetail(null)} />
           </Suspense>
         )}
+
       </div>
     </ClientPreviewProvider>
   );

@@ -407,6 +407,8 @@ function DashboardPage() {
         <Suspense fallback={null}>
           <VendorDetail
             vendor={modals.state.detail}
+            vendors={filtered}
+            onNavigate={(v) => modals.openDetail(v)}
             onClose={modals.closeDetail}
             onEdit={() => modals.state.detail && modals.openEdit(modals.state.detail)}
             onDelete={async () => {

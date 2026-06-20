@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
-import { X, MapPin, Instagram, Link as LinkIcon, Paperclip, FileText, Globe, Star, CircleCheck, Sparkles } from "lucide-react";
+import { X, MapPin, Instagram, Link as LinkIcon, Paperclip, FileText, Globe, Star, CircleCheck, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { SignedDocumentViewer } from "@/components/vendor/SignedDocumentViewer";
 import { AttachmentGalleryViewer } from "@/components/vendor/AttachmentGalleryViewer";
 import { AttachmentThumbnailGrid } from "@/components/vendor/AttachmentThumbnailGrid";
@@ -21,11 +21,43 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion";
 interface Props {
   vendor: ClientVendor | null;
   onClose: () => void;
+  vendors?: ClientVendor[];
+  onNavigate?: (vendor: ClientVendor) => void;
 }
 
-export function ClientVendorDetail({ vendor, onClose }: Props) {
+export function ClientVendorDetail({ vendor, onClose, vendors, onNavigate }: Props) {
   const [viewing, setViewing] = useState<ClientVendor["attachments"][number] | null>(null);
   const [viewingQuoteFile, setViewingQuoteFile] = useState<QuoteFile | null>(null);
+
+  const navIndex = vendor && vendors ? vendors.findIndex((v) => v.id === vendor.id) : -1;
+  const prevVendor = navIndex > 0 ? vendors![navIndex - 1] : null;
+  const nextVendor = navIndex >= 0 && vendors && navIndex < vendors.length - 1 ? vendors[navIndex + 1] : null;
+  const canNavigate = !!onNavigate && !!vendors && navIndex >= 0;
+
+  useEffect(() => {
+    setViewing(null);
+    setViewingQuoteFile(null);
+  }, [vendor?.id]);
+
+  useEffect(() => {
+    if (!canNavigate) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLElement) {
+        const tag = e.target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || e.target.isContentEditable) return;
+      }
+      if (e.key === "ArrowLeft" && prevVendor) {
+        e.preventDefault();
+        onNavigate!(prevVendor);
+      } else if (e.key === "ArrowRight" && nextVendor) {
+        e.preventDefault();
+        onNavigate!(nextVendor);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [canNavigate, prevVendor, nextVendor, onNavigate]);
+
 
   const { isPreview, projectId: previewProjectId } = useClientPreview();
   // Subscribe to the my-project cache so the status stays in sync with the card.
@@ -75,6 +107,24 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
         className="fixed inset-0 z-50 flex items-end justify-center bg-[color-mix(in_srgb,var(--charcoal)_70%,transparent)] backdrop-blur-sm sm:items-center sm:p-4"
         onClick={onClose}
       >
+        {canNavigate && prevVendor && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onNavigate!(prevVendor); }}
+            aria-label="Previous vendor"
+            className="absolute left-2 top-1/2 z-[51] -translate-y-1/2 rounded-full bg-white/90 p-2 text-[var(--charcoal)] shadow-lg hover:bg-white sm:left-6"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        )}
+        {canNavigate && nextVendor && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onNavigate!(nextVendor); }}
+            aria-label="Next vendor"
+            className="absolute right-2 top-1/2 z-[51] -translate-y-1/2 rounded-full bg-white/90 p-2 text-[var(--charcoal)] shadow-lg hover:bg-white sm:right-6"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        )}
         <motion.div
           onClick={(e) => e.stopPropagation()}
           initial={reduced ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.97 }}
@@ -102,10 +152,18 @@ export function ClientVendorDetail({ vendor, onClose }: Props) {
             </div>
             <motion.h2 layoutId={`vendor-title-${vendor.id}`} className="font-display text-3xl leading-tight">{vendor.vendor_name}</motion.h2>
           </div>
-          <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]">
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {canNavigate && (
+              <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-medium text-[var(--charcoal)]/65">
+                {navIndex + 1} / {vendors!.length}
+              </span>
+            )}
+            <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
+
 
         <div className="border-b border-[var(--border)] bg-[var(--cream-deep)]/40 px-6 py-3">
           <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
