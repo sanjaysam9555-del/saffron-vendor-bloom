@@ -968,7 +968,7 @@ function AssignedVendorsSection({
             const rows = selections[v.id] ?? [];
             const primary = pickPrimary(rows);
             return (
-              <div key={v.id} className="relative flex items-start justify-between gap-3 rounded-lg border border-[var(--border)] bg-white p-3 pr-10 sm:pr-3">
+              <div key={v.id} className="relative flex items-start justify-between gap-3 rounded-lg border border-[var(--border)] bg-white p-3 pr-10">
                 <div className="min-w-0 flex-1">
                   <div className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
                     {v.category}{v.subcategory ? ` · ${v.subcategory}` : ""}
@@ -1027,7 +1027,7 @@ function AssignedVendorsSection({
                 <button
                   onClick={() => onRemove(v.id, v.vendor_name)}
                   title="Remove from project"
-                  className="absolute right-2 top-2 rounded p-1.5 text-[var(--charcoal)]/55 hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)] sm:static"
+                  className="absolute right-2 top-2 rounded p-1.5 text-[var(--charcoal)]/55 hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
