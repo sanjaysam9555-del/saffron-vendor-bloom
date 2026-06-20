@@ -1055,7 +1055,13 @@ function AssignedVendorsSection({
                   {items.map(({ vendor: v, selection }) => (
                     <li key={v.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
                       <div className="min-w-0">
-                        <div className="font-medium text-[var(--charcoal)]">{v.vendor_name}</div>
+                        <button
+                          type="button"
+                          onClick={() => setDetailVendor(v)}
+                          className="block text-left font-medium text-[var(--charcoal)] hover:text-[var(--terracotta)] hover:underline"
+                        >
+                          {v.vendor_name}
+                        </button>
                         <div className="text-[11px] text-[var(--charcoal)]/55">
                           {v.category}{v.subcategory ? ` · ${v.subcategory}` : ""}
                           {selection && <> · marked by {selection.display_name || selection.email}</>}
