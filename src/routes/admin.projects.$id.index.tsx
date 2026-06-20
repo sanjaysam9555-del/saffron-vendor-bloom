@@ -963,7 +963,7 @@ function AssignedVendorsSection({
           No vendors assigned to this project yet.
         </div>
       ) : view === "list" ? (
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {vendors.map((v: any) => {
             const rows = selections[v.id] ?? [];
             const primary = pickPrimary(rows);
