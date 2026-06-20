@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import type { ClientVendor } from "@/lib/project-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
-import { X, MapPin, Instagram, Link as LinkIcon, Paperclip, FileText, Globe, Star, CircleCheck, Sparkles } from "lucide-react";
+import { X, MapPin, Instagram, Link as LinkIcon, Paperclip, FileText, Globe, Star, CircleCheck, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { SignedDocumentViewer } from "@/components/vendor/SignedDocumentViewer";
 import { AttachmentGalleryViewer } from "@/components/vendor/AttachmentGalleryViewer";
 import { AttachmentThumbnailGrid } from "@/components/vendor/AttachmentThumbnailGrid";
@@ -21,11 +21,43 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion";
 interface Props {
   vendor: ClientVendor | null;
   onClose: () => void;
+  vendors?: ClientVendor[];
+  onNavigate?: (vendor: ClientVendor) => void;
 }
 
-export function ClientVendorDetail({ vendor, onClose }: Props) {
+export function ClientVendorDetail({ vendor, onClose, vendors, onNavigate }: Props) {
   const [viewing, setViewing] = useState<ClientVendor["attachments"][number] | null>(null);
   const [viewingQuoteFile, setViewingQuoteFile] = useState<QuoteFile | null>(null);
+
+  const navIndex = vendor && vendors ? vendors.findIndex((v) => v.id === vendor.id) : -1;
+  const prevVendor = navIndex > 0 ? vendors![navIndex - 1] : null;
+  const nextVendor = navIndex >= 0 && vendors && navIndex < vendors.length - 1 ? vendors[navIndex + 1] : null;
+  const canNavigate = !!onNavigate && !!vendors && navIndex >= 0;
+
+  useEffect(() => {
+    setViewing(null);
+    setViewingQuoteFile(null);
+  }, [vendor?.id]);
+
+  useEffect(() => {
+    if (!canNavigate) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLElement) {
+        const tag = e.target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || e.target.isContentEditable) return;
+      }
+      if (e.key === "ArrowLeft" && prevVendor) {
+        e.preventDefault();
+        onNavigate!(prevVendor);
+      } else if (e.key === "ArrowRight" && nextVendor) {
+        e.preventDefault();
+        onNavigate!(nextVendor);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [canNavigate, prevVendor, nextVendor, onNavigate]);
+
 
   const { isPreview, projectId: previewProjectId } = useClientPreview();
   // Subscribe to the my-project cache so the status stays in sync with the card.
