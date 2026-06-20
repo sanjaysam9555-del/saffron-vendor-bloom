@@ -107,6 +107,24 @@ export function ClientVendorDetail({ vendor, onClose, vendors, onNavigate }: Pro
         className="fixed inset-0 z-50 flex items-end justify-center bg-[color-mix(in_srgb,var(--charcoal)_70%,transparent)] backdrop-blur-sm sm:items-center sm:p-4"
         onClick={onClose}
       >
+        {canNavigate && prevVendor && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onNavigate!(prevVendor); }}
+            aria-label="Previous vendor"
+            className="absolute left-2 top-1/2 z-[51] -translate-y-1/2 rounded-full bg-white/90 p-2 text-[var(--charcoal)] shadow-lg hover:bg-white sm:left-6"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        )}
+        {canNavigate && nextVendor && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onNavigate!(nextVendor); }}
+            aria-label="Next vendor"
+            className="absolute right-2 top-1/2 z-[51] -translate-y-1/2 rounded-full bg-white/90 p-2 text-[var(--charcoal)] shadow-lg hover:bg-white sm:right-6"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        )}
         <motion.div
           onClick={(e) => e.stopPropagation()}
           initial={reduced ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.97 }}
@@ -134,10 +152,18 @@ export function ClientVendorDetail({ vendor, onClose, vendors, onNavigate }: Pro
             </div>
             <motion.h2 layoutId={`vendor-title-${vendor.id}`} className="font-display text-3xl leading-tight">{vendor.vendor_name}</motion.h2>
           </div>
-          <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]">
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {canNavigate && (
+              <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-medium text-[var(--charcoal)]/65">
+                {navIndex + 1} / {vendors!.length}
+              </span>
+            )}
+            <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
+
 
         <div className="border-b border-[var(--border)] bg-[var(--cream-deep)]/40 px-6 py-3">
           <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
