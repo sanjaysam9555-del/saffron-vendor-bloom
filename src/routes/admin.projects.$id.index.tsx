@@ -973,9 +973,18 @@ function AssignedVendorsSection({
                   <div className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
                     {v.category}{v.subcategory ? ` · ${v.subcategory}` : ""}
                   </div>
-                  <div className="font-medium text-[var(--charcoal)]">{v.vendor_name}</div>
+                  <button
+                    type="button"
+                    onClick={() => setDetailVendor(v)}
+                    className="block text-left font-medium text-[var(--charcoal)] hover:text-[var(--terracotta)] hover:underline"
+                  >
+                    {v.vendor_name}
+                  </button>
                   {v.price_text && <div className="text-xs text-[var(--terracotta)]">{v.price_text}</div>}
                   <VendorMetaRow vendor={v} />
+                  {v.instagram_handle && (
+                    <VendorInstagramCardStrip preview={instagramPreviewMap.get(v.id)} hasHandle />
+                  )}
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     <ClientStatusPill status={primary?.status ?? null} />
                     {rows.length > 1 && (
