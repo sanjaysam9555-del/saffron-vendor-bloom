@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, lazy, Suspense } from "react";
 import { useQuery, useQueryClient, useMutation, useQueries } from "@tanstack/react-query";
 import { Switch } from "@/components/ui/switch";
 import { UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck, MessageSquare, Star, MapPin, Instagram, Phone, Globe, Plus, Sparkles, Archive, ArchiveRestore, Eye, ChevronDown, Table as TableIcon, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
@@ -35,6 +35,12 @@ import { listProjectOtherExpenses } from "@/lib/project-other-expenses.functions
 import { buildTimelineItems, otherExpensesAsTimelineItems } from "@/lib/build-timeline-items";
 import { QuickAddVendorPanel } from "@/components/admin/QuickAddVendorPanel";
 import { ColumnFilter } from "@/components/ui/ColumnFilter";
+import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
+import { VendorInstagramCardStrip } from "@/components/vendor/VendorInstagramPreview";
+
+const AdminProjectVendorDetail = lazy(() =>
+  import("@/components/admin/AdminProjectVendorDetail").then((m) => ({ default: m.AdminProjectVendorDetail })),
+);
 
 export const Route = createFileRoute("/admin/projects/$id/")({
   head: () => ({
@@ -762,6 +768,14 @@ function AssignedVendorsSection({
   const [view, setView] = useState<"list" | "grouped" | "table">("list");
   const [quotesFor, setQuotesFor] = useState<{ id: string; name: string; category: string | null; autoOpenForm?: boolean } | null>(null);
   const [commentsFor, setCommentsFor] = useState<{ id: string; name: string } | null>(null);
+  const [detailVendor, setDetailVendor] = useState<any | null>(null);
+
+  // Instagram previews for thumbnail strip + detail modal (deduped by react-query).
+  const igVendorIds = useMemo(
+    () => vendors.filter((v: any) => v.instagram_handle).map((v: any) => v.id as string),
+    [vendors],
+  );
+  const { map: instagramPreviewMap } = useInstagramPreviewsBulk(igVendorIds);
 
   // Multi-column sort for the table view. Click a header to cycle:
   // not-sorted → asc → desc → removed. Multiple columns combine in click order.
@@ -959,9 +973,18 @@ function AssignedVendorsSection({
                   <div className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
                     {v.category}{v.subcategory ? ` · ${v.subcategory}` : ""}
                   </div>
-                  <div className="font-medium text-[var(--charcoal)]">{v.vendor_name}</div>
+                  <button
+                    type="button"
+                    onClick={() => setDetailVendor(v)}
+                    className="block text-left font-medium text-[var(--charcoal)] hover:text-[var(--terracotta)] hover:underline"
+                  >
+                    {v.vendor_name}
+                  </button>
                   {v.price_text && <div className="text-xs text-[var(--terracotta)]">{v.price_text}</div>}
                   <VendorMetaRow vendor={v} />
+                  {v.instagram_handle && (
+                    <VendorInstagramCardStrip preview={instagramPreviewMap.get(v.id)} hasHandle />
+                  )}
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     <ClientStatusPill status={primary?.status ?? null} />
                     {rows.length > 1 && (
@@ -1032,7 +1055,13 @@ function AssignedVendorsSection({
                   {items.map(({ vendor: v, selection }) => (
                     <li key={v.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
                       <div className="min-w-0">
-                        <div className="font-medium text-[var(--charcoal)]">{v.vendor_name}</div>
+                        <button
+                          type="button"
+                          onClick={() => setDetailVendor(v)}
+                          className="block text-left font-medium text-[var(--charcoal)] hover:text-[var(--terracotta)] hover:underline"
+                        >
+                          {v.vendor_name}
+                        </button>
                         <div className="text-[11px] text-[var(--charcoal)]/55">
                           {v.category}{v.subcategory ? ` · ${v.subcategory}` : ""}
                           {selection && <> · marked by {selection.display_name || selection.email}</>}
@@ -1105,7 +1134,13 @@ function AssignedVendorsSection({
                             <Sparkles className="h-2.5 w-2.5 fill-current" /> Pick
                           </span>
                         )}
-                        <span className="font-medium text-[var(--charcoal)]">{v.vendor_name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setDetailVendor(v)}
+                          className="font-medium text-[var(--charcoal)] hover:text-[var(--terracotta)] hover:underline"
+                        >
+                          {v.vendor_name}
+                        </button>
                       </div>
                       {(v.comment_count ?? 0) > 0 && (
                         <div className="mt-1 inline-flex items-center gap-0.5 text-[10px] text-[var(--charcoal)]/55">
@@ -1222,6 +1257,32 @@ function AssignedVendorsSection({
             </div>
           </div>
         </div>
+      )}
+
+      {detailVendor && (
+        <Suspense fallback={null}>
+          <AdminProjectVendorDetail
+            projectId={projectId}
+            vendor={detailVendor}
+            vendors={sortedVendors}
+            selections={selections[detailVendor.id] ?? []}
+            onClose={() => setDetailVendor(null)}
+            onNavigate={(v) => setDetailVendor(v)}
+            onOpenQuotes={(autoOpenForm) =>
+              setQuotesFor({
+                id: detailVendor.id,
+                name: detailVendor.vendor_name,
+                category: detailVendor.category ?? null,
+                autoOpenForm,
+              })
+            }
+            onRemove={() => {
+              const v = detailVendor;
+              setDetailVendor(null);
+              onRemove(v.id, v.vendor_name);
+            }}
+          />
+        </Suspense>
       )}
     </section>
   );

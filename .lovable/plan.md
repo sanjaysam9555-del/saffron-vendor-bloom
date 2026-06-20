@@ -1,44 +1,46 @@
-# Add Prev/Next Navigation in Vendor Detail Modals
+# Project-Scoped Vendor Detail + Instagram Previews
 
-When a user opens the detailed vendor view from any thumbnail/card/table list, add left/right arrow buttons so they can step through vendors without closing the modal.
+Under "Assigned Vendors" on a specific project (`/admin/projects/$id`), the three views (Thumbnail, Group, Table) need two improvements.
 
-## Scope
+## 1. Thumbnail view — show Instagram preview
 
-Two detail modals, each opened from multiple places:
+Each thumbnail card already shows name, category, status, quotes, comments, etc. Add the vendor's Instagram preview image (square thumbnail with overlay handle) at the top of the card, matching the look the client-side card uses. If the vendor has no Instagram handle or no cached preview yet, fall back gracefully (skeleton → handle-only chip → nothing) — no broken images.
 
-1. **Admin** — `src/components/vendor/VendorDetail.tsx`
-   - Opened from: `src/routes/admin.index.tsx` (main vendor library) and `src/routes/admin.projects.$id.index.tsx` (project's vendor views).
-2. **Client** — `src/components/client/ClientVendorDetail.tsx`
-   - Opened from: `src/routes/client.index.tsx` and `src/routes/admin.projects.$id.preview.$clientId.tsx`.
+Data source: reuse `useInstagramPreviewsBulk(vendorIds)` (already used by client cards and the admin preview route). Compute the id list once from the visible vendor array and pass each card the resolved preview.
 
-## Behavior
+## 2. Table & Group views — clickable vendor name opens a project-scoped detail
 
-- Two circular arrow buttons floating on the left and right edges of the modal (outside the card on desktop, inside on mobile).
-- "Previous" and "Next" cycle through the **same visible/filtered list** the user is currently looking at (so filters, sorting, and search are respected).
-- Disabled (greyed out) at the first/last vendor — no wrap-around.
-- Keyboard support: `←` / `→` while the modal is open. `Esc` continues to close.
-- A small "X of Y" counter sits next to the close button in the header.
-- Navigation simply swaps the vendor in the existing modal — no close/reopen flicker.
+Today the vendor name in the Table and Group views is plain text. Make it a button. Clicking it opens a NEW modal — `AdminProjectVendorDetail` — distinct from:
+- `VendorDetail` (admin global vendor library), and
+- `ClientVendorDetail` (client-facing read view).
 
-## Technical Notes
+This admin/project detail shows everything an admin needs about that vendor *in the context of this project*:
 
-- Extend each modal's props with `vendors: Vendor[]` (the ordered, filtered list currently shown) plus `onNavigate: (vendor) => void`. Keep `vendor`/`onClose` as today.
-- At each call site, pass the same array that drives the cards/table/thumbnails (e.g. `filteredVendors`, `vendors` returned by the query/filter pipeline) so prev/next matches what the user sees.
-- Inside the modal, derive `index = vendors.findIndex(v => v.id === vendor.id)` and compute `prev`/`next`. Wire arrow buttons + a `useEffect` keydown listener on `ArrowLeft`/`ArrowRight` to call `onNavigate(prev|next)`.
-- Reset any internal modal state (e.g. delete-confirm, currently viewed attachment) when the vendor id changes.
-- No backend, query, or data-shape changes.
+- Header: vendor name, category/subcategory, Saffron's Pick toggle, Booked badge, "Remove from project" action.
+- **Instagram preview block** (uses `VendorInstagramDetailBlock`, same as global vendor detail).
+- Core vendor facts: location, phone, email, Instagram, website, portfolio, price, commission, rating(s).
+- **Project-specific quotes** — full quote history scoped to this project (reuses `ProjectVendorQuotesPanel` logic / `listProjectVendorQuotes`), with the existing "Add quote" action.
+- **Client status per client** on this project (the per-client rows already computed as `selections[v.id]`, rendered with `ClientStatusPill` + names).
+- **Client comments** thread for this project+vendor (reuses `VendorCommentsThread`).
+- Attachments grid (reuses `AttachmentThumbnailGrid` + signed viewer), since these are vendor-level docs admins want here too.
+- Prev/Next arrows + `X / Y` counter + ← → keyboard nav across the currently filtered/sorted vendor list, matching the pattern just added to the other detail modals.
+- The same modal opens from the Thumbnail card too (clicking the card body), so all three views share the entry point.
 
-## Files Touched
+Triggering the modal does NOT replace the existing inline buttons (Add quote, comments, Saffron's Pick, Remove) on the thumbnail or table rows — those keep working as quick actions. Only the vendor name becomes clickable.
 
-- `src/components/vendor/VendorDetail.tsx` — add nav buttons, counter, keyboard handler, prop changes.
-- `src/components/client/ClientVendorDetail.tsx` — same.
-- `src/routes/admin.index.tsx` — pass filtered vendor list + `onNavigate`.
-- `src/routes/admin.projects.$id.index.tsx` — same for thumbnail/table/board openers.
-- `src/routes/client.index.tsx` — pass filtered client-vendor list + `onNavigate`.
-- `src/routes/admin.projects.$id.preview.$clientId.tsx` — same.
+## Files
+
+- New: `src/components/admin/AdminProjectVendorDetail.tsx` — the new modal.
+- Edit: `src/routes/admin.projects.$id.index.tsx`
+  - Thumbnail card: add Instagram preview at top, make name a button that opens the new modal.
+  - Group view: wrap vendor name in a button that opens the modal.
+  - Table view: wrap vendor cell in a button that opens the modal.
+  - Add `detail` state (selected vendor id) + render the modal once at page level, lazy-loaded.
+  - Compute `useInstagramPreviewsBulk` once for the visible vendor list and pass into card + modal.
 
 ## Out of Scope
 
-- No changes to filters, sorting, or list rendering.
-- No swipe gestures on touch (can add later if desired).
-- Board view's drag-and-drop card flow is untouched; only its detail modal gains nav.
+- No changes to the global Vendors tab detail (`VendorDetail.tsx`).
+- No changes to the client-facing detail (`ClientVendorDetail.tsx`).
+- No backend / RLS / schema changes; all data already exposed via existing server functions.
+- No edits in the Table/Group rows beyond making the name clickable.
