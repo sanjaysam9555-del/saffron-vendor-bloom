@@ -35,6 +35,12 @@ import { listProjectOtherExpenses } from "@/lib/project-other-expenses.functions
 import { buildTimelineItems, otherExpensesAsTimelineItems } from "@/lib/build-timeline-items";
 import { QuickAddVendorPanel } from "@/components/admin/QuickAddVendorPanel";
 import { ColumnFilter } from "@/components/ui/ColumnFilter";
+import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
+import { VendorInstagramCardStrip } from "@/components/vendor/VendorInstagramPreview";
+
+const AdminProjectVendorDetail = lazy(() =>
+  import("@/components/admin/AdminProjectVendorDetail").then((m) => ({ default: m.AdminProjectVendorDetail })),
+);
 
 export const Route = createFileRoute("/admin/projects/$id/")({
   head: () => ({
