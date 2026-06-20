@@ -1134,7 +1134,13 @@ function AssignedVendorsSection({
                             <Sparkles className="h-2.5 w-2.5 fill-current" /> Pick
                           </span>
                         )}
-                        <span className="font-medium text-[var(--charcoal)]">{v.vendor_name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setDetailVendor(v)}
+                          className="font-medium text-[var(--charcoal)] hover:text-[var(--terracotta)] hover:underline"
+                        >
+                          {v.vendor_name}
+                        </button>
                       </div>
                       {(v.comment_count ?? 0) > 0 && (
                         <div className="mt-1 inline-flex items-center gap-0.5 text-[10px] text-[var(--charcoal)]/55">
