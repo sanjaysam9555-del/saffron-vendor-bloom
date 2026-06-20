@@ -768,6 +768,14 @@ function AssignedVendorsSection({
   const [view, setView] = useState<"list" | "grouped" | "table">("list");
   const [quotesFor, setQuotesFor] = useState<{ id: string; name: string; category: string | null; autoOpenForm?: boolean } | null>(null);
   const [commentsFor, setCommentsFor] = useState<{ id: string; name: string } | null>(null);
+  const [detailVendor, setDetailVendor] = useState<any | null>(null);
+
+  // Instagram previews for thumbnail strip + detail modal (deduped by react-query).
+  const igVendorIds = useMemo(
+    () => vendors.filter((v: any) => v.instagram_handle).map((v: any) => v.id as string),
+    [vendors],
+  );
+  const { map: instagramPreviewMap } = useInstagramPreviewsBulk(igVendorIds);
 
   // Multi-column sort for the table view. Click a header to cycle:
   // not-sorted → asc → desc → removed. Multiple columns combine in click order.
