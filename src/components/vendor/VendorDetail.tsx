@@ -1,10 +1,10 @@
 import type { Vendor } from "@/lib/vendor-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import {
-  X, MapPin, Phone, Mail, Instagram, Globe, Star, Sparkles, Pencil, Trash2, Copy, Check, Link as LinkIcon, Paperclip, FileText, Loader2,
+  X, MapPin, Phone, Mail, Instagram, Globe, Star, Sparkles, Pencil, Trash2, Copy, Check, Link as LinkIcon, Paperclip, FileText, Loader2, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   formatFileSize,
