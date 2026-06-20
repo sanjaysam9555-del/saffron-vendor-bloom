@@ -1258,6 +1258,32 @@ function AssignedVendorsSection({
           </div>
         </div>
       )}
+
+      {detailVendor && (
+        <Suspense fallback={null}>
+          <AdminProjectVendorDetail
+            projectId={projectId}
+            vendor={detailVendor}
+            vendors={sortedVendors}
+            selections={selections[detailVendor.id] ?? []}
+            onClose={() => setDetailVendor(null)}
+            onNavigate={(v) => setDetailVendor(v)}
+            onOpenQuotes={(autoOpenForm) =>
+              setQuotesFor({
+                id: detailVendor.id,
+                name: detailVendor.vendor_name,
+                category: detailVendor.category ?? null,
+                autoOpenForm,
+              })
+            }
+            onRemove={() => {
+              const v = detailVendor;
+              setDetailVendor(null);
+              onRemove(v.id, v.vendor_name);
+            }}
+          />
+        </Suspense>
+      )}
     </section>
   );
 }
