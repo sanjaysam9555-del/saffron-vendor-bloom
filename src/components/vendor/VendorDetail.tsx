@@ -114,6 +114,24 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete, vendors, onNav
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
+      {canNavigate && prevVendor && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onNavigate!(prevVendor); }}
+          aria-label="Previous vendor"
+          className="absolute left-2 top-1/2 z-[51] -translate-y-1/2 rounded-full bg-white/90 p-2 text-[var(--charcoal)] shadow-lg hover:bg-white sm:left-6"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+      )}
+      {canNavigate && nextVendor && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onNavigate!(nextVendor); }}
+          aria-label="Next vendor"
+          className="absolute right-2 top-1/2 z-[51] -translate-y-1/2 rounded-full bg-white/90 p-2 text-[var(--charcoal)] shadow-lg hover:bg-white sm:right-6"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      )}
       <div
         onClick={(e) => e.stopPropagation()}
         className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-[var(--cream)] text-[oklch(0.18_0.01_60)] shadow-2xl"
@@ -151,8 +169,16 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete, vendors, onNav
               <BookedBadge vendorId={vendor.id} />
             </div>
           </div>
-          <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]"><X className="h-5 w-5" /></button>
+          <div className="flex items-center gap-2">
+            {canNavigate && (
+              <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-medium text-[var(--charcoal)]/65">
+                {navIndex + 1} / {vendors!.length}
+              </span>
+            )}
+            <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]"><X className="h-5 w-5" /></button>
+          </div>
         </div>
+
 
         <div className="grid gap-3 p-6 sm:grid-cols-2">
           <Row icon={<MapPin />} label="Location" value={vendor.location} />
