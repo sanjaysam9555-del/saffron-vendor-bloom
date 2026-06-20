@@ -486,9 +486,10 @@ function ClientPortalPage() {
 
       {detail && (
         <Suspense fallback={null}>
-          <ClientVendorDetail vendor={detail} onClose={() => setDetail(null)} />
+          <ClientVendorDetail vendor={detail} vendors={filtered} onNavigate={setDetail} onClose={() => setDetail(null)} />
         </Suspense>
       )}
+
 
     </div>
   );
