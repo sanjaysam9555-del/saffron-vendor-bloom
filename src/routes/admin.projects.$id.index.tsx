@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, lazy, Suspense } from "react";
 import { useQuery, useQueryClient, useMutation, useQueries } from "@tanstack/react-query";
 import { Switch } from "@/components/ui/switch";
 import { UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck, MessageSquare, Star, MapPin, Instagram, Phone, Globe, Plus, Sparkles, Archive, ArchiveRestore, Eye, ChevronDown, Table as TableIcon, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
