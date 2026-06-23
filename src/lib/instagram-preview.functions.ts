@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { attachAuthToken } from "./auth-client-middleware";
 import { scrapeInstagramProfile } from "@/server/instagram-preview.server";
+import { persistInstagramAssets } from "@/server/instagram-image-cache.server";
 
 /** True if any of `urls` still references an Instagram CDN host (signed + expiring). */
 function hasEphemeralCdnUrl(urls: Array<string | null | undefined>): boolean {
