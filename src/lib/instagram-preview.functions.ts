@@ -73,11 +73,17 @@ async function upsertPreview(
     return existingRow;
   }
 
+  // For successful scrapes, mirror avatar + thumbnails into our cache bucket
+  // so the URLs we store never expire. Failures fall back to the original
+  // CDN URL inside the helper.
+  const persisted = await persistInstagramAssets(vendorId, scrape);
+
   const row = {
     vendor_id: vendorId,
-    handle: scrape.handle,
-    profile_url: scrape.status === "error" && !scrape.profile_url ? null : scrape.profile_url,
-    avatar_url: scrape.status === "ok" ? scrape.avatar_url : null,
+    handle: persisted.handle,
+    profile_url:
+      persisted.status === "error" && !persisted.profile_url ? null : persisted.profile_url,
+    avatar_url: persisted.status === "ok" ? persisted.avatar_url : null,
     display_name: scrape.status === "ok" ? scrape.display_name : null,
     bio: scrape.status === "ok" ? scrape.bio : null,
     followers_text: scrape.status === "ok" ? scrape.followers_text : null,
