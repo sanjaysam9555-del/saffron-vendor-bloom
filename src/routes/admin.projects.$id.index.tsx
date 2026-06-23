@@ -971,12 +971,12 @@ function AssignedVendorsSection({
           No vendors assigned to this project yet.
         </div>
       ) : view === "list" ? (
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {vendors.map((v: any) => {
             const rows = selections[v.id] ?? [];
             const primary = pickPrimary(rows);
             return (
-              <div key={v.id} className="relative flex items-start justify-between gap-3 rounded-lg border border-[var(--border)] bg-white p-3 pr-10">
+              <div key={v.id} className="relative flex min-w-0 items-start justify-between gap-3 overflow-hidden rounded-lg border border-[var(--border)] bg-white p-3 pr-10">
                 <div className="min-w-0 flex-1">
                   <div className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
                     {v.category}{v.subcategory ? ` · ${v.subcategory}` : ""}
