@@ -134,18 +134,13 @@ export function ClientVendorTable({ vendors, onView }: Props) {
             return (
               <tr
                 key={v.id}
-                className="border-t border-[var(--border)] hover:bg-[var(--cream-deep)]/30"
+                className={`border-t border-[var(--border)] ${v.is_saffron_pick ? "bg-terracotta-soft" : "hover:bg-[var(--cream-deep)]/30"}`}
               >
                 <Td>
                   <button
                     onClick={() => onView(v)}
                     className="inline-flex items-center gap-1.5 text-left font-medium text-[var(--charcoal)] hover:text-[var(--terracotta)]"
                   >
-                    {v.is_saffron_pick && (
-                      <span title="Saffron's Pick" className="inline-flex items-center gap-0.5 rounded-full bg-[var(--terracotta)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--cream)]">
-                        <Sparkles className="h-2.5 w-2.5 fill-current" /> Pick
-                      </span>
-                    )}
                     {v.vendor_name}
                   </button>
                   {(v.attachments.length > 0 || (v.comment_count ?? 0) > 0) && (
