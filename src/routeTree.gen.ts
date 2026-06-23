@@ -25,6 +25,7 @@ import { Route as AdminProjectsIndexRouteImport } from './routes/admin.projects.
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicVendorSignupRouteImport } from './routes/api/public/vendor-signup'
 import { Route as ApiPublicInstagramImageRouteImport } from './routes/api/public/instagram-image'
+import { Route as ApiPublicIgAssetRouteImport } from './routes/api/public/ig-asset'
 import { Route as AdminProjectsIdIndexRouteImport } from './routes/admin.projects.$id.index'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -113,6 +114,11 @@ const ApiPublicInstagramImageRoute = ApiPublicInstagramImageRouteImport.update({
   path: '/api/public/instagram-image',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicIgAssetRoute = ApiPublicIgAssetRouteImport.update({
+  id: '/api/public/ig-asset',
+  path: '/api/public/ig-asset',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminProjectsIdIndexRoute = AdminProjectsIdIndexRouteImport.update({
   id: '/projects/$id/',
   path: '/projects/$id/',
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
+  '/api/public/ig-asset': typeof ApiPublicIgAssetRoute
   '/api/public/instagram-image': typeof ApiPublicInstagramImageRoute
   '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin': typeof AdminIndexRoute
   '/client': typeof ClientIndexRoute
+  '/api/public/ig-asset': typeof ApiPublicIgAssetRoute
   '/api/public/instagram-image': typeof ApiPublicInstagramImageRoute
   '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
+  '/api/public/ig-asset': typeof ApiPublicIgAssetRoute
   '/api/public/instagram-image': typeof ApiPublicInstagramImageRoute
   '/api/public/vendor-signup': typeof ApiPublicVendorSignupRouteWithChildren
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -244,6 +253,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/admin/'
     | '/client/'
+    | '/api/public/ig-asset'
     | '/api/public/instagram-image'
     | '/api/public/vendor-signup'
     | '/lovable/email/suppression'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/admin'
     | '/client'
+    | '/api/public/ig-asset'
     | '/api/public/instagram-image'
     | '/api/public/vendor-signup'
     | '/lovable/email/suppression'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/admin/'
     | '/client/'
+    | '/api/public/ig-asset'
     | '/api/public/instagram-image'
     | '/api/public/vendor-signup'
     | '/lovable/email/suppression'
@@ -316,6 +328,7 @@ export interface RootRouteChildren {
   ClientLoginRoute: typeof ClientLoginRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   ClientIndexRoute: typeof ClientIndexRoute
+  ApiPublicIgAssetRoute: typeof ApiPublicIgAssetRoute
   ApiPublicInstagramImageRoute: typeof ApiPublicInstagramImageRoute
   ApiPublicVendorSignupRoute: typeof ApiPublicVendorSignupRouteWithChildren
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -439,6 +452,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicInstagramImageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/ig-asset': {
+      id: '/api/public/ig-asset'
+      path: '/api/public/ig-asset'
+      fullPath: '/api/public/ig-asset'
+      preLoaderRoute: typeof ApiPublicIgAssetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/projects/$id/': {
       id: '/admin/projects/$id/'
       path: '/projects/$id'
@@ -534,6 +554,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClientLoginRoute: ClientLoginRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   ClientIndexRoute: ClientIndexRoute,
+  ApiPublicIgAssetRoute: ApiPublicIgAssetRoute,
   ApiPublicInstagramImageRoute: ApiPublicInstagramImageRoute,
   ApiPublicVendorSignupRoute: ApiPublicVendorSignupRouteWithChildren,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,

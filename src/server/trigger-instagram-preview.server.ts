@@ -23,7 +23,9 @@ export async function triggerInstagramPreview(
       .maybeSingle();
     if (existing && (existing as { status?: string }).status === "ok") return false;
 
-    const scrape = await scrapeInstagramProfile(handle);
+    const rawScrape = await scrapeInstagramProfile(handle);
+    const { persistInstagramAssets } = await import("@/server/instagram-image-cache.server");
+    const scrape = await persistInstagramAssets(vendorId, rawScrape);
     const row = {
       vendor_id: vendorId,
       handle: scrape.handle,
