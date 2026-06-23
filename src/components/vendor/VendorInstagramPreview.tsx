@@ -217,14 +217,14 @@ export function VendorInstagramDetailBlock({ vendorId, handle, canRefresh = fals
           </div>
 
           {thumbs.length > 0 && (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid min-w-0 grid-cols-3 gap-2">
               {thumbs.slice(0, 3).map((src, i) => (
                 <a
                   key={`${src}-${i}`}
                   href={preview.profile_url ?? "#"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block aspect-square overflow-hidden rounded-md bg-[var(--cream-deep)] ring-1 ring-[var(--border)]"
+                  className="block aspect-square min-w-0 overflow-hidden rounded-md bg-[var(--cream-deep)] ring-1 ring-[var(--border)]"
                 >
                   <SafeImg src={src} alt="" className="h-full w-full object-cover" />
                 </a>
