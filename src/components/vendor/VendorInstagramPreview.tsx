@@ -85,18 +85,18 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
   }
 
   return (
-    <div className="mt-2 min-h-[148px] rounded-md border border-[var(--border)] bg-[var(--cream)]/40 p-2">
+    <div className="mt-2 min-h-[148px] overflow-hidden rounded-md border border-[var(--border)] bg-[var(--cream)]/40 p-2">
       <div className="flex items-center gap-2">
         {preview.avatar_url && (
           <SafeImg
             src={preview.avatar_url}
             alt=""
-            className="h-8 w-8 rounded-full object-cover ring-1 ring-[var(--border)]"
+            className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-[var(--border)]"
           />
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1 text-[11px] font-medium text-[var(--charcoal)]">
-            <Instagram className="h-3 w-3 text-[var(--terracotta)]" />
+            <Instagram className="h-3 w-3 shrink-0 text-[var(--terracotta)]" />
             <span className="truncate">{preview.display_name ?? `@${preview.handle ?? ""}`}</span>
           </div>
           {preview.bio && (
@@ -105,7 +105,7 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
         </div>
       </div>
       {thumbs.length > 0 && (
-        <div className="mt-2 grid grid-cols-3 gap-1">
+        <div className="mt-2 grid min-w-0 grid-cols-3 gap-1">
           {thumbs.slice(0, 3).map((src, i) => (
             <a
               key={`${src}-${i}`}
@@ -113,7 +113,7 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="block aspect-square overflow-hidden rounded-sm bg-[var(--cream-deep)]"
+              className="block aspect-square min-w-0 overflow-hidden rounded-sm bg-[var(--cream-deep)]"
             >
               <SafeImg src={src} alt="" className="h-full w-full object-cover" />
             </a>
