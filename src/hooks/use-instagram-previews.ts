@@ -341,6 +341,16 @@ export function useAutoEnsureMissingPreviews(
 
       const existing = previewMap.get(v.id);
       if (existing && existing.status === "ok") {
+        // Rows that still point at the Instagram CDN carry expiring signed
+        // URLs — re-scrape so the persistence step can mirror them into our
+        // cache bucket and the thumbnails stop going blank.
+        const stillEphemeral = [existing.avatar_url, ...(existing.post_thumbnails ?? [])].some(
+          (u) => !!u && /(cdninstagram\.com|fbcdn\.net)/i.test(u),
+        );
+        if (stillEphemeral) {
+          missing.push({ id: v.id, handle: normalized, force: false });
+          continue;
+        }
         const ageMs = Date.now() - new Date(existing.fetched_at).getTime();
         if (ageMs <= REFRESH_AFTER_MS) continue;
         missing.push({ id: v.id, handle: normalized, force: false });
