@@ -212,16 +212,30 @@ export const ensureVendorInstagramPreview = createServerFn({ method: "POST" })
       .maybeSingle();
     const row = existing as unknown as VendorInstagramPreview | null;
 
-    // If a successful preview is already stored, never touch it. Staff can
-    // overwrite via refreshVendorInstagramPreview (manual "Refresh" button).
-    if (row && row.status === "ok") return row;
+    // If the stored row is OK, keep it — unless it still points at the
+    // Instagram CDN (signed URLs that expire within hours) or the caller
+    // explicitly forces a refresh. Migrating those rows over to our cache
+    // bucket is what gets the blank thumbnails back.
+    if (row && row.status === "ok") {
+      const stillEphemeral = hasEphemeralCdnUrl([
+        row.avatar_url,
+        ...(row.post_thumbnails ?? []),
+      ]);
+      if (!data.force && !stillEphemeral) return row;
+    } else if (row && !data.force) {
+      // error / not_found rows: respect cooldown unless force-retry.
+      return row;
+    }
 
-    // Only scrape when no row exists, or when staff explicitly forces a retry
-    // on an error/not_found row.
-    if (row && !data.force) return row;
-
+    const reason = !row
+      ? "missing"
+      : data.force
+        ? "force-retry"
+        : row.status === "ok"
+          ? "ephemeral-urls"
+          : "force-retry";
     console.info(
-      `[instagram-preview] scraping vendor=${data.vendorId} handle=${data.handle} reason=${row ? "force-retry" : "missing"}`,
+      `[instagram-preview] scraping vendor=${data.vendorId} handle=${data.handle} reason=${reason}`,
     );
     const scrape = await scrapeInstagramProfile(data.handle);
     return upsertPreview(data.vendorId, scrape);
