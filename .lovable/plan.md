@@ -1,46 +1,32 @@
-# Project-Scoped Vendor Detail + Instagram Previews
+## Problem
 
-Under "Assigned Vendors" on a specific project (`/admin/projects/$id`), the three views (Thumbnail, Group, Table) need two improvements.
+On the project's Assigned Vendors page (mobile), two issues appear in the screenshot:
 
-## 1. Thumbnail view — show Instagram preview
+1. The vendor cards (and their Instagram thumbnail strip) extend past the right edge of the screen, causing horizontal page scroll.
+2. The Instagram preview grid stays blank — only empty grey tiles render, never the actual profile/thumbnails.
 
-Each thumbnail card already shows name, category, status, quotes, comments, etc. Add the vendor's Instagram preview image (square thumbnail with overlay handle) at the top of the card, matching the look the client-side card uses. If the vendor has no Instagram handle or no cached preview yet, fall back gracefully (skeleton → handle-only chip → nothing) — no broken images.
+## Root causes
 
-Data source: reuse `useInstagramPreviewsBulk(vendorIds)` (already used by client cards and the admin preview route). Compute the id list once from the visible vendor array and pass each card the resolved preview.
+1. **Overflow:** `VendorInstagramCardStrip` uses `grid grid-cols-3` whose `<a>` cells have no `min-w-0`. CSS grid items default to `min-width: auto`, which for cells containing `<img>` resolves to the image's intrinsic width. Large Instagram CDN images push each cell to its natural width (hundreds of px), the row blows past the card, and the card pushes past the viewport.
+2. **Missing previews:** `useInstagramPreviewsBulk` only returns rows that already exist in `vendor_instagram_previews`. The hook that fires background scrapes for vendors with handles but no cached row — `useAutoEnsureMissingPreviews` — is defined in `src/hooks/use-instagram-previews.ts` but is **not called from any page**, so on this route vendors that have never been scraped stay forever blank.
 
-## 2. Table & Group views — clickable vendor name opens a project-scoped detail
+## Fix
 
-Today the vendor name in the Table and Group views is plain text. Make it a button. Clicking it opens a NEW modal — `AdminProjectVendorDetail` — distinct from:
-- `VendorDetail` (admin global vendor library), and
-- `ClientVendorDetail` (client-facing read view).
+### 1. Stop the strip from forcing card width
+In `src/components/vendor/VendorInstagramPreview.tsx` (both the card strip at ~line 108 and the detail block at ~line 220):
+- Add `min-w-0` to the `grid grid-cols-3` container.
+- Add `min-w-0` to each `<a>` grid cell.
+- Add `overflow-hidden` to the outer strip wrapper (`min-h-[148px] rounded-md …`) as a belt-and-suspenders guard so a misbehaving child can never push the card wider.
 
-This admin/project detail shows everything an admin needs about that vendor *in the context of this project*:
+### 2. Auto-fetch missing previews on the assigned-vendors page
+In `src/routes/admin.projects.$id.index.tsx` (the `AssignedVendorsSection` where `useInstagramPreviewsBulk` is already called, ~line 778):
+- Import `useAutoEnsureMissingPreviews` from `@/hooks/use-instagram-previews`.
+- Build the lightweight `{ id, instagram_handle }[]` list from `vendors` (memoised) and pass it together with `instagramPreviewMap` to `useAutoEnsureMissingPreviews(...)`. The hook already debounces with `requestIdleCallback`, caps concurrency at 6, dedupes in-flight ids, and patches the bulk cache on success, so no further wiring is needed.
 
-- Header: vendor name, category/subcategory, Saffron's Pick toggle, Booked badge, "Remove from project" action.
-- **Instagram preview block** (uses `VendorInstagramDetailBlock`, same as global vendor detail).
-- Core vendor facts: location, phone, email, Instagram, website, portfolio, price, commission, rating(s).
-- **Project-specific quotes** — full quote history scoped to this project (reuses `ProjectVendorQuotesPanel` logic / `listProjectVendorQuotes`), with the existing "Add quote" action.
-- **Client status per client** on this project (the per-client rows already computed as `selections[v.id]`, rendered with `ClientStatusPill` + names).
-- **Client comments** thread for this project+vendor (reuses `VendorCommentsThread`).
-- Attachments grid (reuses `AttachmentThumbnailGrid` + signed viewer), since these are vendor-level docs admins want here too.
-- Prev/Next arrows + `X / Y` counter + ← → keyboard nav across the currently filtered/sorted vendor list, matching the pattern just added to the other detail modals.
-- The same modal opens from the Thumbnail card too (clicking the card body), so all three views share the entry point.
+That's it — the strip stops blowing out the card, and any vendor with a valid Instagram handle gets a preview scraped in the background and the strip refreshes itself.
 
-Triggering the modal does NOT replace the existing inline buttons (Add quote, comments, Saffron's Pick, Remove) on the thumbnail or table rows — those keep working as quick actions. Only the vendor name becomes clickable.
+## Out of scope
 
-## Files
-
-- New: `src/components/admin/AdminProjectVendorDetail.tsx` — the new modal.
-- Edit: `src/routes/admin.projects.$id.index.tsx`
-  - Thumbnail card: add Instagram preview at top, make name a button that opens the new modal.
-  - Group view: wrap vendor name in a button that opens the modal.
-  - Table view: wrap vendor cell in a button that opens the modal.
-  - Add `detail` state (selected vendor id) + render the modal once at page level, lazy-loaded.
-  - Compute `useInstagramPreviewsBulk` once for the visible vendor list and pass into card + modal.
-
-## Out of Scope
-
-- No changes to the global Vendors tab detail (`VendorDetail.tsx`).
-- No changes to the client-facing detail (`ClientVendorDetail.tsx`).
-- No backend / RLS / schema changes; all data already exposed via existing server functions.
-- No edits in the Table/Group rows beyond making the name clickable.
+- Group view and Table view vendor-name click-through to a project-scoped detail page — already shipped earlier.
+- Visual redesign of the strip (sizes, columns, captions) — unchanged.
+- Backfill of vendors with invalid handles (Google Drive links etc.) — already filtered by `isValidInstagramHandle`.

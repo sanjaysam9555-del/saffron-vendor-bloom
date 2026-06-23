@@ -35,7 +35,7 @@ import { listProjectOtherExpenses } from "@/lib/project-other-expenses.functions
 import { buildTimelineItems, otherExpensesAsTimelineItems } from "@/lib/build-timeline-items";
 import { QuickAddVendorPanel } from "@/components/admin/QuickAddVendorPanel";
 import { ColumnFilter } from "@/components/ui/ColumnFilter";
-import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
+import { useInstagramPreviewsBulk, useAutoEnsureMissingPreviews } from "@/hooks/use-instagram-previews";
 import { VendorInstagramCardStrip } from "@/components/vendor/VendorInstagramPreview";
 
 const AdminProjectVendorDetail = lazy(() =>
@@ -776,6 +776,14 @@ function AssignedVendorsSection({
     [vendors],
   );
   const { map: instagramPreviewMap } = useInstagramPreviewsBulk(igVendorIds);
+  const igVendorsForEnsure = useMemo(
+    () =>
+      vendors
+        .filter((v: any) => v.instagram_handle)
+        .map((v: any) => ({ id: v.id as string, instagram_handle: v.instagram_handle as string })),
+    [vendors],
+  );
+  useAutoEnsureMissingPreviews(igVendorsForEnsure, instagramPreviewMap);
 
   // Multi-column sort for the table view. Click a header to cycle:
   // not-sorted → asc → desc → removed. Multiple columns combine in click order.
