@@ -1134,14 +1134,9 @@ function AssignedVendorsSection({
                 const rows = selections[v.id] ?? [];
                 const primary = pickPrimary(rows);
                 return (
-                  <tr key={v.id} className="border-t border-[var(--border)] hover:bg-[var(--cream-deep)]/30">
+                  <tr key={v.id} className={`border-t border-[var(--border)] ${v.is_saffron_pick ? "bg-terracotta-soft" : "hover:bg-[var(--cream-deep)]/30"}`}>
                     <td className="align-top px-3 py-2">
                       <div className="flex items-center gap-1.5">
-                        {v.is_saffron_pick && (
-                          <span title="Saffron's Pick" className="inline-flex items-center gap-0.5 rounded-full bg-[var(--terracotta)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--cream)]">
-                            <Sparkles className="h-2.5 w-2.5 fill-current" /> Pick
-                          </span>
-                        )}
                         <button
                           type="button"
                           onClick={() => setDetailVendor(v)}
