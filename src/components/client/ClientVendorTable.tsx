@@ -3,7 +3,7 @@ import { CATEGORY_COLORS } from "@/lib/categories";
 import { getClientStatusOption } from "@/lib/client-status";
 import { CLIENT_STATUS_OPTIONS } from "@/lib/client-status";
 import { ClientStatusSelect } from "./ClientStatusSelect";
-import { CircleCheck, FileText, Star, Paperclip, MessageSquare, Sparkles } from "lucide-react";
+import { CircleCheck, FileText, Star, Paperclip, MessageSquare } from "lucide-react";
 import { formatINR, formatINRShort, ordinal, buildQuoteSeqMap } from "@/lib/quote-types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ColumnFilter } from "@/components/ui/ColumnFilter";
