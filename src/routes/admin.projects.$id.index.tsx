@@ -775,7 +775,8 @@ function AssignedVendorsSection({
     () => vendors.filter((v: any) => v.instagram_handle).map((v: any) => v.id as string),
     [vendors],
   );
-  const { map: instagramPreviewMap } = useInstagramPreviewsBulk(igVendorIds);
+  const { map: instagramPreviewMap, isLoading: instagramPreviewsLoading } =
+    useInstagramPreviewsBulk(igVendorIds);
   const igVendorsForEnsure = useMemo(
     () =>
       vendors
@@ -991,7 +992,10 @@ function AssignedVendorsSection({
                   {v.price_text && <div className="text-xs text-[var(--terracotta)]">{v.price_text}</div>}
                   <VendorMetaRow vendor={v} />
                   {v.instagram_handle && (
-                    <VendorInstagramCardStrip preview={instagramPreviewMap.get(v.id)} hasHandle />
+                    <VendorInstagramCardStrip
+                      preview={instagramPreviewMap.get(v.id) ?? (instagramPreviewsLoading ? undefined : null)}
+                      hasHandle
+                    />
                   )}
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     <ClientStatusPill status={primary?.status ?? null} />

@@ -33,7 +33,7 @@ export function ClientTopNav({
   return (
     <header
       data-tour="header-greeting"
-      className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--cream)]/95 backdrop-blur"
+      className="app-header-safe sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--cream)]"
     >
       <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-3 py-2.5 sm:px-6">
         <div className="flex shrink-0 items-center gap-2.5">

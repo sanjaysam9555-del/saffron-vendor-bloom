@@ -109,6 +109,49 @@ async function upsertPreview(
   return data as unknown as VendorInstagramPreview;
 }
 
+async function mirrorExistingPreviewAssets(
+  vendorId: string,
+  row: VendorInstagramPreview,
+): Promise<VendorInstagramPreview | null> {
+  if (row.status !== "ok") return row;
+  const mirrored = await persistInstagramAssets(vendorId, {
+    status: "ok",
+    handle: row.handle ?? "",
+    profile_url: row.profile_url ?? (row.handle ? `https://www.instagram.com/${row.handle}/` : ""),
+    avatar_url: row.avatar_url,
+    display_name: row.display_name,
+    bio: row.bio,
+    followers_text: row.followers_text,
+    post_thumbnails: row.post_thumbnails ?? [],
+  });
+
+  if (mirrored.status !== "ok") return row;
+
+  const next = {
+    ...row,
+    handle: mirrored.handle || row.handle,
+    profile_url: mirrored.profile_url || row.profile_url,
+    avatar_url: mirrored.avatar_url,
+    post_thumbnails: mirrored.post_thumbnails,
+    fetched_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  const { data, error } = await (supabaseAdmin
+    .from("vendor_instagram_previews" as never) as unknown as {
+      upsert: (r: unknown, opts: { onConflict: string }) => {
+        select: () => { single: () => Promise<{ data: unknown; error: { message: string } | null }> };
+      };
+    })
+    .upsert(next, { onConflict: "vendor_id" })
+    .select()
+    .single();
+  if (error) {
+    console.error("[instagram-preview] mirror upsert failed", error.message);
+    return row;
+  }
+  return data as unknown as VendorInstagramPreview;
+}
+
 export const getVendorInstagramPreviewsBulk = createServerFn({ method: "POST" })
   .middleware([attachAuthToken])
   .inputValidator((d) =>
@@ -222,6 +265,12 @@ export const ensureVendorInstagramPreview = createServerFn({ method: "POST" })
         ...(row.post_thumbnails ?? []),
       ]);
       if (!data.force && !stillEphemeral) return row;
+      if (!data.force && stillEphemeral) {
+        // Existing previews should not spend a scraper run just to replace
+        // expiring image URLs. First try to mirror the already-stored image
+        // URLs into our cache bucket and return immediately.
+        return mirrorExistingPreviewAssets(data.vendorId, row);
+      }
     } else if (row && !data.force) {
       // error / not_found rows: respect cooldown unless force-retry.
       return row;

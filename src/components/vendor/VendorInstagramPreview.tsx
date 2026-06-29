@@ -13,7 +13,13 @@ function proxiedSrc(src: string): string {
 
 function SafeImg({ src, alt, className }: { src: string; alt: string; className: string }) {
   const [ok, setOk] = useState(true);
-  if (!ok) return null;
+  if (!ok) {
+    return (
+      <span className={`${className} flex items-center justify-center bg-[var(--cream-deep)] text-[var(--terracotta)]/55`}>
+        <Instagram className="h-4 w-4" aria-hidden />
+      </span>
+    );
+  }
   return (
     <img
       src={proxiedSrc(src)}
