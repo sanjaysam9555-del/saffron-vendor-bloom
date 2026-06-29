@@ -164,6 +164,12 @@ function ClientPortalPage() {
   };
 
   const vendors = (data?.vendors ?? []) as ClientVendor[];
+  const instagramVendorIds = useMemo(
+    () => vendors.filter((v) => v.instagram_handle).map((v) => v.id),
+    [vendors],
+  );
+  const { map: instagramPreviewMap, isLoading: instagramPreviewsLoading } =
+    useInstagramPreviewsBulk(instagramVendorIds);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -450,7 +456,12 @@ function ClientPortalPage() {
           ) : filtered.length === 0 ? (
             <EmptyState message="No vendors match your filters." />
           ) : view === "grid" ? (
-            <ClientVendorGrid vendors={filtered} onView={(v) => setDetail(v)} />
+            <ClientVendorGrid
+              vendors={filtered}
+              onView={(v) => setDetail(v)}
+              previewMap={instagramPreviewMap}
+              previewsLoading={instagramPreviewsLoading}
+            />
           ) : view === "board" ? (
             <div className="animate-fade-in">
               <Suspense fallback={<div className="h-40" aria-hidden />}>
@@ -505,10 +516,17 @@ function EmptyState({ message }: { message: string }) {
   );
 }
 
-function ClientVendorGrid({ vendors, onView }: { vendors: ClientVendor[]; onView: (v: ClientVendor) => void }) {
-  const ids = useMemo(() => vendors.filter((v) => v.instagram_handle).map((v) => v.id), [vendors]);
-  const { map: previewMap, isLoading: previewsLoading } = useInstagramPreviewsBulk(ids);
-
+function ClientVendorGrid({
+  vendors,
+  onView,
+  previewMap,
+  previewsLoading,
+}: {
+  vendors: ClientVendor[];
+  onView: (v: ClientVendor) => void;
+  previewMap: Map<string, import("@/lib/instagram-preview.functions").VendorInstagramPreview>;
+  previewsLoading: boolean;
+}) {
   return (
     <VirtualGrid
       items={vendors}
@@ -520,7 +538,7 @@ function ClientVendorGrid({ vendors, onView }: { vendors: ClientVendor[]; onView
         <ClientVendorCard
           vendor={v}
           onView={() => onView(v)}
-          instagramPreview={previewsLoading ? undefined : (previewMap.get(v.id) ?? null)}
+          instagramPreview={previewMap.get(v.id) ?? (previewsLoading ? undefined : null)}
         />
       )}
     />

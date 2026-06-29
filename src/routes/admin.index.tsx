@@ -67,6 +67,12 @@ function DashboardPage() {
   const isAdmin = useIsAdmin();
   const categories = useAllCategories();
   const { data: vendors = [], isLoading } = useVendors();
+  const instagramVendorIds = useMemo(
+    () => vendors.filter((v) => v.instagram_handle).map((v) => v.id),
+    [vendors],
+  );
+  const { map: instagramPreviewMap, isLoading: instagramPreviewsLoading } =
+    useInstagramPreviewsBulk(instagramVendorIds);
   const { create, update, remove, bulkUpdate, bulkDelete } = useVendorMutations();
   const modals = useVendorModals();
 
@@ -322,6 +328,8 @@ function DashboardPage() {
               bulkMode={bulkMode}
               selectedIds={selectedIds}
               toggleSelect={toggleSelect}
+              previewMap={instagramPreviewMap}
+              previewsLoading={instagramPreviewsLoading}
             />
           ) : (
             <VendorTable
@@ -582,19 +590,17 @@ function VendorCardGrid({
   bulkMode,
   selectedIds,
   toggleSelect,
+  previewMap,
+  previewsLoading,
 }: {
   vendors: import("@/lib/vendor-types").Vendor[];
   modals: ReturnType<typeof useVendorModals>;
   bulkMode: boolean;
   selectedIds: Set<string>;
   toggleSelect: (id: string) => void;
+  previewMap: Map<string, import("@/lib/instagram-preview.functions").VendorInstagramPreview>;
+  previewsLoading: boolean;
 }) {
-  const ids = useMemo(
-    () => vendors.filter((v) => v.instagram_handle).map((v) => v.id),
-    [vendors],
-  );
-  const { map: previewMap, isLoading: previewsLoading } = useInstagramPreviewsBulk(ids);
-
   const allIds = useMemo(() => vendors.map((v) => v.id), [vendors]);
   const idsKey = useMemo(() => allIds.slice().sort().join(","), [allIds]);
   const { data: bookedMap } = useBookedSummaryBulk(allIds, idsKey);
@@ -614,7 +620,7 @@ function VendorCardGrid({
           selectMode={bulkMode}
           selected={selectedIds.has(v.id)}
           onToggleSelect={() => toggleSelect(v.id)}
-          instagramPreview={previewsLoading ? undefined : (previewMap.get(v.id) ?? null)}
+          instagramPreview={previewMap.get(v.id) ?? (previewsLoading ? undefined : null)}
           bookedSummary={bookedMap?.[v.id] ?? null}
         />
       )}

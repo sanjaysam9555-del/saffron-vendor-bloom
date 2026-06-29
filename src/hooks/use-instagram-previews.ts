@@ -241,11 +241,14 @@ export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enable
     }
     map.set(p.vendor_id, p);
   });
-  // Surface error as "still loading" so the UI doesn't render the empty
-  // strip on a transient failure; combined with retry above this self-heals.
+  const hasAllRequestedRows = vendorIds.length > 0 && vendorIds.every((id) => map.has(id));
+
+  // Surface error as "still loading" only while we genuinely have no usable
+  // row for the requested cards. Cached rows should keep rendering through
+  // filter changes and auth-session warmup.
   return {
     map,
-    isLoading: query.isLoading || (query.isError && !query.data) || !sessionReady,
+    isLoading: !hasAllRequestedRows && (query.isLoading || (query.isError && !query.data) || !sessionReady),
     isError: query.isError,
   };
 }

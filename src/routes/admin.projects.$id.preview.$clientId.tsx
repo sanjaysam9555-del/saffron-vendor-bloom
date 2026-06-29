@@ -101,7 +101,7 @@ function PreviewPage() {
                   key={v.id}
                   vendor={v}
                   onView={() => setDetail(v)}
-                  instagramPreview={previewsLoading ? undefined : (previewMap.get(v.id) ?? null)}
+                  instagramPreview={previewMap.get(v.id) ?? (previewsLoading ? undefined : null)}
                 />
               ))}
             </div>
