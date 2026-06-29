@@ -184,10 +184,44 @@ export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enable
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
     staleTime: 30 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
-    // Hydrate from localStorage so cached strips render on first paint.
+    // Hydrate from any active bulk cache (covers filter toggles that change
+    // the id set) and localStorage so cached strips render on first paint
+    // without a refetch flash.
     initialData: () => {
-      const cached = readLSForIds(vendorIds);
-      return cached.length > 0 ? cached : undefined;
+      const idSet = new Set(vendorIds);
+      const seen = new Map<string, VendorInstagramPreview>();
+      // 1. Any other active bulk-query cache — instant cross-filter reuse.
+      const bulkCaches = qc.getQueriesData<VendorInstagramPreview[]>({
+        queryKey: ["instagram-previews-bulk"],
+      });
+      for (const [, value] of bulkCaches) {
+        const list = Array.isArray(value) ? value : [];
+        for (const row of list) {
+          if (idSet.has(row.vendor_id) && !seen.has(row.vendor_id)) {
+            seen.set(row.vendor_id, row);
+          }
+        }
+      }
+      // 2. Per-vendor cache fallback for ids not in any bulk cache.
+      for (const id of vendorIds) {
+        if (seen.has(id)) continue;
+        const queries = qc.getQueriesData<VendorInstagramPreview>({
+          queryKey: ["instagram-preview", id],
+        });
+        for (const [, row] of queries) {
+          if (row && row.vendor_id === id) {
+            seen.set(id, row);
+            break;
+          }
+        }
+      }
+      // 3. localStorage final fallback.
+      const fromLS = readLSForIds(vendorIds);
+      for (const row of fromLS) {
+        if (!seen.has(row.vendor_id)) seen.set(row.vendor_id, row);
+      }
+      const merged = Array.from(seen.values());
+      return merged.length > 0 ? merged : undefined;
     },
     initialDataUpdatedAt: 0, // ensure background refetch still runs
     placeholderData: keepPreviousData,
