@@ -1,57 +1,43 @@
-## Why the previews are still blank
+## 1. Translucent strip above the fixed header (iOS PWA)
 
-The grey/blank tiles in your screenshot are NOT a layout bug anymore — they're the image proxy serving a 1×1 transparent SVG fallback because the Instagram CDN URL it tried to fetch returned 403/404.
+**Cause:** `apple-mobile-web-app-status-bar-style` is set to `black-translucent` in `src/routes/__root.tsx`. iOS then renders the status bar as a dark translucent overlay sitting on top of whatever is behind the body's `safe-area-inset-top` padding — which is the bare HTML background, not the cream header. That produces the grey band visible in the screenshot.
 
-Walking the chain:
+**Fix:** Make the area behind the status bar a solid cream so it merges seamlessly with the header.
 
-1. The Apify scrape returns raw `*.cdninstagram.com` URLs for the avatar and post thumbnails. Those URLs are signed and **expire within hours**.
-2. We store those raw URLs in the `vendor_instagram_previews` table.
-3. The card requests `/api/public/instagram-image?url=…`. That route refetches Instagram upstream; when the signature has expired Instagram answers 403 and the route returns a 1×1 SVG fallback.
-4. Browser renders the SVG into the tile → blank cream square.
-5. The "auto-ensure missing previews" hook I wired in last round can't recover from this: the server fn returns the existing row immediately if `status === "ok"`, regardless of how old the row is. So once an OK row is written, the URLs stay frozen until staff hits the manual Refresh button in the detail drawer.
+- In `src/routes/__root.tsx`, change `apple-mobile-web-app-status-bar-style` from `black-translucent` to `default`. iOS then uses `theme-color` (`#F5F0E8`, already cream) to paint the status-bar background as a solid strip flush against the header.
+- Keep `viewport-fit=cover` and the existing safe-area body padding so nothing else shifts.
+- No CSS changes needed; the cream `body`/`html` background already covers the inset region.
 
-That's why some tiles render (URL still within its TTL window) and the rest don't (signature already expired).
+## 2. Instagram previews go blank after applying a filter
 
-## Fix — persist the images, don't proxy short-lived URLs
+**Cause:** Each page that renders vendor cards calls `useInstagramPreviewsBulk(ids)` with `ids` derived from the **filtered** vendor list. When the user toggles a filter, the `vendorIds` array changes → the React Query key `["instagram-previews-bulk", sortedKey]` changes → a brand-new query runs. For that new key:
 
-Stop relying on Instagram's expiring CDN. At scrape time, download the avatar + the first 3 post thumbnails server-side and upload them to a dedicated public bucket on Lovable Cloud Storage, then store those permanent URLs in `vendor_instagram_previews`. Tiles render directly from Cloud Storage; no proxy, no expiry.
+- `initialData` only hydrates from localStorage; vendors whose previews were just successfully fetched moments ago under the previous key haven't been written to LS yet (or LS missed them), so `isLoading` flips to `true`.
+- The parent passes `previewsLoading ? undefined` to each card, which puts every card into the skeleton state — matching exactly what the screenshot shows.
+- It also triggers another server-fn call, burning tokens for data we already have in memory.
 
-### 1. Storage bucket
+**Fix — make the bulk query stable across filtering:** fetch previews once for the **full vendor list** on each page, then look up per-card from the resulting map. Filtering becomes a pure UI operation; no refetch, no skeletons, no extra tokens.
 
-Add a migration that creates a public `instagram-cache` bucket on Lovable Cloud Storage. Reads open to `anon`; writes restricted to `service_role` (the existing `vendor-files` bucket stays private and unchanged).
+Files to change (same pattern in each):
 
-### 2. Image persistence helper
+1. `src/routes/admin.index.tsx`
+   - Move the `useInstagramPreviewsBulk` and `useBookedSummaryBulk` calls from the inner `VendorCardGrid`/table wrappers up to the parent component that owns the unfiltered `vendors` array.
+   - Pass the resulting `previewMap` (and `previewsLoading`) down as props to both the grid and table wrappers, so the same map is shared between view modes.
+   - In the card renderer, keep using `previewMap.get(v.id) ?? null` but stop gating it on `previewsLoading` once the map has any entries — only show the skeleton on the very first load when the map is empty.
 
-New `src/server/instagram-image-cache.server.ts`:
+2. `src/routes/client.index.tsx` — same refactor: hoist the bulk hook to use the full client vendor list, not the filtered one.
 
-- `persistInstagramImage(vendorId, kind, sourceUrl)` — fetches the URL with the same Instagram-friendly headers the proxy already uses, validates content-type is `image/*` and size is sane (<2 MB), uploads to `instagram-cache/{vendorId}/{kind}-{shortHash}.jpg` via the admin Cloud client (`upsert: true`), and returns the public URL. Returns `null` on failure.
-- `persistInstagramAssets(vendorId, scrape)` — runs `persistInstagramImage` for the avatar and each thumbnail in parallel, swaps the URLs in the scrape result with whatever persisted successfully (falls back to the original URL if one fails, so we never lose a partial preview).
+3. `src/routes/admin.projects.$id.index.tsx` — `igVendorIds` is already derived from the project's full vendor set, but verify it's not being recomputed from a filtered list; if it is, switch it to the unfiltered source.
 
-### 3. Wire persistence into the upsert path
+4. `src/routes/admin.projects.$id.preview.$clientId.tsx` — same audit; ensure `igIds` is built from the full project vendor list, not a filtered subset.
 
-In `src/lib/instagram-preview.functions.ts`, before `upsertPreview(...)` writes the row, call `persistInstagramAssets(vendorId, scrape)` and use the rewritten URLs. This covers `refreshVendorInstagramPreview`, `ensureVendorInstagramPreview`, the bulk backfill batch, and `src/server/trigger-instagram-preview.server.ts`.
+5. `src/hooks/use-instagram-previews.ts` — small hardening so this never regresses:
+   - In `useInstagramPreviewsBulk`, when computing `initialData` for a new key, also merge from any other active `["instagram-previews-bulk", …]` query caches (not just LS). This way, even if a caller does pass a changing id list, the previously-fetched rows are reused instantly with zero network calls.
+   - Write rows to LS eagerly inside `queryFn` (already done) and also after `patchBulkCaches` (already done) — no behavior change, just confirm.
 
-### 4. One-time refresh for vendors that already have OK rows with expired CDN URLs
-
-The current `ensureVendorInstagramPreview` early-returns on `status === "ok"`. Relax that so:
-
-- if `force === true`, always re-scrape;
-- otherwise, if the existing `avatar_url` / first thumbnail still points at a `*.cdninstagram.com` / `*.fbcdn.net` host (i.e. the row predates the persistence fix), treat it as stale and re-scrape once.
-
-Update `useAutoEnsureMissingPreviews` to also enqueue vendors whose cached row is OK but still points at a CDN host. That migrates existing rows the first time someone views them; no separate backfill is required, though staff can still run the bulk backfill for a faster sweep.
-
-### 5. Proxy stays as a safety net
-
-`/api/public/instagram-image` keeps working — old cached rows that haven't been re-scraped yet still flow through it until step 4 migrates them. The card component (`<SafeImg>`) already skips the proxy for non-Instagram hosts, so cached Cloud Storage URLs will load directly with no proxy hop.
+**Result:** Toggling filters keeps the existing Instagram previews on screen instantly, no skeleton flash, and no additional server-fn / scraper calls.
 
 ## Out of scope
 
-- Storing post captions, multi-image carousels, video previews — unchanged.
-- Bandwidth/cost optimisation for storage (CDN front, image resizing) — can revisit later.
-- Layout (already fixed in the previous turn).
-
-## After this ships
-
-- New scrapes write permanent Cloud Storage URLs from the first run.
-- Existing OK rows with `*.cdninstagram.com` URLs get re-scraped the next time the assigned-vendors page loads them, then they too render from Cloud Storage.
-- The blank tiles you're seeing on Moov N Groov With Jeet should disappear within the first reload after the fix is deployed.
+- No changes to scraper logic, image cache bucket, or server functions.
+- No visual redesign of the cards or header.
