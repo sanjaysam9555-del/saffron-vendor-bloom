@@ -241,7 +241,7 @@ export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enable
     }
     map.set(p.vendor_id, p);
   });
-  const hasAllRequestedRows = vendorIds.length > 0 && vendorIds.every((id) => map.has(id));
+  const hasAllRequestedRows = vendorIds.length === 0 || vendorIds.every((id) => map.has(id));
 
   // Surface error as "still loading" only while we genuinely have no usable
   // row for the requested cards. Cached rows should keep rendering through
