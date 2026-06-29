@@ -125,6 +125,8 @@ async function mirrorExistingPreviewAssets(
     post_thumbnails: row.post_thumbnails ?? [],
   });
 
+  if (mirrored.status !== "ok") return row;
+
   const next = {
     ...row,
     handle: mirrored.handle || row.handle,
