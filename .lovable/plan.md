@@ -1,43 +1,66 @@
-## 1. Translucent strip above the fixed header (iOS PWA)
+# Saffron — Project Overview Document
 
-**Cause:** `apple-mobile-web-app-status-bar-style` is set to `black-translucent` in `src/routes/__root.tsx`. iOS then renders the status bar as a dark translucent overlay sitting on top of whatever is behind the body's `safe-area-inset-top` padding — which is the bare HTML background, not the cream header. That produces the grey band visible in the screenshot.
+I'll create a single markdown file at `src/documents/saffron-project-overview.md` (companion to the existing `saffron-design-system.md`) that another Lovable project can read to understand how this app is structured. It will be written in plain product/architecture language — no code dumps — so a different project's AI can reason about behavior, roles, data flow, and business rules.
 
-**Fix:** Make the area behind the status bar a solid cream so it merges seamlessly with the header.
+## What the document will cover
 
-- In `src/routes/__root.tsx`, change `apple-mobile-web-app-status-bar-style` from `black-translucent` to `default`. iOS then uses `theme-color` (`#F5F0E8`, already cream) to paint the status-bar background as a solid strip flush against the header.
-- Keep `viewport-fit=cover` and the existing safe-area body padding so nothing else shifts.
-- No CSS changes needed; the cream `body`/`html` background already covers the inset region.
+### 1. What the app is
+Saffron is an internal wedding-planning ops tool used by an events studio to manage vendors across many client weddings. Three sides use it:
+- **Admin** (studio owner) — full control.
+- **Employee** (studio staff) — day-to-day vendor management.
+- **Client** (bride/groom) — read + react to their own project's shortlist.
 
-## 2. Instagram previews go blank after applying a filter
+All staff auth is gated to `@saffronevents.in`; clients are invited per project and only ever see their own project.
 
-**Cause:** Each page that renders vendor cards calls `useInstagramPreviewsBulk(ids)` with `ids` derived from the **filtered** vendor list. When the user toggles a filter, the `vendorIds` array changes → the React Query key `["instagram-previews-bulk", sortedKey]` changes → a brand-new query runs. For that new key:
+### 2. The main "legs" of the product
+- **Vendor library** — the master catalogue of vendors (name, category, subcategory, city, Instagram, website, portfolio, price notes, Google rating, attachments). Shared across all projects.
+- **Projects** — one per wedding: bride/groom names, wedding date, notes, assigned clients.
+- **Project ↔ Vendor board** — for each project, staff curate a shortlist of vendors by category. Each row carries a per-project client_status (like / shortlisted / thinking / finalised / rejected) and can be flagged as a "Saffron Pick".
+- **Quotes** — multiple quote rows per (project, vendor): amount, status (received / revised / closed / withdrawn), is_final, closed_amount, notes, and attached quote files. Only "closed" quotes count toward booked totals.
+- **Category deadlines & criticality** — per project, each category has a due date, criticality (low/medium/high), planned budget and (optional) actual override. Drives the urgency strip and timeline.
+- **Other expenses** — per-project ad-hoc line items outside the vendor flow (planned vs actual, booked flag, due date, criticality).
+- **Client experience** — a curated summary + board view (kanban by status) + table view of their vendors, with per-vendor comments back to staff, and an Instagram preview for each vendor card.
+- **Notifications** — bell for staff (new client comments, status changes, quote actions) and for clients (staff replies, new vendors added), plus transactional email.
+- **Vendor self-signup** — public form for vendors to submit themselves; staff review submissions and promote them into the library.
 
-- `initialData` only hydrates from localStorage; vendors whose previews were just successfully fetched moments ago under the previous key haven't been written to LS yet (or LS missed them), so `isLoading` flips to `true`.
-- The parent passes `previewsLoading ? undefined` to each card, which puts every card into the skeleton state — matching exactly what the screenshot shows.
-- It also triggers another server-fn call, burning tokens for data we already have in memory.
+### 3. Roles & access model
+- Roles live in a separate `user_roles` table (admin / employee / client) checked via a `has_role` security-definer function — never on the profile.
+- Staff (admin+employee) see everything; only admin can delete.
+- Clients are linked to projects through `project_clients` and can only read data for their project. Server functions strip staff-only fields (internal notes, `created_by`) before returning to clients.
+- All app-internal server logic runs as TanStack `createServerFn` with `requireSupabaseAuth` middleware. Public endpoints (vendor signup, Instagram asset proxy, email unsubscribe) live under `/api/public/*`.
 
-**Fix — make the bulk query stable across filtering:** fetch previews once for the **full vendor list** on each page, then look up per-card from the resulting map. Filtering becomes a pure UI operation; no refetch, no skeletons, no extra tokens.
+### 4. Key business rules
+- A vendor is "booked" for a project when it has at least one quote with status `closed`; `closed_amount` becomes the actual spend.
+- "Actual" project spend = sum of closed vendor quotes + `actual_amount` on other-expenses rows.
+- Entering an actual amount on an "other expense" auto-marks it booked.
+- Category planned budget can be overridden per project; otherwise it rolls up from vendor planned amounts.
+- Saffron Picks are a highlight, not a status — they tint the row/card in a light terracotta shade.
+- Client statuses are ordered: like → thinking → shortlisted → finalised, with rejected as a terminal side state.
+- Criticality drives the urgency strip color (high = red, medium = amber, low = blue), combined with days-to-due-date.
 
-Files to change (same pattern in each):
+### 5. Data shape (high level)
+Tables (public schema, RLS on, granted to `authenticated` + `service_role`):
+- `vendors`, `vendor_categories`, `vendor_attachments`
+- `projects`, `project_clients`
+- `project_vendors` (join with client_status, saffron_pick, notes)
+- `project_vendor_quotes`, `quote_files`
+- `project_category_deadlines`, `project_other_expenses`
+- `vendor_comments`, `notifications`, `client_notifications`
+- `user_roles`, `profiles`
+- `vendor_signup_submissions`
+- `email_queue`, `email_suppressions`
 
-1. `src/routes/admin.index.tsx`
-   - Move the `useInstagramPreviewsBulk` and `useBookedSummaryBulk` calls from the inner `VendorCardGrid`/table wrappers up to the parent component that owns the unfiltered `vendors` array.
-   - Pass the resulting `previewMap` (and `previewsLoading`) down as props to both the grid and table wrappers, so the same map is shared between view modes.
-   - In the card renderer, keep using `previewMap.get(v.id) ?? null` but stop gating it on `previewsLoading` once the map has any entries — only show the skeleton on the very first load when the map is empty.
+### 6. Tech + integration notes (short)
+- TanStack Start v1 on Cloudflare Workers, Vite 7, React 19, Tailwind v4, shadcn/ui.
+- Data via Supabase (Lovable Cloud) — publishable key on client, service role only inside `*.server.ts` helpers loaded from server-fn handlers.
+- Realtime: a single channel per page subscribes to relevant tables and invalidates React Query caches (debounced).
+- Reads use `useSuspenseQuery` + loader-hydrated `queryClient.ensureQueryData`.
+- Instagram previews are scraped once via Apify, mirrored into a private `instagram-cache` bucket, and served through a public asset proxy — never re-scraped on filter changes.
+- Emails: templated React Email components enqueued to `email_queue`, drained by a cron endpoint under `/api/public/`.
 
-2. `src/routes/client.index.tsx` — same refactor: hoist the bulk hook to use the full client vendor list, not the filtered one.
+### 7. What another project should copy vs adapt
+- **Copy**: role separation via `user_roles` + `has_role`, per-project access via a join table, staff-vs-client field stripping in server functions, realtime-invalidate hook, quote-closing model, criticality/urgency scale.
+- **Adapt**: category vocabulary, "Saffron Pick" concept, wedding-specific fields (bride/groom/date), INR-only formatting.
 
-3. `src/routes/admin.projects.$id.index.tsx` — `igVendorIds` is already derived from the project's full vendor set, but verify it's not being recomputed from a filtered list; if it is, switch it to the unfiltered source.
-
-4. `src/routes/admin.projects.$id.preview.$clientId.tsx` — same audit; ensure `igIds` is built from the full project vendor list, not a filtered subset.
-
-5. `src/hooks/use-instagram-previews.ts` — small hardening so this never regresses:
-   - In `useInstagramPreviewsBulk`, when computing `initialData` for a new key, also merge from any other active `["instagram-previews-bulk", …]` query caches (not just LS). This way, even if a caller does pass a changing id list, the previously-fetched rows are reused instantly with zero network calls.
-   - Write rows to LS eagerly inside `queryFn` (already done) and also after `patchBulkCaches` (already done) — no behavior change, just confirm.
-
-**Result:** Toggling filters keeps the existing Instagram previews on screen instantly, no skeleton flash, and no additional server-fn / scraper calls.
-
-## Out of scope
-
-- No changes to scraper logic, image cache bucket, or server functions.
-- No visual redesign of the cards or header.
+## Deliverable
+One new file: `src/documents/saffron-project-overview.md`. No code changes, no other files touched.
