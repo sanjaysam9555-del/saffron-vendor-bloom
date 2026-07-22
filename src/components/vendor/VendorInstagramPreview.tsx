@@ -113,6 +113,7 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
           <SafeImg
             src={preview.avatar_url}
             alt=""
+            eager
             className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-[var(--border)]"
           />
         )}
@@ -135,9 +136,18 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="block aspect-square min-w-0 overflow-hidden rounded-sm bg-[var(--cream-deep)]"
+              className="relative block aspect-square min-w-0 overflow-hidden rounded-sm bg-[var(--cream-deep)]"
             >
-              <SafeImg src={src} alt="" className="h-full w-full object-cover" />
+              {/* Baseline glyph so a slow-loading thumbnail never renders as an empty square. */}
+              <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-[var(--terracotta)]/25">
+                <Instagram className="h-4 w-4" aria-hidden />
+              </span>
+              <SafeImg
+                src={src}
+                alt=""
+                eager
+                className="relative h-full w-full object-cover"
+              />
             </a>
           ))}
         </div>
