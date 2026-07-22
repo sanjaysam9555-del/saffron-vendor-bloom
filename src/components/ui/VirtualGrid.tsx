@@ -39,7 +39,7 @@ export function VirtualGrid<T>({
   renderItem,
   getKey,
   className = "",
-  overscan = 4,
+  overscan = 8,
 }: VirtualGridProps<T>) {
   const parentRef = useRef<HTMLDivElement | null>(null);
   const [columns, setColumns] = useState(1);

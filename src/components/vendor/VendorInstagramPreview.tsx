@@ -1,5 +1,5 @@
 import { Instagram, RefreshCw, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { VendorInstagramPreview as PreviewData } from "@/lib/instagram-preview.functions";
 import { useInstagramPreviewFromCache, useRefreshInstagramPreview } from "@/hooks/use-instagram-previews";
 
@@ -11,8 +11,23 @@ function proxiedSrc(src: string): string {
   return src;
 }
 
-function SafeImg({ src, alt, className }: { src: string; alt: string; className: string }) {
+function SafeImg({
+  src,
+  alt,
+  className,
+  eager = false,
+}: {
+  src: string;
+  alt: string;
+  className: string;
+  eager?: boolean;
+}) {
   const [ok, setOk] = useState(true);
+  // Reset error state when src changes so a previously-failed URL
+  // doesn't poison a later successful one (e.g. after mirror refresh).
+  useEffect(() => {
+    setOk(true);
+  }, [src]);
   if (!ok) {
     return (
       <span className={`${className} flex items-center justify-center bg-[var(--cream-deep)] text-[var(--terracotta)]/55`}>
@@ -24,7 +39,8 @@ function SafeImg({ src, alt, className }: { src: string; alt: string; className:
     <img
       src={proxiedSrc(src)}
       alt={alt}
-      loading="lazy"
+      loading={eager ? "eager" : "lazy"}
+      decoding="async"
       referrerPolicy="no-referrer"
       className={className}
       onError={() => setOk(false)}
@@ -97,6 +113,7 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
           <SafeImg
             src={preview.avatar_url}
             alt=""
+            eager
             className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-[var(--border)]"
           />
         )}
@@ -119,9 +136,18 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="block aspect-square min-w-0 overflow-hidden rounded-sm bg-[var(--cream-deep)]"
+              className="relative block aspect-square min-w-0 overflow-hidden rounded-sm bg-[var(--cream-deep)]"
             >
-              <SafeImg src={src} alt="" className="h-full w-full object-cover" />
+              {/* Baseline glyph so a slow-loading thumbnail never renders as an empty square. */}
+              <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-[var(--terracotta)]/25">
+                <Instagram className="h-4 w-4" aria-hidden />
+              </span>
+              <SafeImg
+                src={src}
+                alt=""
+                eager
+                className="relative h-full w-full object-cover"
+              />
             </a>
           ))}
         </div>
