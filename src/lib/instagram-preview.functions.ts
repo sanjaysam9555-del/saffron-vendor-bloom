@@ -268,8 +268,16 @@ export const ensureVendorInstagramPreview = createServerFn({ method: "POST" })
       if (!data.force && stillEphemeral) {
         // Existing previews should not spend a scraper run just to replace
         // expiring image URLs. First try to mirror the already-stored image
-        // URLs into our cache bucket and return immediately.
-        return mirrorExistingPreviewAssets(data.vendorId, row);
+        // URLs into our cache bucket. If those signed CDN URLs have already
+        // expired, mirroring returns the original row; in that case fall
+        // through to a normal refresh so filtered cards do not stay blank.
+        const mirrored = await mirrorExistingPreviewAssets(data.vendorId, row);
+        if (
+          mirrored &&
+          !hasEphemeralCdnUrl([mirrored.avatar_url, ...(mirrored.post_thumbnails ?? [])])
+        ) {
+          return mirrored;
+        }
       }
     } else if (row && !data.force) {
       // error / not_found rows: respect cooldown unless force-retry.

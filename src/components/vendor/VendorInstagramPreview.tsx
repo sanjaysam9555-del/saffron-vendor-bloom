@@ -43,6 +43,13 @@ function SafeImg({
       decoding="async"
       referrerPolicy="no-referrer"
       className={className}
+      onLoad={(event) => {
+        const img = event.currentTarget;
+        // Our image proxy returns a tiny fallback SVG when an old Instagram
+        // CDN URL has expired. Treat that as a failed image so the branded
+        // fallback renders instead of a blank cream square.
+        if (img.naturalWidth <= 2 && img.naturalHeight <= 2) setOk(false);
+      }}
       onError={() => setOk(false)}
     />
   );
