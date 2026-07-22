@@ -15,7 +15,7 @@ import { useVendors, useVendorMutations, useVendorModals } from "@/hooks/useVend
 import { useAllCategories } from "@/lib/categories";
 
 import { useIsAdmin } from "@/lib/auth";
-import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
+import { useAutoEnsureMissingPreviews, useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
 import { useVendorTabState, type VendorSortKey } from "@/components/admin/admin-tab-state";
 
 
@@ -131,6 +131,24 @@ function DashboardPage() {
     });
     return sorted;
   }, [vendors, filters, search, sort]);
+
+  const filterDrivenPreviewRepairVendors = useMemo(() => {
+    const filtersActive = !!(
+      filters.category ||
+      filters.locations.length ||
+      filters.minGoogleRating != null ||
+      filters.minSaffronRating != null ||
+      filters.submittedViaForm !== "any" ||
+      filters.assignedToProject !== "any" ||
+      filters.hasQuoteHistory !== "any" ||
+      filters.hasAttachment !== "any" ||
+      search.trim()
+    );
+    if (!filtersActive) return [];
+    return filtered.filter((v) => v.instagram_handle).slice(0, 24);
+  }, [filtered, filters, search]);
+
+  useAutoEnsureMissingPreviews(filterDrivenPreviewRepairVendors, instagramPreviewMap);
 
   // Clear selection when filters/search change so we don't accidentally edit hidden rows.
   useEffect(() => {
