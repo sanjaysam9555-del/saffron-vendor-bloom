@@ -27,8 +27,6 @@ import { normalizeInstagramHandle, isValidInstagramHandle } from "@/lib/instagra
 
 const LS_KEY = "saffron.ig.previews.v1";
 const LS_MAX = 500;
-const REFRESH_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
-
 type LSCache = Record<string, VendorInstagramPreview>;
 
 function readLS(): LSCache {
