@@ -151,7 +151,7 @@ async function cachedImageResponse(
     }
   }
   if (!file) return null;
-  return new Response(data.stream(), {
+  return new Response(file.stream(), {
     status: 200,
     headers: {
       "Content-Type": file.type || "image/jpeg",
