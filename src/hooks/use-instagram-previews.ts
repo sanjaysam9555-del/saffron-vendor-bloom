@@ -325,16 +325,24 @@ export function useInstagramPreviewFromCache(
 ): VendorInstagramPreview | null {
   const qc = useQueryClient();
   const normalized = normalizeInstagramHandle(handle);
-  const perVendor = qc.getQueryData<VendorInstagramPreview>([
-    "instagram-preview",
-    vendorId,
-    normalized,
-  ]);
-  if (perVendor) return perVendor;
-  const cachedOk = findCachedOkPreview(qc, vendorId, handle);
-  if (cachedOk) return cachedOk;
-  const fromLS = readLS()[vendorId];
-  return fromLS ?? null;
+  const query = useQuery({
+    queryKey: ["instagram-preview", vendorId, normalized],
+    queryFn: async () => null as VendorInstagramPreview | null,
+    enabled: false,
+    initialData: () => {
+      const perVendor = qc.getQueryData<VendorInstagramPreview>([
+        "instagram-preview",
+        vendorId,
+        normalized,
+      ]);
+      if (perVendor) return perVendor;
+      const cachedOk = findCachedOkPreview(qc, vendorId, handle);
+      if (cachedOk) return cachedOk;
+      const fromLS = readLS()[vendorId];
+      return fromLS ?? null;
+    },
+  });
+  return query.data ?? findCachedOkPreview(qc, vendorId, handle) ?? readLS()[vendorId] ?? null;
 }
 
 export function useRefreshInstagramPreview() {

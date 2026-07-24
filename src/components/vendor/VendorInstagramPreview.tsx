@@ -3,10 +3,18 @@ import { useEffect, useState } from "react";
 import type { VendorInstagramPreview as PreviewData } from "@/lib/instagram-preview.functions";
 import { useInstagramPreviewFromCache, useRefreshInstagramPreview } from "@/hooks/use-instagram-previews";
 
-function proxiedSrc(src: string): string {
+function proxiedSrc(
+  src: string,
+  cache?: { vendorId: string; kind: "avatar" | "thumb" },
+): string {
   if (!src) return src;
   if (/^https?:\/\/[^/]*(cdninstagram\.com|fbcdn\.net)/i.test(src)) {
-    return `/api/public/instagram-image?url=${encodeURIComponent(src)}`;
+    const params = new URLSearchParams({ url: src });
+    if (cache?.vendorId) {
+      params.set("vendorId", cache.vendorId);
+      params.set("kind", cache.kind);
+    }
+    return `/api/public/instagram-image?${params.toString()}`;
   }
   return src;
 }
@@ -16,11 +24,13 @@ function SafeImg({
   alt,
   className,
   eager = false,
+  cache,
 }: {
   src: string;
   alt: string;
   className: string;
   eager?: boolean;
+  cache?: { vendorId: string; kind: "avatar" | "thumb" };
 }) {
   const [ok, setOk] = useState(true);
   // Reset error state when src changes so a previously-failed URL
@@ -37,7 +47,7 @@ function SafeImg({
   }
   return (
     <img
-      src={proxiedSrc(src)}
+      src={proxiedSrc(src, cache)}
       alt={alt}
       loading={eager ? "eager" : "lazy"}
       decoding="async"
@@ -121,6 +131,7 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
             src={preview.avatar_url}
             alt=""
             eager
+            cache={{ vendorId: preview.vendor_id, kind: "avatar" }}
             className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-[var(--border)]"
           />
         )}
@@ -153,6 +164,7 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
                 src={src}
                 alt=""
                 eager
+                cache={{ vendorId: preview.vendor_id, kind: "thumb" }}
                 className="relative h-full w-full object-cover"
               />
             </a>
@@ -228,6 +240,8 @@ export function VendorInstagramDetailBlock({ vendorId, handle, canRefresh = fals
               <SafeImg
                 src={preview.avatar_url}
                 alt={preview.display_name ?? "Instagram avatar"}
+                eager
+                cache={{ vendorId, kind: "avatar" }}
                 className="h-14 w-14 rounded-full object-cover ring-2 ring-[var(--border)]"
               />
             ) : (
@@ -265,7 +279,13 @@ export function VendorInstagramDetailBlock({ vendorId, handle, canRefresh = fals
                   rel="noopener noreferrer"
                   className="block aspect-square min-w-0 overflow-hidden rounded-md bg-[var(--cream-deep)] ring-1 ring-[var(--border)]"
                 >
-                  <SafeImg src={src} alt="" className="h-full w-full object-cover" />
+                  <SafeImg
+                    src={src}
+                    alt=""
+                    eager
+                    cache={{ vendorId, kind: "thumb" }}
+                    className="h-full w-full object-cover"
+                  />
                 </a>
               ))}
             </div>
