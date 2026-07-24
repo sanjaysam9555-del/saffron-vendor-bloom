@@ -132,23 +132,12 @@ function DashboardPage() {
     return sorted;
   }, [vendors, filters, search, sort]);
 
-  const filterDrivenPreviewRepairVendors = useMemo(() => {
-    const filtersActive = !!(
-      filters.category ||
-      filters.locations.length ||
-      filters.minGoogleRating != null ||
-      filters.minSaffronRating != null ||
-      filters.submittedViaForm !== "any" ||
-      filters.assignedToProject !== "any" ||
-      filters.hasQuoteHistory !== "any" ||
-      filters.hasAttachment !== "any" ||
-      search.trim()
-    );
-    if (!filtersActive) return [];
-    return filtered.filter((v) => v.instagram_handle).slice(0, 24);
-  }, [filtered, filters, search]);
+  const visiblePreviewRepairVendors = useMemo(
+    () => filtered.filter((v) => v.instagram_handle).slice(0, 48),
+    [filtered],
+  );
 
-  useAutoEnsureMissingPreviews(filterDrivenPreviewRepairVendors, instagramPreviewMap);
+  useAutoEnsureMissingPreviews(visiblePreviewRepairVendors, instagramPreviewMap);
 
   // Clear selection when filters/search change so we don't accidentally edit hidden rows.
   useEffect(() => {
