@@ -403,7 +403,10 @@ export function useAutoEnsureMissingPreviews(
       }
       // No row, or only an error/not_found row.
       const cachedOk = findCachedOkPreview(qc, v.id, normalized);
-      if (cachedOk) continue;
+      if (cachedOk) {
+        patchBulkCaches(qc, cachedOk);
+        continue;
+      }
       // If the cached row's handle no longer matches the normalized
       // handle, it was scraped with a bad value (legacy URL-as-handle).
       // Force a rescrape past the server cooldown.
