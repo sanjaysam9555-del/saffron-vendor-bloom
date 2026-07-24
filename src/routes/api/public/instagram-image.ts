@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 const ALLOWED_HOST_SUFFIXES = [".cdninstagram.com", ".fbcdn.net"];
-const MAX_BYTES = 2 * 1024 * 1024;
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -61,56 +60,6 @@ function cachedPath(vendorId: string, kind: "avatar" | "thumb", sourceUrl: strin
   return `${cachedPrefix(vendorId, kind, sourceUrl)}.jpg`;
 }
 
-function publicAssetUrl(path: string): string {
-  return `/api/public/ig-asset?path=${encodeURIComponent(path)}`;
-}
-
-async function replacePreviewUrl(
-  vendorId: string,
-  kind: "avatar" | "thumb",
-  sourceUrl: string,
-  stableUrl: string,
-) {
-  try {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row } = await supabaseAdmin
-      .from("vendor_instagram_previews" as never)
-      .select("avatar_url, post_thumbnails")
-      .eq("vendor_id", vendorId)
-      .maybeSingle();
-    const preview = row as unknown as {
-      avatar_url: string | null;
-      post_thumbnails: string[] | null;
-    } | null;
-    if (!preview) return;
-
-    if (kind === "avatar" && preview.avatar_url === sourceUrl) {
-      await supabaseAdmin
-        .from("vendor_instagram_previews" as never)
-        .update({ avatar_url: stableUrl, updated_at: new Date().toISOString() } as never)
-        .eq("vendor_id", vendorId);
-      return;
-    }
-
-    if (kind === "thumb" && Array.isArray(preview.post_thumbnails)) {
-      let changed = false;
-      const post_thumbnails = preview.post_thumbnails.map((url) => {
-        if (url !== sourceUrl) return url;
-        changed = true;
-        return stableUrl;
-      });
-      if (changed) {
-        await supabaseAdmin
-          .from("vendor_instagram_previews" as never)
-          .update({ post_thumbnails, updated_at: new Date().toISOString() } as never)
-          .eq("vendor_id", vendorId);
-      }
-    }
-  } catch {
-    // Image delivery must never fail because the optional DB repair failed.
-  }
-}
-
 async function cachedImageResponse(
   vendorId: string,
   kind: "avatar" | "thumb",
@@ -164,28 +113,6 @@ async function cachedImageResponse(
   });
 }
 
-async function storeCachedImage(
-  vendorId: string,
-  kind: "avatar" | "thumb",
-  sourceUrl: string,
-  contentType: string,
-  body: ArrayBuffer,
-) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { INSTAGRAM_CACHE_BUCKET } = await import("@/server/instagram-image-cache.server");
-  const path = cachedPath(vendorId, kind, sourceUrl);
-  const { error } = await supabaseAdmin.storage
-    .from(INSTAGRAM_CACHE_BUCKET)
-    .upload(path, new Uint8Array(body), {
-      upsert: true,
-      contentType,
-      cacheControl: "604800",
-    });
-  if (!error) {
-    await replacePreviewUrl(vendorId, kind, sourceUrl, publicAssetUrl(path));
-  }
-}
-
 export const Route = createFileRoute("/api/public/instagram-image")({
   server: {
     handlers: {
@@ -228,25 +155,6 @@ export const Route = createFileRoute("/api/public/instagram-image")({
           const contentType = upstream.headers.get("content-type") ?? "image/jpeg";
           if (!contentType.toLowerCase().startsWith("image/")) {
             return fallbackImage("not-image");
-          }
-
-          if (canPersist) {
-            const body = await upstream.arrayBuffer();
-            if (body.byteLength === 0 || body.byteLength > MAX_BYTES) {
-              return fallbackImage("size-out-of-range");
-            }
-            await storeCachedImage(vendorId, kind, parsed.toString(), contentType, body.slice(0));
-            return new Response(body, {
-              status: 200,
-              headers: {
-                "Content-Type": contentType,
-                "Cache-Control":
-                  "public, max-age=604800, s-maxage=604800, immutable, stale-while-revalidate=86400",
-                ...CORS_HEADERS,
-                Vary: "Accept",
-                "X-Instagram-Image-Proxy": "stored",
-              },
-            });
           }
 
           return new Response(upstream.body, {
