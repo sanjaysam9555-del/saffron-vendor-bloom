@@ -27,8 +27,6 @@ import { normalizeInstagramHandle, isValidInstagramHandle } from "@/lib/instagra
 
 const LS_KEY = "saffron.ig.previews.v1";
 const LS_MAX = 500;
-const REFRESH_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
-
 type LSCache = Record<string, VendorInstagramPreview>;
 
 function readLS(): LSCache {
@@ -325,16 +323,24 @@ export function useInstagramPreviewFromCache(
 ): VendorInstagramPreview | null {
   const qc = useQueryClient();
   const normalized = normalizeInstagramHandle(handle);
-  const perVendor = qc.getQueryData<VendorInstagramPreview>([
-    "instagram-preview",
-    vendorId,
-    normalized,
-  ]);
-  if (perVendor) return perVendor;
-  const cachedOk = findCachedOkPreview(qc, vendorId, handle);
-  if (cachedOk) return cachedOk;
-  const fromLS = readLS()[vendorId];
-  return fromLS ?? null;
+  const query = useQuery({
+    queryKey: ["instagram-preview", vendorId, normalized],
+    queryFn: async () => null as VendorInstagramPreview | null,
+    enabled: false,
+    initialData: () => {
+      const perVendor = qc.getQueryData<VendorInstagramPreview>([
+        "instagram-preview",
+        vendorId,
+        normalized,
+      ]);
+      if (perVendor) return perVendor;
+      const cachedOk = findCachedOkPreview(qc, vendorId, handle);
+      if (cachedOk) return cachedOk;
+      const fromLS = readLS()[vendorId];
+      return fromLS ?? null;
+    },
+  });
+  return query.data ?? findCachedOkPreview(qc, vendorId, handle) ?? readLS()[vendorId] ?? null;
 }
 
 export function useRefreshInstagramPreview() {
@@ -388,14 +394,15 @@ export function useAutoEnsureMissingPreviews(
           missing.push({ id: v.id, handle: normalized, force: false });
           continue;
         }
-        const ageMs = Date.now() - new Date(existing.fetched_at).getTime();
-        if (ageMs <= REFRESH_AFTER_MS) continue;
-        missing.push({ id: v.id, handle: normalized, force: false });
+        continue;
         continue;
       }
       // No row, or only an error/not_found row.
       const cachedOk = findCachedOkPreview(qc, v.id, normalized);
-      if (cachedOk) continue;
+      if (cachedOk) {
+        patchBulkCaches(qc, cachedOk);
+        continue;
+      }
       // If the cached row's handle no longer matches the normalized
       // handle, it was scraped with a bad value (legacy URL-as-handle).
       // Force a rescrape past the server cooldown.
