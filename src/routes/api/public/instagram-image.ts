@@ -53,8 +53,12 @@ function validKind(value: string | null): value is "avatar" | "thumb" {
   return value === "avatar" || value === "thumb";
 }
 
+function cachedPrefix(vendorId: string, kind: "avatar" | "thumb", sourceUrl: string): string {
+  return `${vendorId}/${kind}-${shortHash(sourceUrl)}`;
+}
+
 function cachedPath(vendorId: string, kind: "avatar" | "thumb", sourceUrl: string): string {
-  return `${vendorId}/${kind}-${shortHash(sourceUrl)}.jpg`;
+  return `${cachedPrefix(vendorId, kind, sourceUrl)}.jpg`;
 }
 
 function publicAssetUrl(path: string): string {
@@ -114,13 +118,43 @@ async function cachedImageResponse(
 ): Promise<Response | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { INSTAGRAM_CACHE_BUCKET } = await import("@/server/instagram-image-cache.server");
-  const path = cachedPath(vendorId, kind, sourceUrl);
+  const exactPath = cachedPath(vendorId, kind, sourceUrl);
+  let path = exactPath;
   const { data } = await supabaseAdmin.storage.from(INSTAGRAM_CACHE_BUCKET).download(path);
-  if (!data) return null;
+  let file = data;
+  if (!file) {
+    // Earlier cache writes kept the original extension, so the same hashed
+    // image may exist as .webp/.avif/etc. Look it up before going upstream.
+    const prefix = cachedPrefix(vendorId, kind, sourceUrl).split("/")[1];
+    const { data: exactMatches } = await supabaseAdmin.storage
+      .from(INSTAGRAM_CACHE_BUCKET)
+      .list(vendorId, { limit: 10, search: prefix });
+    const exact = exactMatches?.find((item) => item.name.startsWith(prefix));
+    if (exact?.name) {
+      path = `${vendorId}/${exact.name}`;
+      const retry = await supabaseAdmin.storage.from(INSTAGRAM_CACHE_BUCKET).download(path);
+      file = retry.data;
+    }
+  }
+  if (!file) {
+    // Last-resort visual continuity: if the signed source URL has already
+    // expired but any image for this vendor/slot was cached before, use it
+    // rather than returning the 1px blank fallback.
+    const { data: slotMatches } = await supabaseAdmin.storage
+      .from(INSTAGRAM_CACHE_BUCKET)
+      .list(vendorId, { limit: 25, sortBy: { column: "updated_at", order: "desc" } });
+    const slot = slotMatches?.find((item) => item.name.startsWith(`${kind}-`));
+    if (slot?.name) {
+      path = `${vendorId}/${slot.name}`;
+      const fallback = await supabaseAdmin.storage.from(INSTAGRAM_CACHE_BUCKET).download(path);
+      file = fallback.data;
+    }
+  }
+  if (!file) return null;
   return new Response(data.stream(), {
     status: 200,
     headers: {
-      "Content-Type": data.type || "image/jpeg",
+      "Content-Type": file.type || "image/jpeg",
       "Cache-Control":
         "public, max-age=604800, s-maxage=604800, immutable, stale-while-revalidate=86400",
       ...CORS_HEADERS,
