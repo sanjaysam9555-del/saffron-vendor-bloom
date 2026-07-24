@@ -396,9 +396,7 @@ export function useAutoEnsureMissingPreviews(
           missing.push({ id: v.id, handle: normalized, force: false });
           continue;
         }
-        const ageMs = Date.now() - new Date(existing.fetched_at).getTime();
-        if (ageMs <= REFRESH_AFTER_MS) continue;
-        missing.push({ id: v.id, handle: normalized, force: false });
+        continue;
         continue;
       }
       // No row, or only an error/not_found row.
