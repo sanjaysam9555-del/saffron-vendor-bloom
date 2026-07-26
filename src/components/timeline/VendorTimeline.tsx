@@ -1139,7 +1139,7 @@ function TableView({
     <div className="space-y-2">
       <div className="overflow-x-auto rounded-md border border-[var(--border)] shadow-[inset_-12px_0_8px_-8px_rgba(0,0,0,0.08)]">
         <table className="w-full min-w-[820px] text-sm">
-          <thead className="bg-[var(--cream)] text-left text-xs uppercase tracking-wider text-[var(--charcoal)]/60">
+          <thead className="bg-[var(--charcoal)] text-left text-xs uppercase tracking-wider text-[var(--cream)]/80">
             <tr>
               <th className="px-3 py-2">Category</th>
               <th className="px-3 py-2">Vendors</th>
