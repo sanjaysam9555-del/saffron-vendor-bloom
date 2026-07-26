@@ -360,37 +360,62 @@ function QuoteRow({
       )}
 
       {quote.status !== "closed" && quote.status !== "withdrawn" && (
-        <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-2">
+        <div className="mt-2 border-t border-[var(--border)] pt-2">
           {showCloseInput ? (
-            <>
-              <span className="text-xs text-[var(--charcoal)]/65">Closed at ₹</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                className="w-32 rounded border border-[var(--border)] px-2 py-1 text-sm"
-                value={closedAmt}
-                onChange={(e) => setClosedAmt(e.target.value)}
-                placeholder="amount"
-              />
-              <button
-                onClick={() => {
-                  const n = closedAmt.trim() === "" ? null : Number(closedAmt);
-                  onClose(Number.isFinite(n as number) ? (n as number) : null);
-                  setShowCloseInput(false);
-                }}
-                className="inline-flex items-center gap-1 rounded-md bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700"
-              >
-                <Check className="h-3 w-3" /> Confirm
-              </button>
-              <button
-                onClick={() => setShowCloseInput(false)}
-                className="rounded-md px-2 py-1 text-xs hover:bg-[var(--cream-deep)]"
-              >
-                Cancel
-              </button>
-            </>
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-[var(--charcoal)]/65">Client price ₹</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  className="w-32 rounded border border-[var(--border)] px-2 py-1 text-sm"
+                  value={closedAmt}
+                  onChange={(e) => setClosedAmt(e.target.value)}
+                  placeholder="amount"
+                />
+                {isAdmin && (
+                  <>
+                    <span className="text-xs text-[var(--charcoal)]/65">Commission ₹</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      className="w-28 rounded border border-[var(--terracotta)]/50 bg-[var(--terracotta-soft)]/40 px-2 py-1 text-sm"
+                      value={commissionAmt}
+                      onChange={(e) => setCommissionAmt(e.target.value)}
+                      placeholder="0"
+                      title="Admin-only. Included in client price."
+                    />
+                  </>
+                )}
+                <button
+                  onClick={() => {
+                    const n = closedAmt.trim() === "" ? null : Number(closedAmt);
+                    const c = commissionAmt.trim() === "" ? null : Number(commissionAmt);
+                    onClose(
+                      Number.isFinite(n as number) ? (n as number) : null,
+                      Number.isFinite(c as number) ? (c as number) : null,
+                    );
+                    setShowCloseInput(false);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-md bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700"
+                >
+                  <Check className="h-3 w-3" /> Confirm
+                </button>
+                <button
+                  onClick={() => setShowCloseInput(false)}
+                  className="rounded-md px-2 py-1 text-xs hover:bg-[var(--cream-deep)]"
+                >
+                  Cancel
+                </button>
+              </div>
+              {isAdmin && (
+                <p className="text-[10px] text-[var(--charcoal)]/55">
+                  Commission is admin-only. Client price = vendor cost + commission.
+                </p>
+              )}
+            </div>
           ) : (
-            <>
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setShowCloseInput(true)}
                 className="inline-flex items-center gap-1 rounded-md border border-green-600/40 bg-green-50 px-2 py-1 text-xs font-medium text-green-800 hover:bg-green-100"
@@ -403,10 +428,84 @@ function QuoteRow({
               >
                 Withdraw
               </button>
-            </>
+            </div>
           )}
         </div>
       )}
+
+      {isAdmin && (quote.status === "closed" || quote.is_final) && (
+        <ClosedCommissionEditor quoteId={quote.id} />
+      )}
+    </div>
+  );
+}
+
+function ClosedCommissionEditor({ quoteId }: { quoteId: string }) {
+  const qc = useQueryClient();
+  const { data } = useQuery({
+    queryKey: ["quote-commission", quoteId],
+    queryFn: () => getQuoteCommission({ data: { quote_id: quoteId } }),
+  });
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState("");
+  const current = data?.commission_amount ?? 0;
+
+  const save = async () => {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n < 0) {
+      toast.error("Enter a valid amount");
+      return;
+    }
+    try {
+      await setQuoteCommission({ data: { quote_id: quoteId, commission_amount: n } });
+      toast.success("Commission saved");
+      setEditing(false);
+      qc.invalidateQueries({ queryKey: ["quote-commission", quoteId] });
+      qc.invalidateQueries({ queryKey: ["analytics-overview"] });
+      qc.invalidateQueries({ queryKey: ["analytics-projects"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    }
+  };
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md border border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)]/40 px-2 py-1.5 text-xs">
+      <span className="font-semibold uppercase tracking-widest text-[var(--terracotta)]">Commission</span>
+      {editing ? (
+        <>
+          <span>₹</span>
+          <input
+            type="number"
+            inputMode="decimal"
+            className="w-28 rounded border border-[var(--border)] bg-white px-2 py-1 text-xs"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            autoFocus
+          />
+          <button onClick={save} className="rounded bg-green-600 px-2 py-1 text-white hover:bg-green-700">
+            Save
+          </button>
+          <button onClick={() => setEditing(false)} className="rounded px-2 py-1 hover:bg-white">
+            Cancel
+          </button>
+        </>
+      ) : (
+        <>
+          <span className="font-semibold">{formatINR(Number(current))}</span>
+          <button
+            onClick={() => {
+              setValue(String(current));
+              setEditing(true);
+            }}
+            className="ml-auto inline-flex items-center gap-1 rounded px-2 py-1 text-[var(--terracotta)] hover:bg-white"
+          >
+            <Pencil className="h-3 w-3" /> Edit
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
     </div>
   );
 }
