@@ -209,6 +209,7 @@ function ProjectSectionTabs({
   project,
   clients,
   canDelete,
+  isAdmin,
   onDelete,
   onToggleArchived,
   onSaved,
@@ -223,6 +224,7 @@ function ProjectSectionTabs({
   project: any;
   clients: any[];
   canDelete: boolean;
+  isAdmin: boolean;
   onDelete: () => void;
   onToggleArchived: (archived: boolean) => void;
   onSaved: () => void;
@@ -233,8 +235,9 @@ function ProjectSectionTabs({
   weddingDate: string;
   onRemoveVendor: (id: string, name: string) => void;
 }) {
-  const [tab, setTab] = useState<"vendors" | "timeline" | "details">("vendors");
-  const tabBtn = (key: "vendors" | "timeline" | "details", label: string, Icon: any) => (
+  type TabKey = "vendors" | "timeline" | "details" | "analytics";
+  const [tab, setTab] = useState<TabKey>("vendors");
+  const tabBtn = (key: TabKey, label: string, Icon: any) => (
     <button
       key={key}
       role="tab"
@@ -265,6 +268,7 @@ function ProjectSectionTabs({
         {tabBtn("vendors", "Assigned Vendors", LayoutGrid)}
         {tabBtn("timeline", "Budget & Deadlines", Calendar)}
         {tabBtn("details", "Project Details", FileText)}
+        {isAdmin && tabBtn("analytics", "Analytics", BarChart3)}
       </div>
 
       <div className="mt-4">
