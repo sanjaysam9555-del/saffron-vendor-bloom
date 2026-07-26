@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { LogOut, Shield, BarChart3 } from "lucide-react";
+import { LogOut, Shield } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 
@@ -12,19 +12,6 @@ export function AdminLink() {
       className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-xs text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
     >
       <Shield className="h-3.5 w-3.5" /> Admin
-    </Link>
-  );
-}
-
-export function AnalyticsLink() {
-  const { role } = useAuth();
-  if (role !== "admin") return null;
-  return (
-    <Link
-      to="/admin/analytics"
-      className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-xs text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
-    >
-      <BarChart3 className="h-3.5 w-3.5" /> Analytics
     </Link>
   );
 }

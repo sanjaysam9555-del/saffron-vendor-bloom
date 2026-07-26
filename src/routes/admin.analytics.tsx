@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2, Pencil, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { AuthGate } from "@/components/AuthGate";
 import {
@@ -11,15 +11,13 @@ import {
   analyticsCategories,
 } from "@/lib/analytics.functions";
 import {
-  listProjectPayments,
-  upsertProjectPayment,
-  deleteProjectPayment,
-  listAdminProjectsMini,
-  type PaymentStatus,
-  type ProjectPayment,
+  listPaymentsMatrix,
+  upsertInstallmentSlot,
+  updateProjectPaymentRemarks,
+  type PaymentMatrixRow,
+  type InstallmentSlot,
 } from "@/lib/project-payments.functions";
 import { formatINR, formatINRShort } from "@/lib/quote-types";
-import { useConfirmDelete } from "@/components/ui/confirm-dialog";
 
 export const Route = createFileRoute("/admin/analytics")({
   head: () => ({
@@ -76,14 +74,7 @@ function AdminAnalyticsPage() {
   return (
     <div className="min-h-screen bg-[var(--cream)] py-8">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
-        <Link
-          to="/admin"
-          className="inline-flex items-center gap-1 text-sm text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to dashboard
-        </Link>
-
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="font-display text-3xl text-[var(--charcoal)]">Analytics</h1>
             <p className="text-sm text-[var(--charcoal)]/60">
@@ -108,30 +99,26 @@ function AdminAnalyticsPage() {
           </div>
         </div>
 
-        {/* Overview cards */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {/* Overview: Client billing · Vendor cost · Commission */}
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <OverviewCard label="Client billing" value={overview.data?.client_billing ?? 0} tone="charcoal" />
           <OverviewCard label="Vendor cost" value={overview.data?.vendor_cost ?? 0} tone="muted" />
           <OverviewCard label="Commission" value={overview.data?.commission ?? 0} tone="terracotta" highlight />
-          <OverviewCard label="Received" value={overview.data?.received ?? 0} tone="green" />
-          <OverviewCard label="Pending" value={overview.data?.pending ?? 0} tone="amber" />
         </div>
 
         {/* Per-project P&L */}
         <section className="mt-10">
           <h2 className="font-display text-xl text-[var(--charcoal)]">Per-project P&amp;L</h2>
           <div className="mt-3 overflow-x-auto rounded-lg border border-[var(--border)] bg-white">
-            <table className="w-full min-w-[900px] text-sm">
+            <table className="w-full min-w-[820px] text-sm">
               <thead className="bg-[var(--cream)] text-left text-[10px] uppercase tracking-widest text-[var(--charcoal)]/60">
                 <tr>
                   <th className="px-4 py-2.5">Project</th>
                   <th className="px-4 py-2.5">Wedding</th>
-                  <th className="px-4 py-2.5 text-right">Client price</th>
+                  <th className="px-4 py-2.5 text-right">Client billing</th>
                   <th className="px-4 py-2.5 text-right">Vendor cost</th>
                   <th className="px-4 py-2.5 text-right">Commission</th>
                   <th className="px-4 py-2.5 text-right">Margin</th>
-                  <th className="px-4 py-2.5 text-right">Received</th>
-                  <th className="px-4 py-2.5 text-right">Pending</th>
                 </tr>
               </thead>
               <tbody>
@@ -155,14 +142,12 @@ function AdminAnalyticsPage() {
                       <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{formatINR(Number(p.vendor_cost))}</td>
                       <td className="px-4 py-3 text-right font-semibold text-[var(--terracotta)]">{formatINR(Number(p.commission))}</td>
                       <td className="px-4 py-3 text-right">{margin.toFixed(1)}%</td>
-                      <td className="px-4 py-3 text-right text-green-700">{formatINR(Number(p.received))}</td>
-                      <td className="px-4 py-3 text-right text-amber-700">{formatINR(Number(p.pending))}</td>
                     </tr>
                   );
                 })}
                 {(projects.data ?? []).length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
+                    <td colSpan={6} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
                       {projects.isLoading ? "Loading…" : "No closed quotes in this range yet."}
                     </td>
                   </tr>
@@ -170,6 +155,15 @@ function AdminAnalyticsPage() {
               </tbody>
             </table>
           </div>
+        </section>
+
+        {/* Project payments matrix (below P&L) */}
+        <section className="mt-10">
+          <h2 className="font-display text-xl text-[var(--charcoal)]">Project payments</h2>
+          <p className="text-xs text-[var(--charcoal)]/60">
+            One row per project. Click an installment to record the amount and mark it received.
+          </p>
+          <PaymentsMatrixTable range={range} />
         </section>
 
         {/* Vendor & category performance */}
@@ -223,13 +217,6 @@ function AdminAnalyticsPage() {
             </div>
           </div>
         </section>
-
-        {/* Payment ledger */}
-        <section className="mt-10">
-          <h2 className="font-display text-xl text-[var(--charcoal)]">Project payments</h2>
-          <p className="text-xs text-[var(--charcoal)]/60">Pick a project to add, edit and mark installments received.</p>
-          <PaymentLedger />
-        </section>
       </div>
     </div>
   );
@@ -243,16 +230,12 @@ function OverviewCard({
 }: {
   label: string;
   value: number;
-  tone: "charcoal" | "muted" | "terracotta" | "green" | "amber";
+  tone: "charcoal" | "muted" | "terracotta";
   highlight?: boolean;
 }) {
   const toneClass =
     tone === "terracotta"
       ? "text-[var(--terracotta)]"
-      : tone === "green"
-      ? "text-green-700"
-      : tone === "amber"
-      ? "text-amber-700"
       : tone === "muted"
       ? "text-[var(--charcoal)]/70"
       : "text-[var(--charcoal)]";
@@ -271,218 +254,217 @@ function OverviewCard({
   );
 }
 
-// -------------------- Payment ledger --------------------
+// -------------------- Payments matrix table --------------------
 
-function PaymentLedger() {
+function PaymentsMatrixTable({ range }: { range: { from: string | null; to: string | null } }) {
   const qc = useQueryClient();
-  const confirmDelete = useConfirmDelete();
-  const { data: projects = [] } = useQuery({
-    queryKey: ["admin-projects-mini"],
-    queryFn: () => listAdminProjectsMini(),
+  const { data: rows = [], isLoading } = useQuery({
+    queryKey: ["payments-matrix", range],
+    queryFn: () => listPaymentsMatrix({ data: range }),
   });
-  const [projectId, setProjectId] = useState<string>("");
-  const active = projectId || projects[0]?.id || "";
-  const { data: payments = [], isLoading } = useQuery({
-    queryKey: ["project-payments", active],
-    queryFn: () => listProjectPayments({ data: { project_id: active } }),
-    enabled: !!active,
-  });
+
+  const maxInstallments = useMemo(
+    () => rows.reduce((m, r) => Math.max(m, r.total_installments), 1),
+    [rows],
+  );
 
   const refresh = () => {
-    qc.invalidateQueries({ queryKey: ["project-payments", active] });
+    qc.invalidateQueries({ queryKey: ["payments-matrix"] });
     qc.invalidateQueries({ queryKey: ["analytics-overview"] });
     qc.invalidateQueries({ queryKey: ["analytics-projects"] });
   };
 
-  const del = useMutation({
-    mutationFn: (id: string) => deleteProjectPayment({ data: { id } }),
-    onSuccess: () => {
-      toast.success("Deleted");
-      refresh();
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
-  });
-
-  const [editing, setEditing] = useState<ProjectPayment | null>(null);
-  const [adding, setAdding] = useState(false);
-
-  const totals = useMemo(() => {
-    let expected = 0;
-    let received = 0;
-    for (const p of payments) {
-      expected += Number(p.expected_amount);
-      received += Number(p.received_amount);
-    }
-    return { expected, received, pending: Math.max(expected - received, 0) };
-  }, [payments]);
-
   return (
-    <div className="mt-3 rounded-lg border border-[var(--border)] bg-white p-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="text-xs text-[var(--charcoal)]/70">
-          Project
-          <select
-            value={active}
-            onChange={(e) => setProjectId(e.target.value)}
-            className="ml-2 rounded border border-[var(--border)] px-2 py-1 text-sm"
-          >
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {(p.bride_name || "?") + " & " + (p.groom_name || "?")}
-                {p.wedding_date ? ` — ${new Date(p.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` : ""}
-              </option>
+    <div className="mt-3 overflow-x-auto rounded-lg border border-[var(--border)] bg-white">
+      <table className="w-full min-w-[900px] text-sm">
+        <thead className="bg-[var(--cream)] text-left text-[10px] uppercase tracking-widest text-[var(--charcoal)]/60">
+          <tr>
+            <th className="px-3 py-2.5">Project</th>
+            <th className="px-3 py-2.5 text-right">Closed amount</th>
+            <th className="px-3 py-2.5 text-center">Installments</th>
+            {Array.from({ length: maxInstallments }, (_, i) => (
+              <th key={i} className="px-2 py-2.5 text-center">Inst. {i + 1}</th>
             ))}
-          </select>
-        </label>
-        <div className="ml-auto flex items-center gap-4 text-xs text-[var(--charcoal)]/70">
-          <span>Expected: <strong>{formatINR(totals.expected)}</strong></span>
-          <span className="text-green-700">Received: <strong>{formatINR(totals.received)}</strong></span>
-          <span className="text-amber-700">Pending: <strong>{formatINR(totals.pending)}</strong></span>
-          <button
-            onClick={() => {
-              setEditing(null);
-              setAdding(true);
-            }}
-            className="inline-flex items-center gap-1 rounded-md bg-[var(--terracotta)] px-2.5 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
-          >
-            <Plus className="h-3 w-3" /> Add installment
-          </button>
-        </div>
-      </div>
-
-      {(adding || editing) && (
-        <PaymentForm
-          projectId={active}
-          initial={editing}
-          onCancel={() => {
-            setAdding(false);
-            setEditing(null);
-          }}
-          onSaved={() => {
-            setAdding(false);
-            setEditing(null);
-            refresh();
-          }}
-        />
-      )}
-
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[720px] text-sm">
-          <thead className="bg-[var(--cream)] text-left text-[10px] uppercase tracking-widest text-[var(--charcoal)]/60">
+            <th className="px-3 py-2.5 text-right">Total received</th>
+            <th className="px-3 py-2.5">Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <MatrixRow key={r.project_id} row={r} maxInstallments={maxInstallments} onChanged={refresh} />
+          ))}
+          {rows.length === 0 && (
             <tr>
-              <th className="px-3 py-2">Label</th>
-              <th className="px-3 py-2 text-right">Expected</th>
-              <th className="px-3 py-2 text-right">Received</th>
-              <th className="px-3 py-2">Due</th>
-              <th className="px-3 py-2">Received on</th>
-              <th className="px-3 py-2">Status</th>
-              <th className="px-3 py-2 text-right">Actions</th>
+              <td colSpan={4 + maxInstallments} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
+                {isLoading ? "Loading…" : "No projects in this range."}
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {payments.map((p) => (
-              <tr key={p.id} className="border-t border-[var(--border)]">
-                <td className="px-3 py-2">
-                  <div className="font-medium">{p.label}</div>
-                  {p.notes && <div className="text-[11px] text-[var(--charcoal)]/55">{p.notes}</div>}
-                </td>
-                <td className="px-3 py-2 text-right">{formatINR(Number(p.expected_amount))}</td>
-                <td className="px-3 py-2 text-right text-green-700">{formatINR(Number(p.received_amount))}</td>
-                <td className="px-3 py-2">{p.due_date ?? "—"}</td>
-                <td className="px-3 py-2">{p.received_on ?? "—"}</td>
-                <td className="px-3 py-2"><StatusChip s={p.status} /></td>
-                <td className="px-3 py-2">
-                  <div className="flex justify-end gap-1">
-                    <button
-                      onClick={() => {
-                        setAdding(false);
-                        setEditing(p);
-                      }}
-                      className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={async () => {
-                        const ok = await confirmDelete({
-                          title: "Delete this installment?",
-                          confirmLabel: "Delete",
-                        });
-                        if (ok) del.mutate(p.id);
-                      }}
-                      className="rounded p-1.5 text-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {payments.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-[var(--charcoal)]/60">
-                  {isLoading ? "Loading…" : "No installments yet."}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
 
-function StatusChip({ s }: { s: PaymentStatus }) {
-  const map: Record<PaymentStatus, string> = {
-    pending: "bg-[var(--cream-deep)] text-[var(--charcoal)]/70",
-    partial: "bg-amber-100 text-amber-800",
-    received: "bg-green-100 text-green-800",
-    overdue: "bg-red-100 text-red-800",
-  };
-  return <span className={"rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider " + map[s]}>{s}</span>;
+function MatrixRow({
+  row,
+  maxInstallments,
+  onChanged,
+}: {
+  row: PaymentMatrixRow;
+  maxInstallments: number;
+  onChanged: () => void;
+}) {
+  const [remarks, setRemarks] = useState(row.payment_remarks ?? "");
+  const [remarksDirty, setRemarksDirty] = useState(false);
+
+  const saveRemarks = useMutation({
+    mutationFn: () =>
+      updateProjectPaymentRemarks({
+        data: { project_id: row.project_id, remarks: remarks.trim() || null },
+      }),
+    onSuccess: () => {
+      toast.success("Remarks saved");
+      setRemarksDirty(false);
+      onChanged();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  return (
+    <tr className="border-t border-[var(--border)] align-middle">
+      <td className="px-3 py-2">
+        <Link
+          to="/admin/projects/$id"
+          params={{ id: row.project_id }}
+          className="font-medium text-[var(--terracotta)] hover:underline"
+        >
+          {(row.bride_name || "?") + " & " + (row.groom_name || "?")}
+        </Link>
+        <div className="text-[11px] text-[var(--charcoal)]/55">
+          {row.wedding_date ? new Date(row.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+        </div>
+      </td>
+      <td className="px-3 py-2 text-right font-medium">{formatINR(row.closed_amount)}</td>
+      <td className="px-3 py-2 text-center">{row.total_installments}</td>
+      {Array.from({ length: maxInstallments }, (_, i) => {
+        const slotNo = i + 1;
+        if (slotNo > row.total_installments) {
+          return <td key={i} className="px-2 py-2 text-center text-[var(--charcoal)]/30">—</td>;
+        }
+        const slot =
+          row.installments.find((s) => s.installment_no === slotNo) ??
+          ({ id: null, installment_no: slotNo, expected_amount: 0, received_amount: 0, received_on: null, status: "pending" } as InstallmentSlot);
+        return (
+          <td key={i} className="px-2 py-2 text-center">
+            <InstallmentCell projectId={row.project_id} slot={slot} onChanged={onChanged} />
+          </td>
+        );
+      })}
+      <td className="px-3 py-2 text-right text-green-700 font-medium">{formatINR(row.total_received)}</td>
+      <td className="px-3 py-2 min-w-[180px]">
+        <div className="flex items-center gap-1">
+          <input
+            value={remarks}
+            onChange={(e) => {
+              setRemarks(e.target.value);
+              setRemarksDirty(true);
+            }}
+            onBlur={() => {
+              if (remarksDirty) saveRemarks.mutate();
+            }}
+            placeholder="Add remarks…"
+            className="w-full rounded border border-[var(--border)] bg-white px-2 py-1 text-xs"
+          />
+        </div>
+      </td>
+    </tr>
+  );
 }
 
-function PaymentForm({
+function InstallmentCell({
   projectId,
-  initial,
-  onCancel,
+  slot,
+  onChanged,
+}: {
+  projectId: string;
+  slot: InstallmentSlot;
+  onChanged: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const received = slot.status === "received";
+  const partial = slot.status === "partial";
+
+  const cellClass = received
+    ? "bg-green-100 hover:bg-green-200 text-green-800 border-green-300"
+    : partial
+    ? "bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300"
+    : "bg-[var(--cream)] hover:bg-[var(--cream-deep)] text-[var(--charcoal)]/70 border-[var(--border)]";
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className={"inline-flex min-w-[86px] flex-col items-center rounded-md border px-2 py-1 text-[11px] leading-tight " + cellClass}
+        title={`${received ? "Received" : partial ? "Partial" : "Pending"} · click to edit`}
+      >
+        <span className="font-semibold uppercase tracking-wider text-[9px]">
+          {received ? "Received" : partial ? "Partial" : "Pending"}
+        </span>
+        <span className="font-medium">
+          {slot.received_amount > 0
+            ? formatINRShort(slot.received_amount)
+            : slot.expected_amount > 0
+            ? `of ${formatINRShort(slot.expected_amount)}`
+            : "—"}
+        </span>
+      </button>
+      {open && (
+        <InstallmentEditDialog
+          projectId={projectId}
+          slot={slot}
+          onClose={() => setOpen(false)}
+          onSaved={() => {
+            setOpen(false);
+            onChanged();
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+function InstallmentEditDialog({
+  projectId,
+  slot,
+  onClose,
   onSaved,
 }: {
   projectId: string;
-  initial: ProjectPayment | null;
-  onCancel: () => void;
+  slot: InstallmentSlot;
+  onClose: () => void;
   onSaved: () => void;
 }) {
-  const [label, setLabel] = useState(initial?.label ?? "");
-  const [expected, setExpected] = useState(initial ? String(initial.expected_amount) : "");
-  const [received, setReceived] = useState(initial ? String(initial.received_amount) : "0");
-  const [due, setDue] = useState(initial?.due_date ?? "");
-  const [receivedOn, setReceivedOn] = useState(initial?.received_on ?? "");
-  const [status, setStatus] = useState<PaymentStatus>(initial?.status ?? "pending");
-  const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [expected, setExpected] = useState<string>(String(slot.expected_amount || ""));
+  const [receivedAmount, setReceivedAmount] = useState<string>(String(slot.received_amount || ""));
+  const [status, setStatus] = useState(slot.status);
+  const [receivedOn, setReceivedOn] = useState(slot.received_on ?? "");
   const [busy, setBusy] = useState(false);
 
   const save = async () => {
-    if (!label.trim()) {
-      toast.error("Label is required");
-      return;
-    }
     setBusy(true);
     try {
-      await upsertProjectPayment({
+      await upsertInstallmentSlot({
         data: {
-          id: initial?.id,
           project_id: projectId,
-          label: label.trim(),
-          expected_amount: Number(expected) || 0,
-          received_amount: Number(received) || 0,
-          due_date: due || null,
-          received_on: receivedOn || null,
+          installment_no: slot.installment_no,
+          expected_amount: Number(expected || 0),
+          received_amount: Number(receivedAmount || 0),
           status,
-          notes: notes.trim() || null,
+          received_on: status === "received" ? (receivedOn || new Date().toISOString().slice(0, 10)) : receivedOn || null,
         },
       });
-      toast.success(initial ? "Updated" : "Added");
+      toast.success("Saved");
       onSaved();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
@@ -492,28 +474,71 @@ function PaymentForm({
   };
 
   return (
-    <div className="mt-4 rounded-lg border border-[var(--terracotta)]/40 bg-[var(--cream)]/60 p-3">
-      <div className="grid gap-2 sm:grid-cols-6">
-        <input placeholder="Label (e.g. Signing amount)" value={label} onChange={(e) => setLabel(e.target.value)} className="sm:col-span-2 rounded border border-[var(--border)] bg-white px-2 py-1.5 text-sm" />
-        <input placeholder="Expected ₹" type="number" value={expected} onChange={(e) => setExpected(e.target.value)} className="rounded border border-[var(--border)] bg-white px-2 py-1.5 text-sm" />
-        <input placeholder="Received ₹" type="number" value={received} onChange={(e) => setReceived(e.target.value)} className="rounded border border-[var(--border)] bg-white px-2 py-1.5 text-sm" />
-        <input type="date" value={due} onChange={(e) => setDue(e.target.value)} className="rounded border border-[var(--border)] bg-white px-2 py-1.5 text-sm" />
-        <input type="date" value={receivedOn} onChange={(e) => setReceivedOn(e.target.value)} className="rounded border border-[var(--border)] bg-white px-2 py-1.5 text-sm" />
-        <select value={status} onChange={(e) => setStatus(e.target.value as PaymentStatus)} className="rounded border border-[var(--border)] bg-white px-2 py-1.5 text-sm">
-          <option value="pending">Pending</option>
-          <option value="partial">Partial</option>
-          <option value="received">Received</option>
-          <option value="overdue">Overdue</option>
-        </select>
-        <input placeholder="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} className="sm:col-span-5 rounded border border-[var(--border)] bg-white px-2 py-1.5 text-sm" />
-      </div>
-      <div className="mt-2 flex justify-end gap-2">
-        <button onClick={onCancel} className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs hover:bg-[var(--cream-deep)]">
-          <X className="h-3 w-3" /> Cancel
-        </button>
-        <button onClick={save} disabled={busy} className="inline-flex items-center gap-1 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 disabled:opacity-50">
-          <Check className="h-3 w-3" /> {busy ? "Saving…" : "Save"}
-        </button>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm rounded-xl bg-[var(--cream)] p-5 shadow-2xl"
+      >
+        <h3 className="font-display text-lg text-[var(--charcoal)]">Installment {slot.installment_no}</h3>
+        <div className="mt-3 grid gap-2 text-xs text-[var(--charcoal)]/70">
+          <label>
+            Expected amount
+            <input
+              type="number"
+              min={0}
+              value={expected}
+              onChange={(e) => setExpected(e.target.value)}
+              className="mt-1 w-full rounded border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+            />
+          </label>
+          <label>
+            Received amount
+            <input
+              type="number"
+              min={0}
+              value={receivedAmount}
+              onChange={(e) => setReceivedAmount(e.target.value)}
+              className="mt-1 w-full rounded border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+            />
+          </label>
+          <label>
+            Status
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as InstallmentSlot["status"])}
+              className="mt-1 w-full rounded border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+            >
+              <option value="pending">Pending</option>
+              <option value="partial">Partial</option>
+              <option value="received">Received</option>
+              <option value="overdue">Overdue</option>
+            </select>
+          </label>
+          <label>
+            Received on
+            <input
+              type="date"
+              value={receivedOn ?? ""}
+              onChange={(e) => setReceivedOn(e.target.value)}
+              className="mt-1 w-full rounded border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
+            />
+          </label>
+        </div>
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onClose} disabled={busy} className="rounded-md border border-[var(--border)] bg-white px-3 py-1.5 text-sm">
+            Cancel
+          </button>
+          <button
+            onClick={save}
+            disabled={busy}
+            className="rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 disabled:opacity-50"
+          >
+            {busy ? "Saving…" : "Save"}
+          </button>
+        </div>
       </div>
     </div>
   );

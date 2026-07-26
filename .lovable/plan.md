@@ -1,58 +1,58 @@
-# Admin-Only Analytics Tab
+## Analytics tab restructure
 
-Everything below is gated to `role === 'admin'`. Employees never see the tab, the commission field, or the payment ledger — anywhere in the app.
+### 1. Header nav
+- `src/components/admin/DashboardSwitch.tsx`: add third segment "Analytics" (BarChart3 icon), route `/admin/analytics`. Active when path starts with `/admin/analytics`.
+- `src/components/UserMenu.tsx`: remove `AnalyticsLink` export usage.
+- `src/components/admin/AdminShellHeader.tsx`: drop `<AnalyticsLink />`.
+- `DashboardSwitch` renders the Analytics segment only when `role === 'admin'` (using `useAuth`).
 
-## 1. Database
+### 2. Analytics page cleanup (`src/routes/admin.analytics.tsx`)
+- Remove "Back to dashboard" link.
+- Overview cards → 3 cards only: **Client Billing**, **Vendor Cost**, **Commission**. Drop Received/Pending.
+- Per-project P&L table → columns: Project, Wedding, Client Price, Vendor Cost, Commission, Margin. Drop Received/Pending.
+- Move Project Payments section directly below P&L (before vendor/category performance).
 
-**a) Commission on closed quotes**
-- Add `commission_amount NUMERIC(12,2)` (nullable) to `project_vendor_quotes`.
-- RLS: readable/writable by admin only via a dedicated policy; employees keep existing quote access but cannot read/write this column (enforced through an admin-only RPC for get/set; column excluded from client-facing selects).
-- `closed_amount` stays the single client-facing figure — unchanged.
+### 3. Project Payments table (replaces dropdown ledger)
+New flat table, one row per project, editable inline. Columns:
 
-**b) New `project_payments` table** (admin-only)
-- Fields: `project_id`, `label`, `expected_amount`, `received_amount`, `due_date`, `received_on`, `status` (pending / partial / received / overdue), `notes`.
-- RLS: SELECT/INSERT/UPDATE/DELETE gated by `has_role(auth.uid(), 'admin')`. Employees and clients get nothing.
+```
+Project | Closed Amount | Total Installments | Inst 1 | Inst 2 | Inst 3 | Inst 4 | Total Received | Remarks
+```
 
-**c) Admin-only analytics RPCs**
-- `admin_analytics_overview(from, to)` — totals: client billing, vendor cost, commission, received, pending.
-- `admin_analytics_projects(from, to)` — per-project P&L rows.
-- `admin_analytics_vendors(from, to)` / `admin_analytics_categories(from, to)` — performance rollups.
-- Each RPC is `SECURITY DEFINER`, checks `has_role(auth.uid(),'admin')` at the top, EXECUTE granted to `authenticated` only.
+- Each installment cell shows the amount; cell background = green when received, amber when pending (toggle via click or a small ✓ button inside the cell to mark received/unreceived and set `received_on`).
+- "Total Received" auto-computes from installments.
+- "Remarks" is an editable text field (debounced save).
+- Total Installments is set at project creation (1–4) and locked here (edit only via project edit).
+- Closed Amount is read-only, equals sum of closed quotes for the project (already available from analytics_projects RPC).
 
-## 2. New route `/admin/analytics` (admin only)
+### 4. Data model changes
+Add to `projects` table:
+- `total_installments SMALLINT NOT NULL DEFAULT 1 CHECK (total_installments BETWEEN 1 AND 4)`
 
-- New file `src/routes/admin.analytics.tsx` wrapped in `<AuthGate requireAdmin />`. Non-admins are redirected by the existing gate.
-- Add nav link in `AdminShellHeader` rendered only when `role === 'admin'` (mirrors existing `AdminLink` pattern) — employees do not see the tab at all.
+Auto-seed `project_payments` rows on project creation:
+- On `createProject`, after insert, generate N installment rows with `label = 'Installment k'`, `expected_amount = closed_amount / N` placeholder (0 initially since no closed quotes yet), `status = 'pending'`, `installment_no = k`.
+- Add `installment_no SMALLINT` column to `project_payments` to order them 1..N.
 
-Sections on the tab:
+New admin RPC / server fn `listProjectPaymentsMatrix(range)`:
+- Returns one row per project: `{ project_id, names, wedding_date, closed_amount, total_installments, installments: [{no, expected, received, received_on, status}], total_received, remarks }`.
+- Remarks stored on project row as `payment_remarks TEXT NULL`.
 
-**A. Overview cards** — date-range filter (This month / Quarter / Year / Custom)
-- Total client billing · Total vendor cost · Total commission earned · Total received · Total pending.
+Server fns:
+- `updateInstallment({project_id, installment_no, expected_amount?, received_amount?, status?, received_on?})` — upserts on `(project_id, installment_no)`.
+- `updateProjectPaymentRemarks({project_id, remarks})`.
 
-**B. Per-project P&L table**
-- Project · Client price · Vendor cost · Commission · Margin % · Received · Pending · Status. Sortable, links into project detail.
+### 5. Create Project dialog
+`src/components/admin/CreateProjectDialog.tsx`:
+- Add required "Number of installments" select (1/2/3/4).
+- Pass to `createProject`; server fn seeds N `project_payments` rows.
 
-**C. Vendor & category performance**
-- Top vendors by bookings + commission earned.
-- Category spend + commission breakdown.
+### 6. Files touched
+- Migration: add `projects.total_installments`, `projects.payment_remarks`, `project_payments.installment_no`, unique index `(project_id, installment_no)`, backfill defaults, new admin RPC.
+- `src/lib/projects.functions.ts`: accept `total_installments`, seed installments.
+- `src/lib/project-payments.functions.ts`: add matrix listing + inline update fns.
+- `src/routes/admin.analytics.tsx`: rewrite overview cards, P&L columns, replace `PaymentLedger` with `PaymentsMatrixTable`.
+- `src/components/admin/DashboardSwitch.tsx`, `AdminShellHeader.tsx`, `UserMenu.tsx`.
+- `src/components/admin/CreateProjectDialog.tsx`.
 
-**D. Project payment ledger** (admin only)
-- Pick a project → installment list with add/edit/mark-received.
-- Also embedded as an admin-only card inside the existing admin project page — hidden for employees via `role === 'admin'` check.
-
-## 3. Quote close flow
-
-- In `ProjectVendorQuotesPanel` close dialog: **Commission** input rendered only when `role === 'admin'`.
-- Employees continue to close quotes exactly as today, with no commission UI or data exposure.
-- Editable later from the same panel, still admin-only.
-
-## 4. Visual / motion
-
-Reuse existing tokens, `FlipNumber`, `Reveal`. No new libraries.
-
-## Technical notes
-
-- Single migration: column + payments table + RLS + admin-only RPCs + `GRANT`s per project rules.
-- New server fns: `src/lib/analytics.functions.ts`, `src/lib/project-payments.functions.ts`, `src/lib/quote-commission.functions.ts` — all use `requireSupabaseAuth` and re-check `has_role('admin')` inside every handler (defence-in-depth on top of RLS/RPC checks).
-- New UI: `src/routes/admin.analytics.tsx` + `src/components/admin/analytics/{OverviewCards,ProjectPLTable,VendorPerformance,CategoryBreakdown,PaymentLedger}.tsx`.
-- Client-facing components and employee views are not modified beyond hiding admin-only affordances.
+### Open question
+For projects created before this migration, default `total_installments = 1` and seed one installment with expected = closed amount. OK?

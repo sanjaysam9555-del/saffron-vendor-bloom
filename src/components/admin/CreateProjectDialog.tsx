@@ -16,6 +16,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
   const [groom, setGroom] = useState("");
   const [date, setDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [installments, setInstallments] = useState<number>(2);
   const [busy, setBusy] = useState(false);
 
   if (!open) return null;
@@ -25,6 +26,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
     setGroom("");
     setDate("");
     setNotes("");
+    setInstallments(2);
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -37,6 +39,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
           groom_name: groom.trim(),
           wedding_date: date,
           notes: notes.trim() || null,
+          total_installments: installments,
         },
       });
       notifySuccess("Project created");
@@ -79,9 +82,24 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
               Groom name
               <input required value={groom} onChange={(e) => setGroom(e.target.value)} className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" />
             </label>
-            <label className="sm:col-span-2 text-xs text-[var(--charcoal)]/70">
+            <label className="text-xs text-[var(--charcoal)]/70">
               Wedding date
               <input required type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" />
+            </label>
+            <label className="text-xs text-[var(--charcoal)]/70">
+              Number of installments
+              <select
+                required
+                value={installments}
+                onChange={(e) => setInstallments(Number(e.target.value))}
+                className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm"
+              >
+                {[1, 2, 3, 4].map((n) => (
+                  <option key={n} value={n}>
+                    {n} installment{n === 1 ? "" : "s"}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="sm:col-span-2 text-xs text-[var(--charcoal)]/70">
               Notes (optional)
