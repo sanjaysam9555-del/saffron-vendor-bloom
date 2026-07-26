@@ -460,6 +460,7 @@ export const createProject = createServerFn({ method: "POST" })
         wedding_date: z.string().min(4),
         notes: z.string().max(2000).optional().nullable(),
         total_installments: z.number().int().min(1).max(4),
+        planning_fee: z.number().nonnegative(),
       })
       .parse(d),
   )
@@ -473,14 +474,13 @@ export const createProject = createServerFn({ method: "POST" })
         wedding_date: data.wedding_date,
         notes: data.notes ?? null,
         total_installments: data.total_installments,
+        planning_fee: data.planning_fee,
         created_by: context.userId,
       })
       .select()
       .single();
     if (error) throw new Error(error.message);
 
-    // Seed installment placeholder rows (1..N) so the payments matrix
-    // has slots ready to edit inline.
     if (row?.id) {
       const seedRows = Array.from({ length: data.total_installments }, (_, i) => ({
         project_id: row.id as string,
