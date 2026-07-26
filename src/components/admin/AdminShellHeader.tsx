@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
 import logoLight from "@/assets/saffron-logo-transparent.png";
-import { AdminLink, LogoutButton } from "@/components/UserMenu";
+import { AdminLink, AnalyticsLink, LogoutButton } from "@/components/UserMenu";
 import { DashboardSwitch } from "@/components/admin/DashboardSwitch";
 
 // Defer NotificationsBell — it has its own realtime subscription and data
@@ -41,6 +41,7 @@ export function AdminShellHeader() {
           <div className="hidden sm:block">
             <DashboardSwitch />
           </div>
+          <AnalyticsLink />
           <AdminLink />
           <LogoutButton />
         </div>
