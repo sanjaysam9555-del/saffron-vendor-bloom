@@ -383,14 +383,14 @@ function CommissionMatrixTable({ projectId }: { projectId: string }) {
   };
 
   const totals = useMemo(() => {
-    const t = { closed: 0, commission: 0, received: 0, pending: 0, per_slot: [0, 0, 0, 0] as [number, number, number, number] };
+    const t = { closed: 0, commission: 0, received: 0, pending: 0, per_slot: [0, 0] as [number, number] };
     for (const r of rows) {
       t.closed += Number(r.closed_amount || 0);
       t.commission += Number(r.commission_amount || 0);
       t.received += Number(r.total_received || 0);
       t.pending += commissionRowPending(r);
       for (const s of r.installments) {
-        if (s.installment_no >= 1 && s.installment_no <= 4) {
+        if (s.installment_no >= 1 && s.installment_no <= 2) {
           t.per_slot[s.installment_no - 1] += Number(s.received_amount || 0);
         }
       }
@@ -401,20 +401,20 @@ function CommissionMatrixTable({ projectId }: { projectId: string }) {
   return (
     <div className="mt-3 overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1200px] text-sm">
-          <thead className="bg-[var(--charcoal)] text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/80">
+        <table className="w-full min-w-[980px] text-sm">
+          <thead className="bg-[var(--charcoal)] text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/80">
             <tr>
-              <th className="px-3 py-3">Vendor</th>
-              <th className="px-3 py-3">Category</th>
-              <th className="px-3 py-3 text-right">Closed amount</th>
-              <th className="px-3 py-3 text-right">Commission</th>
-              <th className="px-3 py-3 text-center">Instalments</th>
-              {[1, 2, 3, 4].map((n) => (
-                <th key={n} className="px-2 py-3 text-center">Inst. {n}</th>
+              <th className="whitespace-nowrap px-3 py-3 text-left">Vendor</th>
+              <th className="whitespace-nowrap px-3 py-3 text-left">Category</th>
+              <th className="whitespace-nowrap px-3 py-3 text-right">Closed</th>
+              <th className="whitespace-nowrap px-3 py-3 text-right">Commission</th>
+              <th className="whitespace-nowrap px-2 py-3 text-center">Inst.</th>
+              {[1, 2].map((n) => (
+                <th key={n} className="whitespace-nowrap px-2 py-3 text-center">Inst. {n}</th>
               ))}
-              <th className="px-3 py-3 text-right">Total received</th>
-              <th className="px-3 py-3 text-right">Total pending</th>
-              <th className="px-3 py-3">Remarks</th>
+              <th className="whitespace-nowrap px-3 py-3 text-right">Received</th>
+              <th className="whitespace-nowrap px-3 py-3 text-right">Pending</th>
+              <th className="whitespace-nowrap px-3 py-3 text-left">Remarks</th>
             </tr>
           </thead>
           <tbody className="[&_tr:nth-child(even)]:bg-[var(--cream)]/25">
@@ -423,7 +423,7 @@ function CommissionMatrixTable({ projectId }: { projectId: string }) {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={11} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
+                <td colSpan={9} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
                   {isLoading ? "Loading…" : "No closed vendors yet."}
                 </td>
               </tr>
@@ -438,7 +438,7 @@ function CommissionMatrixTable({ projectId }: { projectId: string }) {
                 <td className="px-3 py-3" />
                 <td className="px-3 py-3 text-right">{formatINR(totals.closed)}</td>
                 <td className="px-3 py-3 text-right text-[var(--terracotta)]">{formatINR(totals.commission)}</td>
-                <td className="px-3 py-3 text-center text-[var(--charcoal)]/50">—</td>
+                <td className="px-2 py-3 text-center text-[var(--charcoal)]/50">—</td>
                 {totals.per_slot.map((v, i) => (
                   <td key={i} className="px-2 py-3 text-center text-xs">{v > 0 ? formatINRShort(v) : "—"}</td>
                 ))}
