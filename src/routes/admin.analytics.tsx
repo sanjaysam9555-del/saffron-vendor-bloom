@@ -116,7 +116,7 @@ function AdminAnalyticsPage() {
 
             label="Fee + Commission received"
             value={received.data?.total ?? 0}
-            tone="gold"
+            tone="green"
             highlight
             hint={`Fee ${formatINRShort(received.data?.fee_received ?? 0)} · Comm ${formatINRShort(received.data?.commission_received ?? 0)}`}
           />
