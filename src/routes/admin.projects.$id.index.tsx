@@ -187,6 +187,7 @@ function ProjectDetailPage() {
           project={project}
           clients={clients}
           canDelete={role === "admin"}
+          isAdmin={role === "admin"}
           onDelete={handleDeleteProject}
           onToggleArchived={handleToggleArchived}
           onSaved={refresh}
