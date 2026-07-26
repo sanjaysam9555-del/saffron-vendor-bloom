@@ -17,6 +17,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
   const [date, setDate] = useState("");
   const [notes, setNotes] = useState("");
   const [installments, setInstallments] = useState<number>(2);
+  const [planningFee, setPlanningFee] = useState<string>("");
   const [busy, setBusy] = useState(false);
 
   if (!open) return null;
@@ -27,6 +28,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
     setDate("");
     setNotes("");
     setInstallments(2);
+    setPlanningFee("");
   };
 
   const submit = async (e: React.FormEvent) => {
