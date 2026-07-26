@@ -114,7 +114,7 @@ function AdminAnalyticsPage() {
           <h2 className="font-display text-xl text-[var(--charcoal)]">Per-project P&amp;L</h2>
           <div className="mt-3 overflow-x-auto rounded-lg border border-[var(--border)] bg-white">
             <table className="w-full min-w-[820px] text-sm">
-              <thead className="bg-[var(--cream)] text-left text-[10px] uppercase tracking-widest text-[var(--charcoal)]/60">
+              <thead className="bg-[var(--charcoal)] text-left text-[10px] uppercase tracking-widest text-[var(--cream)]/80">
                 <tr>
                   <th className="px-4 py-2.5">Project</th>
                   <th className="px-4 py-2.5">Wedding</th>
