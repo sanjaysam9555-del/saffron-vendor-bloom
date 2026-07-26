@@ -247,7 +247,7 @@ function OverviewCard({
 }: {
   label: string;
   value: number;
-  tone: "charcoal" | "muted" | "terracotta" | "green" | "gold";
+  tone: "charcoal" | "muted" | "terracotta" | "green" | "gold" | "rose";
   highlight?: boolean;
   hint?: string;
 }) {
@@ -258,6 +258,8 @@ function OverviewCard({
       ? "text-emerald-700"
       : tone === "gold"
       ? "text-amber-700"
+      : tone === "rose"
+      ? "text-rose-700"
       : tone === "muted"
       ? "text-[var(--charcoal)]/70"
       : "text-[var(--charcoal)]";
@@ -266,6 +268,8 @@ function OverviewCard({
       ? "border-emerald-500/40 bg-emerald-50"
       : tone === "gold"
       ? "border-amber-500/40 bg-amber-50"
+      : tone === "rose"
+      ? "border-rose-500/40 bg-rose-50"
       : "border-[var(--terracotta)]/40 bg-[var(--terracotta-soft)]";
   return (
     <div
