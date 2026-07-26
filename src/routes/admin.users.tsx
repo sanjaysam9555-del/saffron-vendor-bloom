@@ -171,7 +171,7 @@ function AdminUsersPage() {
               style={{ WebkitOverflowScrolling: "touch" }}
             >
               <table className="w-full min-w-[640px] text-sm">
-                <thead className="bg-[var(--cream)] text-left text-xs uppercase tracking-wider text-[var(--charcoal)]/60">
+                <thead className="bg-[var(--charcoal)] text-left text-xs uppercase tracking-wider text-[var(--cream)]/80">
                   <tr>
                     <th className="px-4 py-2.5">Name</th>
                     <th className="px-4 py-2.5">Email</th>
