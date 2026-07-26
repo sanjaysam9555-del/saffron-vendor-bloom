@@ -122,7 +122,7 @@ export function ClientVendorTable({ vendors, onView }: Props) {
           {visibleRows.map((v) => {
             const colors = CATEGORY_COLORS[v.category] ?? {
               bg: "bg-black/25",
-              text: "text-[var(--charcoal)]",
+              text: "text-[var(--cream)]",
             };
             const statusOpt = getClientStatusOption(v.client_status);
             const quotes = v.quotes ?? [];
@@ -139,7 +139,7 @@ export function ClientVendorTable({ vendors, onView }: Props) {
                 <Td>
                   <button
                     onClick={() => onView(v)}
-                    className="inline-flex items-center gap-1.5 text-left font-medium text-[var(--charcoal)] hover:text-[var(--terracotta)]"
+                    className="inline-flex items-center gap-1.5 text-left font-medium text-[var(--cream)] hover:text-[var(--terracotta)]"
                   >
                     {v.vendor_name}
                   </button>

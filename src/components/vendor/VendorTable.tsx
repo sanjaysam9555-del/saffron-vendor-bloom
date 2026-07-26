@@ -113,7 +113,7 @@ export function VendorTable({
         </thead>
         <tbody>
           {visibleRows.map((v) => {
-            const colors = CATEGORY_COLORS[v.category] ?? { bg: "bg-black/25", text: "text-[var(--charcoal)]" };
+            const colors = CATEGORY_COLORS[v.category] ?? { bg: "bg-black/25", text: "text-[var(--cream)]" };
             const isSelected = !!selectedIds?.has(v.id);
             const handleRowClick = () => {
               if (selectMode) onToggleSelect?.(v.id);
@@ -140,9 +140,9 @@ export function VendorTable({
                 )}
                 <td className="px-3 py-2.5">
                   {selectMode ? (
-                    <span className="font-medium text-[var(--charcoal)]">{v.vendor_name}</span>
+                    <span className="font-medium text-[var(--cream)]">{v.vendor_name}</span>
                   ) : (
-                    <button onClick={() => onView(v)} className="text-left font-medium text-[var(--charcoal)] hover:text-[var(--terracotta)]">
+                    <button onClick={() => onView(v)} className="text-left font-medium text-[var(--cream)] hover:text-[var(--terracotta)]">
                       {v.vendor_name}
                     </button>
                   )}
