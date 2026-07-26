@@ -282,7 +282,7 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
     for (const r of rows) {
       t.planning_fee += Number(r.planning_fee || 0);
       t.total_received += Number(r.total_received || 0);
-      t.total_pending += Math.max(0, Number(r.planning_fee || 0) - Number(r.total_received || 0));
+      t.total_pending += rowPending(r);
       for (const s of r.installments) {
         if (s.installment_no >= 1 && s.installment_no <= 4) {
           t.per_slot[s.installment_no - 1] += Number(s.received_amount || 0);
