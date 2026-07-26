@@ -402,6 +402,8 @@ function CommissionMatrixTable({ projectId }: { projectId: string }) {
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["commission-matrix", projectId] });
     qc.invalidateQueries({ queryKey: ["project-analytics-overview", projectId] });
+    qc.invalidateQueries({ queryKey: ["project-received", projectId] });
+    qc.invalidateQueries({ queryKey: ["analytics-received"] });
   };
 
   const totals = useMemo(() => {
