@@ -874,10 +874,22 @@ function AssignedVendorsSection({
     return map;
   }, [vendors, quoteQueries]);
 
+  const hasClosedByVendor = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    vendors.forEach((v: any, i: number) => {
+      const qs = (quoteQueries[i]?.data as any[]) ?? [];
+      map[v.id] = qs.some((q) => q.is_final || q.status === "closed");
+    });
+    return map;
+  }, [vendors, quoteQueries]);
+
   const sortedVendors = useMemo(() => {
-    if (sorts.length === 0) return filteredVendors;
     const arr = [...filteredVendors];
     arr.sort((a: any, b: any) => {
+      // Closed-quote vendors always float to the top of the table.
+      const ac = hasClosedByVendor[a.id] ? 1 : 0;
+      const bc = hasClosedByVendor[b.id] ? 1 : 0;
+      if (ac !== bc) return bc - ac;
       for (const s of sorts) {
         let av: string | number = "";
         let bv: string | number = "";
@@ -897,7 +909,8 @@ function AssignedVendorsSection({
       return 0;
     });
     return arr;
-  }, [filteredVendors, sorts, quoteAmountByVendor]);
+  }, [filteredVendors, sorts, quoteAmountByVendor, hasClosedByVendor]);
+
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { like: 0, shortlisted: 0, finalised: 0, rejected: 0, thinking: 0 };
