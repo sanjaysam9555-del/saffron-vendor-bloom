@@ -1,0 +1,2 @@
+REVOKE SELECT (total_commission_installments, commission_remarks) ON public.project_vendor_quotes FROM authenticated;
+REVOKE UPDATE (total_commission_installments, commission_remarks) ON public.project_vendor_quotes FROM authenticated;
