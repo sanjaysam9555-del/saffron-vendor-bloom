@@ -212,7 +212,12 @@ export const upsertInstallmentSlot = createServerFn({ method: "POST" })
       .eq("installment_no", data.installment_no)
       .maybeSingle();
 
-    const patch: Record<string, unknown> = {};
+    const patch: {
+      expected_amount?: number;
+      received_amount?: number;
+      status?: PaymentStatus;
+      received_on?: string | null;
+    } = {};
     if (data.expected_amount !== undefined) patch.expected_amount = data.expected_amount;
     if (data.received_amount !== undefined) patch.received_amount = data.received_amount;
     if (data.status !== undefined) patch.status = data.status;
