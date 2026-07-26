@@ -308,7 +308,7 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
     <div className="mt-3 overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1100px] text-sm">
-          <thead className="sticky top-0 z-10 bg-gradient-to-b from-[var(--cream)] to-[var(--cream)]/70 text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/60 backdrop-blur">
+          <thead className="sticky top-0 z-10 bg-[var(--charcoal)] text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/80">
             <tr>
               <th className="px-3 py-3">Project</th>
               <th className="px-3 py-3 text-right">Planning fee</th>
