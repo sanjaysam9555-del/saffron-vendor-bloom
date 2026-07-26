@@ -288,7 +288,7 @@ function ProjectSectionTabs({
             mode="admin"
           />
         )}
-        {tab === "details" && (
+        {tab === "details" && isAdmin && (
           <ProjectDetailsTab
             projectId={projectId}
             project={project}
