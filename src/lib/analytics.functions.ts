@@ -2,10 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { attachAuthToken } from "./auth-client-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-async function assertAdmin(userId: string) {
-  const { data, error } = await supabaseAdmin
+async function assertAdmin(supabase: any, userId: string) {
+  const { data, error } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
@@ -24,7 +23,7 @@ export const analyticsOverview = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) => RangeInput.parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.userId);
+    await assertAdmin(context.supabase, context.userId);
     const { data: rows, error } = await context.supabase.rpc("admin_analytics_overview", {
       _from: (data.from ?? null) as unknown as string,
       _to: (data.to ?? null) as unknown as string,
@@ -53,7 +52,7 @@ export const analyticsReceivedBreakdown = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) => RangeInput.parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.userId);
+    await assertAdmin(context.supabase, context.userId);
     let pp = context.supabase.from("project_payments").select("received_amount, received_on");
     if (data.from) pp = pp.gte("received_on", data.from);
     if (data.to) pp = pp.lte("received_on", data.to);
@@ -64,16 +63,24 @@ export const analyticsReceivedBreakdown = createServerFn({ method: "POST" })
     if (data.to) vc = vc.lte("received_on", data.to);
     const { data: vcRows, error: e2 } = await vc;
     if (e2) throw new Error(e2.message);
-    // Pending totals ignore date range - outstanding is a "current state" figure.
-    const { data: ppAll, error: e3 } = await context.supabase
-      .from("project_payments").select("expected_amount, received_amount");
+    // Fee pending must match the Payments Matrix: use planning_fee as the
+    // baseline when installment expected totals are lower/incomplete.
+    const { data: paymentRows, error: e3 } = await context.supabase.rpc("admin_payments_matrix", {
+      _from: (data.from ?? null) as unknown as string,
+      _to: (data.to ?? null) as unknown as string,
+    });
     if (e3) throw new Error(e3.message);
     const { data: vcAll, error: e4 } = await context.supabase
       .from("vendor_commission_payments").select("expected_amount, received_amount");
     if (e4) throw new Error(e4.message);
     const fee_received = (ppRows ?? []).reduce((a: number, r: any) => a + Number(r.received_amount ?? 0), 0);
     const commission_received = (vcRows ?? []).reduce((a: number, r: any) => a + Number(r.received_amount ?? 0), 0);
-    const fee_pending = (ppAll ?? []).reduce((a: number, r: any) => a + Math.max(Number(r.expected_amount ?? 0) - Number(r.received_amount ?? 0), 0), 0);
+    const fee_pending = (paymentRows ?? []).reduce((a: number, r: any) => {
+      const installments = Array.isArray(r.installments) ? r.installments : [];
+      const expectedTotal = installments.reduce((sum: number, s: any) => sum + Number(s.expected_amount ?? 0), 0);
+      const basis = Math.max(Number(r.planning_fee ?? 0), expectedTotal);
+      return a + Math.max(basis - Number(r.total_received ?? 0), 0);
+    }, 0);
     const commission_pending = (vcAll ?? []).reduce((a: number, r: any) => a + Math.max(Number(r.expected_amount ?? 0) - Number(r.received_amount ?? 0), 0), 0);
     return {
       fee_received,
@@ -89,7 +96,7 @@ export const analyticsProjects = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) => RangeInput.parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.userId);
+    await assertAdmin(context.supabase, context.userId);
     const { data: rows, error } = await context.supabase.rpc("admin_analytics_projects", {
       _from: (data.from ?? null) as unknown as string,
       _to: (data.to ?? null) as unknown as string,
@@ -113,7 +120,7 @@ export const analyticsVendors = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) => RangeInput.parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.userId);
+    await assertAdmin(context.supabase, context.userId);
     const { data: rows, error } = await context.supabase.rpc("admin_analytics_vendors", {
       _from: (data.from ?? null) as unknown as string,
       _to: (data.to ?? null) as unknown as string,
@@ -133,7 +140,7 @@ export const analyticsCategories = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) => RangeInput.parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.userId);
+    await assertAdmin(context.supabase, context.userId);
     const { data: rows, error } = await context.supabase.rpc("admin_analytics_categories", {
       _from: (data.from ?? null) as unknown as string,
       _to: (data.to ?? null) as unknown as string,
