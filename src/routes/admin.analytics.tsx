@@ -445,7 +445,10 @@ function MatrixRow({
         );
       })}
 
-      <td className="px-3 py-2 text-right text-green-700 font-medium">{formatINR(row.total_received)}</td>
+      <td className="px-3 py-2 text-right font-medium text-green-700">{formatINR(row.total_received)}</td>
+      <td className="px-3 py-2 text-right font-medium text-[var(--terracotta)]">
+        {formatINR(Math.max(0, Number(row.planning_fee || 0) - Number(row.total_received || 0)))}
+      </td>
       <td className="px-3 py-2 min-w-[180px]">
         <div className="flex items-center gap-1">
           <input
