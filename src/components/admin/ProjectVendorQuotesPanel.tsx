@@ -262,15 +262,18 @@ function QuoteRow({
 }: {
   quote: ProjectVendorQuote;
   onEdit: () => void;
-  onClose: (amount: number | null) => void;
+  onClose: (amount: number | null, commission: number | null) => void;
   onDelete: () => void;
   onWithdraw: () => void;
   onViewFile: (f: QuoteFile) => void;
 }) {
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
   const [showCloseInput, setShowCloseInput] = useState(false);
   const [closedAmt, setClosedAmt] = useState<string>(
     quote.quote_amount != null ? String(quote.quote_amount) : "",
   );
+  const [commissionAmt, setCommissionAmt] = useState<string>("");
 
   const headlineAmount =
     quote.status === "closed" && quote.closed_amount != null
