@@ -14,6 +14,7 @@ import {
   listPaymentsMatrix,
   upsertInstallmentSlot,
   updateProjectPaymentRemarks,
+  updateProjectPlanningFee,
   type PaymentMatrixRow,
   type InstallmentSlot,
 } from "@/lib/project-payments.functions";
@@ -263,11 +264,6 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
     queryFn: () => listPaymentsMatrix({ data: range }),
   });
 
-  const maxInstallments = useMemo(
-    () => rows.reduce((m, r) => Math.max(m, r.total_installments), 1),
-    [rows],
-  );
-
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["payments-matrix"] });
     qc.invalidateQueries({ queryKey: ["analytics-overview"] });
@@ -276,14 +272,14 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
 
   return (
     <div className="mt-3 overflow-x-auto rounded-lg border border-[var(--border)] bg-white">
-      <table className="w-full min-w-[900px] text-sm">
+      <table className="w-full min-w-[1000px] text-sm">
         <thead className="bg-[var(--cream)] text-left text-[10px] uppercase tracking-widest text-[var(--charcoal)]/60">
           <tr>
             <th className="px-3 py-2.5">Project</th>
-            <th className="px-3 py-2.5 text-right">Closed amount</th>
+            <th className="px-3 py-2.5 text-right">Planning fee</th>
             <th className="px-3 py-2.5 text-center">Installments</th>
-            {Array.from({ length: maxInstallments }, (_, i) => (
-              <th key={i} className="px-2 py-2.5 text-center">Inst. {i + 1}</th>
+            {[1, 2, 3, 4].map((n) => (
+              <th key={n} className="px-2 py-2.5 text-center">Inst. {n}</th>
             ))}
             <th className="px-3 py-2.5 text-right">Total received</th>
             <th className="px-3 py-2.5">Remarks</th>
@@ -291,11 +287,11 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
         </thead>
         <tbody>
           {rows.map((r) => (
-            <MatrixRow key={r.project_id} row={r} maxInstallments={maxInstallments} onChanged={refresh} />
+            <MatrixRow key={r.project_id} row={r} onChanged={refresh} />
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={4 + maxInstallments} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
+              <td colSpan={8} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
                 {isLoading ? "Loading…" : "No projects in this range."}
               </td>
             </tr>
@@ -308,15 +304,15 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
 
 function MatrixRow({
   row,
-  maxInstallments,
   onChanged,
 }: {
   row: PaymentMatrixRow;
-  maxInstallments: number;
   onChanged: () => void;
 }) {
   const [remarks, setRemarks] = useState(row.payment_remarks ?? "");
   const [remarksDirty, setRemarksDirty] = useState(false);
+  const [fee, setFee] = useState<string>(String(row.planning_fee ?? 0));
+  const [feeDirty, setFeeDirty] = useState(false);
 
   const saveRemarks = useMutation({
     mutationFn: () =>
@@ -326,6 +322,19 @@ function MatrixRow({
     onSuccess: () => {
       toast.success("Remarks saved");
       setRemarksDirty(false);
+      onChanged();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const saveFee = useMutation({
+    mutationFn: () =>
+      updateProjectPlanningFee({
+        data: { project_id: row.project_id, planning_fee: Number(fee || 0) },
+      }),
+    onSuccess: () => {
+      toast.success("Planning fee saved");
+      setFeeDirty(false);
       onChanged();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
@@ -345,18 +354,32 @@ function MatrixRow({
           {row.wedding_date ? new Date(row.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
         </div>
       </td>
-      <td className="px-3 py-2 text-right font-medium">{formatINR(row.closed_amount)}</td>
+      <td className="px-3 py-2 text-right">
+        <input
+          type="number"
+          min={0}
+          step="0.01"
+          value={fee}
+          onChange={(e) => {
+            setFee(e.target.value);
+            setFeeDirty(true);
+          }}
+          onBlur={() => {
+            if (feeDirty) saveFee.mutate();
+          }}
+          className="w-28 rounded border border-[var(--border)] bg-white px-2 py-1 text-right text-xs font-medium"
+        />
+      </td>
       <td className="px-3 py-2 text-center">{row.total_installments}</td>
-      {Array.from({ length: maxInstallments }, (_, i) => {
-        const slotNo = i + 1;
+      {[1, 2, 3, 4].map((slotNo) => {
         if (slotNo > row.total_installments) {
-          return <td key={i} className="px-2 py-2 text-center text-[var(--charcoal)]/30">—</td>;
+          return <td key={slotNo} className="px-2 py-2 text-center text-[var(--charcoal)]/30">—</td>;
         }
         const slot =
           row.installments.find((s) => s.installment_no === slotNo) ??
           ({ id: null, installment_no: slotNo, expected_amount: 0, received_amount: 0, received_on: null, status: "pending" } as InstallmentSlot);
         return (
-          <td key={i} className="px-2 py-2 text-center">
+          <td key={slotNo} className="px-2 py-2 text-center">
             <InstallmentCell projectId={row.project_id} slot={slot} onChanged={onChanged} />
           </td>
         );

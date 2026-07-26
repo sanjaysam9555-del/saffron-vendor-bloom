@@ -137,7 +137,7 @@ export interface PaymentMatrixRow {
   groom_name: string | null;
   wedding_date: string | null;
   total_installments: number;
-  closed_amount: number;
+  planning_fee: number;
   total_received: number;
   payment_remarks: string | null;
   installments: InstallmentSlot[];
@@ -181,7 +181,7 @@ export const listPaymentsMatrix = createServerFn({ method: "POST" })
         groom_name: r.groom_name,
         wedding_date: r.wedding_date,
         total_installments: n,
-        closed_amount: Number(r.closed_amount ?? 0),
+        planning_fee: Number(r.planning_fee ?? 0),
         total_received: Number(r.total_received ?? 0),
         payment_remarks: r.payment_remarks ?? null,
         installments: slots,
@@ -268,4 +268,25 @@ export const updateProjectPaymentRemarks = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const updateProjectPlanningFee = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        project_id: z.string().uuid(),
+        planning_fee: z.number().nonnegative(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("projects")
+      .update({ planning_fee: data.planning_fee })
+      .eq("id", data.project_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 

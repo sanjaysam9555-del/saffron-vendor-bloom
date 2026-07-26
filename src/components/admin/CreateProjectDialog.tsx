@@ -17,6 +17,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
   const [date, setDate] = useState("");
   const [notes, setNotes] = useState("");
   const [installments, setInstallments] = useState<number>(2);
+  const [planningFee, setPlanningFee] = useState<string>("");
   const [busy, setBusy] = useState(false);
 
   if (!open) return null;
@@ -27,6 +28,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
     setDate("");
     setNotes("");
     setInstallments(2);
+    setPlanningFee("");
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -40,6 +42,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
           wedding_date: date,
           notes: notes.trim() || null,
           total_installments: installments,
+          planning_fee: Number(planningFee || 0),
         },
       });
       notifySuccess("Project created");
@@ -85,6 +88,19 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
             <label className="text-xs text-[var(--charcoal)]/70">
               Wedding date
               <input required type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" />
+            </label>
+            <label className="text-xs text-[var(--charcoal)]/70">
+              Planning fee (₹)
+              <input
+                required
+                type="number"
+                min={0}
+                step="0.01"
+                value={planningFee}
+                onChange={(e) => setPlanningFee(e.target.value)}
+                placeholder="e.g. 50000"
+                className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm"
+              />
             </label>
             <label className="text-xs text-[var(--charcoal)]/70">
               Number of installments

@@ -711,6 +711,7 @@ export type Database = {
           id: string
           notes: string | null
           payment_remarks: string | null
+          planning_fee: number
           total_installments: number
           updated_at: string
           wedding_date: string
@@ -724,6 +725,7 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_remarks?: string | null
+          planning_fee?: number
           total_installments?: number
           updated_at?: string
           wedding_date: string
@@ -737,6 +739,7 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_remarks?: string | null
+          planning_fee?: number
           total_installments?: number
           updated_at?: string
           wedding_date?: string
@@ -1075,10 +1078,10 @@ export type Database = {
         Args: { _from: string; _to: string }
         Returns: {
           bride_name: string
-          closed_amount: number
           groom_name: string
           installments: Json
           payment_remarks: string
+          planning_fee: number
           project_id: string
           total_installments: number
           total_received: number
