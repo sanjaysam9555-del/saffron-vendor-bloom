@@ -196,17 +196,17 @@ function ProjectPaymentsMatrix({ projectId }: { projectId: string }) {
   return (
     <div className="mt-3 overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] text-sm">
-          <thead className="bg-[var(--charcoal)] text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/80">
+        <table className="w-full min-w-[780px] table-fixed text-sm">
+          <thead className="bg-[var(--charcoal)] text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/80">
             <tr>
-              <th className="px-3 py-3 text-right">Planning fee</th>
-              <th className="px-3 py-3 text-center">Instalments</th>
+              <th className="w-[120px] whitespace-nowrap px-3 py-3 text-right">Planning fee</th>
+              <th className="w-[90px] whitespace-nowrap px-2 py-3 text-center">Inst.</th>
               {[1, 2, 3, 4].map((n) => (
-                <th key={n} className="px-2 py-3 text-center">Inst. {n}</th>
+                <th key={n} className="w-[92px] whitespace-nowrap px-2 py-3 text-center">Inst. {n}</th>
               ))}
-              <th className="px-3 py-3 text-right">Total received</th>
-              <th className="px-3 py-3 text-right">Total pending</th>
-              <th className="px-3 py-3">Remarks</th>
+              <th className="w-[110px] whitespace-nowrap px-3 py-3 text-right">Received</th>
+              <th className="w-[110px] whitespace-nowrap px-3 py-3 text-right">Pending</th>
+              <th className="whitespace-nowrap px-3 py-3 text-left">Remarks</th>
             </tr>
           </thead>
           <tbody>
