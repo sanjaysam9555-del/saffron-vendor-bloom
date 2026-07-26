@@ -105,8 +105,8 @@ function AdminAnalyticsPage() {
         {/* Overview: Client billing · Vendor cost · Commission */}
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <OverviewCard label="Client billing" value={overview.data?.client_billing ?? 0} tone="charcoal" />
-          <OverviewCard label="Vendor cost" value={overview.data?.vendor_cost ?? 0} tone="muted" />
-          <OverviewCard label="Commission" value={overview.data?.commission ?? 0} tone="terracotta" highlight />
+          <OverviewCard label="Vendor cost" value={overview.data?.vendor_cost ?? 0} tone="terracotta" highlight />
+          <OverviewCard label="Commission" value={overview.data?.commission ?? 0} tone="green" highlight />
         </div>
 
         {/* Per-project P&L */}
