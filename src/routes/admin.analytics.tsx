@@ -242,23 +242,29 @@ function OverviewCard({
   value,
   tone,
   highlight,
+  hint,
 }: {
   label: string;
   value: number;
-  tone: "charcoal" | "muted" | "terracotta" | "green";
+  tone: "charcoal" | "muted" | "terracotta" | "green" | "gold";
   highlight?: boolean;
+  hint?: string;
 }) {
   const toneClass =
     tone === "terracotta"
       ? "text-[var(--terracotta)]"
       : tone === "green"
       ? "text-emerald-700"
+      : tone === "gold"
+      ? "text-amber-700"
       : tone === "muted"
       ? "text-[var(--charcoal)]/70"
       : "text-[var(--charcoal)]";
   const highlightClass =
     tone === "green"
       ? "border-emerald-500/40 bg-emerald-50"
+      : tone === "gold"
+      ? "border-amber-500/40 bg-amber-50"
       : "border-[var(--terracotta)]/40 bg-[var(--terracotta-soft)]";
   return (
     <div
@@ -269,6 +275,7 @@ function OverviewCard({
     >
       <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">{label}</div>
       <div className={"mt-1 font-display text-2xl font-semibold " + toneClass}>{formatINR(Number(value))}</div>
+      {hint && <div className="mt-1 text-[11px] text-[var(--charcoal)]/60">{hint}</div>}
     </div>
   );
 }
