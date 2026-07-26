@@ -259,6 +259,14 @@ function OverviewCard({
 
 // -------------------- Payments matrix table --------------------
 
+function rowExpectedTotal(r: PaymentMatrixRow): number {
+  return r.installments.reduce((sum, s) => sum + Number(s.expected_amount || 0), 0);
+}
+function rowPending(r: PaymentMatrixRow): number {
+  const basis = Math.max(Number(r.planning_fee || 0), rowExpectedTotal(r));
+  return Math.max(0, basis - Number(r.total_received || 0));
+}
+
 function PaymentsMatrixTable({ range }: { range: { from: string | null; to: string | null } }) {
   const qc = useQueryClient();
   const { data: rows = [], isLoading } = useQuery({
