@@ -506,9 +506,6 @@ function ClosedCommissionEditor({ quoteId }: { quoteId: string }) {
     </div>
   );
 }
-    </div>
-  );
-}
 
 function QuoteForm({
   projectId,
