@@ -459,6 +459,7 @@ export const createProject = createServerFn({ method: "POST" })
         groom_name: z.string().min(1).max(120),
         wedding_date: z.string().min(4),
         notes: z.string().max(2000).optional().nullable(),
+        total_installments: z.number().int().min(1).max(4),
       })
       .parse(d),
   )
@@ -471,11 +472,28 @@ export const createProject = createServerFn({ method: "POST" })
         groom_name: data.groom_name,
         wedding_date: data.wedding_date,
         notes: data.notes ?? null,
+        total_installments: data.total_installments,
         created_by: context.userId,
       })
       .select()
       .single();
     if (error) throw new Error(error.message);
+
+    // Seed installment placeholder rows (1..N) so the payments matrix
+    // has slots ready to edit inline.
+    if (row?.id) {
+      const seedRows = Array.from({ length: data.total_installments }, (_, i) => ({
+        project_id: row.id as string,
+        installment_no: i + 1,
+        label: `Installment ${i + 1}`,
+        expected_amount: 0,
+        received_amount: 0,
+        status: "pending" as const,
+        created_by: context.userId,
+      }));
+      await supabaseAdmin.from("project_payments").insert(seedRows);
+    }
+
     return row;
   });
 
