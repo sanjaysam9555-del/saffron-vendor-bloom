@@ -429,6 +429,91 @@ export type Database = {
           },
         ]
       }
+      project_payments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          expected_amount: number
+          id: string
+          label: string
+          notes: string | null
+          project_id: string
+          received_amount: number
+          received_on: string | null
+          status: Database["public"]["Enums"]["project_payment_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          expected_amount?: number
+          id?: string
+          label: string
+          notes?: string | null
+          project_id: string
+          received_amount?: number
+          received_on?: string | null
+          status?: Database["public"]["Enums"]["project_payment_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          expected_amount?: number
+          id?: string
+          label?: string
+          notes?: string | null
+          project_id?: string
+          received_amount?: number
+          received_on?: string | null
+          status?: Database["public"]["Enums"]["project_payment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_payments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_quote_commissions: {
+        Row: {
+          commission_amount: number
+          created_at: string
+          notes: string | null
+          quote_id: string
+          updated_at: string
+        }
+        Insert: {
+          commission_amount?: number
+          created_at?: string
+          notes?: string | null
+          quote_id: string
+          updated_at?: string
+        }
+        Update: {
+          commission_amount?: number
+          created_at?: string
+          notes?: string | null
+          quote_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_quote_commissions_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: true
+            referencedRelation: "project_vendor_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_vendor_comments: {
         Row: {
           body: string
@@ -930,6 +1015,53 @@ export type Database = {
       }
     }
     Functions: {
+      admin_analytics_categories: {
+        Args: { _from: string; _to: string }
+        Returns: {
+          bookings: number
+          category: string
+          client_billing: number
+          commission: number
+        }[]
+      }
+      admin_analytics_overview: {
+        Args: { _from: string; _to: string }
+        Returns: {
+          booked_vendor_count: number
+          client_billing: number
+          commission: number
+          pending: number
+          project_count: number
+          received: number
+          vendor_cost: number
+        }[]
+      }
+      admin_analytics_projects: {
+        Args: { _from: string; _to: string }
+        Returns: {
+          bride_name: string
+          client_billing: number
+          commission: number
+          groom_name: string
+          pending: number
+          project_id: string
+          received: number
+          vendor_cost: number
+          vendor_count: number
+          wedding_date: string
+        }[]
+      }
+      admin_analytics_vendors: {
+        Args: { _from: string; _to: string }
+        Returns: {
+          bookings: number
+          category: string
+          client_billing: number
+          commission: number
+          vendor_id: string
+          vendor_name: string
+        }[]
+      }
       client_can_access_quote: {
         Args: { _quote_id: string; _user_id: string }
         Returns: boolean
@@ -984,6 +1116,7 @@ export type Database = {
         | "finalised"
         | "rejected"
         | "thinking"
+      project_payment_status: "pending" | "partial" | "received" | "overdue"
       quote_status: "received" | "revised" | "closed" | "withdrawn"
     }
     CompositeTypes: {
@@ -1120,6 +1253,7 @@ export const Constants = {
         "rejected",
         "thinking",
       ],
+      project_payment_status: ["pending", "partial", "received", "overdue"],
       quote_status: ["received", "revised", "closed", "withdrawn"],
     },
   },

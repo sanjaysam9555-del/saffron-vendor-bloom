@@ -1,30 +1,58 @@
-## Diagnosis
+# Admin-Only Analytics Tab
 
-The Instagram bulk cache is already fetched using the **unfiltered** vendor id list (`admin.index.tsx` line 70-75), so switching a category filter does not clear the preview data. The `previewMap.get(v.id)` still returns the correct row after filtering — the row's header (avatar, name, bio) is proof of that in the screenshot.
+Everything below is gated to `role === 'admin'`. Employees never see the tab, the commission field, or the payment ledger — anywhere in the app.
 
-The failure is at the thumbnail `<img>` level:
+## 1. Database
 
-- `VendorInstagramCardStrip` renders each thumb through `SafeImg`, which uses `<img loading="lazy" ...>`.
-- The card grid is rendered inside `VirtualGrid`, whose rows are **absolutely positioned with a `translateY` transform** inside a tall `totalHeight` container.
-- After a category filter is applied, the parent container shrinks and rows are re-positioned. Browsers' `loading="lazy"` intersection heuristic frequently mis-detects these transformed rows as off-screen and never fires the fetch, leaving the anchor's cream `bg-[var(--cream-deep)]` background as a blank square.
-- The same symptom appears on other pages that also mount the strip inside virtualized or animated containers.
+**a) Commission on closed quotes**
+- Add `commission_amount NUMERIC(12,2)` (nullable) to `project_vendor_quotes`.
+- RLS: readable/writable by admin only via a dedicated policy; employees keep existing quote access but cannot read/write this column (enforced through an admin-only RPC for get/set; column excluded from client-facing selects).
+- `closed_amount` stays the single client-facing figure — unchanged.
 
-Secondary issue: `SafeImg` keeps its `ok` state across src changes because the component isn't keyed by `src`. If a URL failed once (e.g. an expired CDN link before mirroring), a later refresh with a good storage URL still renders the fallback icon or blank state.
+**b) New `project_payments` table** (admin-only)
+- Fields: `project_id`, `label`, `expected_amount`, `received_amount`, `due_date`, `received_on`, `status` (pending / partial / received / overdue), `notes`.
+- RLS: SELECT/INSERT/UPDATE/DELETE gated by `has_role(auth.uid(), 'admin')`. Employees and clients get nothing.
 
-## Fix
+**c) Admin-only analytics RPCs**
+- `admin_analytics_overview(from, to)` — totals: client billing, vendor cost, commission, received, pending.
+- `admin_analytics_projects(from, to)` — per-project P&L rows.
+- `admin_analytics_vendors(from, to)` / `admin_analytics_categories(from, to)` — performance rollups.
+- Each RPC is `SECURITY DEFINER`, checks `has_role(auth.uid(),'admin')` at the top, EXECUTE granted to `authenticated` only.
 
-Scope stays in the presentation layer — no data or server-fn changes.
+## 2. New route `/admin/analytics` (admin only)
 
-1. **`src/components/vendor/VendorInstagramPreview.tsx`**
-   - Drop `loading="lazy"` on card-strip thumbnails and the avatar (keep it on the detail-drawer variant where lazy is fine). These are ~60×60 images already known to be visible.
-   - Add `decoding="async"` so decode still stays off the main thread.
-   - Reset `SafeImg`'s error state whenever `src` changes (either `useEffect` reset or, simpler, key the component by `src` at the call site) so a previously-failed URL doesn't poison the next render.
-   - Add a subtle low-opacity Instagram glyph inside each thumb anchor as a base layer, so even a slow image load never leaves a completely empty grey square.
+- New file `src/routes/admin.analytics.tsx` wrapped in `<AuthGate requireAdmin />`. Non-admins are redirected by the existing gate.
+- Add nav link in `AdminShellHeader` rendered only when `role === 'admin'` (mirrors existing `AdminLink` pattern) — employees do not see the tab at all.
 
-2. **`src/components/ui/VirtualGrid.tsx`**
-   - Bump `overscan` default (or override at call sites that render the vendor strip) so mounted rows extend well past the viewport, reducing the chance that lazy/intersection logic in browsers considers the transformed row off-screen when the grid reflows after a filter change.
+Sections on the tab:
 
-3. **Sanity re-check after fix**
-   - Verify by loading `/admin`, applying a category filter, and confirming thumbnails appear immediately on the first three cards. Repeat with a different filter to confirm no regression on toggle.
+**A. Overview cards** — date-range filter (This month / Quarter / Year / Custom)
+- Total client billing · Total vendor cost · Total commission earned · Total received · Total pending.
 
-No changes to `useInstagramPreviewsBulk`, the mirror pipeline, or the proxy route.
+**B. Per-project P&L table**
+- Project · Client price · Vendor cost · Commission · Margin % · Received · Pending · Status. Sortable, links into project detail.
+
+**C. Vendor & category performance**
+- Top vendors by bookings + commission earned.
+- Category spend + commission breakdown.
+
+**D. Project payment ledger** (admin only)
+- Pick a project → installment list with add/edit/mark-received.
+- Also embedded as an admin-only card inside the existing admin project page — hidden for employees via `role === 'admin'` check.
+
+## 3. Quote close flow
+
+- In `ProjectVendorQuotesPanel` close dialog: **Commission** input rendered only when `role === 'admin'`.
+- Employees continue to close quotes exactly as today, with no commission UI or data exposure.
+- Editable later from the same panel, still admin-only.
+
+## 4. Visual / motion
+
+Reuse existing tokens, `FlipNumber`, `Reveal`. No new libraries.
+
+## Technical notes
+
+- Single migration: column + payments table + RLS + admin-only RPCs + `GRANT`s per project rules.
+- New server fns: `src/lib/analytics.functions.ts`, `src/lib/project-payments.functions.ts`, `src/lib/quote-commission.functions.ts` — all use `requireSupabaseAuth` and re-check `has_role('admin')` inside every handler (defence-in-depth on top of RLS/RPC checks).
+- New UI: `src/routes/admin.analytics.tsx` + `src/components/admin/analytics/{OverviewCards,ProjectPLTable,VendorPerformance,CategoryBreakdown,PaymentLedger}.tsx`.
+- Client-facing components and employee views are not modified beyond hiding admin-only affordances.
