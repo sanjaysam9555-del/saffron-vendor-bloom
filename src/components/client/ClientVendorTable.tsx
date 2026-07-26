@@ -75,9 +75,9 @@ export function ClientVendorTable({ vendors, onView }: Props) {
   const visibleRows = filteredVendors.slice(0, visibleCount);
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-[var(--border)] bg-white animate-fade-in">
+    <div className="overflow-x-auto rounded-lg border border-white/10 bg-[var(--charcoal)] text-[var(--cream)] animate-fade-in">
       <table className="w-full min-w-[900px] text-sm">
-        <thead className="bg-[var(--cream-deep)]/60 text-[10px] uppercase tracking-widest text-[var(--charcoal)]/55">
+        <thead className="bg-black/25 text-[10px] uppercase tracking-widest text-[var(--cream)]/55">
           <tr>
             <Th>Vendor</Th>
             <Th>
@@ -121,8 +121,8 @@ export function ClientVendorTable({ vendors, onView }: Props) {
         <tbody>
           {visibleRows.map((v) => {
             const colors = CATEGORY_COLORS[v.category] ?? {
-              bg: "bg-[var(--cream-deep)]",
-              text: "text-[var(--charcoal)]",
+              bg: "bg-black/25",
+              text: "text-[var(--cream)]",
             };
             const statusOpt = getClientStatusOption(v.client_status);
             const quotes = v.quotes ?? [];
@@ -134,17 +134,17 @@ export function ClientVendorTable({ vendors, onView }: Props) {
             return (
               <tr
                 key={v.id}
-                className={`border-t border-[var(--border)] ${v.is_saffron_pick ? "bg-terracotta-soft" : "hover:bg-[var(--cream-deep)]/30"}`}
+                className={`border-t border-white/10 ${v.is_saffron_pick ? "bg-[var(--terracotta)]/25" : "hover:bg-black/25/30"}`}
               >
                 <Td>
                   <button
                     onClick={() => onView(v)}
-                    className="inline-flex items-center gap-1.5 text-left font-medium text-[var(--charcoal)] hover:text-[var(--terracotta)]"
+                    className="inline-flex items-center gap-1.5 text-left font-medium text-[var(--cream)] hover:text-[var(--terracotta)]"
                   >
                     {v.vendor_name}
                   </button>
                   {(v.attachments.length > 0 || (v.comment_count ?? 0) > 0) && (
-                    <div className="mt-1 flex items-center gap-2 text-[10px] text-[var(--charcoal)]/55">
+                    <div className="mt-1 flex items-center gap-2 text-[10px] text-[var(--cream)]/55">
                       {v.attachments.length > 0 && (
                         <span className="inline-flex items-center gap-0.5">
                           <Paperclip className="h-3 w-3" /> {v.attachments.length}
@@ -165,12 +165,12 @@ export function ClientVendorTable({ vendors, onView }: Props) {
                     {v.category}
                   </span>
                   {v.subcategory && (
-                    <div className="mt-0.5 text-[10px] text-[var(--charcoal)]/55">
+                    <div className="mt-0.5 text-[10px] text-[var(--cream)]/55">
                       {v.subcategory}
                     </div>
                   )}
                 </Td>
-                <Td className="text-[var(--charcoal)]/75">{v.location ?? "—"}</Td>
+                <Td className="text-[var(--cream)]/75">{v.location ?? "—"}</Td>
                 <Td>
                   <div className="min-w-[140px]">
                     <ClientStatusSelect vendorId={v.id} status={statusOpt?.value ?? null} />
@@ -178,7 +178,7 @@ export function ClientVendorTable({ vendors, onView }: Props) {
                 </Td>
                 <Td>
                   {ordered.length === 0 ? (
-                    <span className="text-[10px] text-[var(--charcoal)]/45">—</span>
+                    <span className="text-[10px] text-[var(--cream)]/45">—</span>
                   ) : (
                     <div className="flex flex-wrap gap-1">
                       {ordered.map((q) => {
@@ -196,7 +196,7 @@ export function ClientVendorTable({ vendors, onView }: Props) {
                             className={
                               closed
                                 ? "inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-800"
-                                : "inline-flex items-center gap-1 rounded-full border border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--terracotta)]"
+                                : "inline-flex items-center gap-1 rounded-full border border-[var(--terracotta)]/30 bg-[var(--terracotta)]/20 px-2 py-0.5 text-[10px] font-medium text-[var(--terracotta)]"
                             }
                           >
                             {closed ? <CircleCheck className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
@@ -209,12 +209,12 @@ export function ClientVendorTable({ vendors, onView }: Props) {
                 </Td>
                 <Td>
                   {v.google_rating != null ? (
-                    <span className="inline-flex items-center gap-1 text-[var(--charcoal)]/80">
+                    <span className="inline-flex items-center gap-1 text-[var(--cream)]/85">
                       <Star className="h-3.5 w-3.5 fill-[var(--terracotta)] text-[var(--terracotta)]" />
                       {Number(v.google_rating).toFixed(1)}
                     </span>
                   ) : (
-                    <span className="text-[10px] text-[var(--charcoal)]/45">—</span>
+                    <span className="text-[10px] text-[var(--cream)]/45">—</span>
                   )}
                 </Td>
                 <Td className="text-right">
