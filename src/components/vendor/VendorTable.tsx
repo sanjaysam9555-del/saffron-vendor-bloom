@@ -76,7 +76,7 @@ export function VendorTable({
 
 
   const Th = ({ k, label, className }: { k: SortKey; label: string; className?: string }) => (
-    <th className={`px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--cream)]/55 ${className ?? ""}`}>
+    <th className={`px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--cream)]/80 ${className ?? ""}`}>
       <button onClick={() => toggleSort(k)} className="inline-flex items-center gap-1 hover:text-[var(--terracotta)]">
         {label} <ArrowUpDown className="h-3 w-3" />
       </button>
@@ -87,9 +87,9 @@ export function VendorTable({
     selectMode && vendors.length > 0 && vendors.every((v) => selectedIds?.has(v.id));
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-white/10 bg-[var(--charcoal)] text-[var(--cream)] shadow-sm">
+    <div className="overflow-x-auto rounded-lg border border-[var(--border)] bg-white shadow-sm">
       <table className="w-full text-sm">
-        <thead className="border-b border-white/10 bg-black/25">
+        <thead className="bg-[var(--charcoal)]">
           <tr>
             {selectMode && (
               <th className="w-10 px-3 py-2.5">
@@ -97,7 +97,7 @@ export function VendorTable({
                   type="checkbox"
                   checked={allVisibleSelected}
                   onChange={() => onToggleSelectAll?.()}
-                  className="h-4 w-4 rounded border-white/10 accent-[var(--terracotta)]"
+                  className="h-4 w-4 rounded border-white/20 accent-[var(--terracotta)]"
                   aria-label="Select all visible"
                 />
               </th>
@@ -113,7 +113,7 @@ export function VendorTable({
         </thead>
         <tbody>
           {visibleRows.map((v) => {
-            const colors = CATEGORY_COLORS[v.category] ?? { bg: "bg-black/25", text: "text-[var(--cream)]" };
+            const colors = CATEGORY_COLORS[v.category] ?? { bg: "bg-[var(--cream)]", text: "text-[var(--charcoal)]" };
             const isSelected = !!selectedIds?.has(v.id);
             const handleRowClick = () => {
               if (selectMode) onToggleSelect?.(v.id);
@@ -122,9 +122,9 @@ export function VendorTable({
               <tr
                 key={v.id}
                 onClick={handleRowClick}
-                className={`border-b border-white/10 last:border-b-0 ${
+                className={`border-b border-[var(--border)] last:border-b-0 ${
                   selectMode ? "cursor-pointer" : ""
-                } ${isSelected ? "bg-[var(--terracotta)]/20" : "hover:bg-white/5"}`}
+                } ${isSelected ? "bg-[var(--terracotta)]/15" : "hover:bg-[var(--cream)]/60"}`}
               >
                 {selectMode && (
                   <td className="w-10 px-3 py-2.5">
@@ -133,16 +133,16 @@ export function VendorTable({
                       checked={isSelected}
                       onChange={() => onToggleSelect?.(v.id)}
                       onClick={(e) => e.stopPropagation()}
-                      className="h-4 w-4 rounded border-white/10 accent-[var(--terracotta)]"
+                      className="h-4 w-4 rounded border-[var(--border)] accent-[var(--terracotta)]"
                       aria-label={`Select ${v.vendor_name}`}
                     />
                   </td>
                 )}
                 <td className="px-3 py-2.5">
                   {selectMode ? (
-                    <span className="font-medium text-[var(--cream)]">{v.vendor_name}</span>
+                    <span className="font-medium text-[var(--charcoal)]">{v.vendor_name}</span>
                   ) : (
-                    <button onClick={() => onView(v)} className="text-left font-medium text-[var(--cream)] hover:text-[var(--terracotta)]">
+                    <button onClick={() => onView(v)} className="text-left font-medium text-[var(--charcoal)] hover:text-[var(--terracotta)]">
                       {v.vendor_name}
                     </button>
                   )}
@@ -152,13 +152,13 @@ export function VendorTable({
                     {v.category}
                   </span>
                 </td>
-                <td className="px-3 py-2.5 text-[var(--cream)]/75">{v.location ?? "—"}</td>
-                <td className="px-3 py-2.5 text-[var(--cream)]/75">{v.price_text ?? "—"}</td>
-                <td className="px-3 py-2.5 text-[var(--cream)]/75">{v.google_rating != null ? Number(v.google_rating).toFixed(1) : "—"}</td>
-                <td className="px-3 py-2.5 text-[var(--cream)]/55">{new Date(v.date_added).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</td>
+                <td className="px-3 py-2.5 text-[var(--charcoal)]/75">{v.location ?? "—"}</td>
+                <td className="px-3 py-2.5 text-[var(--charcoal)]/75">{v.price_text ?? "—"}</td>
+                <td className="px-3 py-2.5 text-[var(--charcoal)]/75">{v.google_rating != null ? Number(v.google_rating).toFixed(1) : "—"}</td>
+                <td className="px-3 py-2.5 text-[var(--charcoal)]/55">{new Date(v.date_added).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</td>
                 <td className="px-3 py-2.5 text-right">
                   {!selectMode && (
-                    <button onClick={(e) => { e.stopPropagation(); onEdit(v); }} className="rounded p-1 text-[var(--cream)]/55 hover:bg-[var(--terracotta)]/20 hover:text-[var(--terracotta)]" title="Edit">
+                    <button onClick={(e) => { e.stopPropagation(); onEdit(v); }} className="rounded p-1 text-[var(--charcoal)]/55 hover:bg-[var(--terracotta)]/15 hover:text-[var(--terracotta)]" title="Edit">
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
                   )}
@@ -166,6 +166,7 @@ export function VendorTable({
               </tr>
             );
           })}
+
           {visibleCount < sorted.length && (
             <tr ref={sentinelRef} aria-hidden>
               <td colSpan={selectMode ? 8 : 7} className="h-10" />
