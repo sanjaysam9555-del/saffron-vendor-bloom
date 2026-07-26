@@ -207,7 +207,7 @@ function ProjectPaymentsMatrix({ projectId }: { projectId: string }) {
               ))}
               <th className="w-[110px] whitespace-nowrap px-3 py-3 text-right">Received</th>
               <th className="w-[110px] whitespace-nowrap px-3 py-3 text-right">Pending</th>
-              <th className="whitespace-nowrap px-3 py-3 text-left">Remarks</th>
+              <th className="w-[220px] whitespace-nowrap px-3 py-3 text-left">Remarks</th>
             </tr>
           </thead>
           <tbody>
