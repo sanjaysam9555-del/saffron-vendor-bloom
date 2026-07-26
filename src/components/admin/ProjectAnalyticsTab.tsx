@@ -482,10 +482,10 @@ function CommissionRow({ row, onChanged }: { row: CommissionMatrixRow; onChanged
           }}
           className="rounded border border-[var(--border)] bg-white px-2 py-1 text-xs font-medium"
         >
-          {[1, 2, 3, 4].map((n) => (<option key={n} value={n}>{n}</option>))}
+          {[1, 2].map((n) => (<option key={n} value={n}>{n}</option>))}
         </select>
       </td>
-      {[1, 2, 3, 4].map((slotNo) => {
+      {[1, 2].map((slotNo) => {
         if (slotNo > row.total_installments) {
           return <td key={slotNo} className="px-2 py-2 text-center text-[var(--charcoal)]/30">—</td>;
         }
