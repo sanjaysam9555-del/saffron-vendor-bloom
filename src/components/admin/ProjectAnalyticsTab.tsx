@@ -87,7 +87,7 @@ export function ProjectAnalyticsTab({ projectId }: { projectId: string }) {
 
       {/* Project payments (this project only) */}
       <section>
-        <h2 className="font-display text-xl text-[var(--charcoal)]">Project payments</h2>
+        <h2 className="font-display text-xl text-[var(--charcoal)]">Project payment</h2>
         <p className="text-xs text-[var(--charcoal)]/60">Client instalments received against the planning fee.</p>
         <ProjectPaymentsMatrix projectId={projectId} />
       </section>
@@ -207,7 +207,7 @@ function ProjectPaymentsMatrix({ projectId }: { projectId: string }) {
               ))}
               <th className="w-[110px] whitespace-nowrap px-3 py-3 text-right">Received</th>
               <th className="w-[110px] whitespace-nowrap px-3 py-3 text-right">Pending</th>
-              <th className="whitespace-nowrap px-3 py-3 text-left">Remarks</th>
+              <th className="w-[220px] whitespace-nowrap px-3 py-3 text-left">Remarks</th>
             </tr>
           </thead>
           <tbody>
@@ -277,7 +277,7 @@ function ProjectPaymentRow({ row, onChanged }: { row: PaymentMatrixRow; onChange
       })}
       <td className="px-3 py-2 text-right font-medium text-green-700">{formatINR(row.total_received)}</td>
       <td className="px-3 py-2 text-right font-medium text-[var(--terracotta)]">{formatINR(projectPending(row))}</td>
-      <td className="px-3 py-2 min-w-[180px]">
+      <td className="px-3 py-2 w-[220px]">
         <input
           value={remarks}
           onChange={(e) => { setRemarks(e.target.value); setRemarksDirty(true); }}
