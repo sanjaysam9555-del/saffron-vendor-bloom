@@ -198,7 +198,7 @@ export const updateQuoteCommissionInstallmentCount = createServerFn({ method: "P
     z
       .object({
         quote_id: z.string().uuid(),
-        total_installments: z.number().int().min(1).max(4),
+        total_installments: z.number().int().min(1).max(2),
       })
       .parse(d),
   )
