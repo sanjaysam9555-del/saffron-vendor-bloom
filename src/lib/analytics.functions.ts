@@ -3,27 +3,18 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { attachAuthToken } from "./auth-client-middleware";
 
-async function assertAdmin(supabase: any, userId: string) {
-  const { data, error } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("Forbidden: admin only");
-}
-
-const RangeInput = z.object({
-  from: z.string().nullable().optional(),
-  to: z.string().nullable().optional(),
-});
-
 export const analyticsOverview = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
-  .inputValidator((d) => RangeInput.parse(d))
+  .inputValidator((d) => z.object({ from: z.string().nullable().optional(), to: z.string().nullable().optional() }).parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { data: roleRow, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (roleError) throw new Error(roleError.message);
+    if (!roleRow) throw new Error("Forbidden: admin only");
     const { data: rows, error } = await context.supabase.rpc("admin_analytics_overview", {
       _from: (data.from ?? null) as unknown as string,
       _to: (data.to ?? null) as unknown as string,
@@ -50,9 +41,16 @@ export const analyticsOverview = createServerFn({ method: "POST" })
 
 export const analyticsReceivedBreakdown = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
-  .inputValidator((d) => RangeInput.parse(d))
+  .inputValidator((d) => z.object({ from: z.string().nullable().optional(), to: z.string().nullable().optional() }).parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { data: roleRow, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (roleError) throw new Error(roleError.message);
+    if (!roleRow) throw new Error("Forbidden: admin only");
     let pp = context.supabase.from("project_payments").select("received_amount, received_on");
     if (data.from) pp = pp.gte("received_on", data.from);
     if (data.to) pp = pp.lte("received_on", data.to);
@@ -94,9 +92,16 @@ export const analyticsReceivedBreakdown = createServerFn({ method: "POST" })
 
 export const analyticsProjects = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
-  .inputValidator((d) => RangeInput.parse(d))
+  .inputValidator((d) => z.object({ from: z.string().nullable().optional(), to: z.string().nullable().optional() }).parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { data: roleRow, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (roleError) throw new Error(roleError.message);
+    if (!roleRow) throw new Error("Forbidden: admin only");
     const { data: rows, error } = await context.supabase.rpc("admin_analytics_projects", {
       _from: (data.from ?? null) as unknown as string,
       _to: (data.to ?? null) as unknown as string,
@@ -118,9 +123,16 @@ export const analyticsProjects = createServerFn({ method: "POST" })
 
 export const analyticsVendors = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
-  .inputValidator((d) => RangeInput.parse(d))
+  .inputValidator((d) => z.object({ from: z.string().nullable().optional(), to: z.string().nullable().optional() }).parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { data: roleRow, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (roleError) throw new Error(roleError.message);
+    if (!roleRow) throw new Error("Forbidden: admin only");
     const { data: rows, error } = await context.supabase.rpc("admin_analytics_vendors", {
       _from: (data.from ?? null) as unknown as string,
       _to: (data.to ?? null) as unknown as string,
@@ -138,9 +150,16 @@ export const analyticsVendors = createServerFn({ method: "POST" })
 
 export const analyticsCategories = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
-  .inputValidator((d) => RangeInput.parse(d))
+  .inputValidator((d) => z.object({ from: z.string().nullable().optional(), to: z.string().nullable().optional() }).parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { data: roleRow, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (roleError) throw new Error(roleError.message);
+    if (!roleRow) throw new Error("Forbidden: admin only");
     const { data: rows, error } = await context.supabase.rpc("admin_analytics_categories", {
       _from: (data.from ?? null) as unknown as string,
       _to: (data.to ?? null) as unknown as string,
