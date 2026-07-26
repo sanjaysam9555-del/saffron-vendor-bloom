@@ -267,8 +267,8 @@ function ProjectSectionTabs({
       >
         {tabBtn("vendors", "Assigned Vendors", LayoutGrid)}
         {tabBtn("timeline", "Budget & Deadlines", Calendar)}
-        {tabBtn("details", "Project Details", FileText)}
         {isAdmin && tabBtn("analytics", "Analytics", BarChart3)}
+        {isAdmin && tabBtn("details", "Project Details", FileText)}
       </div>
 
       <div className="mt-4">
