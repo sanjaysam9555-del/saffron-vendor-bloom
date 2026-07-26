@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import {
   projectAnalyticsOverview,
   projectPnl,
+  projectReceivedBreakdown,
   listCommissionMatrix,
   upsertCommissionInstallment,
   updateQuoteCommissionInstallmentCount,
@@ -32,14 +33,25 @@ export function ProjectAnalyticsTab({ projectId }: { projectId: string }) {
     queryKey: ["project-pnl", projectId],
     queryFn: () => projectPnl({ data: { project_id: projectId } }),
   });
+  const received = useQuery({
+    queryKey: ["project-received", projectId],
+    queryFn: () => projectReceivedBreakdown({ data: { project_id: projectId } }),
+  });
 
   return (
     <div className="space-y-10">
       {/* Callouts */}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <OverviewCard label="Client billing" value={overview.data?.client_billing ?? 0} tone="charcoal" />
         <OverviewCard label="Vendor cost" value={overview.data?.vendor_cost ?? 0} tone="terracotta" highlight />
         <OverviewCard label="Commission" value={overview.data?.commission ?? 0} tone="green" highlight />
+        <OverviewCard
+          label="Fee + Commission received"
+          value={received.data?.total ?? 0}
+          tone="gold"
+          highlight
+          hint={`Fee ${formatINRShort(received.data?.fee_received ?? 0)} · Comm ${formatINRShort(received.data?.commission_received ?? 0)}`}
+        />
       </div>
 
       {/* P&L */}
@@ -111,26 +123,33 @@ function OverviewCard({
   value,
   tone,
   highlight,
+  hint,
 }: {
   label: string;
   value: number;
-  tone: "charcoal" | "terracotta" | "green";
+  tone: "charcoal" | "terracotta" | "green" | "gold";
   highlight?: boolean;
+  hint?: string;
 }) {
   const toneClass =
     tone === "terracotta"
       ? "text-[var(--terracotta)]"
       : tone === "green"
       ? "text-emerald-700"
+      : tone === "gold"
+      ? "text-amber-700"
       : "text-[var(--charcoal)]";
   const highlightClass =
     tone === "green"
       ? "border-emerald-500/40 bg-emerald-50"
+      : tone === "gold"
+      ? "border-amber-500/40 bg-amber-50"
       : "border-[var(--terracotta)]/40 bg-[var(--terracotta-soft)]";
   return (
     <div className={"rounded-lg border p-4 " + (highlight ? highlightClass : "border-[var(--border)] bg-white")}>
       <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">{label}</div>
       <div className={"mt-1 font-display text-2xl font-semibold " + toneClass}>{formatINR(Number(value))}</div>
+      {hint && <div className="mt-1 text-[11px] text-[var(--charcoal)]/60">{hint}</div>}
     </div>
   );
 }

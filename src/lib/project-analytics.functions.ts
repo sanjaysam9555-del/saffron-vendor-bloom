@@ -60,6 +60,26 @@ export const projectAnalyticsOverview = createServerFn({ method: "POST" })
     };
   });
 
+export const projectReceivedBreakdown = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) => ProjectIdInput.parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { data: ppRows, error: e1 } = await context.supabase
+      .from("project_payments")
+      .select("received_amount")
+      .eq("project_id", data.project_id);
+    if (e1) throw new Error(e1.message);
+    const { data: vcRows, error: e2 } = await context.supabase
+      .from("vendor_commission_payments")
+      .select("received_amount")
+      .eq("project_id", data.project_id);
+    if (e2) throw new Error(e2.message);
+    const fee_received = (ppRows ?? []).reduce((a: number, r: any) => a + Number(r.received_amount ?? 0), 0);
+    const commission_received = (vcRows ?? []).reduce((a: number, r: any) => a + Number(r.received_amount ?? 0), 0);
+    return { fee_received, commission_received, total: fee_received + commission_received };
+  });
+
 export const projectPnl = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) => ProjectIdInput.parse(d))

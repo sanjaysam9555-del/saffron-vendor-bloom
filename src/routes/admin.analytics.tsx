@@ -9,6 +9,7 @@ import {
   analyticsProjects,
   analyticsVendors,
   analyticsCategories,
+  analyticsReceivedBreakdown,
 } from "@/lib/analytics.functions";
 import {
   listPaymentsMatrix,
@@ -73,6 +74,10 @@ function AdminAnalyticsPage() {
     queryKey: ["analytics-categories", range],
     queryFn: () => analyticsCategories({ data: range }),
   });
+  const received = useQuery({
+    queryKey: ["analytics-received", range],
+    queryFn: () => analyticsReceivedBreakdown({ data: range }),
+  });
 
   return (
     <div className="min-h-screen bg-[var(--cream)] py-8">
@@ -102,11 +107,18 @@ function AdminAnalyticsPage() {
           </div>
         </div>
 
-        {/* Overview: Client billing · Vendor cost · Commission */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        {/* Overview: Client billing · Vendor cost · Commission · Fee + Commission received */}
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <OverviewCard label="Client billing" value={overview.data?.client_billing ?? 0} tone="charcoal" />
           <OverviewCard label="Vendor cost" value={overview.data?.vendor_cost ?? 0} tone="terracotta" highlight />
           <OverviewCard label="Commission" value={overview.data?.commission ?? 0} tone="green" highlight />
+          <OverviewCard
+            label="Fee + Commission received"
+            value={received.data?.total ?? 0}
+            tone="gold"
+            highlight
+            hint={`Fee ${formatINRShort(received.data?.fee_received ?? 0)} · Comm ${formatINRShort(received.data?.commission_received ?? 0)}`}
+          />
         </div>
 
         {/* Per-project P&L */}
@@ -230,23 +242,29 @@ function OverviewCard({
   value,
   tone,
   highlight,
+  hint,
 }: {
   label: string;
   value: number;
-  tone: "charcoal" | "muted" | "terracotta" | "green";
+  tone: "charcoal" | "muted" | "terracotta" | "green" | "gold";
   highlight?: boolean;
+  hint?: string;
 }) {
   const toneClass =
     tone === "terracotta"
       ? "text-[var(--terracotta)]"
       : tone === "green"
       ? "text-emerald-700"
+      : tone === "gold"
+      ? "text-amber-700"
       : tone === "muted"
       ? "text-[var(--charcoal)]/70"
       : "text-[var(--charcoal)]";
   const highlightClass =
     tone === "green"
       ? "border-emerald-500/40 bg-emerald-50"
+      : tone === "gold"
+      ? "border-amber-500/40 bg-amber-50"
       : "border-[var(--terracotta)]/40 bg-[var(--terracotta-soft)]";
   return (
     <div
@@ -257,6 +275,7 @@ function OverviewCard({
     >
       <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">{label}</div>
       <div className={"mt-1 font-display text-2xl font-semibold " + toneClass}>{formatINR(Number(value))}</div>
+      {hint && <div className="mt-1 text-[11px] text-[var(--charcoal)]/60">{hint}</div>}
     </div>
   );
 }
