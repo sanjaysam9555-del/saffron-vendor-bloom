@@ -436,6 +436,7 @@ export type Database = {
           due_date: string | null
           expected_amount: number
           id: string
+          installment_no: number | null
           label: string
           notes: string | null
           project_id: string
@@ -450,6 +451,7 @@ export type Database = {
           due_date?: string | null
           expected_amount?: number
           id?: string
+          installment_no?: number | null
           label: string
           notes?: string | null
           project_id: string
@@ -464,6 +466,7 @@ export type Database = {
           due_date?: string | null
           expected_amount?: number
           id?: string
+          installment_no?: number | null
           label?: string
           notes?: string | null
           project_id?: string
@@ -707,6 +710,8 @@ export type Database = {
           groom_name: string
           id: string
           notes: string | null
+          payment_remarks: string | null
+          total_installments: number
           updated_at: string
           wedding_date: string
         }
@@ -718,6 +723,8 @@ export type Database = {
           groom_name: string
           id?: string
           notes?: string | null
+          payment_remarks?: string | null
+          total_installments?: number
           updated_at?: string
           wedding_date: string
         }
@@ -729,6 +736,8 @@ export type Database = {
           groom_name?: string
           id?: string
           notes?: string | null
+          payment_remarks?: string | null
+          total_installments?: number
           updated_at?: string
           wedding_date?: string
         }
@@ -1060,6 +1069,20 @@ export type Database = {
           commission: number
           vendor_id: string
           vendor_name: string
+        }[]
+      }
+      admin_payments_matrix: {
+        Args: { _from: string; _to: string }
+        Returns: {
+          bride_name: string
+          closed_amount: number
+          groom_name: string
+          installments: Json
+          payment_remarks: string
+          project_id: string
+          total_installments: number
+          total_received: number
+          wedding_date: string
         }[]
       }
       client_can_access_quote: {
