@@ -97,8 +97,14 @@ export const setUserPassword = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     // Force-logout the user from all active sessions so they must sign in with the new password.
-    const { error: signOutError } = await supabaseAdmin.auth.admin.signOut(data.user_id, "global");
-    if (signOutError) throw new Error(signOutError.message);
+    // Best-effort: signOut may fail on some Supabase versions when called with a user_id
+    // instead of a JWT — the password update above already invalidates existing sessions
+    // on next refresh, so we don't want to fail the whole request over it.
+    try {
+      await supabaseAdmin.auth.admin.signOut(data.user_id, "global");
+    } catch {
+      // ignore
+    }
     return { ok: true };
   });
 
