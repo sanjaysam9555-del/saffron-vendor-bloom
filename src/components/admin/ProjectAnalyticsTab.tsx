@@ -11,6 +11,7 @@ import {
   type CommissionMatrixRow,
   type CommissionInstallmentSlot,
 } from "@/lib/project-analytics.functions";
+import { setQuoteCommission } from "@/lib/quote-commission.functions";
 import {
   listPaymentsMatrix,
   upsertInstallmentSlot,
@@ -457,11 +458,19 @@ function CommissionMatrixTable({ projectId }: { projectId: string }) {
 function CommissionRow({ row, onChanged }: { row: CommissionMatrixRow; onChanged: () => void }) {
   const [remarks, setRemarks] = useState(row.commission_remarks ?? "");
   const [remarksDirty, setRemarksDirty] = useState(false);
+  const [commission, setCommission] = useState<string>(String(row.commission_amount ?? 0));
+  const [commissionDirty, setCommissionDirty] = useState(false);
 
   const saveRemarks = useMutation({
     mutationFn: () =>
       updateQuoteCommissionRemarks({ data: { quote_id: row.quote_id, remarks: remarks.trim() || null } }),
     onSuccess: () => { toast.success("Remarks saved"); setRemarksDirty(false); onChanged(); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+  const saveCommission = useMutation({
+    mutationFn: () =>
+      setQuoteCommission({ data: { quote_id: row.quote_id, commission_amount: Number(commission || 0) } }),
+    onSuccess: () => { toast.success("Commission saved"); setCommissionDirty(false); onChanged(); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
@@ -470,7 +479,14 @@ function CommissionRow({ row, onChanged }: { row: CommissionMatrixRow; onChanged
       <td className="px-3 py-2 font-medium">{row.vendor_name}</td>
       <td className="px-3 py-2 text-[var(--charcoal)]/70">{row.category ?? "—"}</td>
       <td className="px-3 py-2 text-right">{formatINR(row.closed_amount)}</td>
-      <td className="px-3 py-2 text-right font-semibold text-[var(--terracotta)]">{formatINR(row.commission_amount)}</td>
+      <td className="px-3 py-2 text-right">
+        <input
+          type="number" min={0} step="0.01" value={commission}
+          onChange={(e) => { setCommission(e.target.value); setCommissionDirty(true); }}
+          onBlur={() => { if (commissionDirty) saveCommission.mutate(); }}
+          className="w-28 rounded border border-[var(--border)] bg-white px-2 py-1 text-right text-xs font-semibold text-[var(--terracotta)]"
+        />
+      </td>
       <td className="px-3 py-2 text-center">
         <select
           value={row.total_installments}
