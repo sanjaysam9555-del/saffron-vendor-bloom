@@ -299,6 +299,11 @@ function ProjectSectionTabs({
             onSaved={onSaved}
           />
         )}
+        {tab === "analytics" && isAdmin && (
+          <Suspense fallback={<div className="rounded-lg border border-[var(--border)] bg-white p-6 text-sm text-[var(--charcoal)]/60">Loading analytics…</div>}>
+            <ProjectAnalyticsTab projectId={projectId} />
+          </Suspense>
+        )}
       </div>
     </section>
   );
