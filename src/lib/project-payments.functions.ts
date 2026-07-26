@@ -181,7 +181,7 @@ export const listPaymentsMatrix = createServerFn({ method: "POST" })
         groom_name: r.groom_name,
         wedding_date: r.wedding_date,
         total_installments: n,
-        closed_amount: Number(r.closed_amount ?? 0),
+        planning_fee: Number(r.planning_fee ?? 0),
         total_received: Number(r.total_received ?? 0),
         payment_remarks: r.payment_remarks ?? null,
         installments: slots,
