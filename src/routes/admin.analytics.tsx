@@ -272,34 +272,74 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
     qc.invalidateQueries({ queryKey: ["analytics-projects"] });
   };
 
+  const totals = useMemo(() => {
+    const t = {
+      planning_fee: 0,
+      total_received: 0,
+      total_pending: 0,
+      per_slot: [0, 0, 0, 0] as [number, number, number, number],
+    };
+    for (const r of rows) {
+      t.planning_fee += Number(r.planning_fee || 0);
+      t.total_received += Number(r.total_received || 0);
+      t.total_pending += Math.max(0, Number(r.planning_fee || 0) - Number(r.total_received || 0));
+      for (const s of r.installments) {
+        if (s.installment_no >= 1 && s.installment_no <= 4) {
+          t.per_slot[s.installment_no - 1] += Number(s.received_amount || 0);
+        }
+      }
+    }
+    return t;
+  }, [rows]);
+
   return (
-    <div className="mt-3 overflow-x-auto rounded-lg border border-[var(--border)] bg-white">
-      <table className="w-full min-w-[1000px] text-sm">
-        <thead className="bg-[var(--cream)] text-left text-[10px] uppercase tracking-widest text-[var(--charcoal)]/60">
-          <tr>
-            <th className="px-3 py-2.5">Project</th>
-            <th className="px-3 py-2.5 text-right">Planning fee</th>
-            <th className="px-3 py-2.5 text-center">Installments</th>
-            {[1, 2, 3, 4].map((n) => (
-              <th key={n} className="px-2 py-2.5 text-center">Inst. {n}</th>
-            ))}
-            <th className="px-3 py-2.5 text-right">Total received</th>
-            <th className="px-3 py-2.5">Remarks</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <MatrixRow key={r.project_id} row={r} onChanged={refresh} />
-          ))}
-          {rows.length === 0 && (
+    <div className="mt-3 overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[1100px] text-sm">
+          <thead className="sticky top-0 z-10 bg-gradient-to-b from-[var(--cream)] to-[var(--cream)]/70 text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/60 backdrop-blur">
             <tr>
-              <td colSpan={8} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
-                {isLoading ? "Loading…" : "No projects in this range."}
-              </td>
+              <th className="px-3 py-3">Project</th>
+              <th className="px-3 py-3 text-right">Planning fee</th>
+              <th className="px-3 py-3 text-center">Installments</th>
+              {[1, 2, 3, 4].map((n) => (
+                <th key={n} className="px-2 py-3 text-center">Inst. {n}</th>
+              ))}
+              <th className="px-3 py-3 text-right">Total received</th>
+              <th className="px-3 py-3 text-right">Total pending</th>
+              <th className="px-3 py-3">Remarks</th>
             </tr>
+          </thead>
+          <tbody className="[&_tr:nth-child(even)]:bg-[var(--cream)]/25">
+            {rows.map((r) => (
+              <MatrixRow key={r.project_id} row={r} onChanged={refresh} />
+            ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={9} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
+                  {isLoading ? "Loading…" : "No projects in this range."}
+                </td>
+              </tr>
+            )}
+          </tbody>
+          {rows.length > 0 && (
+            <tfoot>
+              <tr className="border-t-2 border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)]/60 font-semibold text-[var(--charcoal)]">
+                <td className="px-3 py-3 text-[11px] uppercase tracking-widest text-[var(--charcoal)]/70">
+                  Totals · {rows.length} project{rows.length === 1 ? "" : "s"}
+                </td>
+                <td className="px-3 py-3 text-right">{formatINR(totals.planning_fee)}</td>
+                <td className="px-3 py-3 text-center text-[var(--charcoal)]/50">—</td>
+                {totals.per_slot.map((v, i) => (
+                  <td key={i} className="px-2 py-3 text-center text-xs">{v > 0 ? formatINRShort(v) : "—"}</td>
+                ))}
+                <td className="px-3 py-3 text-right text-green-700">{formatINR(totals.total_received)}</td>
+                <td className="px-3 py-3 text-right text-[var(--terracotta)]">{formatINR(totals.total_pending)}</td>
+                <td className="px-3 py-3" />
+              </tr>
+            </tfoot>
           )}
-        </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   );
 }
@@ -405,7 +445,10 @@ function MatrixRow({
         );
       })}
 
-      <td className="px-3 py-2 text-right text-green-700 font-medium">{formatINR(row.total_received)}</td>
+      <td className="px-3 py-2 text-right font-medium text-green-700">{formatINR(row.total_received)}</td>
+      <td className="px-3 py-2 text-right font-medium text-[var(--terracotta)]">
+        {formatINR(Math.max(0, Number(row.planning_fee || 0) - Number(row.total_received || 0)))}
+      </td>
       <td className="px-3 py-2 min-w-[180px]">
         <div className="flex items-center gap-1">
           <input
