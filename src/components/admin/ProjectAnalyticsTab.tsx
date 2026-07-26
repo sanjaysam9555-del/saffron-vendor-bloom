@@ -11,6 +11,7 @@ import {
   type CommissionMatrixRow,
   type CommissionInstallmentSlot,
 } from "@/lib/project-analytics.functions";
+import { setQuoteCommission } from "@/lib/quote-commission.functions";
 import {
   listPaymentsMatrix,
   upsertInstallmentSlot,
