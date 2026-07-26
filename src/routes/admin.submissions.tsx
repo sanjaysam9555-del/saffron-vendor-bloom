@@ -133,7 +133,7 @@ function SubmissionsPage() {
         ) : (
           <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-white">
             <table className="w-full text-sm">
-              <thead className="bg-[var(--cream-deep)] text-left text-[10px] uppercase tracking-widest text-[var(--charcoal)]/55">
+              <thead className="bg-[var(--charcoal)] text-left text-[10px] uppercase tracking-widest text-[var(--cream)]/80">
                 <tr>
                   <th className="px-4 py-3">Vendor</th>
                   <th className="px-4 py-3">Category</th>

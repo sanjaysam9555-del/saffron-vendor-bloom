@@ -114,7 +114,7 @@ function AdminAnalyticsPage() {
           <h2 className="font-display text-xl text-[var(--charcoal)]">Per-project P&amp;L</h2>
           <div className="mt-3 overflow-x-auto rounded-lg border border-[var(--border)] bg-white">
             <table className="w-full min-w-[820px] text-sm">
-              <thead className="bg-[var(--cream)] text-left text-[10px] uppercase tracking-widest text-[var(--charcoal)]/60">
+              <thead className="bg-[var(--charcoal)] text-left text-[10px] uppercase tracking-widest text-[var(--cream)]/80">
                 <tr>
                   <th className="px-4 py-2.5">Project</th>
                   <th className="px-4 py-2.5">Wedding</th>
@@ -308,7 +308,7 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
     <div className="mt-3 overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1100px] text-sm">
-          <thead className="sticky top-0 z-10 bg-gradient-to-b from-[var(--cream)] to-[var(--cream)]/70 text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/60 backdrop-blur">
+          <thead className="sticky top-0 z-10 bg-[var(--charcoal)] text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/80">
             <tr>
               <th className="px-3 py-3">Project</th>
               <th className="px-3 py-3 text-right">Planning fee</th>
