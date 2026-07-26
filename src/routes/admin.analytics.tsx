@@ -301,6 +301,8 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
     qc.invalidateQueries({ queryKey: ["payments-matrix"] });
     qc.invalidateQueries({ queryKey: ["analytics-overview"] });
     qc.invalidateQueries({ queryKey: ["analytics-projects"] });
+    qc.invalidateQueries({ queryKey: ["analytics-received"] });
+    qc.invalidateQueries({ queryKey: ["project-received"] });
   };
 
   const totals = useMemo(() => {
