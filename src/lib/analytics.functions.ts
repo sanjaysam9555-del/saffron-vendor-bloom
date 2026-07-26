@@ -25,7 +25,7 @@ export const analyticsOverview = createServerFn({ method: "POST" })
   .inputValidator((d) => RangeInput.parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
-    const { data: rows, error } = await supabaseAdmin.rpc("admin_analytics_overview", {
+    const { data: rows, error } = await context.supabase.rpc("admin_analytics_overview", {
       _from: (data.from ?? null) as unknown as string,
       _to: (data.to ?? null) as unknown as string,
     });
@@ -54,7 +54,7 @@ export const analyticsProjects = createServerFn({ method: "POST" })
   .inputValidator((d) => RangeInput.parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
-    const { data: rows, error } = await supabaseAdmin.rpc("admin_analytics_projects", {
+    const { data: rows, error } = await context.supabase.rpc("admin_analytics_projects", {
       _from: (data.from ?? null) as unknown as string,
       _to: (data.to ?? null) as unknown as string,
     });
@@ -78,7 +78,7 @@ export const analyticsVendors = createServerFn({ method: "POST" })
   .inputValidator((d) => RangeInput.parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
-    const { data: rows, error } = await supabaseAdmin.rpc("admin_analytics_vendors", {
+    const { data: rows, error } = await context.supabase.rpc("admin_analytics_vendors", {
       _from: (data.from ?? null) as unknown as string,
       _to: (data.to ?? null) as unknown as string,
     });
@@ -98,7 +98,7 @@ export const analyticsCategories = createServerFn({ method: "POST" })
   .inputValidator((d) => RangeInput.parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
-    const { data: rows, error } = await supabaseAdmin.rpc("admin_analytics_categories", {
+    const { data: rows, error } = await context.supabase.rpc("admin_analytics_categories", {
       _from: (data.from ?? null) as unknown as string,
       _to: (data.to ?? null) as unknown as string,
     });
