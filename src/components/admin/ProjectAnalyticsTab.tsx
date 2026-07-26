@@ -277,7 +277,7 @@ function ProjectPaymentRow({ row, onChanged }: { row: PaymentMatrixRow; onChange
       })}
       <td className="px-3 py-2 text-right font-medium text-green-700">{formatINR(row.total_received)}</td>
       <td className="px-3 py-2 text-right font-medium text-[var(--terracotta)]">{formatINR(projectPending(row))}</td>
-      <td className="px-3 py-2 min-w-[180px]">
+      <td className="px-3 py-2 w-[220px]">
         <input
           value={remarks}
           onChange={(e) => { setRemarks(e.target.value); setRemarksDirty(true); }}
