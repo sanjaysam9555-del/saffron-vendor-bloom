@@ -107,11 +107,18 @@ function AdminAnalyticsPage() {
           </div>
         </div>
 
-        {/* Overview: Client billing · Vendor cost · Commission */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        {/* Overview: Client billing · Vendor cost · Commission · Fee + Commission received */}
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <OverviewCard label="Client billing" value={overview.data?.client_billing ?? 0} tone="charcoal" />
           <OverviewCard label="Vendor cost" value={overview.data?.vendor_cost ?? 0} tone="terracotta" highlight />
           <OverviewCard label="Commission" value={overview.data?.commission ?? 0} tone="green" highlight />
+          <OverviewCard
+            label="Fee + Commission received"
+            value={received.data?.total ?? 0}
+            tone="gold"
+            highlight
+            hint={`Fee ${formatINRShort(received.data?.fee_received ?? 0)} · Comm ${formatINRShort(received.data?.commission_received ?? 0)}`}
+          />
         </div>
 
         {/* Per-project P&L */}
