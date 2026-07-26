@@ -54,19 +54,28 @@ export const analyticsReceivedBreakdown = createServerFn({ method: "POST" })
   .inputValidator((d) => RangeInput.parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
-    let pp = context.supabase.from("project_payments").select("received_amount, received_on");
+    let pp = context.supabase.from("project_payments").select("expected_amount, received_amount, received_on");
     if (data.from) pp = pp.gte("received_on", data.from);
     if (data.to) pp = pp.lte("received_on", data.to);
     const { data: ppRows, error: e1 } = await pp;
     if (e1) throw new Error(e1.message);
-    let vc = context.supabase.from("vendor_commission_payments").select("received_amount, received_on");
+    let vc = context.supabase.from("vendor_commission_payments").select("expected_amount, received_amount, received_on");
     if (data.from) vc = vc.gte("received_on", data.from);
     if (data.to) vc = vc.lte("received_on", data.to);
     const { data: vcRows, error: e2 } = await vc;
     if (e2) throw new Error(e2.message);
     const fee_received = (ppRows ?? []).reduce((a: number, r: any) => a + Number(r.received_amount ?? 0), 0);
     const commission_received = (vcRows ?? []).reduce((a: number, r: any) => a + Number(r.received_amount ?? 0), 0);
-    return { fee_received, commission_received, total: fee_received + commission_received };
+    const fee_pending = (ppRows ?? []).reduce((a: number, r: any) => a + Math.max(Number(r.expected_amount ?? 0) - Number(r.received_amount ?? 0), 0), 0);
+    const commission_pending = (vcRows ?? []).reduce((a: number, r: any) => a + Math.max(Number(r.expected_amount ?? 0) - Number(r.received_amount ?? 0), 0), 0);
+    return {
+      fee_received,
+      commission_received,
+      total: fee_received + commission_received,
+      fee_pending,
+      commission_pending,
+      pending_total: fee_pending + commission_pending,
+    };
   });
 
 export const analyticsProjects = createServerFn({ method: "POST" })
