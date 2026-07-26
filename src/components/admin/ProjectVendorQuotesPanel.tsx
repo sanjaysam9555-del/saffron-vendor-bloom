@@ -13,6 +13,7 @@ import {
   CircleCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
 import { useConfirmDelete } from "@/components/ui/confirm-dialog";
 import {
   listProjectVendorQuotes,
@@ -25,6 +26,10 @@ import {
   QUOTE_ACCEPTED_FILE_TYPES,
   QUOTE_MAX_FILE_SIZE,
 } from "@/lib/quote-api";
+import {
+  getQuoteCommission,
+  setQuoteCommission,
+} from "@/lib/quote-commission.functions";
 import {
   type ProjectVendorQuote,
   type QuoteFile,
