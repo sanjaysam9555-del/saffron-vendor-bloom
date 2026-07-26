@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo, lazy, Suspense } from "react";
 import { useQuery, useQueryClient, useMutation, useQueries } from "@tanstack/react-query";
 import { Switch } from "@/components/ui/switch";
-import { UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck, MessageSquare, Star, MapPin, Instagram, Phone, Globe, Plus, Sparkles, Archive, ArchiveRestore, Eye, ChevronDown, Table as TableIcon, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck, MessageSquare, Star, MapPin, Instagram, Phone, Globe, Plus, Sparkles, Archive, ArchiveRestore, Eye, ChevronDown, Table as TableIcon, ArrowUp, ArrowDown, ArrowUpDown, BarChart3 } from "lucide-react";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { ClientStatusPill, StatusCountsRow, CLIENT_STATUS_OPTIONS } from "@/components/admin/ClientStatusPill";
 import { AuthGate } from "@/components/AuthGate";
@@ -40,6 +40,9 @@ import { VendorInstagramCardStrip } from "@/components/vendor/VendorInstagramPre
 
 const AdminProjectVendorDetail = lazy(() =>
   import("@/components/admin/AdminProjectVendorDetail").then((m) => ({ default: m.AdminProjectVendorDetail })),
+);
+const ProjectAnalyticsTab = lazy(() =>
+  import("@/components/admin/ProjectAnalyticsTab").then((m) => ({ default: m.ProjectAnalyticsTab })),
 );
 
 export const Route = createFileRoute("/admin/projects/$id/")({
@@ -184,6 +187,7 @@ function ProjectDetailPage() {
           project={project}
           clients={clients}
           canDelete={role === "admin"}
+          isAdmin={role === "admin"}
           onDelete={handleDeleteProject}
           onToggleArchived={handleToggleArchived}
           onSaved={refresh}
@@ -205,6 +209,7 @@ function ProjectSectionTabs({
   project,
   clients,
   canDelete,
+  isAdmin,
   onDelete,
   onToggleArchived,
   onSaved,
@@ -219,6 +224,7 @@ function ProjectSectionTabs({
   project: any;
   clients: any[];
   canDelete: boolean;
+  isAdmin: boolean;
   onDelete: () => void;
   onToggleArchived: (archived: boolean) => void;
   onSaved: () => void;
@@ -229,8 +235,9 @@ function ProjectSectionTabs({
   weddingDate: string;
   onRemoveVendor: (id: string, name: string) => void;
 }) {
-  const [tab, setTab] = useState<"vendors" | "timeline" | "details">("vendors");
-  const tabBtn = (key: "vendors" | "timeline" | "details", label: string, Icon: any) => (
+  type TabKey = "vendors" | "timeline" | "details" | "analytics";
+  const [tab, setTab] = useState<TabKey>("vendors");
+  const tabBtn = (key: TabKey, label: string, Icon: any) => (
     <button
       key={key}
       role="tab"
@@ -261,6 +268,7 @@ function ProjectSectionTabs({
         {tabBtn("vendors", "Assigned Vendors", LayoutGrid)}
         {tabBtn("timeline", "Budget & Deadlines", Calendar)}
         {tabBtn("details", "Project Details", FileText)}
+        {isAdmin && tabBtn("analytics", "Analytics", BarChart3)}
       </div>
 
       <div className="mt-4">
@@ -290,6 +298,11 @@ function ProjectSectionTabs({
             onToggleArchived={onToggleArchived}
             onSaved={onSaved}
           />
+        )}
+        {tab === "analytics" && isAdmin && (
+          <Suspense fallback={<div className="rounded-lg border border-[var(--border)] bg-white p-6 text-sm text-[var(--charcoal)]/60">Loading analytics…</div>}>
+            <ProjectAnalyticsTab projectId={projectId} />
+          </Suspense>
         )}
       </div>
     </section>
