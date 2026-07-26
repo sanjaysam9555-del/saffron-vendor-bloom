@@ -289,4 +289,25 @@ export const updateProjectPlanningFee = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const updateProjectInstallmentCount = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        project_id: z.string().uuid(),
+        total_installments: z.number().int().min(1).max(4),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("projects")
+      .update({ total_installments: data.total_installments })
+      .eq("id", data.project_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+
 

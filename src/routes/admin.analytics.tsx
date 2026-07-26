@@ -15,6 +15,8 @@ import {
   upsertInstallmentSlot,
   updateProjectPaymentRemarks,
   updateProjectPlanningFee,
+  updateProjectInstallmentCount,
+
   type PaymentMatrixRow,
   type InstallmentSlot,
 } from "@/lib/project-payments.functions";
@@ -370,7 +372,25 @@ function MatrixRow({
           className="w-28 rounded border border-[var(--border)] bg-white px-2 py-1 text-right text-xs font-medium"
         />
       </td>
-      <td className="px-3 py-2 text-center">{row.total_installments}</td>
+      <td className="px-3 py-2 text-center">
+        <select
+          value={row.total_installments}
+          onChange={(e) => {
+            const n = Number(e.target.value);
+            updateProjectInstallmentCount({ data: { project_id: row.project_id, total_installments: n } })
+              .then(() => {
+                toast.success("Installment count updated");
+                onChanged();
+              })
+              .catch((err) => toast.error(err instanceof Error ? err.message : "Failed"));
+          }}
+          className="rounded border border-[var(--border)] bg-white px-2 py-1 text-xs font-medium"
+        >
+          {[1, 2, 3, 4].map((n) => (
+            <option key={n} value={n}>{n}</option>
+          ))}
+        </select>
+      </td>
       {[1, 2, 3, 4].map((slotNo) => {
         if (slotNo > row.total_installments) {
           return <td key={slotNo} className="px-2 py-2 text-center text-[var(--charcoal)]/30">—</td>;
@@ -384,6 +404,7 @@ function MatrixRow({
           </td>
         );
       })}
+
       <td className="px-3 py-2 text-right text-green-700 font-medium">{formatINR(row.total_received)}</td>
       <td className="px-3 py-2 min-w-[180px]">
         <div className="flex items-center gap-1">
