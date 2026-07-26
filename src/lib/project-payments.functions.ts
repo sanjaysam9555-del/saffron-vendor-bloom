@@ -137,7 +137,7 @@ export interface PaymentMatrixRow {
   groom_name: string | null;
   wedding_date: string | null;
   total_installments: number;
-  closed_amount: number;
+  planning_fee: number;
   total_received: number;
   payment_remarks: string | null;
   installments: InstallmentSlot[];
