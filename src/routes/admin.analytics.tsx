@@ -233,22 +233,26 @@ function OverviewCard({
 }: {
   label: string;
   value: number;
-  tone: "charcoal" | "muted" | "terracotta";
+  tone: "charcoal" | "muted" | "terracotta" | "green";
   highlight?: boolean;
 }) {
   const toneClass =
     tone === "terracotta"
       ? "text-[var(--terracotta)]"
+      : tone === "green"
+      ? "text-emerald-700"
       : tone === "muted"
       ? "text-[var(--charcoal)]/70"
       : "text-[var(--charcoal)]";
+  const highlightClass =
+    tone === "green"
+      ? "border-emerald-500/40 bg-emerald-50"
+      : "border-[var(--terracotta)]/40 bg-[var(--terracotta-soft)]";
   return (
     <div
       className={
         "rounded-lg border p-4 " +
-        (highlight
-          ? "border-[var(--terracotta)]/40 bg-[var(--terracotta-soft)]"
-          : "border-[var(--border)] bg-white")
+        (highlight ? highlightClass : "border-[var(--border)] bg-white")
       }
     >
       <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">{label}</div>
