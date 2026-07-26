@@ -41,6 +41,9 @@ import { VendorInstagramCardStrip } from "@/components/vendor/VendorInstagramPre
 const AdminProjectVendorDetail = lazy(() =>
   import("@/components/admin/AdminProjectVendorDetail").then((m) => ({ default: m.AdminProjectVendorDetail })),
 );
+const ProjectAnalyticsTab = lazy(() =>
+  import("@/components/admin/ProjectAnalyticsTab").then((m) => ({ default: m.ProjectAnalyticsTab })),
+);
 
 export const Route = createFileRoute("/admin/projects/$id/")({
   head: () => ({
