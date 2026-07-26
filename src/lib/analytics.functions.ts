@@ -26,8 +26,8 @@ export const analyticsOverview = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const { data: rows, error } = await supabaseAdmin.rpc("admin_analytics_overview", {
-      _from: data.from ?? null,
-      _to: data.to ?? null,
+      _from: (data.from ?? null) as unknown as string,
+      _to: (data.to ?? null) as unknown as string,
     });
     if (error) throw new Error(error.message);
     return (rows?.[0] ?? {
@@ -55,8 +55,8 @@ export const analyticsProjects = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const { data: rows, error } = await supabaseAdmin.rpc("admin_analytics_projects", {
-      _from: data.from ?? null,
-      _to: data.to ?? null,
+      _from: (data.from ?? null) as unknown as string,
+      _to: (data.to ?? null) as unknown as string,
     });
     if (error) throw new Error(error.message);
     return (rows ?? []) as Array<{
@@ -79,8 +79,8 @@ export const analyticsVendors = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const { data: rows, error } = await supabaseAdmin.rpc("admin_analytics_vendors", {
-      _from: data.from ?? null,
-      _to: data.to ?? null,
+      _from: (data.from ?? null) as unknown as string,
+      _to: (data.to ?? null) as unknown as string,
     });
     if (error) throw new Error(error.message);
     return (rows ?? []) as Array<{
@@ -99,8 +99,8 @@ export const analyticsCategories = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const { data: rows, error } = await supabaseAdmin.rpc("admin_analytics_categories", {
-      _from: data.from ?? null,
-      _to: data.to ?? null,
+      _from: (data.from ?? null) as unknown as string,
+      _to: (data.to ?? null) as unknown as string,
     });
     if (error) throw new Error(error.message);
     return (rows ?? []) as Array<{
