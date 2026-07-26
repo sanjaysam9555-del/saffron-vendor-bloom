@@ -87,7 +87,7 @@ export function ProjectAnalyticsTab({ projectId }: { projectId: string }) {
 
       {/* Project payments (this project only) */}
       <section>
-        <h2 className="font-display text-xl text-[var(--charcoal)]">Project payments</h2>
+        <h2 className="font-display text-xl text-[var(--charcoal)]">Project payment</h2>
         <p className="text-xs text-[var(--charcoal)]/60">Client instalments received against the planning fee.</p>
         <ProjectPaymentsMatrix projectId={projectId} />
       </section>
