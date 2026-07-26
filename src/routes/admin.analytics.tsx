@@ -263,11 +263,6 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
     queryFn: () => listPaymentsMatrix({ data: range }),
   });
 
-  const maxInstallments = useMemo(
-    () => rows.reduce((m, r) => Math.max(m, r.total_installments), 1),
-    [rows],
-  );
-
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["payments-matrix"] });
     qc.invalidateQueries({ queryKey: ["analytics-overview"] });
@@ -276,14 +271,14 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
 
   return (
     <div className="mt-3 overflow-x-auto rounded-lg border border-[var(--border)] bg-white">
-      <table className="w-full min-w-[900px] text-sm">
+      <table className="w-full min-w-[1000px] text-sm">
         <thead className="bg-[var(--cream)] text-left text-[10px] uppercase tracking-widest text-[var(--charcoal)]/60">
           <tr>
             <th className="px-3 py-2.5">Project</th>
-            <th className="px-3 py-2.5 text-right">Closed amount</th>
+            <th className="px-3 py-2.5 text-right">Planning fee</th>
             <th className="px-3 py-2.5 text-center">Installments</th>
-            {Array.from({ length: maxInstallments }, (_, i) => (
-              <th key={i} className="px-2 py-2.5 text-center">Inst. {i + 1}</th>
+            {[1, 2, 3, 4].map((n) => (
+              <th key={n} className="px-2 py-2.5 text-center">Inst. {n}</th>
             ))}
             <th className="px-3 py-2.5 text-right">Total received</th>
             <th className="px-3 py-2.5">Remarks</th>
@@ -291,11 +286,11 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
         </thead>
         <tbody>
           {rows.map((r) => (
-            <MatrixRow key={r.project_id} row={r} maxInstallments={maxInstallments} onChanged={refresh} />
+            <MatrixRow key={r.project_id} row={r} onChanged={refresh} />
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={4 + maxInstallments} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
+              <td colSpan={8} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
                 {isLoading ? "Loading…" : "No projects in this range."}
               </td>
             </tr>
