@@ -107,18 +107,24 @@ function AdminAnalyticsPage() {
           </div>
         </div>
 
-        {/* Overview: Client billing · Vendor cost · Commission · Fee + Commission received */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Overview: Client billing · Vendor cost · Commission · Fee + Commission received · Pending */}
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <OverviewCard label="Client billing" value={overview.data?.client_billing ?? 0} tone="charcoal" />
           <OverviewCard label="Vendor cost" value={overview.data?.vendor_cost ?? 0} tone="terracotta" highlight />
           <OverviewCard label="Commission" value={overview.data?.commission ?? 0} tone="gold" highlight />
           <OverviewCard
-
             label="Fee + Commission received"
             value={received.data?.total ?? 0}
             tone="green"
             highlight
             hint={`Fee ${formatINRShort(received.data?.fee_received ?? 0)} · Comm ${formatINRShort(received.data?.commission_received ?? 0)}`}
+          />
+          <OverviewCard
+            label="Pending (Fee + Commission)"
+            value={received.data?.pending_total ?? 0}
+            tone="rose"
+            highlight
+            hint={`Fee ${formatINRShort(received.data?.fee_pending ?? 0)} · Comm ${formatINRShort(received.data?.commission_pending ?? 0)}`}
           />
         </div>
 
@@ -247,7 +253,7 @@ function OverviewCard({
 }: {
   label: string;
   value: number;
-  tone: "charcoal" | "muted" | "terracotta" | "green" | "gold";
+  tone: "charcoal" | "muted" | "terracotta" | "green" | "gold" | "rose";
   highlight?: boolean;
   hint?: string;
 }) {
@@ -258,6 +264,8 @@ function OverviewCard({
       ? "text-emerald-700"
       : tone === "gold"
       ? "text-amber-700"
+      : tone === "rose"
+      ? "text-rose-700"
       : tone === "muted"
       ? "text-[var(--charcoal)]/70"
       : "text-[var(--charcoal)]";
@@ -266,6 +274,8 @@ function OverviewCard({
       ? "border-emerald-500/40 bg-emerald-50"
       : tone === "gold"
       ? "border-amber-500/40 bg-amber-50"
+      : tone === "rose"
+      ? "border-rose-500/40 bg-rose-50"
       : "border-[var(--terracotta)]/40 bg-[var(--terracotta-soft)]";
   return (
     <div

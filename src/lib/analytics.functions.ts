@@ -64,9 +64,25 @@ export const analyticsReceivedBreakdown = createServerFn({ method: "POST" })
     if (data.to) vc = vc.lte("received_on", data.to);
     const { data: vcRows, error: e2 } = await vc;
     if (e2) throw new Error(e2.message);
+    // Pending totals ignore date range - outstanding is a "current state" figure.
+    const { data: ppAll, error: e3 } = await context.supabase
+      .from("project_payments").select("expected_amount, received_amount");
+    if (e3) throw new Error(e3.message);
+    const { data: vcAll, error: e4 } = await context.supabase
+      .from("vendor_commission_payments").select("expected_amount, received_amount");
+    if (e4) throw new Error(e4.message);
     const fee_received = (ppRows ?? []).reduce((a: number, r: any) => a + Number(r.received_amount ?? 0), 0);
     const commission_received = (vcRows ?? []).reduce((a: number, r: any) => a + Number(r.received_amount ?? 0), 0);
-    return { fee_received, commission_received, total: fee_received + commission_received };
+    const fee_pending = (ppAll ?? []).reduce((a: number, r: any) => a + Math.max(Number(r.expected_amount ?? 0) - Number(r.received_amount ?? 0), 0), 0);
+    const commission_pending = (vcAll ?? []).reduce((a: number, r: any) => a + Math.max(Number(r.expected_amount ?? 0) - Number(r.received_amount ?? 0), 0), 0);
+    return {
+      fee_received,
+      commission_received,
+      total: fee_received + commission_received,
+      fee_pending,
+      commission_pending,
+      pending_total: fee_pending + commission_pending,
+    };
   });
 
 export const analyticsProjects = createServerFn({ method: "POST" })

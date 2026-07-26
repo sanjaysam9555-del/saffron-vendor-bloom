@@ -67,17 +67,26 @@ export const projectReceivedBreakdown = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     const { data: ppRows, error: e1 } = await context.supabase
       .from("project_payments")
-      .select("received_amount")
+      .select("expected_amount, received_amount")
       .eq("project_id", data.project_id);
     if (e1) throw new Error(e1.message);
     const { data: vcRows, error: e2 } = await context.supabase
       .from("vendor_commission_payments")
-      .select("received_amount")
+      .select("expected_amount, received_amount")
       .eq("project_id", data.project_id);
     if (e2) throw new Error(e2.message);
     const fee_received = (ppRows ?? []).reduce((a: number, r: any) => a + Number(r.received_amount ?? 0), 0);
     const commission_received = (vcRows ?? []).reduce((a: number, r: any) => a + Number(r.received_amount ?? 0), 0);
-    return { fee_received, commission_received, total: fee_received + commission_received };
+    const fee_pending = (ppRows ?? []).reduce((a: number, r: any) => a + Math.max(Number(r.expected_amount ?? 0) - Number(r.received_amount ?? 0), 0), 0);
+    const commission_pending = (vcRows ?? []).reduce((a: number, r: any) => a + Math.max(Number(r.expected_amount ?? 0) - Number(r.received_amount ?? 0), 0), 0);
+    return {
+      fee_received,
+      commission_received,
+      total: fee_received + commission_received,
+      fee_pending,
+      commission_pending,
+      pending_total: fee_pending + commission_pending,
+    };
   });
 
 export const projectPnl = createServerFn({ method: "POST" })

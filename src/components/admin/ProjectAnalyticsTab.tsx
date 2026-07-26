@@ -41,7 +41,7 @@ export function ProjectAnalyticsTab({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-10">
       {/* Callouts */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <OverviewCard label="Client billing" value={overview.data?.client_billing ?? 0} tone="charcoal" />
         <OverviewCard label="Vendor cost" value={overview.data?.vendor_cost ?? 0} tone="terracotta" highlight />
         <OverviewCard label="Commission" value={overview.data?.commission ?? 0} tone="gold" highlight />
@@ -51,6 +51,13 @@ export function ProjectAnalyticsTab({ projectId }: { projectId: string }) {
           tone="green"
           highlight
           hint={`Fee ${formatINRShort(received.data?.fee_received ?? 0)} · Comm ${formatINRShort(received.data?.commission_received ?? 0)}`}
+        />
+        <OverviewCard
+          label="Pending (Fee + Commission)"
+          value={received.data?.pending_total ?? 0}
+          tone="rose"
+          highlight
+          hint={`Fee ${formatINRShort(received.data?.fee_pending ?? 0)} · Comm ${formatINRShort(received.data?.commission_pending ?? 0)}`}
         />
       </div>
 
@@ -127,7 +134,7 @@ function OverviewCard({
 }: {
   label: string;
   value: number;
-  tone: "charcoal" | "terracotta" | "green" | "gold";
+  tone: "charcoal" | "terracotta" | "green" | "gold" | "rose";
   highlight?: boolean;
   hint?: string;
 }) {
@@ -138,12 +145,16 @@ function OverviewCard({
       ? "text-emerald-700"
       : tone === "gold"
       ? "text-amber-700"
+      : tone === "rose"
+      ? "text-rose-700"
       : "text-[var(--charcoal)]";
   const highlightClass =
     tone === "green"
       ? "border-emerald-500/40 bg-emerald-50"
       : tone === "gold"
       ? "border-amber-500/40 bg-amber-50"
+      : tone === "rose"
+      ? "border-rose-500/40 bg-rose-50"
       : "border-[var(--terracotta)]/40 bg-[var(--terracotta-soft)]";
   return (
     <div className={"rounded-lg border p-4 " + (highlight ? highlightClass : "border-[var(--border)] bg-white")}>
