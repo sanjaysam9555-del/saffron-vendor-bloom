@@ -269,3 +269,24 @@ export const updateProjectPaymentRemarks = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const updateProjectPlanningFee = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        project_id: z.string().uuid(),
+        planning_fee: z.number().nonnegative(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("projects")
+      .update({ planning_fee: data.planning_fee })
+      .eq("id", data.project_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+
