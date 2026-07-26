@@ -303,15 +303,15 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
 
 function MatrixRow({
   row,
-  maxInstallments,
   onChanged,
 }: {
   row: PaymentMatrixRow;
-  maxInstallments: number;
   onChanged: () => void;
 }) {
   const [remarks, setRemarks] = useState(row.payment_remarks ?? "");
   const [remarksDirty, setRemarksDirty] = useState(false);
+  const [fee, setFee] = useState<string>(String(row.planning_fee ?? 0));
+  const [feeDirty, setFeeDirty] = useState(false);
 
   const saveRemarks = useMutation({
     mutationFn: () =>
@@ -321,6 +321,19 @@ function MatrixRow({
     onSuccess: () => {
       toast.success("Remarks saved");
       setRemarksDirty(false);
+      onChanged();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const saveFee = useMutation({
+    mutationFn: () =>
+      updateProjectPlanningFee({
+        data: { project_id: row.project_id, planning_fee: Number(fee || 0) },
+      }),
+    onSuccess: () => {
+      toast.success("Planning fee saved");
+      setFeeDirty(false);
       onChanged();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
@@ -340,18 +353,32 @@ function MatrixRow({
           {row.wedding_date ? new Date(row.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
         </div>
       </td>
-      <td className="px-3 py-2 text-right font-medium">{formatINR(row.closed_amount)}</td>
+      <td className="px-3 py-2 text-right">
+        <input
+          type="number"
+          min={0}
+          step="0.01"
+          value={fee}
+          onChange={(e) => {
+            setFee(e.target.value);
+            setFeeDirty(true);
+          }}
+          onBlur={() => {
+            if (feeDirty) saveFee.mutate();
+          }}
+          className="w-28 rounded border border-[var(--border)] bg-white px-2 py-1 text-right text-xs font-medium"
+        />
+      </td>
       <td className="px-3 py-2 text-center">{row.total_installments}</td>
-      {Array.from({ length: maxInstallments }, (_, i) => {
-        const slotNo = i + 1;
+      {[1, 2, 3, 4].map((slotNo) => {
         if (slotNo > row.total_installments) {
-          return <td key={i} className="px-2 py-2 text-center text-[var(--charcoal)]/30">—</td>;
+          return <td key={slotNo} className="px-2 py-2 text-center text-[var(--charcoal)]/30">—</td>;
         }
         const slot =
           row.installments.find((s) => s.installment_no === slotNo) ??
           ({ id: null, installment_no: slotNo, expected_amount: 0, received_amount: 0, received_on: null, status: "pending" } as InstallmentSlot);
         return (
-          <td key={i} className="px-2 py-2 text-center">
+          <td key={slotNo} className="px-2 py-2 text-center">
             <InstallmentCell projectId={row.project_id} slot={slot} onChanged={onChanged} />
           </td>
         );
