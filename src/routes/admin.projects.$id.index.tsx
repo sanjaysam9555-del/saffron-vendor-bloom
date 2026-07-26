@@ -148,7 +148,7 @@ function ProjectDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[var(--cream)] px-6 py-8">
-        <div className="mx-auto max-w-5xl space-y-4">
+        <div className="mx-auto max-w-[1600px] space-y-4">
           <div className="h-4 w-32 animate-pulse rounded bg-[var(--cream-deep)]" />
           <div className="h-9 w-72 animate-pulse rounded bg-[var(--cream-deep)]" />
           <div className="h-4 w-48 animate-pulse rounded bg-[var(--cream-deep)]/70" />
@@ -174,7 +174,7 @@ function ProjectDetailPage() {
   const { project, clients, vendors, selections = {} as Record<string, { user_id: string; display_name: string; email: string; status: string; updated_at: string }[]> } = data as any;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-6">
+    <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6">
       <Link to="/admin/projects" className="text-xs uppercase tracking-[0.18em] text-[var(--charcoal)]/50 hover:text-[var(--terracotta)]">
         Projects
       </Link>
