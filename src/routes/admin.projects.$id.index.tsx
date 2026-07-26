@@ -148,7 +148,7 @@ function ProjectDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[var(--cream)] px-6 py-8">
-        <div className="mx-auto max-w-5xl space-y-4">
+        <div className="mx-auto max-w-[1600px] space-y-4">
           <div className="h-4 w-32 animate-pulse rounded bg-[var(--cream-deep)]" />
           <div className="h-9 w-72 animate-pulse rounded bg-[var(--cream-deep)]" />
           <div className="h-4 w-48 animate-pulse rounded bg-[var(--cream-deep)]/70" />
