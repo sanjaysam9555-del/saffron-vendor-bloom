@@ -1100,9 +1100,9 @@ function AssignedVendorsSection({
           })}
         </div>
       ) : (
-        <div className="mt-4 overflow-x-auto rounded-lg border border-white/10 bg-[var(--charcoal)] text-[var(--cream)] shadow-sm">
+        <div className="mt-4 overflow-x-auto rounded-lg border border-[var(--border)] bg-white shadow-sm">
           <table className="w-full min-w-[760px] text-sm">
-            <thead className="bg-black/25 text-[10px] uppercase tracking-widest text-[var(--cream)]/60">
+            <thead className="bg-[var(--charcoal)] text-[10px] uppercase tracking-widest text-[var(--cream)]/80">
               <tr>
                 <SortableTh label="Vendor" sortKey="vendor" info={sortInfo("vendor")} onClick={toggleSort} />
                 <SortableTh
@@ -1140,39 +1140,39 @@ function AssignedVendorsSection({
                 const primary = pickPrimary(rows);
                 const isClosed = !!hasClosedByVendor[v.id];
                 const rowClass = isClosed
-                  ? "bg-emerald-500/25 hover:bg-emerald-500/30"
+                  ? "bg-emerald-500/15 hover:bg-emerald-500/20"
                   : v.is_saffron_pick
-                    ? "bg-[var(--terracotta)]/20 hover:bg-[var(--terracotta)]/25"
-                    : "hover:bg-white/5";
+                    ? "bg-[var(--terracotta-soft)] hover:bg-[var(--terracotta)]/15"
+                    : "hover:bg-[var(--cream)]/60";
                 return (
-                  <tr key={v.id} className={`border-t border-white/10 ${rowClass}`}>
+                  <tr key={v.id} className={`border-t border-[var(--border)] ${rowClass}`}>
                     <td className="align-top px-3 py-2 text-left">
                       <div className="flex items-center gap-1.5">
                         <button
                           type="button"
                           onClick={() => setDetailVendor(v)}
-                          className="text-left font-medium text-[var(--cream)] hover:text-[var(--terracotta)] hover:underline"
+                          className="text-left font-medium text-[var(--charcoal)] hover:text-[var(--terracotta)] hover:underline"
                         >
                           {v.vendor_name}
                         </button>
                       </div>
                       {(v.comment_count ?? 0) > 0 && (
-                        <div className="mt-1 inline-flex items-center gap-0.5 text-[10px] text-[var(--cream)]/55">
+                        <div className="mt-1 inline-flex items-center gap-0.5 text-[10px] text-[var(--charcoal)]/55">
                           <MessageSquare className="h-3 w-3" /> {v.comment_count}
                         </div>
                       )}
                     </td>
-                    <td className="align-top px-3 py-2 text-[var(--cream)]/85">
+                    <td className="align-top px-3 py-2 text-[var(--charcoal)]/85">
                       {v.category}
                       {v.subcategory && (
-                        <div className="text-[10px] text-[var(--cream)]/55">{v.subcategory}</div>
+                        <div className="text-[10px] text-[var(--charcoal)]/55">{v.subcategory}</div>
                       )}
                     </td>
                     <td className="align-top px-3 py-2">
                       <div className="flex flex-wrap items-center gap-1">
                         <ClientStatusPill status={primary?.status ?? null} />
                         {rows.length > 1 && (
-                          <span className="text-[10px] text-[var(--cream)]/55" title={rows.map((r) => `${r.display_name || r.email}: ${r.status}`).join("\n")}>
+                          <span className="text-[10px] text-[var(--charcoal)]/55" title={rows.map((r) => `${r.display_name || r.email}: ${r.status}`).join("\n")}>
                             +{rows.length - 1}
                           </span>
                         )}
@@ -1186,10 +1186,10 @@ function AssignedVendorsSection({
                       />
                     </td>
                     <td className="align-top px-3 py-2 text-right">
-                      <div className="inline-flex items-center gap-0.5 rounded-md border border-white/15 bg-black/25 p-0.5">
+                      <div className="inline-flex items-center gap-0.5 rounded-md border border-[var(--border)] bg-[var(--cream)]/70 p-0.5">
                         <button
                           onClick={() => setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null, autoOpenForm: true })}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--cream)]/85 hover:bg-[var(--terracotta)] hover:text-[var(--cream)]"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--charcoal)]/70 hover:bg-[var(--terracotta)] hover:text-[var(--cream)]"
                           title="Add a new quote"
                           aria-label="Add a new quote"
                         >
@@ -1197,7 +1197,7 @@ function AssignedVendorsSection({
                         </button>
                         <button
                           onClick={() => setCommentsFor({ id: v.id, name: v.vendor_name })}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--cream)]/85 hover:bg-white/10 hover:text-[var(--cream)]"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--charcoal)]/70 hover:bg-[var(--cream)] hover:text-[var(--charcoal)]"
                           title="Comments"
                           aria-label="Comments"
                         >
@@ -1205,7 +1205,7 @@ function AssignedVendorsSection({
                         </button>
                         <button
                           onClick={() => onRemove(v.id, v.vendor_name)}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--cream)]/70 hover:bg-red-500/25 hover:text-red-100"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--charcoal)]/60 hover:bg-red-500/15 hover:text-red-600"
                           title="Remove from project"
                           aria-label="Remove from project"
                         >
@@ -1216,6 +1216,7 @@ function AssignedVendorsSection({
                   </tr>
                 );
               })}
+
             </tbody>
           </table>
         </div>
