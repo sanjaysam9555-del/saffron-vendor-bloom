@@ -41,7 +41,7 @@ export function ProjectAnalyticsTab({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-10">
       {/* Callouts */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <OverviewCard label="Client billing" value={overview.data?.client_billing ?? 0} tone="charcoal" />
         <OverviewCard label="Vendor cost" value={overview.data?.vendor_cost ?? 0} tone="terracotta" highlight />
         <OverviewCard label="Commission" value={overview.data?.commission ?? 0} tone="gold" highlight />
@@ -51,6 +51,13 @@ export function ProjectAnalyticsTab({ projectId }: { projectId: string }) {
           tone="green"
           highlight
           hint={`Fee ${formatINRShort(received.data?.fee_received ?? 0)} · Comm ${formatINRShort(received.data?.commission_received ?? 0)}`}
+        />
+        <OverviewCard
+          label="Pending (Fee + Commission)"
+          value={received.data?.pending_total ?? 0}
+          tone="rose"
+          highlight
+          hint={`Fee ${formatINRShort(received.data?.fee_pending ?? 0)} · Comm ${formatINRShort(received.data?.commission_pending ?? 0)}`}
         />
       </div>
 
