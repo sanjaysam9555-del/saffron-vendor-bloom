@@ -259,6 +259,14 @@ function OverviewCard({
 
 // -------------------- Payments matrix table --------------------
 
+function rowExpectedTotal(r: PaymentMatrixRow): number {
+  return r.installments.reduce((sum, s) => sum + Number(s.expected_amount || 0), 0);
+}
+function rowPending(r: PaymentMatrixRow): number {
+  const basis = Math.max(Number(r.planning_fee || 0), rowExpectedTotal(r));
+  return Math.max(0, basis - Number(r.total_received || 0));
+}
+
 function PaymentsMatrixTable({ range }: { range: { from: string | null; to: string | null } }) {
   const qc = useQueryClient();
   const { data: rows = [], isLoading } = useQuery({
@@ -282,7 +290,7 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
     for (const r of rows) {
       t.planning_fee += Number(r.planning_fee || 0);
       t.total_received += Number(r.total_received || 0);
-      t.total_pending += Math.max(0, Number(r.planning_fee || 0) - Number(r.total_received || 0));
+      t.total_pending += rowPending(r);
       for (const s of r.installments) {
         if (s.installment_no >= 1 && s.installment_no <= 4) {
           t.per_slot[s.installment_no - 1] += Number(s.received_amount || 0);
@@ -447,7 +455,7 @@ function MatrixRow({
 
       <td className="px-3 py-2 text-right font-medium text-green-700">{formatINR(row.total_received)}</td>
       <td className="px-3 py-2 text-right font-medium text-[var(--terracotta)]">
-        {formatINR(Math.max(0, Number(row.planning_fee || 0) - Number(row.total_received || 0)))}
+        {formatINR(rowPending(row))}
       </td>
       <td className="px-3 py-2 min-w-[180px]">
         <div className="flex items-center gap-1">
