@@ -73,6 +73,7 @@ function AdminAnalyticsPage() {
   const categories = useQuery({
     queryKey: ["analytics-categories", range],
     queryFn: () => analyticsCategories({ data: range }),
+  });
   const received = useQuery({
     queryKey: ["analytics-received", range],
     queryFn: () => analyticsReceivedBreakdown({ data: range }),
