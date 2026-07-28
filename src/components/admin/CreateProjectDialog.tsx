@@ -18,6 +18,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
   const [notes, setNotes] = useState("");
   const [installments, setInstallments] = useState<number>(2);
   const [planningFee, setPlanningFee] = useState<string>("");
+  const [targetIncome, setTargetIncome] = useState<string>("");
   const [busy, setBusy] = useState(false);
 
   if (!open) return null;
@@ -29,6 +30,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
     setNotes("");
     setInstallments(2);
     setPlanningFee("");
+    setTargetIncome("");
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -43,6 +45,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
           notes: notes.trim() || null,
           total_installments: installments,
           planning_fee: Number(planningFee || 0),
+          target_income: Number(targetIncome || 0),
         },
       });
       notifySuccess("Project created");
@@ -56,6 +59,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
       setBusy(false);
     }
   };
+
 
   return (
     <div
