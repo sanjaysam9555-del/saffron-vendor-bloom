@@ -132,20 +132,26 @@ function AdminAnalyticsPage() {
         <section className="mt-10">
           <h2 className="font-display text-xl text-[var(--charcoal)]">Per-project P&amp;L</h2>
           <div className="mt-3 overflow-x-auto rounded-lg border border-[var(--border)] bg-white">
-            <table className="w-full min-w-[820px] text-sm">
+            <table className="w-full min-w-[1100px] text-sm">
               <thead className="bg-[var(--charcoal)] text-left text-[10px] uppercase tracking-widest text-[var(--cream)]/80">
                 <tr>
                   <th className="px-4 py-2.5">Project</th>
                   <th className="px-4 py-2.5">Wedding</th>
+                  <th className="px-4 py-2.5 text-right">Planning fee</th>
                   <th className="px-4 py-2.5 text-right">Client billing</th>
                   <th className="px-4 py-2.5 text-right">Vendor cost</th>
                   <th className="px-4 py-2.5 text-right">Commission</th>
                   <th className="px-4 py-2.5 text-right">Margin</th>
+                  <th className="px-4 py-2.5 text-right">Total income</th>
+                  <th className="px-4 py-2.5 text-right">Target income</th>
                 </tr>
               </thead>
               <tbody>
                 {(projects.data ?? []).map((p) => {
                   const margin = p.client_billing > 0 ? (Number(p.commission) / Number(p.client_billing)) * 100 : 0;
+                  const planning = Number((p as any).planning_fee ?? 0);
+                  const target = Number((p as any).target_income ?? 0);
+                  const totalIncome = planning + Number(p.commission ?? 0);
                   return (
                     <tr key={p.project_id} className="border-t border-[var(--border)]">
                       <td className="px-4 py-3">
@@ -160,16 +166,19 @@ function AdminAnalyticsPage() {
                       <td className="px-4 py-3 text-[var(--charcoal)]/70">
                         {p.wedding_date ? new Date(p.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
                       </td>
+                      <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{formatINR(planning)}</td>
                       <td className="px-4 py-3 text-right font-medium">{formatINR(Number(p.client_billing))}</td>
                       <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{formatINR(Number(p.vendor_cost))}</td>
                       <td className="px-4 py-3 text-right font-semibold text-[var(--terracotta)]">{formatINR(Number(p.commission))}</td>
                       <td className="px-4 py-3 text-right">{margin.toFixed(1)}%</td>
+                      <td className="px-4 py-3 text-right font-semibold text-emerald-700">{formatINR(totalIncome)}</td>
+                      <td className="px-4 py-3 text-right text-indigo-700">{formatINR(target)}</td>
                     </tr>
                   );
                 })}
                 {(projects.data ?? []).length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
+                    <td colSpan={9} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
                       {projects.isLoading ? "Loading…" : "No closed quotes in this range yet."}
                     </td>
                   </tr>
@@ -178,6 +187,7 @@ function AdminAnalyticsPage() {
             </table>
           </div>
         </section>
+
 
         {/* Project payments matrix (below P&L) */}
         <section className="mt-10">
