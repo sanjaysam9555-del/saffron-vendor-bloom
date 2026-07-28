@@ -107,7 +107,7 @@ export const analyticsProjects = createServerFn({ method: "POST" })
       _to: (data.to ?? null) as unknown as string,
     });
     if (error) throw new Error(error.message);
-    return (rows ?? []) as Array<{
+    const list = (rows ?? []) as Array<{
       project_id: string;
       bride_name: string | null;
       groom_name: string | null;
@@ -119,7 +119,32 @@ export const analyticsProjects = createServerFn({ method: "POST" })
       pending: number;
       vendor_count: number;
     }>;
+    // Enrich with planning_fee + target_income per project (project-level values).
+    const ids = list.map((r) => r.project_id);
+    let feeMap = new Map<string, { planning_fee: number; target_income: number }>();
+    if (ids.length > 0) {
+      const { data: projRows, error: pe } = await context.supabase
+        .from("projects")
+        .select("id, planning_fee, target_income")
+        .in("id", ids);
+      if (pe) throw new Error(pe.message);
+      feeMap = new Map(
+        (projRows ?? []).map((p: any) => [
+          p.id as string,
+          {
+            planning_fee: Number(p.planning_fee ?? 0),
+            target_income: Number(p.target_income ?? 0),
+          },
+        ]),
+      );
+    }
+    return list.map((r) => ({
+      ...r,
+      planning_fee: feeMap.get(r.project_id)?.planning_fee ?? 0,
+      target_income: feeMap.get(r.project_id)?.target_income ?? 0,
+    }));
   });
+
 
 export const analyticsVendors = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
