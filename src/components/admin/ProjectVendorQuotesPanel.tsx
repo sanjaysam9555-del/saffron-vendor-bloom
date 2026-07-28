@@ -160,19 +160,9 @@ export function ProjectVendorQuotesPanel({
                   <QuoteRow
                     quote={q}
                     onEdit={() => setEditing(q)}
-                    onClose={async (amt, commission) => {
+                    onClose={async (amt) => {
                       try {
                         await closeProjectVendorQuote(q.id, amt);
-                        if (commission != null) {
-                          try {
-                            await setQuoteCommission({
-                              data: { quote_id: q.id, commission_amount: commission },
-                            });
-                          } catch (e) {
-                            // Non-admins simply can't set commission — swallow.
-                            console.warn("commission save skipped", e);
-                          }
-                        }
                         toast.success("Quote marked as closed");
                         refresh();
                       } catch (e) {
@@ -204,6 +194,7 @@ export function ProjectVendorQuotesPanel({
                     }}
                     onViewFile={setViewing}
                   />
+
                 </li>
               ),
             )}
