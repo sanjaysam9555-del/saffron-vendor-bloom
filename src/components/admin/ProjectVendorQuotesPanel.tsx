@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   X,
@@ -160,19 +160,9 @@ export function ProjectVendorQuotesPanel({
                   <QuoteRow
                     quote={q}
                     onEdit={() => setEditing(q)}
-                    onClose={async (amt, commission) => {
+                    onClose={async (amt) => {
                       try {
                         await closeProjectVendorQuote(q.id, amt);
-                        if (commission != null) {
-                          try {
-                            await setQuoteCommission({
-                              data: { quote_id: q.id, commission_amount: commission },
-                            });
-                          } catch (e) {
-                            // Non-admins simply can't set commission — swallow.
-                            console.warn("commission save skipped", e);
-                          }
-                        }
                         toast.success("Quote marked as closed");
                         refresh();
                       } catch (e) {
@@ -204,6 +194,7 @@ export function ProjectVendorQuotesPanel({
                     }}
                     onViewFile={setViewing}
                   />
+
                 </li>
               ),
             )}
@@ -262,7 +253,7 @@ function QuoteRow({
 }: {
   quote: ProjectVendorQuote;
   onEdit: () => void;
-  onClose: (amount: number | null, commission: number | null) => void;
+  onClose: (amount: number | null) => void;
   onDelete: () => void;
   onWithdraw: () => void;
   onViewFile: (f: QuoteFile) => void;
@@ -273,7 +264,7 @@ function QuoteRow({
   const [closedAmt, setClosedAmt] = useState<string>(
     quote.quote_amount != null ? String(quote.quote_amount) : "",
   );
-  const [commissionAmt, setCommissionAmt] = useState<string>("");
+
 
   const headlineAmount =
     quote.status === "closed" && quote.closed_amount != null
@@ -362,58 +353,34 @@ function QuoteRow({
       {quote.status !== "closed" && quote.status !== "withdrawn" && (
         <div className="mt-2 border-t border-[var(--border)] pt-2">
           {showCloseInput ? (
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-[var(--charcoal)]/65">Client price ₹</span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  className="w-32 rounded border border-[var(--border)] px-2 py-1 text-sm"
-                  value={closedAmt}
-                  onChange={(e) => setClosedAmt(e.target.value)}
-                  placeholder="amount"
-                />
-                {isAdmin && (
-                  <>
-                    <span className="text-xs text-[var(--charcoal)]/65">Commission ₹</span>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      className="w-28 rounded border border-[var(--terracotta)]/50 bg-[var(--terracotta-soft)]/40 px-2 py-1 text-sm"
-                      value={commissionAmt}
-                      onChange={(e) => setCommissionAmt(e.target.value)}
-                      placeholder="0"
-                      title="Admin-only. Included in client price."
-                    />
-                  </>
-                )}
-                <button
-                  onClick={() => {
-                    const n = closedAmt.trim() === "" ? null : Number(closedAmt);
-                    const c = commissionAmt.trim() === "" ? null : Number(commissionAmt);
-                    onClose(
-                      Number.isFinite(n as number) ? (n as number) : null,
-                      Number.isFinite(c as number) ? (c as number) : null,
-                    );
-                    setShowCloseInput(false);
-                  }}
-                  className="inline-flex items-center gap-1 rounded-md bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700"
-                >
-                  <Check className="h-3 w-3" /> Confirm
-                </button>
-                <button
-                  onClick={() => setShowCloseInput(false)}
-                  className="rounded-md px-2 py-1 text-xs hover:bg-[var(--cream-deep)]"
-                >
-                  Cancel
-                </button>
-              </div>
-              {isAdmin && (
-                <p className="text-[10px] text-[var(--charcoal)]/55">
-                  Commission is admin-only. Client price = vendor cost + commission.
-                </p>
-              )}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-[var(--charcoal)]/65">Client price ₹</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                className="w-32 rounded border border-[var(--border)] px-2 py-1 text-sm"
+                value={closedAmt}
+                onChange={(e) => setClosedAmt(e.target.value)}
+                placeholder="amount"
+              />
+              <button
+                onClick={() => {
+                  const n = closedAmt.trim() === "" ? null : Number(closedAmt);
+                  onClose(Number.isFinite(n as number) ? (n as number) : null);
+                  setShowCloseInput(false);
+                }}
+                className="inline-flex items-center gap-1 rounded-md bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700"
+              >
+                <Check className="h-3 w-3" /> Confirm
+              </button>
+              <button
+                onClick={() => setShowCloseInput(false)}
+                className="rounded-md px-2 py-1 text-xs hover:bg-[var(--cream-deep)]"
+              >
+                Cancel
+              </button>
             </div>
+
           ) : (
             <div className="flex flex-wrap items-center gap-2">
               <button
@@ -525,10 +492,35 @@ function QuoteForm({
   onViewFile?: (f: QuoteFile) => void;
 }) {
   const confirmDelete = useConfirmDelete();
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
   const isEdit = !!quote;
-  const [amount, setAmount] = useState<string>(
-    quote?.quote_amount != null ? String(quote.quote_amount) : "",
+
+  // Load existing commission when editing (admin only).
+  const existingCommissionQ = useQuery({
+    queryKey: ["quote-commission", quote?.id],
+    queryFn: () => getQuoteCommission({ data: { quote_id: quote!.id } }),
+    enabled: isAdmin && !!quote?.id,
+  });
+  const existingCommission = Number(existingCommissionQ.data?.commission_amount ?? 0);
+
+  const initialTotal = quote?.quote_amount != null ? Number(quote.quote_amount) : null;
+  const [vendorCost, setVendorCost] = useState<string>(
+    initialTotal != null ? String(Math.max(0, initialTotal - existingCommission)) : "",
   );
+  const [commission, setCommission] = useState<string>(
+    existingCommission > 0 ? String(existingCommission) : "",
+  );
+  // Keep vendor-cost field in sync when the commission query resolves for an existing quote.
+  useEffect(() => {
+    if (isEdit && existingCommissionQ.isSuccess && initialTotal != null) {
+      const c = Number(existingCommissionQ.data?.commission_amount ?? 0);
+      setCommission(c > 0 ? String(c) : "");
+      setVendorCost(String(Math.max(0, initialTotal - c)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingCommissionQ.isSuccess]);
+
   const [text, setText] = useState<string>(quote?.quote_text ?? "");
   const [notes, setNotes] = useState<string>(quote?.notes ?? "");
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -552,12 +544,13 @@ function QuoteForm({
   const handleSave = async () => {
     setBusy(true);
     try {
-      const numericAmount =
-        amount.trim() === "" ? null : Number(amount);
-      if (numericAmount != null && !Number.isFinite(numericAmount)) {
-        throw new Error("Amount must be a number");
-      }
+      const vc = vendorCost.trim() === "" ? null : Number(vendorCost);
+      const cm = commission.trim() === "" ? 0 : Number(commission);
+      if (vc != null && !Number.isFinite(vc)) throw new Error("Vendor cost must be a number");
+      if (!Number.isFinite(cm)) throw new Error("Commission must be a number");
+      const numericAmount = vc == null && !cm ? null : Number((vc ?? 0) + cm);
 
+      let quoteId = quote?.id;
       if (isEdit && quote) {
         await updateProjectVendorQuote({
           id: quote.id,
@@ -570,7 +563,7 @@ function QuoteForm({
           await uploadQuoteFiles(projectId, quote.id, pendingFiles);
         }
       } else {
-        await createProjectVendorQuote(
+        const created = await createProjectVendorQuote(
           {
             project_id: projectId,
             vendor_id: vendorId,
@@ -581,6 +574,14 @@ function QuoteForm({
           },
           pendingFiles,
         );
+        quoteId = (created as any)?.id ?? quoteId;
+      }
+      if (isAdmin && quoteId) {
+        try {
+          await setQuoteCommission({ data: { quote_id: quoteId, commission_amount: cm } });
+        } catch (e) {
+          console.warn("commission save skipped", e);
+        }
       }
       toast.success(isEdit ? "Quote updated" : "Quote added");
       onSaved();
@@ -599,16 +600,38 @@ function QuoteForm({
 
       <div className="grid gap-2 sm:grid-cols-2">
         <label className="text-xs">
-          <span className="mb-1 block font-medium text-[var(--charcoal)]/70">Amount (₹)</span>
+          <span className="mb-1 block font-medium text-[var(--charcoal)]/70">Vendor cost (₹)</span>
           <input
             type="number"
             inputMode="decimal"
             className="w-full rounded border border-[var(--border)] px-2 py-1.5 text-sm"
-            placeholder="e.g. 450000"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            placeholder="e.g. 400000"
+            value={vendorCost}
+            onChange={(e) => setVendorCost(e.target.value)}
           />
         </label>
+        {isAdmin ? (
+          <label className="text-xs">
+            <span className="mb-1 block font-medium text-[var(--terracotta)]">
+              Incentive / Commission (₹) · admin-only
+            </span>
+            <input
+              type="number"
+              inputMode="decimal"
+              className="w-full rounded border border-[var(--terracotta)]/50 bg-[var(--terracotta-soft)]/40 px-2 py-1.5 text-sm"
+              placeholder="0"
+              value={commission}
+              onChange={(e) => setCommission(e.target.value)}
+            />
+            <p className="mt-1 text-[10px] text-[var(--charcoal)]/55">
+              Client price = vendor cost + commission ={" "}
+              <strong>{formatINR((Number(vendorCost) || 0) + (Number(commission) || 0))}</strong>
+            </p>
+          </label>
+        ) : (
+          <div />
+        )}
+
         <label className="text-xs sm:col-span-2">
           <span className="mb-1 block font-medium text-[var(--charcoal)]/70">Quote text</span>
           <textarea

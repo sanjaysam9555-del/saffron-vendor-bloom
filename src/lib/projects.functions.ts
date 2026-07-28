@@ -461,6 +461,7 @@ export const createProject = createServerFn({ method: "POST" })
         notes: z.string().max(2000).optional().nullable(),
         total_installments: z.number().int().min(1).max(4),
         planning_fee: z.number().nonnegative(),
+        target_income: z.number().nonnegative().optional(),
       })
       .parse(d),
   )
@@ -475,6 +476,7 @@ export const createProject = createServerFn({ method: "POST" })
         notes: data.notes ?? null,
         total_installments: data.total_installments,
         planning_fee: data.planning_fee,
+        target_income: data.target_income ?? 0,
         created_by: context.userId,
       })
       .select()
@@ -507,9 +509,12 @@ export const updateProject = createServerFn({ method: "POST" })
         groom_name: z.string().min(1).max(120).optional(),
         wedding_date: z.string().min(4).optional(),
         notes: z.string().max(2000).optional().nullable(),
+        planning_fee: z.number().nonnegative().optional(),
+        target_income: z.number().nonnegative().optional(),
       })
       .parse(d),
   )
+
   .handler(async ({ context, data }) => {
     await assertStaff(context.userId);
     const { id, ...patch } = data;

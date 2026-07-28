@@ -1,0 +1,1 @@
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS target_income numeric NOT NULL DEFAULT 0;
