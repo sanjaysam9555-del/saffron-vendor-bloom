@@ -258,7 +258,15 @@ function OverviewCard({
   );
 }
 
-function PnlFooter({ rows }: { rows: Array<{ client_billing: number; vendor_cost: number; commission: number }> }) {
+function PnlFooter({
+  rows,
+  planningFee,
+  targetIncome,
+}: {
+  rows: Array<{ client_billing: number; vendor_cost: number; commission: number }>;
+  planningFee: number;
+  targetIncome: number;
+}) {
   const t = rows.reduce(
     (acc, r) => {
       acc.client += Number(r.client_billing || 0);
@@ -269,19 +277,24 @@ function PnlFooter({ rows }: { rows: Array<{ client_billing: number; vendor_cost
     { client: 0, vendor: 0, comm: 0 },
   );
   const margin = t.client > 0 ? (t.comm / t.client) * 100 : 0;
+  const totalIncome = planningFee + t.comm;
   return (
     <tfoot>
       <tr className="border-t-2 border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)]/60 font-semibold text-[var(--charcoal)]">
         <td className="px-4 py-3 text-[11px] uppercase tracking-widest text-[var(--charcoal)]/70">Totals</td>
         <td className="px-4 py-3" />
+        <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{formatINR(planningFee)}</td>
         <td className="px-4 py-3 text-right">{formatINR(t.client)}</td>
         <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{formatINR(t.vendor)}</td>
         <td className="px-4 py-3 text-right text-[var(--terracotta)]">{formatINR(t.comm)}</td>
         <td className="px-4 py-3 text-right">{margin.toFixed(1)}%</td>
+        <td className="px-4 py-3 text-right text-emerald-700">{formatINR(totalIncome)}</td>
+        <td className="px-4 py-3 text-right text-indigo-700">{formatINR(targetIncome)}</td>
       </tr>
     </tfoot>
   );
 }
+
 
 // -------------------- Project payments (single project) --------------------
 
