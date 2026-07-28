@@ -107,6 +107,21 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
               />
             </label>
             <label className="text-xs text-[var(--charcoal)]/70">
+              Target income (₹)
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={targetIncome}
+                onChange={(e) => setTargetIncome(e.target.value)}
+                placeholder="e.g. 300000"
+                className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm"
+              />
+              <span className="mt-1 block text-[10px] text-[var(--charcoal)]/50">
+                Planning fee + expected commission target
+              </span>
+            </label>
+            <label className="text-xs text-[var(--charcoal)]/70">
               Number of installments
               <select
                 required
@@ -121,6 +136,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
                 ))}
               </select>
             </label>
+
             <label className="sm:col-span-2 text-xs text-[var(--charcoal)]/70">
               Notes (optional)
               <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" />
