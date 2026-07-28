@@ -512,7 +512,7 @@ function QuoteForm({
     existingCommission > 0 ? String(existingCommission) : "",
   );
   // Keep vendor-cost field in sync when the commission query resolves for an existing quote.
-  useMemo(() => {
+  useEffect(() => {
     if (isEdit && existingCommissionQ.isSuccess && initialTotal != null) {
       const c = Number(existingCommissionQ.data?.commission_amount ?? 0);
       setCommission(c > 0 ? String(c) : "");
