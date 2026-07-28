@@ -718,6 +718,7 @@ export type Database = {
           notes: string | null
           payment_remarks: string | null
           planning_fee: number
+          target_income: number
           total_installments: number
           updated_at: string
           wedding_date: string
@@ -732,6 +733,7 @@ export type Database = {
           notes?: string | null
           payment_remarks?: string | null
           planning_fee?: number
+          target_income?: number
           total_installments?: number
           updated_at?: string
           wedding_date: string
@@ -746,6 +748,7 @@ export type Database = {
           notes?: string | null
           payment_remarks?: string | null
           planning_fee?: number
+          target_income?: number
           total_installments?: number
           updated_at?: string
           wedding_date?: string
