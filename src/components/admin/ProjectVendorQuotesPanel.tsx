@@ -253,7 +253,7 @@ function QuoteRow({
 }: {
   quote: ProjectVendorQuote;
   onEdit: () => void;
-  onClose: (amount: number | null, commission: number | null) => void;
+  onClose: (amount: number | null) => void;
   onDelete: () => void;
   onWithdraw: () => void;
   onViewFile: (f: QuoteFile) => void;
@@ -264,7 +264,7 @@ function QuoteRow({
   const [closedAmt, setClosedAmt] = useState<string>(
     quote.quote_amount != null ? String(quote.quote_amount) : "",
   );
-  const [commissionAmt, setCommissionAmt] = useState<string>("");
+
 
   const headlineAmount =
     quote.status === "closed" && quote.closed_amount != null
