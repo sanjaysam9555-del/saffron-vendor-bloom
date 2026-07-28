@@ -27,6 +27,7 @@ import { formatINR, formatINRShort } from "@/lib/quote-types";
 
 
 export function ProjectAnalyticsTab({ projectId }: { projectId: string }) {
+  const qc = useQueryClient();
   const overview = useQuery({
     queryKey: ["project-analytics-overview", projectId],
     queryFn: () => projectAnalyticsOverview({ data: { project_id: projectId } }),
@@ -39,14 +40,22 @@ export function ProjectAnalyticsTab({ projectId }: { projectId: string }) {
     queryKey: ["project-received", projectId],
     queryFn: () => projectReceivedBreakdown({ data: { project_id: projectId } }),
   });
+  const projectQ = useQuery({
+    queryKey: ["project", projectId],
+    queryFn: () => getProject({ data: { id: projectId } }),
+  });
+  const planningFee = Number((projectQ.data?.project as any)?.planning_fee ?? 0);
+  const targetIncome = Number((projectQ.data?.project as any)?.target_income ?? 0);
+  const commissionTotal = Number(overview.data?.commission ?? 0);
+  const totalIncome = planningFee + commissionTotal;
 
   return (
     <div className="space-y-10">
       {/* Callouts */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <OverviewCard label="Client billing" value={overview.data?.client_billing ?? 0} tone="charcoal" />
         <OverviewCard label="Vendor cost" value={overview.data?.vendor_cost ?? 0} tone="terracotta" highlight />
-        <OverviewCard label="Commission" value={overview.data?.commission ?? 0} tone="gold" highlight />
+        <OverviewCard label="Commission" value={commissionTotal} tone="gold" highlight />
         <OverviewCard
           label="Fee + Commission received"
           value={(received.data?.fee_received ?? 0) + (received.data?.commission_received ?? 0)}
@@ -61,6 +70,12 @@ export function ProjectAnalyticsTab({ projectId }: { projectId: string }) {
           highlight
           hint={`Fee ${formatINRShort(received.data?.fee_pending ?? 0)} · Comm ${formatINRShort(received.data?.commission_pending ?? 0)}`}
         />
+        <TargetIncomeCard
+          projectId={projectId}
+          target={targetIncome}
+          totalIncome={totalIncome}
+          onSaved={() => qc.invalidateQueries({ queryKey: ["project", projectId] })}
+        />
       </div>
 
       {/* P&L */}
@@ -68,15 +83,18 @@ export function ProjectAnalyticsTab({ projectId }: { projectId: string }) {
         <h2 className="font-display text-xl text-[var(--charcoal)]">Project P&amp;L</h2>
         <p className="text-xs text-[var(--charcoal)]/60">Per closed vendor for this project.</p>
         <div className="mt-3 overflow-x-auto rounded-lg border border-[var(--border)] bg-white">
-          <table className="w-full min-w-[720px] text-sm">
+          <table className="w-full min-w-[960px] text-sm">
             <thead className="bg-[var(--charcoal)] text-left text-[10px] uppercase tracking-widest text-[var(--cream)]/80">
               <tr>
                 <th className="px-4 py-2.5">Vendor</th>
                 <th className="px-4 py-2.5">Category</th>
+                <th className="px-4 py-2.5 text-right">Planning fee</th>
                 <th className="px-4 py-2.5 text-right">Client billing</th>
                 <th className="px-4 py-2.5 text-right">Vendor cost</th>
                 <th className="px-4 py-2.5 text-right">Commission</th>
                 <th className="px-4 py-2.5 text-right">Margin</th>
+                <th className="px-4 py-2.5 text-right">Total income</th>
+                <th className="px-4 py-2.5 text-right">Target income</th>
               </tr>
             </thead>
             <tbody className="[&_tr:nth-child(even)]:bg-[var(--cream)]/25">
@@ -86,22 +104,27 @@ export function ProjectAnalyticsTab({ projectId }: { projectId: string }) {
                   <tr key={p.quote_id} className="border-t border-[var(--border)]">
                     <td className="px-4 py-3 font-medium">{p.vendor_name}</td>
                     <td className="px-4 py-3 text-[var(--charcoal)]/70">{p.category ?? "—"}</td>
+                    <td className="px-4 py-3 text-right text-[var(--charcoal)]/30">—</td>
                     <td className="px-4 py-3 text-right font-medium">{formatINR(Number(p.client_billing))}</td>
                     <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{formatINR(Number(p.vendor_cost))}</td>
                     <td className="px-4 py-3 text-right font-semibold text-[var(--terracotta)]">{formatINR(Number(p.commission))}</td>
                     <td className="px-4 py-3 text-right">{margin.toFixed(1)}%</td>
+                    <td className="px-4 py-3 text-right text-[var(--charcoal)]/30">—</td>
+                    <td className="px-4 py-3 text-right text-[var(--charcoal)]/30">—</td>
                   </tr>
                 );
               })}
               {(pnl.data ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
+                  <td colSpan={9} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
                     {pnl.isLoading ? "Loading…" : "No closed quotes for this project yet."}
                   </td>
                 </tr>
               )}
             </tbody>
-            {(pnl.data ?? []).length > 0 && <PnlFooter rows={pnl.data ?? []} />}
+            {(pnl.data ?? []).length > 0 && (
+              <PnlFooter rows={pnl.data ?? []} planningFee={planningFee} targetIncome={targetIncome} />
+            )}
           </table>
         </div>
       </section>
@@ -124,6 +147,74 @@ export function ProjectAnalyticsTab({ projectId }: { projectId: string }) {
     </div>
   );
 }
+
+// -------------------- Target income card (editable) -----------------------
+
+function TargetIncomeCard({
+  projectId,
+  target,
+  totalIncome,
+  onSaved,
+}: {
+  projectId: string;
+  target: number;
+  totalIncome: number;
+  onSaved: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(String(target || 0));
+  const diff = totalIncome - target;
+  const overTarget = diff >= 0;
+  const save = async () => {
+    try {
+      await updateProject({
+        data: { id: projectId, target_income: Number(value || 0) },
+      });
+      toast.success("Target saved");
+      setEditing(false);
+      onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    }
+  };
+  return (
+    <div className="rounded-lg border border-indigo-500/40 bg-indigo-50 p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+          Target income
+        </div>
+        {!editing && (
+          <button
+            onClick={() => { setValue(String(target || 0)); setEditing(true); }}
+            className="text-[10px] font-semibold uppercase tracking-widest text-indigo-700 hover:underline"
+          >
+            Edit
+          </button>
+        )}
+      </div>
+      {editing ? (
+        <div className="mt-1 flex items-center gap-1">
+          <span className="text-indigo-700">₹</span>
+          <input
+            type="number" min={0} step="0.01" value={value} autoFocus
+            onChange={(e) => setValue(e.target.value)}
+            className="w-full rounded border border-indigo-300 bg-white px-2 py-1 text-lg font-semibold text-indigo-700"
+          />
+          <button onClick={save} className="rounded bg-indigo-600 px-2 py-1 text-xs text-white hover:bg-indigo-700">Save</button>
+          <button onClick={() => setEditing(false)} className="rounded px-2 py-1 text-xs hover:bg-white">Cancel</button>
+        </div>
+      ) : (
+        <div className="mt-1 font-display text-2xl font-semibold text-indigo-700">{formatINR(target)}</div>
+      )}
+      {!editing && target > 0 && (
+        <div className={"mt-1 text-[11px] " + (overTarget ? "text-emerald-700" : "text-rose-700")}>
+          {overTarget ? "▲" : "▼"} {formatINRShort(Math.abs(diff))} {overTarget ? "above" : "below"} target
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 // -------------------- OverviewCard (matches master analytics) -------------
 
