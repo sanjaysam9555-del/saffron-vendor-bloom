@@ -353,58 +353,34 @@ function QuoteRow({
       {quote.status !== "closed" && quote.status !== "withdrawn" && (
         <div className="mt-2 border-t border-[var(--border)] pt-2">
           {showCloseInput ? (
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-[var(--charcoal)]/65">Client price ₹</span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  className="w-32 rounded border border-[var(--border)] px-2 py-1 text-sm"
-                  value={closedAmt}
-                  onChange={(e) => setClosedAmt(e.target.value)}
-                  placeholder="amount"
-                />
-                {isAdmin && (
-                  <>
-                    <span className="text-xs text-[var(--charcoal)]/65">Commission ₹</span>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      className="w-28 rounded border border-[var(--terracotta)]/50 bg-[var(--terracotta-soft)]/40 px-2 py-1 text-sm"
-                      value={commissionAmt}
-                      onChange={(e) => setCommissionAmt(e.target.value)}
-                      placeholder="0"
-                      title="Admin-only. Included in client price."
-                    />
-                  </>
-                )}
-                <button
-                  onClick={() => {
-                    const n = closedAmt.trim() === "" ? null : Number(closedAmt);
-                    const c = commissionAmt.trim() === "" ? null : Number(commissionAmt);
-                    onClose(
-                      Number.isFinite(n as number) ? (n as number) : null,
-                      Number.isFinite(c as number) ? (c as number) : null,
-                    );
-                    setShowCloseInput(false);
-                  }}
-                  className="inline-flex items-center gap-1 rounded-md bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700"
-                >
-                  <Check className="h-3 w-3" /> Confirm
-                </button>
-                <button
-                  onClick={() => setShowCloseInput(false)}
-                  className="rounded-md px-2 py-1 text-xs hover:bg-[var(--cream-deep)]"
-                >
-                  Cancel
-                </button>
-              </div>
-              {isAdmin && (
-                <p className="text-[10px] text-[var(--charcoal)]/55">
-                  Commission is admin-only. Client price = vendor cost + commission.
-                </p>
-              )}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-[var(--charcoal)]/65">Client price ₹</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                className="w-32 rounded border border-[var(--border)] px-2 py-1 text-sm"
+                value={closedAmt}
+                onChange={(e) => setClosedAmt(e.target.value)}
+                placeholder="amount"
+              />
+              <button
+                onClick={() => {
+                  const n = closedAmt.trim() === "" ? null : Number(closedAmt);
+                  onClose(Number.isFinite(n as number) ? (n as number) : null);
+                  setShowCloseInput(false);
+                }}
+                className="inline-flex items-center gap-1 rounded-md bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700"
+              >
+                <Check className="h-3 w-3" /> Confirm
+              </button>
+              <button
+                onClick={() => setShowCloseInput(false)}
+                className="rounded-md px-2 py-1 text-xs hover:bg-[var(--cream-deep)]"
+              >
+                Cancel
+              </button>
             </div>
+
           ) : (
             <div className="flex flex-wrap items-center gap-2">
               <button
