@@ -123,7 +123,8 @@ export const analyticsProjects = createServerFn({ method: "POST" })
     const ids = list.map((r) => r.project_id);
     let feeMap = new Map<string, { planning_fee: number; target_income: number }>();
     if (ids.length > 0) {
-      const { data: projRows, error: pe } = await context.supabase
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: projRows, error: pe } = await supabaseAdmin
         .from("projects")
         .select("id, planning_fee, target_income")
         .in("id", ids);

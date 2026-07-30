@@ -9,6 +9,15 @@ import { getQuoteFileSignedUrl, getQuoteFileStreamUrl } from "@/lib/quote-files.
 
 const BUCKET = "vendor-files";
 
+/**
+ * Explicit column list. Commission-related columns
+ * (total_commission_installments, commission_remarks) are intentionally
+ * excluded — they are not readable by the Data API role and must never
+ * reach a client user.
+ */
+const QUOTE_COLUMNS =
+  "id, project_id, vendor_id, category, quote_text, quote_amount, currency, status, is_final, closed_amount, notes, created_by, created_at, updated_at";
+
 export const QUOTE_ACCEPTED_FILE_TYPES =
   ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp";
 export const QUOTE_MAX_FILE_SIZE = 20 * 1024 * 1024;
@@ -19,7 +28,7 @@ export async function listProjectVendorQuotes(
 ): Promise<ProjectVendorQuote[]> {
   const { data, error } = await supabase
     .from("project_vendor_quotes")
-    .select("*, files:project_vendor_quote_files(*)")
+    .select(`${QUOTE_COLUMNS}, files:project_vendor_quote_files(*)`)
     .eq("project_id", projectId)
     .eq("vendor_id", vendorId)
     .order("created_at", { ascending: false });
@@ -37,7 +46,7 @@ export async function listVendorQuoteHistory(
 ): Promise<ProjectVendorQuote[]> {
   const { data, error } = await supabase
     .from("project_vendor_quotes")
-    .select("*, files:project_vendor_quote_files(*)")
+    .select(`${QUOTE_COLUMNS}, files:project_vendor_quote_files(*)`)
     .eq("vendor_id", vendorId)
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -100,7 +109,7 @@ export async function createProjectVendorQuote(
       notes: input.notes ?? null,
       created_by: userId,
     })
-    .select()
+    .select(QUOTE_COLUMNS)
     .single();
   if (error) throw error;
 
