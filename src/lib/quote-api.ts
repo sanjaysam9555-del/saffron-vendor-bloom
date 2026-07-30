@@ -9,6 +9,15 @@ import { getQuoteFileSignedUrl, getQuoteFileStreamUrl } from "@/lib/quote-files.
 
 const BUCKET = "vendor-files";
 
+/**
+ * Explicit column list. Commission-related columns
+ * (total_commission_installments, commission_remarks) are intentionally
+ * excluded — they are not readable by the Data API role and must never
+ * reach a client user.
+ */
+const QUOTE_COLUMNS =
+  "id, project_id, vendor_id, category, quote_text, quote_amount, currency, status, is_final, closed_amount, notes, created_by, created_at, updated_at";
+
 export const QUOTE_ACCEPTED_FILE_TYPES =
   ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp";
 export const QUOTE_MAX_FILE_SIZE = 20 * 1024 * 1024;
