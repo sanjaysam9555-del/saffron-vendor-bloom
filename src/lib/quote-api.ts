@@ -28,7 +28,7 @@ export async function listProjectVendorQuotes(
 ): Promise<ProjectVendorQuote[]> {
   const { data, error } = await supabase
     .from("project_vendor_quotes")
-    .select("*, files:project_vendor_quote_files(*)")
+    .select(`${QUOTE_COLUMNS}, files:project_vendor_quote_files(*)`)
     .eq("project_id", projectId)
     .eq("vendor_id", vendorId)
     .order("created_at", { ascending: false });
@@ -46,7 +46,7 @@ export async function listVendorQuoteHistory(
 ): Promise<ProjectVendorQuote[]> {
   const { data, error } = await supabase
     .from("project_vendor_quotes")
-    .select("*, files:project_vendor_quote_files(*)")
+    .select(`${QUOTE_COLUMNS}, files:project_vendor_quote_files(*)`)
     .eq("vendor_id", vendorId)
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -109,7 +109,7 @@ export async function createProjectVendorQuote(
       notes: input.notes ?? null,
       created_by: userId,
     })
-    .select()
+    .select(QUOTE_COLUMNS)
     .single();
   if (error) throw error;
 
