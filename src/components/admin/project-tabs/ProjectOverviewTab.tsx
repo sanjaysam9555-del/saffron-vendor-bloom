@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CheckSquare, AlertTriangle, MessageSquare } from "lucide-react";
 import { listProjectTasks } from "@/lib/project-tasks.functions";
+import { PriorityChip } from "./tasks/task-meta";
 import { listProjectGuests } from "@/lib/project-guests.functions";
 import { getProjectBudgetSummary } from "@/lib/project-budget.functions";
 import { listProjectQuotesAllVendors } from "@/lib/quote-api";
@@ -142,7 +143,7 @@ export function ProjectOverviewTab({
               openTasks.slice(0, 6).map((t) => (
                 <div key={t.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
                   <span className="min-w-0 truncate text-sm text-[var(--charcoal)]">{t.title}</span>
-                  <PriorityPill priority={t.priority} />
+                  <PriorityChip priority={t.priority} />
                 </div>
               ))
             )}
