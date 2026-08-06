@@ -142,7 +142,7 @@ export function ProjectOverviewTab({
               openTasks.slice(0, 6).map((t) => (
                 <div key={t.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
                   <span className="min-w-0 truncate text-sm text-[var(--charcoal)]">{t.title}</span>
-                  <PriorityPill priority={t.priority} />
+                  <PriorityChip priority={t.priority} />
                 </div>
               ))
             )}
