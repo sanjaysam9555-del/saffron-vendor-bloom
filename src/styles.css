@@ -578,8 +578,40 @@ button:active, a:active, [role="button"]:active {
   animation: loader-sweep 1.6s ease-in-out infinite;
 }
 
+/* Phase: starting — quick, eager arc and a fast sliver. */
+.loader-arc[data-phase="starting"] { animation-duration: 0.9s; }
+.loader-sliver[data-phase="starting"] { animation-duration: 1s; }
+
+/* Phase: buffering — slower, heavier breathing so waits feel patient. */
+.loader-arc[data-phase="buffering"] {
+  animation-duration: 2.2s;
+  border-top-color: color-mix(in oklab, var(--terracotta) 80%, transparent);
+}
+.loader-sliver[data-phase="buffering"] {
+  animation: loader-breathe 2.2s ease-in-out infinite;
+  width: 100%;
+  transform-origin: left center;
+}
+@keyframes loader-breathe {
+  0%, 100% { transform: scaleX(0.12); opacity: 0.5; }
+  50%      { transform: scaleX(0.7);  opacity: 1; }
+}
+
+/* Phase: done — motion settles, ring closes, track fills. */
+.loader-arc[data-phase="done"] {
+  animation: none;
+  border-color: var(--terracotta);
+  transition: border-color 0.35s ease;
+}
+.loader-sliver[data-phase="done"] {
+  animation: none;
+  width: 100%;
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .loader-arc { animation: none !important; border-top-color: var(--terracotta); }
-  .loader-sliver { animation: none !important; width: 100%; opacity: 0.5; }
+  .loader-sliver { animation: none !important; width: 100%; opacity: 0.5; transform: none !important; }
 }
+
 
