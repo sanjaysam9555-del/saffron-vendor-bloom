@@ -164,17 +164,19 @@ export function VendorCard({
           )}
         </div>
 
-        {/* ── Price ── */}
-        <div className={`flex ${SLOT.price} items-center`}>
+        {/* ── Price — same treatment as location so the two read as one
+               field group rather than one shouting over the other ── */}
+        <div className={`mt-1.5 flex ${SLOT.price} items-center gap-1.5 text-xs text-[var(--charcoal)]/60`}>
           {vendor.price_text && (
-            <span
-              className="truncate text-[13px] font-semibold text-[var(--terracotta)]"
-              title={vendor.price_text}
-            >
-              {vendor.price_text}
-            </span>
+            <>
+              <IndianRupee className="h-3 w-3 shrink-0" />
+              <span className="truncate" title={vendor.price_text}>
+                {vendor.price_text}
+              </span>
+            </>
           )}
         </div>
+
 
         {/* ── Footer ── */}
         <div className="mt-auto pt-3">
