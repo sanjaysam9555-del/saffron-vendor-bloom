@@ -20,6 +20,15 @@ dist-ssr
 .wrangler/
 .dev.vars
 
+# Environment secrets — never commit, set these directly in Lovable's
+# project secrets/environment-variables settings instead.
+.env
+.env.*
+!.env.example
+
+# Supabase CLI local link cache — machine-local state, not project config.
+supabase/.temp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
