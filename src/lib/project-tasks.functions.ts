@@ -342,7 +342,7 @@ export const updateProjectTask = createServerFn({ method: "POST" })
       throw new Error("A task cannot depend on itself");
     }
 
-    const update: Record<string, unknown> = { ...patch };
+    const update: any = { ...patch };
     if (patch.stage !== undefined) update.done = patch.stage === "done";
     else if (patch.done !== undefined) update.stage = patch.done ? "done" : "in_progress";
 
