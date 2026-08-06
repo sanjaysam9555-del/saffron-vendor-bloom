@@ -287,7 +287,7 @@ function DashboardPage() {
                 {filtered.length} of {vendors.length}
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex w-full items-center gap-2 sm:w-auto">
               {(() => {
                 const filtersActive = !!(filters.category || filters.locations.length || filters.minGoogleRating != null || filters.minSaffronRating != null || filters.submittedViaForm !== "any" || filters.assignedToProject !== "any" || filters.hasQuoteHistory !== "any" || filters.hasAttachment !== "any");
                 return (
@@ -295,13 +295,14 @@ function DashboardPage() {
                     onClick={() => setMobileFiltersOpen(true)}
                     aria-label="Filters"
                     title="Filters"
-                    className={`relative inline-flex h-8 w-8 items-center justify-center rounded-md border lg:hidden ${
+                    className={`relative inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border text-xs font-medium sm:h-8 sm:w-8 sm:flex-none lg:hidden ${
                       filtersActive
                         ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
                         : "border-[var(--border)] bg-white text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
                     }`}
                   >
                     <FilterIcon className="h-4 w-4" />
+                    <span className="sm:hidden">Filters</span>
                     {filtersActive && (
                       <span className="absolute right-1 top-1 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
                     )}
