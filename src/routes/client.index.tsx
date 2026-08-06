@@ -203,12 +203,7 @@ function ClientPortalPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--cream)]">
-        <div className="flex items-center gap-3 text-sm text-[var(--charcoal)]/60">
-          <span className="h-3 w-3 animate-pulse rounded-full bg-[var(--terracotta)]" />
-          Loading your vendors…
-        </div>
-      </div>
+      <LoadingState variant="fullscreen" label="Loading your vendors" />
     );
   }
 

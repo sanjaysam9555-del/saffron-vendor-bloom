@@ -51,12 +51,7 @@ function AdminDashboardPage() {
 
   if (isLoading || !data) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--cream)]">
-        <span className="flex items-center gap-2 text-sm text-[var(--charcoal)]/50">
-          <Sparkles className="h-4 w-4 animate-pulse text-[var(--terracotta)]" />
-          Loading dashboard…
-        </span>
-      </div>
+      <LoadingState variant="fullscreen" label="Loading your dashboard" />
     );
   }
 

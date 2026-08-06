@@ -41,12 +41,7 @@ function PreviewPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[var(--cream)] px-6 py-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="h-4 w-40 animate-pulse rounded bg-[var(--cream-deep)]" />
-          <div className="mt-4 h-8 w-72 animate-pulse rounded bg-[var(--cream-deep)]" />
-        </div>
-      </div>
+      <LoadingState variant="fullscreen" label="Loading client preview" />
     );
   }
   if (error || !data) {

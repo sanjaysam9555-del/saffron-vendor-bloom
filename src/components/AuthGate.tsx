@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
+import { LoadingState } from "@/components/ui/LoadingState";
 
 /**
  * Gates staff routes. Renders children optimistically as soon as we have a
@@ -44,12 +45,5 @@ export function AuthGate({
 }
 
 function InlineLoader() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--cream)]">
-      <div className="flex items-center gap-3 text-sm text-[var(--charcoal)]/60">
-        <span className="h-3 w-3 animate-pulse rounded-full bg-[var(--terracotta)]" />
-        Loading your dashboard…
-      </div>
-    </div>
-  );
+  return <LoadingState variant="fullscreen" label="Loading your dashboard" />;
 }
