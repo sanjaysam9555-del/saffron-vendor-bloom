@@ -1,6 +1,6 @@
 import type { Vendor } from "@/lib/vendor-types";
 import { CATEGORY_COLORS } from "@/lib/categories";
-import { MapPin, Phone, Star, Sparkles, Instagram, Copy, Check, MessageCircle } from "lucide-react";
+import { MapPin, Phone, Star, Sparkles, Instagram, Copy, Check, MessageCircle, IndianRupee } from "lucide-react";
 import { useState } from "react";
 import { VendorProjectAssigner } from "./VendorProjectAssigner";
 import { BookedBadge } from "./BookedBadge";
@@ -30,7 +30,7 @@ const SLOT = {
   name: "h-[2.6rem]",
   category: "h-4",
   location: "h-4",
-  price: "h-[1.15rem]",
+  price: "h-4",
   contact: "h-7",
   assigner: "h-6",
 } as const;
@@ -164,17 +164,19 @@ export function VendorCard({
           )}
         </div>
 
-        {/* ── Price ── */}
-        <div className={`flex ${SLOT.price} items-center`}>
+        {/* ── Price — same treatment as location so the two read as one
+               field group rather than one shouting over the other ── */}
+        <div className={`mt-1.5 flex ${SLOT.price} items-center gap-1.5 text-xs text-[var(--charcoal)]/60`}>
           {vendor.price_text && (
-            <span
-              className="truncate text-[13px] font-semibold text-[var(--terracotta)]"
-              title={vendor.price_text}
-            >
-              {vendor.price_text}
-            </span>
+            <>
+              <IndianRupee className="h-3 w-3 shrink-0" />
+              <span className="truncate" title={vendor.price_text}>
+                {vendor.price_text}
+              </span>
+            </>
           )}
         </div>
+
 
         {/* ── Footer ── */}
         <div className="mt-auto pt-3">
