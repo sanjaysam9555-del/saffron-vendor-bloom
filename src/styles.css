@@ -256,6 +256,11 @@ body::before {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
+.app-footer-safe {
+  background-color: var(--cream) !important;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 @media all and (display-mode: standalone) {
   body {
     padding-top: 0;

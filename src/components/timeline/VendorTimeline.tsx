@@ -62,11 +62,13 @@ interface Props {
   registerRowRef?: (category: string, el: HTMLDivElement | null) => void;
   /** Force the inner sub-view and hide the local toggle. */
   forcedSub?: SubView;
+  /** Hide "Add Category To Plan" / "Add Other Expense" — they now live on the Categories tab. */
+  hideAddButtons?: boolean;
 }
 
 type SubView = "timeline" | "table";
 
-export function VendorTimeline({ projectId, weddingDate, items, mode, registerRowRef, forcedSub }: Props) {
+export function VendorTimeline({ projectId, weddingDate, items, mode, registerRowRef, forcedSub, hideAddButtons }: Props) {
   const [subState, setSub] = useState<SubView>("timeline");
   const sub = forcedSub ?? subState;
   const [addOpen, setAddOpen] = useState(false);
@@ -90,7 +92,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
     <div className="mt-2">
       <div className="mb-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-end">
         <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
-          {mode === "admin" && (
+          {mode === "admin" && !hideAddButtons && (
             <>
               <button
                 type="button"
@@ -117,25 +119,25 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
                 role="tab"
                 aria-selected={sub === "timeline"}
                 onClick={() => setSub("timeline")}
-                className={`inline-flex flex-1 items-center justify-center gap-1.5 px-3 py-1.5 sm:flex-none ${
+                className={`inline-flex flex-1 items-center justify-center gap-1 px-2.5 py-1.5 sm:flex-none ${
                   sub === "timeline"
-                    ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                    : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                    ? "bg-[var(--cream)] text-[var(--charcoal)]"
+                    : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"
                 }`}
               >
-                <Clock className="h-3.5 w-3.5" /> Timeline
+                <Clock className="h-3.5 w-3.5" /> <span>Timeline</span>
               </button>
               <button
                 role="tab"
                 aria-selected={sub === "table"}
                 onClick={() => setSub("table")}
-                className={`inline-flex flex-1 items-center justify-center gap-1.5 border-l border-[var(--border)] px-3 py-1.5 sm:flex-none ${
+                className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-2.5 py-1.5 sm:flex-none ${
                   sub === "table"
-                    ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                    : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                    ? "bg-[var(--cream)] text-[var(--charcoal)]"
+                    : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"
                 }`}
               >
-                <ListChecks className="h-3.5 w-3.5" /> Table
+                <ListChecks className="h-3.5 w-3.5" /> <span>Table</span>
               </button>
             </div>
           )}
@@ -210,7 +212,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
   );
 }
 
-function AddCategoryDialog({
+export function AddCategoryDialog({
   projectId,
   existing,
   onClose,
@@ -406,12 +408,6 @@ function TimelineRibbon({
     return { overdue, upcoming, unscheduled, booked };
   }, [items, now]);
 
-  const totals = useMemo(() => {
-    const planned = sumAmounts(items, (i) => i.planned_amount);
-    const actual = sumAmounts(items, (i) => resolveActual(i));
-    return { planned, actual, variance: actual - planned };
-  }, [items]);
-
   const weddingDays = daysBetween(now, new Date(weddingDate));
 
   // Continuous index for left/right alternation across scheduled rows only.
@@ -421,7 +417,7 @@ function TimelineRibbon({
 
   return (
     <div>
-      <RibbonHeader weddingDate={weddingDate} daysToWedding={weddingDays} totals={totals} />
+      <RibbonHeader weddingDate={weddingDate} daysToWedding={weddingDays} />
 
       <div className="relative">
         <motion.div
@@ -494,18 +490,10 @@ function TimelineRibbon({
 function RibbonHeader({
   weddingDate,
   daysToWedding,
-  totals,
 }: {
   weddingDate: string;
   daysToWedding: number;
-  totals: { planned: number; actual: number; variance: number };
 }) {
-  const varColor =
-    totals.variance > 0
-      ? "text-[var(--urgency-overdue)]"
-      : totals.variance < 0
-        ? "text-[var(--urgency-booked)]"
-        : "text-[var(--charcoal)]/70";
   const absDays = Math.abs(daysToWedding);
   const dayLabel =
     daysToWedding > 0
@@ -514,42 +502,17 @@ function RibbonHeader({
         ? "today"
         : `day${daysToWedding === -1 ? "" : "s"} ago`;
   return (
-    <div className="mb-10 flex flex-col items-center gap-5 border-b border-[var(--champagne)]/50 pb-6 text-center md:flex-row md:items-end md:justify-between md:text-left">
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--terracotta)]">
-          Wedding Day: {formatDueDate(weddingDate)} —{" "}
-          {daysToWedding === 0 ? (
-            "Today"
-          ) : (
-            <>
-              <FlipNumber value={absDays} /> {dayLabel}
-            </>
-          )}
-        </p>
-      </div>
-      <div className="flex justify-center gap-6 text-center text-sm md:justify-end md:gap-8 md:text-right">
-        <div>
-          <p className="mb-0.5 text-[9px] uppercase tracking-wider text-[var(--charcoal)]/55">
-            Planned
-          </p>
-          <p className="font-display text-xl text-[var(--charcoal)]">{formatINR(totals.planned)}</p>
-        </div>
-        <div>
-          <p className="mb-0.5 text-[9px] uppercase tracking-wider text-[var(--charcoal)]/55">
-            Actual
-          </p>
-          <p className="font-display text-xl text-[var(--charcoal)]">{formatINR(totals.actual)}</p>
-        </div>
-        <div>
-          <p className="mb-0.5 text-[9px] uppercase tracking-wider text-[var(--charcoal)]/55">
-            Variance
-          </p>
-          <p className={`font-display text-xl ${varColor}`}>
-            {totals.variance >= 0 ? "+" : "−"}
-            {formatINR(Math.abs(totals.variance))}
-          </p>
-        </div>
-      </div>
+    <div className="mb-10 border-b border-[var(--champagne)]/50 pb-6 text-center">
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--terracotta)]">
+        Wedding Day: {formatDueDate(weddingDate)} —{" "}
+        {daysToWedding === 0 ? (
+          "Today"
+        ) : (
+          <>
+            <FlipNumber value={absDays} /> {dayLabel}
+          </>
+        )}
+      </p>
     </div>
   );
 }
@@ -1543,7 +1506,7 @@ function OtherExpenseEditor({
   );
 }
 
-function AddOtherExpenseDialog({
+export function AddOtherExpenseDialog({
   projectId,
   existingLabels,
   onClose,
@@ -1744,12 +1707,6 @@ function HorizontalTimeline({
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const reduced = useReducedMotion();
 
-  const totals = useMemo(() => {
-    const planned = sumAmounts(items, (i) => i.planned_amount);
-    const actual = sumAmounts(items, (i) => resolveActual(i));
-    return { planned, actual, variance: actual - planned };
-  }, [items]);
-
   const onAxis = useMemo(
     () =>
       items
@@ -1859,7 +1816,6 @@ function HorizontalTimeline({
       <RibbonHeader
         weddingDate={weddingDate}
         daysToWedding={daysBetween(now, wedding)}
-        totals={totals}
       />
 
       <div className="overflow-x-auto rounded-md border border-[var(--champagne)]/40 bg-[var(--cream)]/40 shadow-[inset_-12px_0_8px_-8px_rgba(0,0,0,0.06)]">

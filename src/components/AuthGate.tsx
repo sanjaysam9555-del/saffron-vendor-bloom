@@ -32,7 +32,9 @@ export function AuthGate({
       return;
     }
     if (role && requireAdmin && role !== "admin") {
-      navigate({ to: "/admin", replace: true });
+      // Non-admin staff bounced off an admin-only page land on the dashboard,
+      // matching where sign-in sends them.
+      navigate({ to: "/admin/dashboard", replace: true });
     }
   }, [initialized, session, role, loading, requireAdmin, navigate]);
 

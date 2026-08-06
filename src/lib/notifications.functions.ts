@@ -22,7 +22,7 @@ async function requireStaff(): Promise<{ userId: string }> {
 export const listStaffNotifications = createServerFn({ method: "GET" })
   .middleware([attachAuthToken])
   .inputValidator((d) =>
-    z.object({ limit: z.number().int().min(1).max(100).optional() }).parse(d ?? {}),
+    z.object({ limit: z.number().int().min(1).max(200).optional() }).parse(d ?? {}),
   )
   .handler(async ({ data }) => {
     await requireStaff();
@@ -33,7 +33,28 @@ export const listStaffNotifications = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(limit);
     if (error) throw new Error(error.message);
-    return rows ?? [];
+
+    // Resolve project names in one extra query so clubbed rows can name the
+    // wedding they belong to ("8 client status changes · Sharma & Iyer").
+    const ids = [...new Set((rows ?? []).map((r: any) => r.project_id).filter(Boolean))];
+    let nameOf = new Map<string, string>();
+    if (ids.length > 0) {
+      const { data: projects } = await supabaseAdmin
+        .from("projects")
+        .select("id, bride_name, groom_name")
+        .in("id", ids as string[]);
+      nameOf = new Map(
+        (projects ?? []).map((p: any) => [
+          p.id as string,
+          `${p.bride_name ?? "?"} & ${p.groom_name ?? "?"}`,
+        ]),
+      );
+    }
+
+    return (rows ?? []).map((r: any) => ({
+      ...r,
+      project_name: r.project_id ? nameOf.get(r.project_id) ?? null : null,
+    }));
   });
 
 export const getUnreadNotificationCount = createServerFn({ method: "GET" })

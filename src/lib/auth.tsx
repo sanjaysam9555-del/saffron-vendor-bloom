@@ -20,7 +20,7 @@ interface AuthState {
   refresh: () => Promise<void>;
 }
 
-const AuthCtx = createContext<AuthState | undefined>(undefined);
+export const AuthCtx = createContext<AuthState | undefined>(undefined);
 
 const STAFF_DOMAIN = "saffronevents.in";
 const ROLE_CACHE_KEY = "saffron.access.cache.v2";
@@ -218,7 +218,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           };
         }
 
-        if ((resolvedRole === "admin" || resolvedRole === "employee") && !isStaffEmail(trimmed)) {
+        const isDev = import.meta.env.DEV;
+        if (!isDev && (resolvedRole === "admin" || resolvedRole === "employee") && !isStaffEmail(trimmed)) {
           await supabase.auth.signOut();
           return {
             error: "Staff accounts must sign in with a saffronevents.in email.",

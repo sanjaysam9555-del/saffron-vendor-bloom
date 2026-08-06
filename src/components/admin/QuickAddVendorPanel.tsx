@@ -12,9 +12,11 @@ import type { Vendor } from "@/lib/vendor-types";
 interface Props {
   projectId: string;
   assignedVendorIds: Set<string>;
+  /** Overrides the outer wrapper's sizing/spacing classes. */
+  className?: string;
 }
 
-export function QuickAddVendorPanel({ projectId, assignedVendorIds }: Props) {
+export function QuickAddVendorPanel({ projectId, assignedVendorIds, className }: Props) {
   const qc = useQueryClient();
   
   const [q, setQ] = useState("");
@@ -58,19 +60,19 @@ export function QuickAddVendorPanel({ projectId, assignedVendorIds }: Props) {
   };
 
   return (
-    <div className="mb-4 rounded-lg border border-[var(--border)] bg-white p-3">
-      <div className="flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--cream)]/40 px-2.5 py-1.5">
-        <Search className="h-4 w-4 shrink-0 text-[var(--charcoal)]/40" />
+    <div className={`relative ${className ?? "mb-4"}`}>
+      <div className="flex h-[30px] items-center gap-2 rounded-md border border-[var(--border)] bg-white px-2.5 text-xs">
+        <Search className="h-3.5 w-3.5 shrink-0 text-[var(--charcoal)]/40" />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Add Vendors To This Project"
-          className="w-full bg-transparent text-sm placeholder:text-[var(--charcoal)]/60 focus:outline-none"
+          placeholder="Add vendors…"
+          className="w-full bg-transparent text-xs placeholder:text-[var(--charcoal)]/60 focus:outline-none"
         />
         {q && (
           <button
             onClick={() => setQ("")}
-            className="rounded p-0.5 text-[var(--charcoal)]/50 hover:bg-white hover:text-[var(--charcoal)]"
+            className="rounded p-0.5 text-[var(--charcoal)]/50 hover:bg-[var(--cream)] hover:text-[var(--charcoal)]"
             title="Clear"
           >
             <X className="h-3.5 w-3.5" />
@@ -78,8 +80,10 @@ export function QuickAddVendorPanel({ projectId, assignedVendorIds }: Props) {
         )}
       </div>
 
+      {/* Absolutely positioned so a narrow trigger (this panel now sits in a
+          toolbar row, not full-width) doesn't cramp the result rows. */}
       {q.trim() && (
-        <div className="mt-2 max-h-[360px] overflow-y-auto">
+        <div className="absolute left-0 top-full z-30 mt-1.5 max-h-[360px] w-full min-w-[340px] overflow-y-auto rounded-lg border border-[var(--border)] bg-white p-2 shadow-lg">
           {isLoading ? (
             <div className="px-2 py-6 text-center text-xs text-[var(--charcoal)]/55">
               Loading vendor library…

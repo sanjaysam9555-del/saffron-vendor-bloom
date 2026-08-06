@@ -51,25 +51,35 @@ export const analyticsReceivedBreakdown = createServerFn({ method: "POST" })
       .maybeSingle();
     if (roleError) throw new Error(roleError.message);
     if (!roleRow) throw new Error("Forbidden: admin only");
+
     let pp = context.supabase.from("project_payments").select("received_amount, received_on");
     if (data.from) pp = pp.gte("received_on", data.from);
     if (data.to) pp = pp.lte("received_on", data.to);
-    const { data: ppRows, error: e1 } = await pp;
-    if (e1) throw new Error(e1.message);
     let vc = context.supabase.from("vendor_commission_payments").select("received_amount, received_on");
     if (data.from) vc = vc.gte("received_on", data.from);
     if (data.to) vc = vc.lte("received_on", data.to);
-    const { data: vcRows, error: e2 } = await vc;
+
+    // Run all 4 queries in parallel — each was a sequential await before,
+    // adding 150-300ms per round trip. Now they complete in one batch.
+    const [
+      { data: ppRows, error: e1 },
+      { data: vcRows, error: e2 },
+      { data: paymentRows, error: e3 },
+      { data: vcAll, error: e4 },
+    ] = await Promise.all([
+      pp,
+      vc,
+      // Fee pending must match the Payments Matrix: use planning_fee as the
+      // baseline when installment expected totals are lower/incomplete.
+      context.supabase.rpc("admin_payments_matrix", {
+        _from: (data.from ?? null) as unknown as string,
+        _to: (data.to ?? null) as unknown as string,
+      }),
+      context.supabase.from("vendor_commission_payments").select("expected_amount, received_amount"),
+    ]);
+    if (e1) throw new Error(e1.message);
     if (e2) throw new Error(e2.message);
-    // Fee pending must match the Payments Matrix: use planning_fee as the
-    // baseline when installment expected totals are lower/incomplete.
-    const { data: paymentRows, error: e3 } = await context.supabase.rpc("admin_payments_matrix", {
-      _from: (data.from ?? null) as unknown as string,
-      _to: (data.to ?? null) as unknown as string,
-    });
     if (e3) throw new Error(e3.message);
-    const { data: vcAll, error: e4 } = await context.supabase
-      .from("vendor_commission_payments").select("expected_amount, received_amount");
     if (e4) throw new Error(e4.message);
     const fee_received = (ppRows ?? []).reduce((a: number, r: any) => a + Number(r.received_amount ?? 0), 0);
     const commission_received = (vcRows ?? []).reduce((a: number, r: any) => a + Number(r.received_amount ?? 0), 0);
@@ -197,4 +207,86 @@ export const analyticsCategories = createServerFn({ method: "POST" })
       client_billing: number;
       commission: number;
     }>;
+  });
+
+// -------------------- Upcoming receivables (client → Saffron) --------------------
+
+export interface UpcomingReceivable {
+  project_id: string;
+  bride_name: string | null;
+  groom_name: string | null;
+  installment_no: number | null;
+  expected_amount: number;
+  received_amount: number;
+  due_date: string | null;
+  status: "pending" | "partial" | "overdue";
+}
+
+export const analyticsUpcomingReceivables = createServerFn({ method: "GET" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: roleRow, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (roleError) throw new Error(roleError.message);
+    if (!roleRow) throw new Error("Forbidden: admin only");
+    const { data: rows, error } = await context.supabase.rpc("admin_upcoming_receivables");
+    if (error) throw new Error(error.message);
+    return (rows ?? []).map((r: any): UpcomingReceivable => ({
+      project_id: r.project_id,
+      bride_name: r.bride_name ?? null,
+      groom_name: r.groom_name ?? null,
+      installment_no: r.installment_no ?? null,
+      expected_amount: Number(r.expected_amount ?? 0),
+      received_amount: Number(r.received_amount ?? 0),
+      due_date: r.due_date ?? null,
+      status: r.status as UpcomingReceivable["status"],
+    }));
+  });
+
+// -------------------- Upcoming payments (Saffron → vendors) --------------------
+
+export interface UpcomingPayment {
+  project_id: string;
+  bride_name: string | null;
+  groom_name: string | null;
+  vendor_id: string;
+  vendor_name: string;
+  installment_no: number;
+  expected_amount: number;
+  paid_amount: number;
+  due_date: string | null;
+  paid_by: "planner" | "client";
+  status: "pending" | "partial" | "overdue";
+}
+
+export const analyticsUpcomingPayments = createServerFn({ method: "GET" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: roleRow, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (roleError) throw new Error(roleError.message);
+    if (!roleRow) throw new Error("Forbidden: admin only");
+    const { data: rows, error } = await context.supabase.rpc("admin_upcoming_payments");
+    if (error) throw new Error(error.message);
+    return (rows ?? []).map((r: any): UpcomingPayment => ({
+      project_id: r.project_id,
+      bride_name: r.bride_name ?? null,
+      groom_name: r.groom_name ?? null,
+      vendor_id: r.vendor_id,
+      vendor_name: r.vendor_name,
+      installment_no: Number(r.installment_no),
+      expected_amount: Number(r.expected_amount ?? 0),
+      paid_amount: Number(r.paid_amount ?? 0),
+      due_date: r.due_date ?? null,
+      paid_by: r.paid_by as UpcomingPayment["paid_by"],
+      status: r.status as UpcomingPayment["status"],
+    }));
   });

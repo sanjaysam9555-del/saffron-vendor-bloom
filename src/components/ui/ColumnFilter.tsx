@@ -46,7 +46,11 @@ export function ColumnFilter({ options, selected, onChange, label, align = "left
         title={label ? `Filter ${label}` : "Filter"}
         aria-label={label ? `Filter ${label}` : "Filter"}
         className={`inline-flex items-center rounded p-0.5 transition hover:text-[var(--terracotta)] ${
-          active ? "text-[var(--terracotta)]" : "text-[var(--charcoal)]/40"
+          // This button lives inside dark charcoal table headers everywhere
+          // it's used — `--charcoal` text at 40% opacity was dark-on-dark and
+          // nearly invisible until hover. `--cream` at reduced opacity is the
+          // same treatment the header labels themselves use.
+          active ? "text-[var(--terracotta)]" : "text-[var(--cream)]/50"
         }`}
       >
         <Filter className={`h-3 w-3 ${active ? "fill-current" : ""}`} />

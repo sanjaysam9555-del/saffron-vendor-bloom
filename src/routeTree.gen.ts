@@ -9,50 +9,39 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VendorSignupRouteImport } from './routes/vendor-signup'
-import { Route as VendorOnboardingRouteImport } from './routes/vendor-onboarding'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ClientIndexRouteImport } from './routes/client.index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as VendorOnboardingRouteImport } from './routes/vendor-onboarding'
+import { Route as VendorSignupRouteImport } from './routes/vendor-signup'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
-import { Route as ClientLoginRouteImport } from './routes/client.login'
-import { Route as AdminUsersRouteImport } from './routes/admin.users'
-import { Route as AdminSubmissionsRouteImport } from './routes/admin.submissions'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
+import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
+import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
+import { Route as AdminProfileRouteImport } from './routes/admin.profile'
+import { Route as AdminSubmissionsRouteImport } from './routes/admin.submissions'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as ClientIndexRouteImport } from './routes/client.index'
+import { Route as ClientLoginRouteImport } from './routes/client.login'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AdminProjectsIndexRouteImport } from './routes/admin.projects.index'
-import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
-import { Route as ApiPublicVendorSignupRouteImport } from './routes/api/public/vendor-signup'
-import { Route as ApiPublicInstagramImageRouteImport } from './routes/api/public/instagram-image'
 import { Route as ApiPublicIgAssetRouteImport } from './routes/api/public/ig-asset'
+import { Route as ApiPublicInstagramImageRouteImport } from './routes/api/public/instagram-image'
+import { Route as ApiPublicVendorSignupRouteImport } from './routes/api/public/vendor-signup'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AdminProjectsIdIndexRouteImport } from './routes/admin.projects.$id.index'
-import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
-import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
-import { Route as ApiPublicVendorSignupCheckRouteImport } from './routes/api/public/vendor-signup.check'
 import { Route as ApiFilesStreamSplatRouteImport } from './routes/api/files/stream.$'
+import { Route as ApiPublicVendorSignupCheckRouteImport } from './routes/api/public/vendor-signup.check'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as AdminProjectsIdPreviewClientIdRouteImport } from './routes/admin.projects.$id.preview.$clientId'
 
-const VendorSignupRoute = VendorSignupRouteImport.update({
-  id: '/vendor-signup',
-  path: '/vendor-signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const VendorOnboardingRoute = VendorOnboardingRouteImport.update({
-  id: '/vendor-onboarding',
-  path: '/vendor-onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -60,14 +49,24 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ClientIndexRoute = ClientIndexRouteImport.update({
-  id: '/client/',
-  path: '/client/',
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VendorOnboardingRoute = VendorOnboardingRouteImport.update({
+  id: '/vendor-onboarding',
+  path: '/vendor-onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VendorSignupRoute = VendorSignupRouteImport.update({
+  id: '/vendor-signup',
+  path: '/vendor-signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -75,19 +74,29 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
-  id: '/email/unsubscribe',
-  path: '/email/unsubscribe',
-  getParentRoute: () => rootRouteImport,
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRoute,
 } as any)
-const ClientLoginRoute = ClientLoginRouteImport.update({
-  id: '/client/login',
-  path: '/client/login',
-  getParentRoute: () => rootRouteImport,
+const AdminCalendarRoute = AdminCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => AdminRoute,
 } as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProfileRoute = AdminProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSubmissionsRoute = AdminSubmissionsRouteImport.update({
@@ -95,24 +104,34 @@ const AdminSubmissionsRoute = AdminSubmissionsRouteImport.update({
   path: '/submissions',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
   getParentRoute: () => AdminRoute,
+} as any)
+const ClientIndexRoute = ClientIndexRouteImport.update({
+  id: '/client/',
+  path: '/client/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientLoginRoute = ClientLoginRouteImport.update({
+  id: '/client/login',
+  path: '/client/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminProjectsIndexRoute = AdminProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
   getParentRoute: () => AdminRoute,
 } as any)
-const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
-  id: '/lovable/email/suppression',
-  path: '/lovable/email/suppression',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicVendorSignupRoute = ApiPublicVendorSignupRouteImport.update({
-  id: '/api/public/vendor-signup',
-  path: '/api/public/vendor-signup',
+const ApiPublicIgAssetRoute = ApiPublicIgAssetRouteImport.update({
+  id: '/api/public/ig-asset',
+  path: '/api/public/ig-asset',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicInstagramImageRoute = ApiPublicInstagramImageRouteImport.update({
@@ -120,9 +139,14 @@ const ApiPublicInstagramImageRoute = ApiPublicInstagramImageRouteImport.update({
   path: '/api/public/instagram-image',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicIgAssetRoute = ApiPublicIgAssetRouteImport.update({
-  id: '/api/public/ig-asset',
-  path: '/api/public/ig-asset',
+const ApiPublicVendorSignupRoute = ApiPublicVendorSignupRouteImport.update({
+  id: '/api/public/vendor-signup',
+  path: '/api/public/vendor-signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminProjectsIdIndexRoute = AdminProjectsIdIndexRouteImport.update({
@@ -130,10 +154,21 @@ const AdminProjectsIdIndexRoute = AdminProjectsIdIndexRouteImport.update({
   path: '/projects/$id/',
   getParentRoute: () => AdminRoute,
 } as any)
-const LovableEmailTransactionalSendRoute =
-  LovableEmailTransactionalSendRouteImport.update({
-    id: '/lovable/email/transactional/send',
-    path: '/lovable/email/transactional/send',
+const ApiFilesStreamSplatRoute = ApiFilesStreamSplatRouteImport.update({
+  id: '/api/files/stream/$',
+  path: '/api/files/stream/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicVendorSignupCheckRoute =
+  ApiPublicVendorSignupCheckRouteImport.update({
+    id: '/check',
+    path: '/check',
+    getParentRoute: () => ApiPublicVendorSignupRoute,
+  } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
 const LovableEmailTransactionalPreviewRoute =
@@ -142,23 +177,12 @@ const LovableEmailTransactionalPreviewRoute =
     path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
-const LovableEmailQueueProcessRoute =
-  LovableEmailQueueProcessRouteImport.update({
-    id: '/lovable/email/queue/process',
-    path: '/lovable/email/queue/process',
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicVendorSignupCheckRoute =
-  ApiPublicVendorSignupCheckRouteImport.update({
-    id: '/check',
-    path: '/check',
-    getParentRoute: () => ApiPublicVendorSignupRoute,
-  } as any)
-const ApiFilesStreamSplatRoute = ApiFilesStreamSplatRouteImport.update({
-  id: '/api/files/stream/$',
-  path: '/api/files/stream/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminProjectsIdPreviewClientIdRoute =
   AdminProjectsIdPreviewClientIdRouteImport.update({
     id: '/projects/$id/preview/$clientId',
@@ -174,6 +198,10 @@ export interface FileRoutesByFullPath {
   '/vendor-onboarding': typeof VendorOnboardingRoute
   '/vendor-signup': typeof VendorSignupRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/profile': typeof AdminProfileRoute
   '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/client/login': typeof ClientLoginRoute
@@ -200,6 +228,10 @@ export interface FileRoutesByTo {
   '/vendor-onboarding': typeof VendorOnboardingRoute
   '/vendor-signup': typeof VendorSignupRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/profile': typeof AdminProfileRoute
   '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/client/login': typeof ClientLoginRoute
@@ -228,6 +260,10 @@ export interface FileRoutesById {
   '/vendor-onboarding': typeof VendorOnboardingRoute
   '/vendor-signup': typeof VendorSignupRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/profile': typeof AdminProfileRoute
   '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/client/login': typeof ClientLoginRoute
@@ -257,6 +293,10 @@ export interface FileRouteTypes {
     | '/vendor-onboarding'
     | '/vendor-signup'
     | '/admin/analytics'
+    | '/admin/calendar'
+    | '/admin/dashboard'
+    | '/admin/notifications'
+    | '/admin/profile'
     | '/admin/submissions'
     | '/admin/users'
     | '/client/login'
@@ -283,6 +323,10 @@ export interface FileRouteTypes {
     | '/vendor-onboarding'
     | '/vendor-signup'
     | '/admin/analytics'
+    | '/admin/calendar'
+    | '/admin/dashboard'
+    | '/admin/notifications'
+    | '/admin/profile'
     | '/admin/submissions'
     | '/admin/users'
     | '/client/login'
@@ -310,6 +354,10 @@ export interface FileRouteTypes {
     | '/vendor-onboarding'
     | '/vendor-signup'
     | '/admin/analytics'
+    | '/admin/calendar'
+    | '/admin/dashboard'
+    | '/admin/notifications'
+    | '/admin/profile'
     | '/admin/submissions'
     | '/admin/users'
     | '/client/login'
@@ -352,32 +400,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/vendor-signup': {
-      id: '/vendor-signup'
-      path: '/vendor-signup'
-      fullPath: '/vendor-signup'
-      preLoaderRoute: typeof VendorSignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/vendor-onboarding': {
-      id: '/vendor-onboarding'
-      path: '/vendor-onboarding'
-      fullPath: '/vendor-onboarding'
-      preLoaderRoute: typeof VendorOnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -387,18 +414,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/client/': {
-      id: '/client/'
-      path: '/client'
-      fullPath: '/client/'
-      preLoaderRoute: typeof ClientIndexRouteImport
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vendor-onboarding': {
+      id: '/vendor-onboarding'
+      path: '/vendor-onboarding'
+      fullPath: '/vendor-onboarding'
+      preLoaderRoute: typeof VendorOnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vendor-signup': {
+      id: '/vendor-signup'
+      path: '/vendor-signup'
+      fullPath: '/vendor-signup'
+      preLoaderRoute: typeof VendorSignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -408,25 +449,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/email/unsubscribe': {
-      id: '/email/unsubscribe'
-      path: '/email/unsubscribe'
-      fullPath: '/email/unsubscribe'
-      preLoaderRoute: typeof EmailUnsubscribeRouteImport
-      parentRoute: typeof rootRouteImport
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/client/login': {
-      id: '/client/login'
-      path: '/client/login'
-      fullPath: '/client/login'
-      preLoaderRoute: typeof ClientLoginRouteImport
-      parentRoute: typeof rootRouteImport
+    '/admin/calendar': {
+      id: '/admin/calendar'
+      path: '/calendar'
+      fullPath: '/admin/calendar'
+      preLoaderRoute: typeof AdminCalendarRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/admin/users': {
-      id: '/admin/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/profile': {
+      id: '/admin/profile'
+      path: '/profile'
+      fullPath: '/admin/profile'
+      preLoaderRoute: typeof AdminProfileRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/submissions': {
@@ -436,12 +491,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSubmissionsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/analytics': {
-      id: '/admin/analytics'
-      path: '/analytics'
-      fullPath: '/admin/analytics'
-      preLoaderRoute: typeof AdminAnalyticsRouteImport
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/client/': {
+      id: '/client/'
+      path: '/client'
+      fullPath: '/client/'
+      preLoaderRoute: typeof ClientIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/client/login': {
+      id: '/client/login'
+      path: '/client/login'
+      fullPath: '/client/login'
+      preLoaderRoute: typeof ClientLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/projects/': {
       id: '/admin/projects/'
@@ -450,18 +526,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProjectsIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/lovable/email/suppression': {
-      id: '/lovable/email/suppression'
-      path: '/lovable/email/suppression'
-      fullPath: '/lovable/email/suppression'
-      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/vendor-signup': {
-      id: '/api/public/vendor-signup'
-      path: '/api/public/vendor-signup'
-      fullPath: '/api/public/vendor-signup'
-      preLoaderRoute: typeof ApiPublicVendorSignupRouteImport
+    '/api/public/ig-asset': {
+      id: '/api/public/ig-asset'
+      path: '/api/public/ig-asset'
+      fullPath: '/api/public/ig-asset'
+      preLoaderRoute: typeof ApiPublicIgAssetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/instagram-image': {
@@ -471,11 +540,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicInstagramImageRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/ig-asset': {
-      id: '/api/public/ig-asset'
-      path: '/api/public/ig-asset'
-      fullPath: '/api/public/ig-asset'
-      preLoaderRoute: typeof ApiPublicIgAssetRouteImport
+    '/api/public/vendor-signup': {
+      id: '/api/public/vendor-signup'
+      path: '/api/public/vendor-signup'
+      fullPath: '/api/public/vendor-signup'
+      preLoaderRoute: typeof ApiPublicVendorSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/projects/$id/': {
@@ -485,25 +561,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProjectsIdIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/lovable/email/transactional/send': {
-      id: '/lovable/email/transactional/send'
-      path: '/lovable/email/transactional/send'
-      fullPath: '/lovable/email/transactional/send'
-      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/queue/process': {
-      id: '/lovable/email/queue/process'
-      path: '/lovable/email/queue/process'
-      fullPath: '/lovable/email/queue/process'
-      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+    '/api/files/stream/$': {
+      id: '/api/files/stream/$'
+      path: '/api/files/stream/$'
+      fullPath: '/api/files/stream/$'
+      preLoaderRoute: typeof ApiFilesStreamSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/vendor-signup/check': {
@@ -513,11 +575,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicVendorSignupCheckRouteImport
       parentRoute: typeof ApiPublicVendorSignupRoute
     }
-    '/api/files/stream/$': {
-      id: '/api/files/stream/$'
-      path: '/api/files/stream/$'
-      fullPath: '/api/files/stream/$'
-      preLoaderRoute: typeof ApiFilesStreamSplatRouteImport
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/projects/$id/preview/$clientId': {
@@ -532,6 +608,10 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminCalendarRoute: typeof AdminCalendarRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminProfileRoute: typeof AdminProfileRoute
   AdminSubmissionsRoute: typeof AdminSubmissionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -542,6 +622,10 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminCalendarRoute: AdminCalendarRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminProfileRoute: AdminProfileRoute,
   AdminSubmissionsRoute: AdminSubmissionsRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -587,3 +671,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

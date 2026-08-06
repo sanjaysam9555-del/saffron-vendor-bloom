@@ -1,8 +1,7 @@
 import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AuthGate } from "@/components/AuthGate";
-import { AdminShellHeader } from "@/components/admin/AdminShellHeader";
+import { AdminSidebar, AdminMobileTabBar } from "@/components/admin/AdminSidebar";
 import { AdminTabStateProvider } from "@/components/admin/admin-tab-state";
 import { VendorsPane } from "@/routes/admin.index";
 import { ProjectsPane } from "@/routes/admin.projects.index";
@@ -48,17 +47,23 @@ function AdminLayoutInner() {
   usePrefetchAdminData();
 
   return (
-    <div className="min-h-screen bg-[var(--cream)]">
-      <AdminShellHeader />
-      {onVendors && <VendorsPane />}
-      {onProjects && <ProjectsPane />}
-      {onOther && <Outlet />}
+    <div className="flex min-h-screen bg-[var(--cream)]">
+      <AdminSidebar />
+      {/* Main content — offset by sidebar width on desktop only (the sidebar
+          itself is an off-canvas drawer below lg, so it must not reserve any
+          horizontal space there), top bar height and bottom tab bar height
+          on mobile */}
+      <div className="flex min-h-screen w-full flex-col pt-14 pb-16 transition-[padding-left] duration-200 lg:pt-0 lg:pb-0 lg:pl-[var(--sidebar-w,200px)]">
+        {onVendors && <VendorsPane />}
+        {onProjects && <ProjectsPane />}
+        {onOther && <Outlet />}
+      </div>
+      <AdminMobileTabBar />
     </div>
   );
 }
 
 function usePrefetchAdminData() {
-  const qc = useQueryClient();
   const { session, initialized, role } = useAuth();
   const isStaff = role === "admin" || role === "employee";
   const userId = session?.user?.id ?? null;
@@ -79,11 +84,4 @@ function usePrefetchAdminData() {
     staleTime: 60_000,
   });
 
-  // Belt-and-braces: also kick a fetch via the client if the queries get
-  // garbage-collected later in the session.
-  useEffect(() => {
-    if (!ready) return;
-    qc.prefetchQuery({ queryKey: ["vendors", userId], queryFn: listVendors });
-    qc.prefetchQuery({ queryKey: ["projects"], queryFn: () => listProjectsOverview() });
-  }, [qc, ready, userId]);
 }

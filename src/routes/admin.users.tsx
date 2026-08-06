@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, KeyRound, Trash2, UserPlus, Pencil, Check, X, Users, ArrowRight, Instagram } from "lucide-react";
+import { KeyRound, Trash2, UserPlus, Pencil, Check, X, Users, ArrowRight, Instagram, ChevronDown, Inbox } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { useAuth } from "@/lib/auth";
 import { useConfirmDelete } from "@/components/ui/confirm-dialog";
@@ -30,6 +30,9 @@ export const Route = createFileRoute("/admin/users")({
   ),
 });
 
+/** Team rows shown before "Show all". */
+const TEAM_PREVIEW_COUNT = 4;
+
 type Row = {
   id: string;
   email: string;
@@ -43,6 +46,10 @@ function AdminUsersPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+
+  // Show a preview of the team by default; the rest is one click away.
+  const [usersOpen, setUsersOpen] = useState(false);
+  const visibleRows = usersOpen ? rows : rows.slice(0, TEAM_PREVIEW_COUNT);
 
   // create employee state
   const [showCreate, setShowCreate] = useState(false);
@@ -109,120 +116,150 @@ function AdminUsersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--cream)] py-8">
-      <div className="mx-auto max-w-4xl px-6">
-        <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]">
-          <ArrowLeft className="h-4 w-4" /> Back to dashboard
-        </Link>
-        <div className="mt-4 flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-3xl text-[var(--charcoal)]">User Management</h1>
-            <p className="text-sm text-[var(--charcoal)]/60">Create employees and manage their access.</p>
-          </div>
-          <button
-            onClick={() => setShowCreate((s) => !s)}
-            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3.5 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
-          >
-            <UserPlus className="h-4 w-4" /> Create Employee
-          </button>
+    <div className="min-h-screen bg-[var(--cream)] pb-16">
+      {/* Secondary toolbar */}
+      <div className="h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
+        <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 h-full px-3 sm:px-6">
+          <span className="text-sm text-[var(--charcoal)]/55">Create employees and manage their access.</span>
+        </div>
+      </div>
+
+      <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5">
+        {/* Page heading — the only brand-line on the page; section cards
+            below carry their own icon + title instead. */}
+        <div className="mb-6">
+          <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
+            Admin
+          </h1>
         </div>
 
-        {showCreate && (
-          <form onSubmit={handleCreate} className="mt-4 grid gap-2 rounded-lg border border-[var(--border)] bg-white p-4 sm:grid-cols-3">
-            <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" placeholder="Display name" value={newName} onChange={(e) => setNewName(e.target.value)} />
-            <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" type="email" required placeholder="Email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
-            <input className="rounded-md border border-[var(--border)] px-3 py-2 text-sm" required minLength={6} placeholder="Password (min 6)" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} />
-            <p className="sm:col-span-3 text-xs text-[var(--charcoal)]/60">
-              The employee will use this password to sign in. They cannot change it — only you can update it from this page.
+        {err && <div className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{err}</div>}
+
+        <div className="space-y-6">
+          {/* ── Team ── */}
+          <SectionCard
+            icon={<Users className="h-4 w-4" />}
+            title="Team"
+            description="Employees who can sign in to the studio dashboard."
+            meta={loading ? undefined : `${rows.length} member${rows.length === 1 ? "" : "s"}`}
+            action={
+              <button
+                onClick={() => setShowCreate((s) => !s)}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3.5 py-1.5 text-sm font-medium text-[var(--cream)] transition hover:bg-[var(--terracotta)]/90"
+              >
+                <UserPlus className="h-4 w-4" /> Create employee
+              </button>
+            }
+          >
+            {showCreate && (
+              <form onSubmit={handleCreate} className="grid gap-2 border-b border-[var(--border)] bg-[var(--cream)]/40 p-4 sm:grid-cols-3">
+                <input className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" placeholder="Display name" value={newName} onChange={(e) => setNewName(e.target.value)} />
+                <input className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" type="email" required placeholder="Email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
+                <input className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" required minLength={6} placeholder="Password (min 6)" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} />
+                <p className="sm:col-span-3 text-xs text-[var(--charcoal)]/60">
+                  The employee will use this password to sign in. They cannot change it — only you can update it from this page.
+                </p>
+                <div className="sm:col-span-3 flex gap-2">
+                  <button type="submit" disabled={creating} className="flex-1 rounded-md bg-[var(--charcoal)] px-3 py-2 text-sm text-white hover:opacity-90 disabled:opacity-50">
+                    {creating ? "Creating…" : "Create"}
+                  </button>
+                  <button type="button" onClick={() => setShowCreate(false)} className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm hover:bg-[var(--cream)]">
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {loading ? (
+              <div className="space-y-2 p-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-10 animate-pulse rounded-md bg-[var(--cream-deep)]/60" />
+                ))}
+              </div>
+            ) : rows.length === 0 ? (
+              <EmptyState
+                compact
+                icon={<Users />}
+                title="No staff yet"
+                description="Create your first employee account above."
+              />
+            ) : (
+              <>
+                <div className="overflow-x-auto touch-pan-x" style={{ WebkitOverflowScrolling: "touch" }}>
+                  <table className="w-full min-w-[640px] text-sm">
+                    <thead className="bg-[var(--charcoal)] text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/80">
+                      <tr>
+                        <th className="px-4 py-2.5">Name</th>
+                        <th className="px-4 py-2.5">Email</th>
+                        <th className="px-4 py-2.5">Role</th>
+                        <th className="px-4 py-2.5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visibleRows.map((r) => (
+                        <UserRow key={r.id} row={r} isSelf={r.id === user?.id} onChanged={refresh} onError={setErr} />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Explicit expand control — a preview is always visible, so
+                    there is nothing hidden behind an unlabelled chevron. */}
+                {rows.length > TEAM_PREVIEW_COUNT && (
+                  <button
+                    onClick={() => setUsersOpen((o) => !o)}
+                    aria-expanded={usersOpen}
+                    className="flex w-full items-center justify-center gap-1.5 border-t border-[var(--border)] px-4 py-2.5 text-xs font-medium text-[var(--terracotta)] transition hover:bg-[var(--cream)]/60"
+                  >
+                    {usersOpen
+                      ? "Show fewer"
+                      : `Show all ${rows.length} members`}
+                    <ChevronDown className={`h-3.5 w-3.5 transition-transform ${usersOpen ? "rotate-180" : ""}`} />
+                  </button>
+                )}
+              </>
+            )}
+          </SectionCard>
+
+          {/* ── Vendor Submissions ── */}
+          <SectionCard
+            icon={<Inbox className="h-4 w-4" />}
+            title="Vendor Submissions"
+            description="Vendors who registered through the public signup form."
+            action={
+              <Link
+                to="/admin/submissions"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-3.5 py-1.5 text-sm font-medium text-[var(--charcoal)]/75 transition hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+              >
+                View all <ArrowRight className="h-4 w-4" />
+              </Link>
+            }
+          >
+            <div className="grid divide-y divide-[var(--border)] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+              <StatTile label="Total submissions" value={submissionStats.total} />
+              <StatTile label="This week" value={submissionStats.week} />
+              <StatTile label="This month" value={submissionStats.month} />
+            </div>
+          </SectionCard>
+
+          {/* ── Instagram Sync ── */}
+          <SectionCard
+            icon={<Instagram className="h-4 w-4" />}
+            title="Instagram Sync"
+            description="Fetch Instagram previews for vendors that are missing or stale."
+            action={
+              <button
+                onClick={() => setIgSyncOpen(true)}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3.5 py-1.5 text-sm font-medium text-[var(--cream)] transition hover:bg-[var(--terracotta)]/90"
+              >
+                <Instagram className="h-4 w-4" /> Sync now
+              </button>
+            }
+          >
+            <p className="px-4 py-4 text-sm text-[var(--charcoal)]/65 sm:px-5">
+              Runs in the background and refreshes profile photos and recent posts for
+              vendors with an Instagram handle.
             </p>
-            <div className="sm:col-span-3 flex gap-2">
-              <button type="submit" disabled={creating} className="flex-1 rounded-md bg-[var(--charcoal)] px-3 py-2 text-sm text-white hover:opacity-90 disabled:opacity-50">
-                {creating ? "Creating…" : "Create"}
-              </button>
-              <button type="button" onClick={() => setShowCreate(false)} className="rounded-md border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--cream)]">
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
-
-        {err && <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{err}</div>}
-
-        <div className="mt-6 -mx-6 sm:mx-0 sm:rounded-lg sm:border sm:border-[var(--border)] bg-white">
-          {loading ? (
-            <div className="space-y-2 p-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-10 animate-pulse rounded-md bg-[var(--cream-deep)]/60"
-                />
-              ))}
-            </div>
-          ) : rows.length === 0 ? (
-            <EmptyState
-              compact
-              icon={<Users />}
-              title="No staff yet"
-              description="Create your first employee account above."
-            />
-          ) : (
-            <div
-              className="overflow-x-auto touch-pan-x"
-              style={{ WebkitOverflowScrolling: "touch" }}
-            >
-              <table className="w-full min-w-[640px] text-sm">
-                <thead className="bg-[var(--charcoal)] text-left text-xs uppercase tracking-wider text-[var(--cream)]/80">
-                  <tr>
-                    <th className="px-4 py-2.5">Name</th>
-                    <th className="px-4 py-2.5">Email</th>
-                    <th className="px-4 py-2.5">Role</th>
-                    <th className="px-4 py-2.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r) => (
-                    <UserRow key={r.id} row={r} isSelf={r.id === user?.id} onChanged={refresh} onError={setErr} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Vendor Submissions */}
-        <div className="mt-12 flex items-center justify-between">
-          <div>
-            <h2 className="font-display text-3xl text-[var(--charcoal)]">Vendor Submissions</h2>
-            <p className="text-sm text-[var(--charcoal)]/60">Vendors who registered through the public signup form.</p>
-          </div>
-          <Link
-            to="/admin/submissions"
-            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3.5 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
-          >
-            View all <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <StatTile label="Total submissions" value={submissionStats.total} />
-          <StatTile label="This week" value={submissionStats.week} />
-          <StatTile label="This month" value={submissionStats.month} />
-        </div>
-
-        {/* Instagram Sync */}
-        <div className="mt-12 flex items-center justify-between">
-          <div>
-            <h2 className="font-display text-3xl text-[var(--charcoal)]">Instagram Sync</h2>
-            <p className="text-sm text-[var(--charcoal)]/60">Fetch Instagram previews for vendors that are missing or stale.</p>
-          </div>
-          <button
-            onClick={() => setIgSyncOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3.5 py-1.5 text-sm font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
-          >
-            <Instagram className="h-4 w-4" /> Sync now
-          </button>
-        </div>
-        <div className="mt-4 rounded-lg border border-[var(--border)] bg-white p-4 text-sm text-[var(--charcoal)]/70">
-          Runs in the background and refreshes profile photos and recent posts for vendors with an Instagram handle.
+          </SectionCard>
         </div>
       </div>
 
@@ -231,9 +268,51 @@ function AdminUsersPage() {
   );
 }
 
+/**
+ * One settings block: icon + title + description on the left, a single action
+ * on the right, content below. Section titles deliberately carry no
+ * `brand-line` — that accent belongs to the page heading alone.
+ */
+function SectionCard({
+  icon,
+  title,
+  description,
+  meta,
+  action,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  meta?: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3 sm:px-5">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="shrink-0 rounded-lg bg-[var(--terracotta-soft)] p-2 text-[var(--terracotta)]">
+            {icon}
+          </span>
+          <div className="min-w-0">
+            <div className="flex items-baseline gap-2">
+              <h2 className="font-display text-lg leading-tight text-[var(--charcoal)]">{title}</h2>
+              {meta && <span className="text-xs text-[var(--charcoal)]/45">{meta}</span>}
+            </div>
+            <p className="truncate text-xs text-[var(--charcoal)]/55">{description}</p>
+          </div>
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
 function StatTile({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-white p-4">
+    <div className="p-4 sm:px-5">
       <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">{label}</div>
       <div className="mt-1 font-display text-3xl font-semibold text-[var(--terracotta)]">{value}</div>
     </div>

@@ -136,7 +136,7 @@ export function AdminProjectVendorDetail({
               )}
               {vendor.is_saffron_pick && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[var(--terracotta)] to-[var(--terracotta)]/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--cream)] shadow-sm">
-                  <Sparkles className="h-3 w-3 fill-current" /> Saffron's Pick
+                  <Sparkles className="h-3 w-3 fill-current" /> Planner's Pick
                 </span>
               )}
               <span className="inline-flex items-center gap-1 rounded-full border border-[var(--terracotta)]/40 bg-[var(--terracotta-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--terracotta)]">

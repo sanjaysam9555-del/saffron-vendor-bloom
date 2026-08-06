@@ -27,8 +27,11 @@ export const Route = createFileRoute("/")({
   component: RootIndex,
 });
 
-function destinationFor(role: AppRole | null): "/admin" | "/client" | null {
-  if (role === "admin" || role === "employee") return "/admin";
+// Staff land on the dashboard, not the vendor list — `/admin` itself renders
+// the vendors pane, which is a heavy first paint and not the overview a
+// planner wants on opening the app.
+function destinationFor(role: AppRole | null): "/admin/dashboard" | "/client" | null {
+  if (role === "admin" || role === "employee") return "/admin/dashboard";
   if (role === "client") return "/client";
   return null;
 }

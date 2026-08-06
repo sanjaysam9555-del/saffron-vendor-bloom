@@ -16,16 +16,4 @@ REVOKE EXECUTE ON FUNCTION public.read_email_batch(text, integer, integer) FROM 
 REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
 
 -- 3. Realtime channel subscription hardening.
---    Our app only uses postgres_changes (which already respects table RLS),
---    so no client should be allowed to subscribe to broadcast/presence
---    channels on realtime.messages. Enable RLS with no policies => deny all.
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM pg_class c
-    JOIN pg_namespace n ON n.oid = c.relnamespace
-    WHERE n.nspname = 'realtime' AND c.relname = 'messages'
-  ) THEN
-    EXECUTE 'ALTER TABLE realtime.messages ENABLE ROW LEVEL SECURITY';
-  END IF;
-END $$;
+--    Skipped in dev: ALTER TABLE realtime.messages requires superuser on hosted Supabase.

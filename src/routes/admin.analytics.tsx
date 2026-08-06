@@ -7,9 +7,11 @@ import { AuthGate } from "@/components/AuthGate";
 import {
   analyticsOverview,
   analyticsProjects,
-  analyticsVendors,
-  analyticsCategories,
   analyticsReceivedBreakdown,
+  analyticsUpcomingReceivables,
+  analyticsUpcomingPayments,
+  type UpcomingReceivable,
+  type UpcomingPayment,
 } from "@/lib/analytics.functions";
 import {
   listPaymentsMatrix,
@@ -66,30 +68,26 @@ function AdminAnalyticsPage() {
     queryKey: ["analytics-projects", range],
     queryFn: () => analyticsProjects({ data: range }),
   });
-  const vendors = useQuery({
-    queryKey: ["analytics-vendors", range],
-    queryFn: () => analyticsVendors({ data: range }),
-  });
-  const categories = useQuery({
-    queryKey: ["analytics-categories", range],
-    queryFn: () => analyticsCategories({ data: range }),
-  });
   const received = useQuery({
     queryKey: ["analytics-received", range],
     queryFn: () => analyticsReceivedBreakdown({ data: range }),
   });
+  const receivables = useQuery({
+    queryKey: ["analytics-upcoming-receivables"],
+    queryFn: () => analyticsUpcomingReceivables(),
+  });
+  const payments = useQuery({
+    queryKey: ["analytics-upcoming-payments"],
+    queryFn: () => analyticsUpcomingPayments(),
+  });
 
   return (
-    <div className="min-h-screen bg-[var(--cream)] py-8">
-      <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="font-display text-3xl text-[var(--charcoal)]">Analytics</h1>
-            <p className="text-sm text-[var(--charcoal)]/60">
-              Revenue, commissions, project P&amp;L and payment tracking. Admin only.
-            </p>
-          </div>
-          <div className="flex gap-1 rounded-lg border border-[var(--border)] bg-white p-1">
+    <div className="min-h-screen bg-[var(--cream)] pb-16">
+      {/* Secondary toolbar */}
+      <div className="h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
+        <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 h-full px-3 sm:px-6">
+          <span className="text-sm text-[var(--charcoal)]/55">Revenue, commissions, project P&amp;L and payment tracking.</span>
+          <div className="ml-auto flex gap-1 rounded-lg border border-[var(--border)] bg-white p-1">
             {(["month", "quarter", "year", "all"] as Preset[]).map((p) => (
               <button
                 key={p}
@@ -106,148 +104,111 @@ function AdminAnalyticsPage() {
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Overview: Client billing · Vendor cost · Commission · Fee + Commission received · Pending */}
+      <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5">
+        <div className="mb-6">
+          <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">Analytics</h1>
+        </div>
+
+        {/* Overview cards */}
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <OverviewCard label="Client billing" value={overview.data?.client_billing ?? 0} tone="charcoal" />
-          <OverviewCard label="Vendor cost" value={overview.data?.vendor_cost ?? 0} tone="terracotta" highlight />
-          <OverviewCard label="Commission" value={overview.data?.commission ?? 0} tone="gold" highlight />
+          <OverviewCard label="Client Billing" value={overview.data?.client_billing ?? 0} />
+          <OverviewCard label="Vendor Cost" value={overview.data?.vendor_cost ?? 0} valueClass="text-[var(--terracotta)]" />
+          <OverviewCard label="Commission" value={overview.data?.commission ?? 0} valueClass="text-[var(--terracotta)]" />
           <OverviewCard
-            label="Fee + Commission received"
+            label="Received"
             value={received.data?.total ?? 0}
-            tone="green"
-            highlight
+            valueClass="text-[hsl(38_45%_28%)]"
             hint={`Fee ${formatINRShort(received.data?.fee_received ?? 0)} · Comm ${formatINRShort(received.data?.commission_received ?? 0)}`}
           />
           <OverviewCard
-            label="Pending (Fee + Commission)"
+            label="Pending"
             value={received.data?.pending_total ?? 0}
-            tone="rose"
-            highlight
+            valueClass="text-[var(--terracotta)]"
             hint={`Fee ${formatINRShort(received.data?.fee_pending ?? 0)} · Comm ${formatINRShort(received.data?.commission_pending ?? 0)}`}
           />
         </div>
 
         {/* Per-project P&L */}
         <section className="mt-10">
-          <h2 className="font-display text-xl text-[var(--charcoal)]">Per-project P&amp;L</h2>
-          <div className="mt-3 overflow-x-auto rounded-lg border border-[var(--border)] bg-white">
-            <table className="w-full min-w-[1100px] text-sm">
-              <thead className="bg-[var(--charcoal)] text-left text-[10px] uppercase tracking-widest text-[var(--cream)]/80">
-                <tr>
-                  <th className="px-4 py-2.5">Project</th>
-                  <th className="px-4 py-2.5">Wedding</th>
-                  <th className="px-4 py-2.5 text-right">Planning fee</th>
-                  <th className="px-4 py-2.5 text-right">Client billing</th>
-                  <th className="px-4 py-2.5 text-right">Vendor cost</th>
-                  <th className="px-4 py-2.5 text-right">Commission</th>
-                  <th className="px-4 py-2.5 text-right">Margin</th>
-                  <th className="px-4 py-2.5 text-right">Total income</th>
-                  <th className="px-4 py-2.5 text-right">Target income</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(projects.data ?? []).map((p) => {
-                  const margin = p.client_billing > 0 ? (Number(p.commission) / Number(p.client_billing)) * 100 : 0;
-                  const planning = Number((p as any).planning_fee ?? 0);
-                  const target = Number((p as any).target_income ?? 0);
-                  const totalIncome = planning + Number(p.commission ?? 0);
-                  return (
-                    <tr key={p.project_id} className="border-t border-[var(--border)]">
-                      <td className="px-4 py-3">
-                        <Link
-                          to="/admin/projects/$id"
-                          params={{ id: p.project_id }}
-                          className="text-[var(--terracotta)] hover:underline"
-                        >
-                          {(p.bride_name || "?") + " & " + (p.groom_name || "?")}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-[var(--charcoal)]/70">
-                        {p.wedding_date ? new Date(p.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{formatINR(planning)}</td>
-                      <td className="px-4 py-3 text-right font-medium">{formatINR(Number(p.client_billing))}</td>
-                      <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{formatINR(Number(p.vendor_cost))}</td>
-                      <td className="px-4 py-3 text-right font-semibold text-[var(--terracotta)]">{formatINR(Number(p.commission))}</td>
-                      <td className="px-4 py-3 text-right">{margin.toFixed(1)}%</td>
-                      <td className="px-4 py-3 text-right font-semibold text-emerald-700">{formatINR(totalIncome)}</td>
-                      <td className="px-4 py-3 text-right text-indigo-700">{formatINR(target)}</td>
-                    </tr>
-                  );
-                })}
-                {(projects.data ?? []).length === 0 && (
+          <div className="mb-3">
+            <h2 className="font-display text-xl text-[var(--charcoal)]">Per-project P&L</h2>
+            <p className="text-xs text-[var(--charcoal)]/55">Per closed vendor — client billing, vendor cost and commission breakdown.</p>
+          </div>
+          <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1100px] text-sm">
+                <thead className="bg-[var(--charcoal)] text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/80">
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
-                      {projects.isLoading ? "Loading…" : "No closed quotes in this range yet."}
-                    </td>
+                    <th className="px-4 py-2.5">Project</th>
+                    <th className="px-4 py-2.5">Wedding</th>
+                    <th className="px-4 py-2.5 text-right">Planning fee</th>
+                    <th className="px-4 py-2.5 text-right">Client billing</th>
+                    <th className="px-4 py-2.5 text-right">Vendor cost</th>
+                    <th className="px-4 py-2.5 text-right">Commission</th>
+                    <th className="px-4 py-2.5 text-right">Margin</th>
+                    <th className="px-4 py-2.5 text-right">Total income</th>
+                    <th className="px-4 py-2.5 text-right">Target income</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="[&_tr:nth-child(even)]:bg-[var(--cream)]/25">
+                  {(projects.data ?? []).map((p) => {
+                    const margin = p.client_billing > 0 ? (Number(p.commission) / Number(p.client_billing)) * 100 : 0;
+                    const planning = Number((p as any).planning_fee ?? 0);
+                    const target = Number((p as any).target_income ?? 0);
+                    const totalIncome = planning + Number(p.commission ?? 0);
+                    return (
+                      <tr key={p.project_id} className="border-t border-[var(--border)]">
+                        <td className="px-4 py-3">
+                          <Link
+                            to="/admin/projects/$id"
+                            params={{ id: p.project_id }}
+                            className="font-medium text-[var(--terracotta)] hover:underline"
+                          >
+                            {(p.bride_name || "?") + " & " + (p.groom_name || "?")}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 text-[var(--charcoal)]/70">
+                          {p.wedding_date ? new Date(p.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{formatINR(planning)}</td>
+                        <td className="px-4 py-3 text-right font-medium text-[var(--charcoal)]">{formatINR(Number(p.client_billing))}</td>
+                        <td className="px-4 py-3 text-right text-[var(--charcoal)]/60">{formatINR(Number(p.vendor_cost))}</td>
+                        <td className="px-4 py-3 text-right font-semibold text-[var(--terracotta)]">{formatINR(Number(p.commission))}</td>
+                        <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{margin.toFixed(1)}%</td>
+                        <td className="px-4 py-3 text-right font-semibold text-[hsl(38_45%_28%)]">{formatINR(totalIncome)}</td>
+                        <td className="px-4 py-3 text-right text-[var(--charcoal)]/60">{formatINR(target)}</td>
+                      </tr>
+                    );
+                  })}
+                  {(projects.data ?? []).length === 0 && (
+                    <tr>
+                      <td colSpan={9} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
+                        {projects.isLoading ? "Loading…" : "No closed quotes in this range yet."}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
 
         {/* Project payments matrix (below P&L) */}
         <section className="mt-10">
-          <h2 className="font-display text-xl text-[var(--charcoal)]">Project payments</h2>
-          <p className="text-xs text-[var(--charcoal)]/60">
-            One row per project. Click an installment to record the amount and mark it received.
-          </p>
+          <div className="mb-3">
+            <h2 className="font-display text-xl text-[var(--charcoal)]">Project Payments</h2>
+            <p className="text-xs text-[var(--charcoal)]/55">One row per project. Click an installment to record the amount and mark it received.</p>
+          </div>
           <PaymentsMatrixTable range={range} />
         </section>
 
-        {/* Vendor & category performance */}
+        {/* Upcoming receivables + payments */}
         <section className="mt-10 grid gap-6 lg:grid-cols-2">
-          <div>
-            <h2 className="font-display text-xl text-[var(--charcoal)]">Top vendors</h2>
-            <div className="mt-3 rounded-lg border border-[var(--border)] bg-white">
-              <ul className="divide-y divide-[var(--border)]">
-                {(vendors.data ?? []).slice(0, 12).map((v) => (
-                  <li key={v.vendor_id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
-                    <div className="min-w-0">
-                      <div className="truncate font-medium">{v.vendor_name}</div>
-                      <div className="text-[11px] text-[var(--charcoal)]/55">
-                        {v.category ?? "—"} · {v.bookings} booking{Number(v.bookings) === 1 ? "" : "s"}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold text-[var(--terracotta)]">{formatINRShort(Number(v.commission))}</div>
-                      <div className="text-[11px] text-[var(--charcoal)]/55">{formatINRShort(Number(v.client_billing))} billed</div>
-                    </div>
-                  </li>
-                ))}
-                {(vendors.data ?? []).length === 0 && (
-                  <li className="px-4 py-6 text-center text-sm text-[var(--charcoal)]/60">No data.</li>
-                )}
-              </ul>
-            </div>
-          </div>
-          <div>
-            <h2 className="font-display text-xl text-[var(--charcoal)]">Category breakdown</h2>
-            <div className="mt-3 rounded-lg border border-[var(--border)] bg-white">
-              <ul className="divide-y divide-[var(--border)]">
-                {(categories.data ?? []).map((c) => (
-                  <li key={c.category} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
-                    <div className="min-w-0">
-                      <div className="truncate font-medium">{c.category}</div>
-                      <div className="text-[11px] text-[var(--charcoal)]/55">
-                        {c.bookings} booking{Number(c.bookings) === 1 ? "" : "s"}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">{formatINRShort(Number(c.client_billing))}</div>
-                      <div className="text-[11px] text-[var(--terracotta)]">{formatINRShort(Number(c.commission))} comm.</div>
-                    </div>
-                  </li>
-                ))}
-                {(categories.data ?? []).length === 0 && (
-                  <li className="px-4 py-6 text-center text-sm text-[var(--charcoal)]/60">No data.</li>
-                )}
-              </ul>
-            </div>
-          </div>
+          <UpcomingReceivablesTable rows={receivables.data ?? []} isLoading={receivables.isLoading} />
+          <UpcomingPaymentsTable rows={payments.data ?? []} isLoading={payments.isLoading} />
         </section>
       </div>
     </div>
@@ -257,46 +218,21 @@ function AdminAnalyticsPage() {
 function OverviewCard({
   label,
   value,
-  tone,
-  highlight,
+  valueClass = "text-[var(--charcoal)]",
   hint,
 }: {
   label: string;
   value: number;
-  tone: "charcoal" | "muted" | "terracotta" | "green" | "gold" | "rose";
-  highlight?: boolean;
+  valueClass?: string;
   hint?: string;
 }) {
-  const toneClass =
-    tone === "terracotta"
-      ? "text-[var(--terracotta)]"
-      : tone === "green"
-      ? "text-emerald-700"
-      : tone === "gold"
-      ? "text-amber-700"
-      : tone === "rose"
-      ? "text-rose-700"
-      : tone === "muted"
-      ? "text-[var(--charcoal)]/70"
-      : "text-[var(--charcoal)]";
-  const highlightClass =
-    tone === "green"
-      ? "border-emerald-500/40 bg-emerald-50"
-      : tone === "gold"
-      ? "border-amber-500/40 bg-amber-50"
-      : tone === "rose"
-      ? "border-rose-500/40 bg-rose-50"
-      : "border-[var(--terracotta)]/40 bg-[var(--terracotta-soft)]";
   return (
-    <div
-      className={
-        "rounded-lg border p-4 " +
-        (highlight ? highlightClass : "border-[var(--border)] bg-white")
-      }
-    >
-      <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">{label}</div>
-      <div className={"mt-1 font-display text-2xl font-semibold " + toneClass}>{formatINR(Number(value))}</div>
-      {hint && <div className="mt-1 text-[11px] text-[var(--charcoal)]/60">{hint}</div>}
+    <div className="flex flex-col rounded-lg border border-[var(--border)] bg-white p-4">
+      <div className={`font-display text-2xl font-semibold leading-tight ${valueClass}`}>
+        {formatINR(Number(value))}
+      </div>
+      {hint && <div className="mt-1 text-[11px] text-[var(--charcoal)]/50">{hint}</div>}
+      <div className="mt-auto pt-3 text-[10px] font-medium uppercase tracking-widest text-[var(--charcoal)]/55">{label}</div>
     </div>
   );
 }
@@ -386,7 +322,7 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
                 {totals.per_slot.map((v, i) => (
                   <td key={i} className="px-2 py-3 text-center text-xs">{v > 0 ? formatINRShort(v) : "—"}</td>
                 ))}
-                <td className="px-3 py-3 text-right text-green-700">{formatINR(totals.total_received)}</td>
+                <td className="px-3 py-3 text-right text-[hsl(38_45%_28%)]">{formatINR(totals.total_received)}</td>
                 <td className="px-3 py-3 text-right text-[var(--terracotta)]">{formatINR(totals.total_pending)}</td>
                 <td className="px-3 py-3" />
               </tr>
@@ -499,7 +435,7 @@ function MatrixRow({
         );
       })}
 
-      <td className="px-3 py-2 text-right font-medium text-green-700">{formatINR(row.total_received)}</td>
+      <td className="px-3 py-2 text-right font-medium text-[hsl(38_45%_28%)]">{formatINR(row.total_received)}</td>
       <td className="px-3 py-2 text-right font-medium text-[var(--terracotta)]">
         {formatINR(rowPending(row))}
       </td>
@@ -537,10 +473,10 @@ function InstallmentCell({
   const partial = slot.status === "partial";
 
   const cellClass = received
-    ? "bg-green-100 hover:bg-green-200 text-green-800 border-green-300"
+    ? "bg-[var(--gold-soft)] text-[hsl(38_45%_28%)] border-[var(--gold)]/40 hover:border-[var(--gold)]/70"
     : partial
-    ? "bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300"
-    : "bg-[var(--cream)] hover:bg-[var(--cream-deep)] text-[var(--charcoal)]/70 border-[var(--border)]";
+    ? "bg-[var(--champagne)] text-[var(--terracotta)] border-[var(--terracotta)]/30 hover:border-[var(--terracotta)]/60"
+    : "bg-[var(--cream)] text-[var(--charcoal)]/60 border-[var(--border)] hover:bg-[var(--cream-deep)]";
 
   return (
     <>
@@ -679,6 +615,173 @@ function InstallmentEditDialog({
           >
             {busy ? "Saving…" : "Save"}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// -------------------- Shared helpers --------------------
+
+function daysLabel(due_date: string | null): { text: string; cls: string } {
+  if (!due_date) return { text: "No date set", cls: "text-[var(--charcoal)]/40" };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const d = new Date(due_date);
+  d.setHours(0, 0, 0, 0);
+  const diff = Math.round((d.getTime() - today.getTime()) / 86400_000);
+  if (diff < 0) return { text: `${Math.abs(diff)}d overdue`, cls: "text-[var(--terracotta)] font-semibold" };
+  if (diff === 0) return { text: "Due today", cls: "text-[var(--terracotta)] font-semibold" };
+  if (diff <= 7) return { text: `${diff}d left`, cls: "text-[var(--terracotta)]" };
+  if (diff <= 30) return { text: `${diff}d left`, cls: "text-[hsl(38_45%_28%)]" };
+  return { text: `${diff}d left`, cls: "text-[var(--charcoal)]/55" };
+}
+
+function statusBadge(status: string) {
+  if (status === "overdue")
+    return <span className="rounded-full bg-[var(--terracotta-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--terracotta)]">Overdue</span>;
+  if (status === "partial")
+    return <span className="rounded-full bg-[var(--champagne)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--terracotta)]">Partial</span>;
+  return <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/55">Pending</span>;
+}
+
+function fmtDate(d: string | null) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
+
+// -------------------- Upcoming Receivables --------------------
+
+function UpcomingReceivablesTable({ rows, isLoading }: { rows: UpcomingReceivable[]; isLoading: boolean }) {
+  return (
+    <div>
+      <div className="mb-3">
+        <h2 className="font-display text-xl text-[var(--charcoal)]">Upcoming Receivables</h2>
+        <p className="text-xs text-[var(--charcoal)]/55">Pending client payments — planning fee instalments not yet received.</p>
+      </div>
+      <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[480px] text-sm">
+            <thead className="bg-[var(--charcoal)] text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/80">
+              <tr>
+                <th className="px-4 py-2.5 text-left">Project</th>
+                <th className="px-3 py-2.5 text-center">Inst.</th>
+                <th className="px-3 py-2.5 text-right">Amount</th>
+                <th className="px-3 py-2.5 text-center">Due</th>
+                <th className="px-3 py-2.5 text-right">Days</th>
+                <th className="px-3 py-2.5 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody className="[&_tr:nth-child(even)]:bg-[var(--cream)]/25">
+              {rows.map((r, i) => {
+                const days = daysLabel(r.due_date);
+                const pending = r.expected_amount - r.received_amount;
+                return (
+                  <tr key={i} className="border-t border-[var(--border)]">
+                    <td className="px-4 py-2.5">
+                      <Link
+                        to="/admin/projects/$id"
+                        params={{ id: r.project_id }}
+                        className="font-medium text-[var(--terracotta)] hover:underline"
+                      >
+                        {(r.bride_name ?? "?") + " & " + (r.groom_name ?? "?")}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2.5 text-center text-[var(--charcoal)]/60">
+                      {r.installment_no != null ? `#${r.installment_no}` : "—"}
+                    </td>
+                    <td className="px-3 py-2.5 text-right font-semibold text-[hsl(38_45%_28%)]">
+                      {formatINR(pending)}
+                    </td>
+                    <td className="px-3 py-2.5 text-center text-[11px] text-[var(--charcoal)]/60">
+                      {fmtDate(r.due_date)}
+                    </td>
+                    <td className={`px-3 py-2.5 text-right text-[11px] ${days.cls}`}>
+                      {days.text}
+                    </td>
+                    <td className="px-3 py-2.5 text-center">{statusBadge(r.status)}</td>
+                  </tr>
+                );
+              })}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-[var(--charcoal)]/50">
+                    {isLoading ? "Loading…" : "No pending receivables."}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// -------------------- Upcoming Payments --------------------
+
+function UpcomingPaymentsTable({ rows, isLoading }: { rows: UpcomingPayment[]; isLoading: boolean }) {
+  return (
+    <div>
+      <div className="mb-3">
+        <h2 className="font-display text-xl text-[var(--charcoal)]">Upcoming Payments</h2>
+        <p className="text-xs text-[var(--charcoal)]/55">Pending outgoing vendor payments — instalments not yet paid.</p>
+      </div>
+      <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[480px] text-sm">
+            <thead className="bg-[var(--charcoal)] text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/80">
+              <tr>
+                <th className="px-4 py-2.5 text-left">Project · Vendor</th>
+                <th className="px-3 py-2.5 text-center">Inst.</th>
+                <th className="px-3 py-2.5 text-right">Amount</th>
+                <th className="px-3 py-2.5 text-center">Due</th>
+                <th className="px-3 py-2.5 text-right">Days</th>
+                <th className="px-3 py-2.5 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody className="[&_tr:nth-child(even)]:bg-[var(--cream)]/25">
+              {rows.map((r, i) => {
+                const days = daysLabel(r.due_date);
+                const pending = r.expected_amount - r.paid_amount;
+                return (
+                  <tr key={i} className="border-t border-[var(--border)]">
+                    <td className="px-4 py-2.5">
+                      <Link
+                        to="/admin/projects/$id"
+                        params={{ id: r.project_id }}
+                        className="font-medium text-[var(--terracotta)] hover:underline"
+                      >
+                        {(r.bride_name ?? "?") + " & " + (r.groom_name ?? "?")}
+                      </Link>
+                      <div className="text-[11px] text-[var(--charcoal)]/55">{r.vendor_name}</div>
+                      <div className="text-[10px] text-[var(--charcoal)]/40 uppercase tracking-wider">
+                        Paid by {r.paid_by}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2.5 text-center text-[var(--charcoal)]/60">#{r.installment_no}</td>
+                    <td className="px-3 py-2.5 text-right font-semibold text-[var(--terracotta)]">
+                      {formatINR(pending)}
+                    </td>
+                    <td className="px-3 py-2.5 text-center text-[11px] text-[var(--charcoal)]/60">
+                      {fmtDate(r.due_date)}
+                    </td>
+                    <td className={`px-3 py-2.5 text-right text-[11px] ${days.cls}`}>
+                      {days.text}
+                    </td>
+                    <td className="px-3 py-2.5 text-center">{statusBadge(r.status)}</td>
+                  </tr>
+                );
+              })}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-[var(--charcoal)]/50">
+                    {isLoading ? "Loading…" : "No pending vendor payments."}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

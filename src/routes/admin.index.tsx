@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon, ArrowUpDown, X } from "lucide-react";
+import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon, ArrowUpDown, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { getVendorBookedSummary } from "@/lib/quote-api";
 
@@ -44,6 +44,9 @@ const SORT_LABEL: Record<SortKey, string> = {
 };
 const DEFAULT_SORT: SortKey = "date_added_desc";
 
+/** Vendors rendered per page, replacing the previous unbounded scroll. */
+const VENDORS_PER_PAGE = 100;
+
 export const Route = createFileRoute("/admin/")({
   head: () => ({
     meta: [
@@ -60,6 +63,30 @@ export const Route = createFileRoute("/admin/")({
 
 export function VendorsPane() {
   return <DashboardPage />;
+}
+
+/**
+ * Tracks whether the main admin sidebar is collapsed.
+ *
+ * AdminSidebar publishes its width on `--sidebar-w` (the layout already uses it
+ * for content offset), so we observe that rather than lifting the state into a
+ * context just for the vendor grid.
+ */
+function useMainSidebarCollapsed(): boolean {
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    const read = () => {
+      const raw = getComputedStyle(document.documentElement)
+        .getPropertyValue("--sidebar-w")
+        .trim();
+      setCollapsed(parseInt(raw || "200", 10) < 100);
+    };
+    read();
+    const mo = new MutationObserver(read);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
+    return () => mo.disconnect();
+  }, []);
+  return collapsed;
 }
 
 function DashboardPage() {
@@ -89,6 +116,10 @@ function DashboardPage() {
     sidebarCollapsed,
     setSidebarCollapsed,
   } = useVendorTabState();
+
+  // Both rails only compete for space from `lg` up; below that they overlay.
+  const mainSidebarCollapsed = useMainSidebarCollapsed();
+  const bothRailsOpen = !sidebarCollapsed && !mainSidebarCollapsed;
 
   // Local-only state (resets on tab switch by design).
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -132,9 +163,30 @@ function DashboardPage() {
     return sorted;
   }, [vendors, filters, search, sort]);
 
+  // ── Pagination ──────────────────────────────────────────────────────────
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / VENDORS_PER_PAGE));
+  // Any change to the result set can invalidate the current page number.
+  useEffect(() => {
+    setPage(1);
+  }, [search, filters, sort]);
+  useEffect(() => {
+    if (page > pageCount) setPage(pageCount);
+  }, [page, pageCount]);
+
+  const paged = useMemo(
+    () => filtered.slice((page - 1) * VENDORS_PER_PAGE, page * VENDORS_PER_PAGE),
+    [filtered, page],
+  );
+
+  const goToPage = (n: number) => {
+    setPage(n);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const visiblePreviewRepairVendors = useMemo(
-    () => filtered.filter((v) => v.instagram_handle).slice(0, 48),
-    [filtered],
+    () => paged.filter((v) => v.instagram_handle).slice(0, 48),
+    [paged],
   );
 
   useAutoEnsureMissingPreviews(visiblePreviewRepairVendors, instagramPreviewMap);
@@ -170,18 +222,18 @@ function DashboardPage() {
     });
   };
 
+  // "Visible" means the current page now that the list is paginated — select
+  // all should never reach rows the user cannot see.
   const allVisibleSelected =
-    filtered.length > 0 && filtered.every((v) => selectedIds.has(v.id));
+    paged.length > 0 && paged.every((v) => selectedIds.has(v.id));
 
   const toggleSelectAllVisible = () => {
     setSelectedIds((prev) => {
-      if (allVisibleSelected) {
-        const next = new Set(prev);
-        for (const v of filtered) next.delete(v.id);
-        return next;
-      }
       const next = new Set(prev);
-      for (const v of filtered) next.add(v.id);
+      for (const v of paged) {
+        if (allVisibleSelected) next.delete(v.id);
+        else next.add(v.id);
+      }
       return next;
     });
   };
@@ -212,7 +264,7 @@ function DashboardPage() {
 
 
 
-      <div className="mx-auto flex max-w-[1600px]">
+      <div className="mx-auto flex w-full max-w-[1600px]">
         <Sidebar
           vendors={vendors}
           filters={filters}
@@ -330,17 +382,18 @@ function DashboardPage() {
             />
           ) : view === "cards" ? (
             <VendorCardGrid
-              vendors={filtered}
+              vendors={paged}
               modals={modals}
               bulkMode={bulkMode}
               selectedIds={selectedIds}
               toggleSelect={toggleSelect}
               previewMap={instagramPreviewMap}
               previewsLoading={instagramPreviewsLoading}
+              bothRailsOpen={bothRailsOpen}
             />
           ) : (
             <VendorTable
-              vendors={filtered}
+              vendors={paged}
               onView={modals.openDetail}
               onEdit={modals.openEdit}
               selectMode={bulkMode}
@@ -349,13 +402,23 @@ function DashboardPage() {
               onToggleSelectAll={toggleSelectAllVisible}
             />
           )}
+
+          {filtered.length > 0 && (
+            <VendorPagination
+              page={page}
+              pageCount={pageCount}
+              total={filtered.length}
+              perPage={VENDORS_PER_PAGE}
+              onChange={goToPage}
+            />
+          )}
         </main>
       </div>
 
       {bulkMode && (
         <BulkActionBar
           selectedCount={selectedIds.size}
-          visibleCount={filtered.length}
+          visibleCount={paged.length}
           allVisibleSelected={allVisibleSelected}
           onSelectAllVisible={toggleSelectAllVisible}
           onClearSelection={() => setSelectedIds(new Set())}
@@ -591,6 +654,97 @@ function ActiveFilterChips({
   );
 }
 
+/**
+ * Numbered pager. Collapses to first / last / a window around the current page
+ * with ellipses, so 570 vendors don't produce a six-row strip of numbers.
+ */
+function VendorPagination({
+  page,
+  pageCount,
+  total,
+  perPage,
+  onChange,
+}: {
+  page: number;
+  pageCount: number;
+  total: number;
+  perPage: number;
+  onChange: (n: number) => void;
+}) {
+  const from = (page - 1) * perPage + 1;
+  const to = Math.min(page * perPage, total);
+
+  const pages = useMemo(() => {
+    const out: (number | "gap")[] = [];
+    const push = (n: number | "gap") => out.push(n);
+    if (pageCount <= 7) {
+      for (let i = 1; i <= pageCount; i++) push(i);
+      return out;
+    }
+    push(1);
+    if (page > 3) push("gap");
+    for (let i = Math.max(2, page - 1); i <= Math.min(pageCount - 1, page + 1); i++) push(i);
+    if (page < pageCount - 2) push("gap");
+    push(pageCount);
+    return out;
+  }, [page, pageCount]);
+
+  const btn =
+    "inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-xs font-medium transition-colors";
+
+  return (
+    <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+      <p className="text-xs text-[var(--charcoal)]/50">
+        Showing <span className="font-medium text-[var(--charcoal)]/75">{from}–{to}</span> of{" "}
+        <span className="font-medium text-[var(--charcoal)]/75">{total}</span>
+      </p>
+
+      {pageCount > 1 && (
+        <nav className="flex items-center gap-1" aria-label="Vendor pages">
+          <button
+            onClick={() => onChange(page - 1)}
+            disabled={page === 1}
+            aria-label="Previous page"
+            className={`${btn} border border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] disabled:pointer-events-none disabled:opacity-40`}
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </button>
+
+          {pages.map((p, i) =>
+            p === "gap" ? (
+              <span key={`gap-${i}`} className="px-1 text-xs text-[var(--charcoal)]/30">
+                …
+              </span>
+            ) : (
+              <button
+                key={p}
+                onClick={() => onChange(p)}
+                aria-current={p === page ? "page" : undefined}
+                className={`${btn} ${
+                  p === page
+                    ? "bg-[var(--terracotta)] text-[var(--cream)]"
+                    : "border border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+                }`}
+              >
+                {p}
+              </button>
+            ),
+          )}
+
+          <button
+            onClick={() => onChange(page + 1)}
+            disabled={page === pageCount}
+            aria-label="Next page"
+            className={`${btn} border border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] disabled:pointer-events-none disabled:opacity-40`}
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </nav>
+      )}
+    </div>
+  );
+}
+
 function VendorCardGrid({
   vendors,
   modals,
@@ -599,6 +753,7 @@ function VendorCardGrid({
   toggleSelect,
   previewMap,
   previewsLoading,
+  bothRailsOpen,
 }: {
   vendors: import("@/lib/vendor-types").Vendor[];
   modals: ReturnType<typeof useVendorModals>;
@@ -607,15 +762,34 @@ function VendorCardGrid({
   toggleSelect: (id: string) => void;
   previewMap: Map<string, import("@/lib/instagram-preview.functions").VendorInstagramPreview>;
   previewsLoading: boolean;
+  bothRailsOpen: boolean;
 }) {
   const allIds = useMemo(() => vendors.map((v) => v.id), [vendors]);
   const idsKey = useMemo(() => allIds.slice().sort().join(","), [allIds]);
   const { data: bookedMap } = useBookedSummaryBulk(allIds, idsKey);
 
+  /**
+   * Desktop is driven by rail state, not width: at 1440 with both rails open
+   * the grid is ~920px, and at 1280 with one rail open it is ~904px — nearly
+   * identical widths that need different column counts, so width alone cannot
+   * decide. Below `lg` the rails overlay the content, so width is used there.
+   */
+  const getColumns = useCallback(
+    (width: number) => {
+      if (typeof window === "undefined") return 3;
+      const vw = window.innerWidth;
+      if (vw < 640) return 1; // phone
+      if (vw < 1024) return width >= 640 ? 3 : 2; // tablet — rails float over content
+      return bothRailsOpen ? 2 : 3;
+    },
+    [bothRailsOpen],
+  );
+
   return (
     <VirtualGrid
       items={vendors}
       getKey={(v) => v.id}
+      getColumns={getColumns}
       estimateRowHeight={460}
       gap={16}
       className="animate-fade-in"

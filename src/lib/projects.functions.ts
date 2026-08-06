@@ -1121,6 +1121,91 @@ export const listProjectVendorComments = createServerFn({ method: "GET" })
       };
     });
   });
+/**
+ * Every vendor comment thread for a project, in one call — backs the
+ * project-level Comments tab, which groups by vendor ("ALLOCATION") instead
+ * of requiring you to open each vendor individually. Same author-resolution
+ * logic as `listProjectVendorComments`, just not filtered to one vendor_id.
+ */
+export const listProjectCommentsAllVendors = createServerFn({ method: "GET" })
+  .middleware([attachAuthToken])
+  .inputValidator((d) => z.object({ project_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => {
+    const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+    if (!token) throw new Error("Authentication is still loading. Please try again.");
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+    if (userError || !userData.user) throw new Error("Authentication is still loading.");
+    const userId = userData.user.id;
+
+    const { data: roles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    const roleSet = new Set((roles ?? []).map((r) => r.role));
+    const isStaff = roleSet.has("admin") || roleSet.has("employee");
+    if (!isStaff) {
+      const { data: pc } = await supabaseAdmin
+        .from("project_clients")
+        .select("project_id")
+        .eq("user_id", userId)
+        .eq("project_id", data.project_id)
+        .maybeSingle();
+      if (!pc) throw new Error("Forbidden");
+    }
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("project_vendor_comments")
+      .select("id, body, created_at, user_id, parent_id, vendor_id")
+      .eq("project_id", data.project_id)
+      .order("created_at", { ascending: true });
+    if (error) throw new Error(error.message);
+
+    const vendorIds = Array.from(new Set((rows ?? []).map((r) => r.vendor_id)));
+    const userIds = Array.from(new Set((rows ?? []).map((r) => r.user_id)));
+
+    const [{ data: vendorsData }, { data: profs }, { data: roleRows }] = await Promise.all([
+      vendorIds.length > 0
+        ? supabaseAdmin.from("vendors").select("id, vendor_name").in("id", vendorIds)
+        : Promise.resolve({ data: [] as { id: string; vendor_name: string }[] }),
+      userIds.length > 0
+        ? supabaseAdmin.from("profiles").select("user_id, display_name").in("user_id", userIds)
+        : Promise.resolve({ data: [] as { user_id: string; display_name: string | null }[] }),
+      userIds.length > 0
+        ? supabaseAdmin.from("user_roles").select("user_id, role").in("user_id", userIds)
+        : Promise.resolve({ data: [] as { user_id: string; role: string }[] }),
+    ]);
+
+    const vendorNameMap = new Map((vendorsData ?? []).map((v) => [v.id, v.vendor_name]));
+    const nameMap = new Map((profs ?? []).map((p) => [p.user_id, p.display_name ?? ""]));
+    const staffSet = new Set(
+      (roleRows ?? []).filter((r) => r.role === "admin" || r.role === "employee").map((r) => r.user_id),
+    );
+    let emailMap = new Map<string, string>();
+    if (isStaff && userIds.length > 0) {
+      const { data: usersData } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+      emailMap = new Map(usersData.users.map((u) => [u.id, u.email ?? ""]));
+    }
+
+    return (rows ?? []).map((r) => {
+      const isStaffAuthor = staffSet.has(r.user_id);
+      return {
+        id: r.id,
+        body: r.body,
+        created_at: r.created_at,
+        user_id: r.user_id,
+        parent_id: r.parent_id ?? null,
+        vendor_id: r.vendor_id,
+        vendor_name: vendorNameMap.get(r.vendor_id) ?? "Vendor",
+        author_role: isStaffAuthor ? ("staff" as const) : ("client" as const),
+        author_name: isStaffAuthor
+          ? "Saffron Team"
+          : nameMap.get(r.user_id) || (emailMap.get(r.user_id)?.split("@")[0] ?? "Client"),
+        author_email: isStaff ? (emailMap.get(r.user_id) ?? null) : null,
+        is_own: r.user_id === userId,
+      };
+    });
+  });
+
 export const addProjectVendorComment = createServerFn({ method: "POST" })
   .middleware([attachAuthToken])
   .inputValidator((d) =>

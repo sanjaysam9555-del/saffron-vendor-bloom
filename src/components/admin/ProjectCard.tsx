@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { Calendar, Heart, ArrowRight, Sparkles, Users, Archive, ArchiveRestore, MoreHorizontal, Trash2, Pencil } from "lucide-react";
+import { Calendar, ArrowRight, Sparkles, Users, Archive, ArchiveRestore, MoreHorizontal, Trash2, Pencil } from "lucide-react";
 import { useState } from "react";
 import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
-import { StatusCountsRow } from "@/components/admin/ClientStatusPill";
+import { CLIENT_STATUS_OPTIONS } from "@/lib/client-status";
 import { formatINRShort } from "@/lib/quote-types";
 import {
   DropdownMenu,
@@ -50,19 +50,28 @@ function daysUntil(dateStr: string): number {
   return Math.round((target.getTime() - today.getTime()) / 86400000);
 }
 
-function urgencyChip(dateStr: string, archived: boolean) {
-  if (archived) {
-    return { label: "Archived", className: "bg-[var(--charcoal)]/10 text-[var(--charcoal)]/70" };
-  }
+/**
+ * Countdown styling. Only genuinely near dates get colour — a page of cards
+ * where every countdown is a bright chip has no hierarchy left to spend.
+ */
+function countdown(dateStr: string) {
   const d = daysUntil(dateStr);
-  if (d < 0) return { label: `${Math.abs(d)}d ago`, className: "bg-[var(--cream-deep)] text-[var(--charcoal)]/60" };
-  if (d === 0) return { label: "Today", className: "bg-[var(--terracotta)] text-[var(--cream)]" };
-  if (d === 1) return { label: "Tomorrow", className: "bg-[var(--terracotta)] text-[var(--cream)]" };
-  if (d <= 7) return { label: `In ${d}d`, className: "bg-[var(--terracotta-soft)] text-[var(--terracotta)]" };
-  if (d <= 30) return { label: `In ${d}d`, className: "bg-amber-100 text-amber-800" };
-  if (d <= 90) return { label: `In ${d}d`, className: "bg-emerald-50 text-emerald-800" };
-  return { label: `In ${d}d`, className: "bg-[var(--cream-deep)] text-[var(--charcoal)]/65" };
+  if (d < 0) return { text: `${Math.abs(d)} days ago`, cls: "text-[var(--charcoal)]/40" };
+  if (d === 0) return { text: "Today", cls: "font-semibold text-[var(--terracotta)]" };
+  if (d === 1) return { text: "Tomorrow", cls: "font-semibold text-[var(--terracotta)]" };
+  if (d <= 7) return { text: `In ${d} days`, cls: "font-semibold text-[var(--terracotta)]" };
+  if (d <= 30) return { text: `In ${d} days`, cls: "font-medium text-[hsl(38_45%_28%)]" };
+  return { text: `In ${d} days`, cls: "text-[var(--charcoal)]/45" };
 }
+
+/** Compact labels — the full option labels are too long for a card chip. */
+const SHORT_STATUS_LABEL: Record<string, string> = {
+  like: "Liked",
+  shortlisted: "Shortlisted",
+  finalised: "Finalised",
+  rejected: "Rejected",
+  thinking: "Thinking",
+};
 
 function relativeTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -83,17 +92,20 @@ export function ProjectCard({ project: p, canDelete, onArchiveToggle, onEdit, on
   const [menuOpen, setMenuOpen] = useState(false);
   const { ref, isVisible } = useRevealOnScroll<HTMLDivElement>();
   const archived = !!p.archived_at;
-  const chip = urgencyChip(p.wedding_date, archived);
+  const when = countdown(p.wedding_date);
   const finalised = p.quotes_summary?.finalised_vendors ?? 0;
   const vendors = p.vendor_count ?? 0;
   const progressPct = vendors > 0 ? Math.round((finalised / vendors) * 100) : 0;
   const closedTotal = p.quotes_summary?.closed_total_amount ?? 0;
   const saffronPicks = p.saffron_pick_count ?? 0;
-  const counts = p.status_counts ?? { like: 0, shortlisted: 0, finalised: 0, rejected: 0, thinking: 0 };
+  const counts = p.status_counts ?? {};
+  // Only statuses the client has actually used — rendering all five meant four
+  // zeroes of noise on a typical card.
+  const activeStatuses = CLIENT_STATUS_OPTIONS.filter((o) => (counts[o.value] ?? 0) > 0);
   const dateLabel = new Date(p.wedding_date).toLocaleDateString("en-IN", {
     weekday: "short",
     day: "numeric",
-    month: "long",
+    month: "short",
     year: "numeric",
   });
 
@@ -156,68 +168,99 @@ export function ProjectCard({ project: p, canDelete, onArchiveToggle, onEdit, on
         params={{ id: p.id }}
         className="flex h-full flex-col"
       >
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-[var(--charcoal)]/55">
-          <Heart className="h-3 w-3" /> Wedding
-          <span className={`ml-auto mr-7 rounded-full px-2 py-0.5 text-[10px] font-semibold ${chip.className}`}>
-            {chip.label}
-          </span>
-        </div>
-
-        <h3 className="mt-1 pr-7 font-display text-xl text-[var(--charcoal)]">
+        {/* ── Couple + when ── */}
+        <h3 className="pr-8 font-display text-xl leading-snug text-[var(--charcoal)]">
           {p.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {p.groom_name}
         </h3>
 
-        <div className="mt-1 flex items-center gap-1.5 text-sm text-[var(--charcoal)]/70">
-          <Calendar className="h-3.5 w-3.5" />
-          {dateLabel}
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+          <span className="inline-flex items-center gap-1.5 text-[var(--charcoal)]/70">
+            <Calendar className="h-3.5 w-3.5 text-[var(--charcoal)]/40" />
+            {dateLabel}
+          </span>
+          <span className="text-[var(--charcoal)]/25">·</span>
+          {archived ? (
+            <span className="rounded-full bg-[var(--charcoal)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/60">
+              Archived
+            </span>
+          ) : (
+            <span className={when.cls}>{when.text}</span>
+          )}
         </div>
 
         {p.notes && (
-          <p className="mt-2 line-clamp-2 text-xs text-[var(--charcoal)]/55">{p.notes}</p>
+          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[var(--charcoal)]/50">
+            {p.notes}
+          </p>
         )}
 
-        {/* progress strip */}
-        <div className="mt-3 space-y-1">
-          <div className="flex items-baseline justify-between text-[11px] text-[var(--charcoal)]/65">
-            <span>
-              <span className="font-semibold text-[var(--charcoal)]">{finalised}</span>
-              {" / "}
-              {vendors} vendor{vendors === 1 ? "" : "s"} finalised
+        {/* ── Progress band: the operational core, grouped as one unit ── */}
+        <div className="mt-3 rounded-lg bg-[var(--cream)]/70 px-3 py-2.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-[11px] text-[var(--charcoal)]/60">
+              <span className="font-display text-base font-semibold text-[var(--charcoal)]">
+                {finalised}
+              </span>
+              <span className="text-[var(--charcoal)]/35"> / {vendors}</span> finalised
             </span>
             {closedTotal > 0 && (
-              <span className="font-medium text-emerald-800">
-                ₹{formatINRShort(closedTotal)} closed
+              <span className="shrink-0 text-right">
+                <span className="font-display text-base font-semibold text-[hsl(38_45%_28%)]">
+                  {formatINRShort(closedTotal)}
+                </span>
+                <span className="ml-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/40">
+                  closed
+                </span>
               </span>
             )}
           </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--cream-deep)]">
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--cream-deep)]">
             <div
-              className="h-full rounded-full bg-[var(--terracotta)] transition-all"
+              className="h-full rounded-full bg-[var(--terracotta)] transition-all duration-500"
               style={{ width: `${progressPct}%` }}
             />
           </div>
         </div>
 
-        {/* client status counts */}
-        <div className="mt-3 min-h-[22px]">
-          <StatusCountsRow counts={counts} />
-        </div>
-
-        {/* footer meta */}
-        <div className="mt-auto pt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-[var(--charcoal)]/55">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1">
-              <Users className="h-3 w-3" /> {p.client_count} client{p.client_count === 1 ? "" : "s"}
-            </span>
-            {saffronPicks > 0 && (
-              <span className="inline-flex items-center gap-1 text-[var(--terracotta)]">
-                <Sparkles className="h-3 w-3 fill-current" /> {saffronPicks} pick{saffronPicks === 1 ? "" : "s"}
+        {/* ── Client responses — non-zero only, colour carried by the dot ── */}
+        {activeStatuses.length > 0 && (
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            {activeStatuses.map((o) => (
+              <span
+                key={o.value}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[var(--cream)] px-2 py-0.5 text-[11px] text-[var(--charcoal)]/65"
+              >
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: o.dot }} />
+                <span className="font-semibold tabular-nums text-[var(--charcoal)]">
+                  {counts[o.value]}
+                </span>
+                {SHORT_STATUS_LABEL[o.value] ?? o.label}
               </span>
-            )}
+            ))}
           </div>
-          <div className="flex items-center gap-2">
-            <span>Updated {relativeTime(p.updated_at)}</span>
-            <ArrowRight className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition-all duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-hover:text-[var(--terracotta)]" />
+        )}
+
+        {/* ── Footer meta ──
+            The outer wrapper owns `mt-auto` (push to the bottom of a short
+            card) plus a fixed `pt-3`. Putting both the auto margin and the
+            rule on one element meant that once content filled the card the
+            margin collapsed to 0 and the chips sat flush against the line. */}
+        <div className="mt-auto pt-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)]/60 pt-2.5 text-[11px] text-[var(--charcoal)]/45">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-1">
+                <Users className="h-3 w-3" /> {p.client_count} client{p.client_count === 1 ? "" : "s"}
+              </span>
+              {saffronPicks > 0 && (
+                <span className="inline-flex items-center gap-1 text-[var(--terracotta)]">
+                  <Sparkles className="h-3 w-3 fill-current" /> {saffronPicks} pick{saffronPicks === 1 ? "" : "s"}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span>{relativeTime(p.updated_at)}</span>
+              <ArrowRight className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition-all duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-hover:text-[var(--terracotta)]" />
+            </div>
           </div>
         </div>
       </Link>

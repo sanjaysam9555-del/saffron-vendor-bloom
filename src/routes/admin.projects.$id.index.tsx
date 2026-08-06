@@ -2,9 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo, lazy, Suspense } from "react";
 import { useQuery, useQueryClient, useMutation, useQueries } from "@tanstack/react-query";
 import { Switch } from "@/components/ui/switch";
-import { UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, ListFilter, FileText, Paperclip, CircleCheck, MessageSquare, Star, MapPin, Instagram, Phone, Globe, Plus, Sparkles, Archive, ArchiveRestore, Eye, ChevronDown, Table as TableIcon, ArrowUp, ArrowDown, ArrowUpDown, BarChart3 } from "lucide-react";
+import { UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, Filter, FileText, Paperclip, CircleCheck, MessageSquare, Plus, Sparkles, Archive, ArchiveRestore, Eye, ChevronDown, Table as TableIcon, ArrowUp, ArrowDown, ArrowUpDown, BarChart3, LayoutDashboard, Users2, AlertTriangle, LayoutList, Clock3, CheckSquare } from "lucide-react";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
-import { ClientStatusPill, StatusCountsRow, CLIENT_STATUS_OPTIONS } from "@/components/admin/ClientStatusPill";
+import { ClientStatusPill, CLIENT_STATUS_OPTIONS } from "@/components/admin/ClientStatusPill";
 import { AuthGate } from "@/components/AuthGate";
 import {
   getProject,
@@ -28,15 +28,20 @@ import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { EmptyState } from "@/components/ui/empty-state";
 
 import { VendorCommentsThread } from "@/components/client/VendorCommentsThread";
-import { instagramUrl, normalizeInstagramHandle } from "@/lib/instagram";
 import { VendorTimeline } from "@/components/timeline/VendorTimeline";
 import { listProjectCategoryDeadlines } from "@/lib/project-deadlines.functions";
 import { listProjectOtherExpenses } from "@/lib/project-other-expenses.functions";
 import { buildTimelineItems, otherExpensesAsTimelineItems } from "@/lib/build-timeline-items";
 import { QuickAddVendorPanel } from "@/components/admin/QuickAddVendorPanel";
-import { ColumnFilter } from "@/components/ui/ColumnFilter";
+import { ColumnFilter, type ColumnFilterOption } from "@/components/ui/ColumnFilter";
 import { useInstagramPreviewsBulk, useAutoEnsureMissingPreviews } from "@/hooks/use-instagram-previews";
-import { VendorInstagramCardStrip } from "@/components/vendor/VendorInstagramPreview";
+import { AssignedVendorCard } from "@/components/admin/AssignedVendorCard";
+import { ProjectOverviewTab } from "@/components/admin/project-tabs/ProjectOverviewTab";
+import { ProjectQuotesTab } from "@/components/admin/project-tabs/ProjectQuotesTab";
+import { ProjectCategoriesTab } from "@/components/admin/project-tabs/ProjectCategoriesTab";
+import { ProjectGuestsTab } from "@/components/admin/project-tabs/ProjectGuestsTab";
+import { ProjectCommentsTab } from "@/components/admin/project-tabs/ProjectCommentsTab";
+import { ProjectTasksTab } from "@/components/admin/project-tabs/ProjectTasksTab";
 
 const AdminProjectVendorDetail = lazy(() =>
   import("@/components/admin/AdminProjectVendorDetail").then((m) => ({ default: m.AdminProjectVendorDetail })),
@@ -148,7 +153,7 @@ function ProjectDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[var(--cream)] px-6 py-8">
-        <div className="mx-auto max-w-[1600px] space-y-4">
+        <div className="mx-auto w-full max-w-[1600px] space-y-4">
           <div className="h-4 w-32 animate-pulse rounded bg-[var(--cream-deep)]" />
           <div className="h-9 w-72 animate-pulse rounded bg-[var(--cream-deep)]" />
           <div className="h-4 w-48 animate-pulse rounded bg-[var(--cream-deep)]/70" />
@@ -174,12 +179,7 @@ function ProjectDetailPage() {
   const { project, clients, vendors, selections = {} as Record<string, { user_id: string; display_name: string; email: string; status: string; updated_at: string }[]> } = data as any;
 
   return (
-    <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6">
-      <Link to="/admin/projects" className="text-xs uppercase tracking-[0.18em] text-[var(--charcoal)]/50 hover:text-[var(--terracotta)]">
-        Projects
-      </Link>
-
-
+    <div className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6">
         <ProjectHeader project={project} />
 
         <ProjectSectionTabs
@@ -235,23 +235,35 @@ function ProjectSectionTabs({
   weddingDate: string;
   onRemoveVendor: (id: string, name: string) => void;
 }) {
-  type TabKey = "vendors" | "timeline" | "details" | "analytics";
+  type TabKey =
+    | "overview"
+    | "vendors"
+    | "quotesAll"
+    | "categories"
+    | "guests"
+    | "timelineOnly"
+    | "commentsAll"
+    | "tasks"
+    | "details"
+    | "analytics";
   const [tab, setTab] = useState<TabKey>("vendors");
-  const tabBtn = (key: TabKey, label: string, Icon: any) => (
-    <button
-      key={key}
-      role="tab"
-      aria-selected={tab === key}
-      onClick={() => setTab(key)}
-      className={`inline-flex flex-1 items-center justify-center gap-1.5 border-l border-[var(--border)] px-4 py-2 first:border-l-0 ${
-        tab === key
-          ? "bg-[var(--terracotta)] text-[var(--cream)]"
-          : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
-      }`}
-    >
-      <Icon className="h-4 w-4" /> {label}
-    </button>
-  );
+  const tabDefs: { key: TabKey; label: string; icon: any }[] = [
+    { key: "overview", label: "Overview", icon: LayoutDashboard },
+    { key: "vendors", label: "Assigned Vendors", icon: LayoutGrid },
+    { key: "quotesAll", label: "Quotes", icon: Paperclip },
+    { key: "categories", label: "Categories", icon: LayoutList },
+    { key: "guests", label: "Guests", icon: Users2 },
+    { key: "timelineOnly", label: "Timeline", icon: Clock3 },
+    { key: "commentsAll", label: "Comments", icon: MessageSquare },
+    { key: "tasks", label: "Tasks", icon: CheckSquare },
+    ...(isAdmin
+      ? [
+          { key: "analytics" as TabKey, label: "Financials", icon: BarChart3 },
+          { key: "details" as TabKey, label: "Project Details", icon: FileText },
+        ]
+      : []),
+  ];
+  const tabCols = tabDefs.length / 2;
   const timelineItems = useMemo(
     () => [
       ...buildTimelineItems(vendors, deadlines, "admin"),
@@ -259,35 +271,83 @@ function ProjectSectionTabs({
     ],
     [vendors, deadlines, otherExpenses],
   );
+
+  // Lifted here (not owned by AssignedVendorsSection) so the Quotes and
+  // Comments tabs can open the same vendor dialogs — a vendor should look
+  // identical whichever tab you jumped from.
+  const [quotesFor, setQuotesFor] = useState<{ id: string; name: string; category: string | null; autoOpenForm?: boolean } | null>(null);
+  const [detailVendor, setDetailVendor] = useState<any | null>(null);
+  const openVendorDetail = (vendorId: string) =>
+    setDetailVendor(vendors.find((v: any) => v.id === vendorId) ?? null);
+
   return (
     <section className="mt-10">
+      {/* Below sm: a single horizontally-scrollable row of full-width,
+          full-label buttons (a fixed equal-width grid would crush labels
+          like "Assigned Vendors" into unreadable slivers on a phone).
+          sm and up: the even tab count (8 client / 10 admin) splits into
+          two symmetric rows of equal-width buttons. */}
       <div
         role="tablist"
-        className="flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-sm"
+        className="flex overflow-x-auto overflow-y-hidden rounded-xl border border-[var(--border)] bg-white sm:grid sm:overflow-hidden"
+        style={{ gridTemplateColumns: `repeat(${tabCols}, minmax(0, 1fr))` }}
       >
-        {tabBtn("vendors", "Assigned Vendors", LayoutGrid)}
-        {tabBtn("timeline", "Budget & Deadlines", Calendar)}
-        {isAdmin && tabBtn("analytics", "Analytics", BarChart3)}
-        {isAdmin && tabBtn("details", "Project Details", FileText)}
+        {tabDefs.map(({ key, label, icon: Icon }, i) => (
+          <button
+            key={key}
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => setTab(key)}
+            className={`inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap border-[var(--border)] px-3 py-2.5 text-xs sm:min-w-0 sm:px-2 sm:text-sm ${
+              i > 0 ? "border-l" : ""
+            } ${i % tabCols !== 0 ? "sm:border-l" : "sm:border-l-0"} ${
+              i >= tabCols ? "sm:border-t" : "sm:border-t-0"
+            } ${
+              tab === key
+                ? "bg-[var(--terracotta)] text-[var(--cream)]"
+                : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
+            }`}
+          >
+            <Icon className="h-4 w-4 shrink-0" /> <span className="truncate">{label}</span>
+          </button>
+        ))}
       </div>
 
       <div className="mt-4">
+        {tab === "overview" && (
+          <ProjectOverviewTab projectId={projectId} vendorCount={vendors.length} onOpenVendor={openVendorDetail} />
+        )}
         {tab === "vendors" && (
           <AssignedVendorsSection
             projectId={projectId}
             vendors={vendors}
             selections={selections}
             onRemove={onRemoveVendor}
+            quotesFor={quotesFor}
+            setQuotesFor={setQuotesFor}
+            detailVendor={detailVendor}
+            setDetailVendor={setDetailVendor}
           />
         )}
-        {tab === "timeline" && (
+        {tab === "quotesAll" && (
+          <ProjectQuotesTab
+            projectId={projectId}
+            onOpenVendorQuotes={(id, name, category) => setQuotesFor({ id, name, category })}
+          />
+        )}
+        {tab === "categories" && <ProjectCategoriesTab projectId={projectId} isAdmin={isAdmin} />}
+        {tab === "guests" && <ProjectGuestsTab projectId={projectId} />}
+        {tab === "timelineOnly" && (
           <VendorTimeline
             projectId={projectId}
             weddingDate={weddingDate}
             items={timelineItems}
             mode="admin"
+            hideAddButtons
           />
         )}
+        {tab === "commentsAll" && <ProjectCommentsTab projectId={projectId} onOpenVendor={openVendorDetail} />}
+        {tab === "tasks" && <ProjectTasksTab projectId={projectId} />}
         {tab === "details" && isAdmin && (
           <ProjectDetailsTab
             projectId={projectId}
@@ -305,6 +365,43 @@ function ProjectSectionTabs({
           </Suspense>
         )}
       </div>
+
+      {quotesFor && (
+        <ProjectVendorQuotesPanel
+          projectId={projectId}
+          vendorId={quotesFor.id}
+          vendorName={quotesFor.name}
+          vendorCategory={quotesFor.category}
+          autoOpenForm={quotesFor.autoOpenForm}
+          onClose={() => setQuotesFor(null)}
+        />
+      )}
+
+      {detailVendor && (
+        <Suspense fallback={null}>
+          <AdminProjectVendorDetail
+            projectId={projectId}
+            vendor={detailVendor}
+            vendors={vendors}
+            selections={selections[detailVendor.id] ?? []}
+            onClose={() => setDetailVendor(null)}
+            onNavigate={(v: any) => setDetailVendor(v)}
+            onOpenQuotes={(autoOpenForm: boolean) =>
+              setQuotesFor({
+                id: detailVendor.id,
+                name: detailVendor.vendor_name,
+                category: detailVendor.category ?? null,
+                autoOpenForm,
+              })
+            }
+            onRemove={() => {
+              const v = detailVendor;
+              setDetailVendor(null);
+              onRemoveVendor(v.id, v.vendor_name);
+            }}
+          />
+        </Suspense>
+      )}
     </section>
   );
 }
@@ -327,6 +424,7 @@ function ProjectDetailsTab({
   onSaved: () => void;
 }) {
   const isArchived = !!project.archived_at;
+  const [editOpen, setEditOpen] = useState(false);
   const [bride, setBride] = useState(project.bride_name);
   const [groom, setGroom] = useState(project.groom_name);
   const [date, setDate] = useState(project.wedding_date?.slice(0, 10) ?? "");
@@ -402,11 +500,26 @@ function ProjectDetailsTab({
   return (
     <div className="space-y-6">
       <div className="rounded-lg border border-[var(--border)] bg-white p-4">
-        <div className="mb-3 flex items-center gap-2">
-          <Pencil className="h-4 w-4 text-[var(--terracotta)]" />
+        {/* Collapsed by default — editing is the exception, not the reason
+            you open this tab. */}
+        <button
+          type="button"
+          onClick={() => setEditOpen((o) => !o)}
+          aria-expanded={editOpen}
+          className="group flex w-full items-center gap-2 text-left"
+        >
+          <Pencil className="h-4 w-4 shrink-0 text-[var(--terracotta)]" />
           <h2 className="font-display text-base sm:text-lg text-[var(--charcoal)]">Edit details</h2>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-3">
+          {dirty && !editOpen && (
+            <span className="rounded-full bg-[var(--terracotta-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--terracotta)]">
+              unsaved
+            </span>
+          )}
+          <ChevronDown
+            className={`ml-auto h-4 w-4 shrink-0 text-[var(--charcoal)]/40 transition-transform group-hover:text-[var(--terracotta)] ${editOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+        <div className={`mt-3 grid gap-3 sm:grid-cols-3 ${editOpen ? "" : "hidden"}`}>
           <label className="text-xs text-[var(--charcoal)]/70">
             Bride name
             <input className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm" value={bride} onChange={(e) => setBride(e.target.value)} />
@@ -424,7 +537,7 @@ function ProjectDetailsTab({
             <textarea className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </label>
         </div>
-        <div className="mt-3 flex justify-end">
+        <div className={`mt-3 justify-end ${editOpen ? "flex" : "hidden"}`}>
           <button
             type="button"
             onClick={save}
@@ -736,10 +849,10 @@ function SaffronPickToggle({
     },
     onError: (e, _next, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous);
-      notifyError(e, "Could not update Saffron's Preference");
+      notifyError(e, "Could not update Planner's Preference");
     },
     onSuccess: (_d, next) => {
-      notifySuccess(next ? `Marked ${vendorName} as Saffron's Preference` : `Removed Saffron's Preference from ${vendorName}`);
+      notifySuccess(next ? `Marked ${vendorName} as Planner's Preference` : `Removed Planner's Preference from ${vendorName}`);
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey });
@@ -754,7 +867,7 @@ function SaffronPickToggle({
           ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
           : "border-dashed border-[var(--terracotta)]/40 bg-white text-[var(--terracotta)]/70 hover:bg-[var(--terracotta-soft)]/60")
       }
-      title={isPicked ? "Saffron's Preference is on — click to remove" : "Mark as Saffron's Preference"}
+      title={isPicked ? "Planner's Preference is on — click to remove" : "Mark as Planner's Preference"}
     >
       <Switch
         checked={isPicked}
@@ -762,7 +875,7 @@ function SaffronPickToggle({
         className="data-[state=checked]:bg-[var(--terracotta)]"
       />
       <Sparkles className={isPicked ? "h-3 w-3 fill-current" : "h-3 w-3"} />
-      <span>Saffron's Pick</span>
+      <span>Planner's Pick</span>
     </label>
   );
 }
@@ -772,16 +885,26 @@ function AssignedVendorsSection({
   vendors,
   selections,
   onRemove,
+  quotesFor,
+  setQuotesFor,
+  detailVendor,
+  setDetailVendor,
 }: {
   projectId: string;
   vendors: any[];
   selections: Record<string, Selection[]>;
   onRemove: (id: string, name: string) => void;
+  // Lifted to the parent tab component so the Quotes and Comments tabs can
+  // open the same dialogs — a vendor's quotes/detail card should look the
+  // same no matter which tab you jumped from.
+  quotesFor: { id: string; name: string; category: string | null; autoOpenForm?: boolean } | null;
+  setQuotesFor: (v: { id: string; name: string; category: string | null; autoOpenForm?: boolean } | null) => void;
+  detailVendor: any | null;
+  setDetailVendor: (v: any | null) => void;
 }) {
-  const [view, setView] = useState<"list" | "grouped" | "table">("list");
-  const [quotesFor, setQuotesFor] = useState<{ id: string; name: string; category: string | null; autoOpenForm?: boolean } | null>(null);
+  const [view, setView] = useState<"list" | "table">("list");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [commentsFor, setCommentsFor] = useState<{ id: string; name: string } | null>(null);
-  const [detailVendor, setDetailVendor] = useState<any | null>(null);
 
   // Instagram previews for thumbnail strip + detail modal (deduped by react-query).
   const igVendorIds = useMemo(
@@ -925,190 +1048,94 @@ function AssignedVendorsSection({
   }, [filteredVendors, sorts, quoteAmountByVendor, hasClosedByVendor]);
 
 
-  const counts = useMemo(() => {
-    const c: Record<string, number> = { like: 0, shortlisted: 0, finalised: 0, rejected: 0, thinking: 0 };
-    for (const v of vendors) {
-      const rows = selections[v.id] ?? [];
-      for (const r of rows) if (r.status in c) c[r.status]++;
-    }
-    return c;
-  }, [vendors, selections]);
-
-  const grouped = useMemo(() => {
-    const buckets: Record<string, { vendor: any; selection: Selection | null }[]> = {
-      finalised: [],
-      shortlisted: [],
-      like: [],
-      thinking: [],
-      rejected: [],
-      none: [],
-    };
-    for (const v of vendors) {
-      const primary = pickPrimary(selections[v.id]);
-      const key = primary?.status && primary.status in buckets ? primary.status : "none";
-      buckets[key].push({ vendor: v, selection: primary });
-    }
-    return buckets;
-  }, [vendors, selections]);
-
   const assignedVendorIds = useMemo(() => new Set(vendors.map((v: any) => v.id)), [vendors]);
 
+  const activeFilterCount = catFilter.length + locFilter.length + statusFilter.length;
+
   return (
-    <section className="mt-10">
-      <QuickAddVendorPanel projectId={projectId} assignedVendorIds={assignedVendorIds} />
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-        <div>
-          <h2 className="font-display text-2xl text-[var(--terracotta)] sm:text-xl">Assigned Vendors ({vendors.length})</h2>
-          <p className="text-xs text-[var(--charcoal)]/55 my-[10px]">
-            What the client has marked appears next to each vendor.
-          </p>
-        </div>
-        <div className="inline-flex w-full overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs sm:w-auto">
-          <button
-            onClick={() => setView("list")}
-            className={`inline-flex flex-1 items-center justify-center gap-1 px-2.5 py-1.5 sm:flex-none ${view === "list" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"}`}
-          >
-            <LayoutGrid className="h-3.5 w-3.5" /> <span>Thumbnail View (Vendors)</span>
-          </button>
-          <button
-            onClick={() => setView("grouped")}
-            className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-2.5 py-1.5 sm:flex-none ${view === "grouped" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"}`}
-          >
-            <ListFilter className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Group by client status</span>
-            <span className="sm:hidden">Grouped</span>
-          </button>
-          <button
-            onClick={() => setView("table")}
-            className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-2.5 py-1.5 sm:flex-none ${view === "table" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"}`}
-          >
-            <TableIcon className="h-3.5 w-3.5" /> <span>Table View (Vendors)</span>
-          </button>
+    <section>
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <QuickAddVendorPanel
+          projectId={projectId}
+          assignedVendorIds={assignedVendorIds}
+          className="w-full sm:max-w-[320px]"
+        />
+        <div className="flex shrink-0 items-center gap-2">
+          {/* The table gets its filters from per-column headers (ColumnFilter);
+              thumbnail view has no header row to attach those to, so it gets
+              one combined filter button instead — same catFilter/locFilter/
+              statusFilter state either way. */}
+          {view === "list" && (
+            <AssignedVendorsFilterButton
+              open={filtersOpen}
+              onOpenChange={setFiltersOpen}
+              categoryOptions={categoryOptions}
+              locationOptions={locationOptions}
+              statusOptions={statusOptions}
+              catFilter={catFilter}
+              setCatFilter={setCatFilter}
+              locFilter={locFilter}
+              setLocFilter={setLocFilter}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              activeCount={activeFilterCount}
+            />
+          )}
+          <div className="inline-flex h-[30px] overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs">
+            <button
+              onClick={() => setView("list")}
+              className={`inline-flex items-center justify-center gap-1 px-2.5 ${view === "list" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"}`}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" /> <span>Thumbnail</span>
+            </button>
+            <button
+              onClick={() => setView("table")}
+              className={`inline-flex items-center justify-center gap-1 border-l border-[var(--border)] px-2.5 ${view === "table" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"}`}
+            >
+              <TableIcon className="h-3.5 w-3.5" /> <span>Table</span>
+            </button>
+          </div>
         </div>
       </div>
-
-      {vendors.length > 0 && (
-        <div className="mt-3">
-          <StatusCountsRow counts={counts} />
-        </div>
-      )}
 
       {vendors.length === 0 ? (
         <div className="mt-4 rounded-lg border border-dashed border-[var(--champagne)] bg-white py-10 text-center text-sm text-[var(--charcoal)]/60">
           No vendors assigned to this project yet.
         </div>
       ) : view === "list" ? (
-        <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {vendors.map((v: any) => {
+        <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredVendors.map((v: any) => {
             const rows = selections[v.id] ?? [];
             const primary = pickPrimary(rows);
             return (
-              <div key={v.id} className="relative flex min-w-0 items-start justify-between gap-3 overflow-hidden rounded-lg border border-[var(--border)] bg-white p-3 pr-10">
-                <div className="min-w-0 flex-1">
-                  <div className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
-                    {v.category}{v.subcategory ? ` · ${v.subcategory}` : ""}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setDetailVendor(v)}
-                    className="block text-left font-medium text-[var(--charcoal)] hover:text-[var(--terracotta)] hover:underline"
-                  >
-                    {v.vendor_name}
-                  </button>
-                  {v.price_text && <div className="text-xs text-[var(--terracotta)]">{v.price_text}</div>}
-                  <VendorMetaRow vendor={v} />
-                  {v.instagram_handle && (
-                    <VendorInstagramCardStrip
-                      preview={instagramPreviewMap.get(v.id) ?? (instagramPreviewsLoading ? undefined : null)}
-                      hasHandle
-                    />
-                  )}
-                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                    <ClientStatusPill status={primary?.status ?? null} />
-                    {rows.length > 1 && (
-                      <span className="text-[10px] text-[var(--charcoal)]/50" title={rows.map((r) => `${r.display_name || r.email}: ${r.status}`).join("\n")}>
-                        +{rows.length - 1} more
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                    <VendorQuotesPill
-                      projectId={projectId}
-                      vendorId={v.id}
-                      onOpen={() =>
-                        setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null, autoOpenForm: false })
-                      }
-                    />
-                    <button
-                      onClick={() => setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null, autoOpenForm: true })}
-                      className="inline-flex items-center gap-1 rounded-full border border-[var(--terracotta)] bg-[var(--terracotta)] px-2.5 py-1 text-[11px] font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90"
-                      title="Add a new quote for this vendor"
-                    >
-                      <Plus className="h-3 w-3" /> Add quote
-                    </button>
-                    <SaffronPickToggle
-                      projectId={projectId}
-                      vendorId={v.id}
-                      vendorName={v.vendor_name}
-                      isPicked={!!v.is_saffron_pick}
-                    />
-                    <button
-                      onClick={() => setCommentsFor({ id: v.id, name: v.vendor_name })}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--cream)] px-2.5 py-1 text-[11px] text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
-                      title="View client comments for this vendor"
-                    >
-                      <MessageSquare className="h-3 w-3" />
-                      {(v.comment_count ?? 0) > 0 ? `${v.comment_count} comment${v.comment_count === 1 ? "" : "s"}` : "No comments"}
-                    </button>
-                  </div>
-                </div>
-                <button
-                  onClick={() => onRemove(v.id, v.vendor_name)}
-                  title="Remove from project"
-                  className="absolute right-2 top-2 rounded p-1.5 text-[var(--charcoal)]/55 hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      ) : view === "grouped" ? (
-        <div className="mt-4 space-y-4">
-          {(["finalised", "shortlisted", "like", "thinking", "rejected", "none"] as const).map((key) => {
-            const items = grouped[key];
-            if (items.length === 0) return null;
-            const opt = CLIENT_STATUS_OPTIONS.find((o) => o.value === key);
-            const label = opt?.label ?? "No response yet";
-            return (
-              <div key={key} className="rounded-lg border border-[var(--border)] bg-white">
-                <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-2">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: opt?.dot ?? "#9ca3af" }} />
-                    <span className="font-medium text-[var(--charcoal)]">{label}</span>
-                    <span className="text-xs text-[var(--charcoal)]/55">({items.length})</span>
-                  </div>
-                </div>
-                <ul className="divide-y divide-[var(--border)]">
-                  {items.map(({ vendor: v, selection }) => (
-                    <li key={v.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
-                      <div className="min-w-0">
-                        <button
-                          type="button"
-                          onClick={() => setDetailVendor(v)}
-                          className="block text-left font-medium text-[var(--charcoal)] hover:text-[var(--terracotta)] hover:underline"
-                        >
-                          {v.vendor_name}
-                        </button>
-                        <div className="text-[11px] text-[var(--charcoal)]/55">
-                          {v.category}{v.subcategory ? ` · ${v.subcategory}` : ""}
-                          {selection && <> · marked by {selection.display_name || selection.email}</>}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <AssignedVendorCard
+                key={v.id}
+                vendor={v}
+                selectionRows={rows}
+                primarySelection={primary}
+                instagramPreview={instagramPreviewMap.get(v.id) ?? (instagramPreviewsLoading ? undefined : null)}
+                onOpenDetail={() => setDetailVendor(v)}
+                onRemove={() => onRemove(v.id, v.vendor_name)}
+                onOpenComments={() => setCommentsFor({ id: v.id, name: v.vendor_name })}
+                onAddQuote={() => setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null, autoOpenForm: true })}
+                quotesPill={
+                  <VendorQuotesPill
+                    projectId={projectId}
+                    vendorId={v.id}
+                    onOpen={() =>
+                      setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null, autoOpenForm: false })
+                    }
+                  />
+                }
+                saffronToggle={
+                  <SaffronPickToggle
+                    projectId={projectId}
+                    vendorId={v.id}
+                    vendorName={v.vendor_name}
+                    isPicked={!!v.is_saffron_pick}
+                  />
+                }
+              />
             );
           })}
         </div>
@@ -1236,17 +1263,6 @@ function AssignedVendorsSection({
 
       )}
 
-      {quotesFor && (
-        <ProjectVendorQuotesPanel
-          projectId={projectId}
-          vendorId={quotesFor.id}
-          vendorName={quotesFor.name}
-          vendorCategory={quotesFor.category}
-          autoOpenForm={quotesFor.autoOpenForm}
-          onClose={() => setQuotesFor(null)}
-        />
-      )}
-
       {commentsFor && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
@@ -1280,32 +1296,135 @@ function AssignedVendorsSection({
         </div>
       )}
 
-      {detailVendor && (
-        <Suspense fallback={null}>
-          <AdminProjectVendorDetail
-            projectId={projectId}
-            vendor={detailVendor}
-            vendors={sortedVendors}
-            selections={selections[detailVendor.id] ?? []}
-            onClose={() => setDetailVendor(null)}
-            onNavigate={(v) => setDetailVendor(v)}
-            onOpenQuotes={(autoOpenForm) =>
-              setQuotesFor({
-                id: detailVendor.id,
-                name: detailVendor.vendor_name,
-                category: detailVendor.category ?? null,
-                autoOpenForm,
-              })
-            }
-            onRemove={() => {
-              const v = detailVendor;
-              setDetailVendor(null);
-              onRemove(v.id, v.vendor_name);
-            }}
-          />
-        </Suspense>
-      )}
     </section>
+  );
+}
+
+/**
+ * One combined filter for the thumbnail view. The table gets per-column
+ * filters via `ColumnFilter` in its header row; thumbnail has no header to
+ * hang those off, so this bundles the same three facets (category, location,
+ * client status) — same state, same options — into a single popover button.
+ */
+function AssignedVendorsFilterButton({
+  open,
+  onOpenChange,
+  categoryOptions,
+  locationOptions,
+  statusOptions,
+  catFilter,
+  setCatFilter,
+  locFilter,
+  setLocFilter,
+  statusFilter,
+  setStatusFilter,
+  activeCount,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  categoryOptions: ColumnFilterOption[];
+  locationOptions: ColumnFilterOption[];
+  statusOptions: ColumnFilterOption[];
+  catFilter: string[];
+  setCatFilter: (v: string[]) => void;
+  locFilter: string[];
+  setLocFilter: (v: string[]) => void;
+  statusFilter: string[];
+  setStatusFilter: (v: string[]) => void;
+  activeCount: number;
+}) {
+  return (
+    <span className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => onOpenChange(!open)}
+        title="Filter vendors"
+        aria-label="Filter vendors"
+        className={`relative inline-flex h-[30px] items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition ${
+          activeCount > 0
+            ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
+            : "border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+        }`}
+      >
+        <Filter className={`h-3.5 w-3.5 ${activeCount > 0 ? "fill-current" : ""}`} />
+        Filters
+        {activeCount > 0 && (
+          <span className="rounded-full bg-[var(--terracotta)] px-1.5 text-[10px] font-bold text-[var(--cream)]">
+            {activeCount}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => onOpenChange(false)} />
+          <div className="absolute left-0 z-40 mt-1.5 w-64 rounded-md border border-[var(--border)] bg-white p-3 shadow-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/55">
+                Filter vendors
+              </span>
+              {activeCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCatFilter([]);
+                    setLocFilter([]);
+                    setStatusFilter([]);
+                  }}
+                  className="rounded px-1.5 py-0.5 text-[10px] text-[var(--terracotta)] hover:bg-[var(--terracotta-soft)]"
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
+
+            <FilterSection label="Category" options={categoryOptions} selected={catFilter} onChange={setCatFilter} />
+            <FilterSection label="Location" options={locationOptions} selected={locFilter} onChange={setLocFilter} />
+            <FilterSection label="Client status" options={statusOptions} selected={statusFilter} onChange={setStatusFilter} />
+          </div>
+        </>
+      )}
+    </span>
+  );
+}
+
+function FilterSection({
+  label,
+  options,
+  selected,
+  onChange,
+}: {
+  label: string;
+  options: ColumnFilterOption[];
+  selected: string[];
+  onChange: (v: string[]) => void;
+}) {
+  if (options.length === 0) return null;
+  const toggle = (v: string) => {
+    if (selected.includes(v)) onChange(selected.filter((s) => s !== v));
+    else onChange([...selected, v]);
+  };
+  return (
+    <div className="mt-2.5 border-t border-[var(--border)] pt-2.5 first:mt-2 first:border-t-0 first:pt-0">
+      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/45">{label}</div>
+      <div className="max-h-32 space-y-0.5 overflow-y-auto">
+        {options.map((o) => (
+          <label
+            key={o.value}
+            className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-xs text-[var(--charcoal)] hover:bg-[var(--cream)]"
+          >
+            <input
+              type="checkbox"
+              checked={selected.includes(o.value)}
+              onChange={() => toggle(o.value)}
+              className="h-3.5 w-3.5 accent-[var(--terracotta)]"
+            />
+            {o.dot && <span className="inline-block h-2 w-2 shrink-0 rounded-full" style={{ background: o.dot }} />}
+            <span className="truncate">{o.label}</span>
+          </label>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -1404,73 +1523,6 @@ function VendorQuotesPill({
   );
 }
 
-function VendorMetaRow({ vendor: v }: { vendor: any }) {
-  const items: React.ReactNode[] = [];
-  if (v.google_rating != null) {
-    items.push(
-      <span key="rating" className="inline-flex items-center gap-0.5">
-        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-        {Number(v.google_rating).toFixed(1)}
-      </span>,
-    );
-  }
-  if (v.location) {
-    items.push(
-      <span key="loc" className="inline-flex items-center gap-0.5">
-        <MapPin className="h-3 w-3" />
-        {v.location}
-      </span>,
-    );
-  }
-  if (v.instagram_handle) {
-    const handle = normalizeInstagramHandle(v.instagram_handle);
-    const href = instagramUrl(v.instagram_handle);
-    if (handle && href) {
-      items.push(
-        <a
-          key="ig"
-          href={href}
-          target="_blank"
-          rel="noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="inline-flex items-center gap-0.5 hover:text-[var(--terracotta)]"
-        >
-          <Instagram className="h-3 w-3" />@{handle}
-        </a>,
-      );
-    }
-  }
-  if (v.contact_number) {
-    items.push(
-      <a
-        key="tel"
-        href={`tel:${v.contact_number}`}
-        onClick={(e) => e.stopPropagation()}
-        className="inline-flex items-center gap-0.5 hover:text-[var(--terracotta)]"
-      >
-        <Phone className="h-3 w-3" />
-        {v.contact_number}
-      </a>,
-    );
-  }
-  if (v.website) {
-    items.push(
-      <a
-        key="web"
-        href={v.website}
-        target="_blank"
-        rel="noreferrer"
-        onClick={(e) => e.stopPropagation()}
-        className="inline-flex items-center gap-0.5 hover:text-[var(--terracotta)]"
-      >
-        <Globe className="h-3 w-3" /> Website
-      </a>,
-    );
-  }
-  if (items.length === 0) return null;
-  return <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[var(--charcoal)]/65">{items}</div>;
-}
-
 interface ProjectHeaderProps {
   project: { id: string; bride_name: string; groom_name: string; wedding_date: string; notes: string | null; archived_at?: string | null };
 }
@@ -1478,7 +1530,7 @@ interface ProjectHeaderProps {
 function ProjectHeader({ project }: ProjectHeaderProps) {
   const isArchived = !!project.archived_at;
   return (
-    <div className="mt-4 flex flex-col gap-3">
+    <div className="flex flex-col gap-3">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="font-display text-2xl text-[var(--charcoal)] sm:text-3xl">

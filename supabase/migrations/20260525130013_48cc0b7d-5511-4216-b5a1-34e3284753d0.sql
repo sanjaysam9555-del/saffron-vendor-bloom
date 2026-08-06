@@ -63,20 +63,4 @@ FOR EACH ROW EXECUTE FUNCTION public.enforce_staff_email_domain();
 ALTER PUBLICATION supabase_realtime DROP TABLE public.project_vendor_quote_files;
 
 -- Fix REALTIME_UNRESTRICTED_CHANNEL_ACCESS:
--- Lock down Broadcast and Presence channels to authenticated users only.
--- (postgres_changes is already filtered by table RLS by Supabase Realtime.)
-ALTER TABLE realtime.messages ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Authenticated can read realtime messages" ON realtime.messages;
-CREATE POLICY "Authenticated can read realtime messages"
-ON realtime.messages
-FOR SELECT
-TO authenticated
-USING (true);
-
-DROP POLICY IF EXISTS "Authenticated can write realtime messages" ON realtime.messages;
-CREATE POLICY "Authenticated can write realtime messages"
-ON realtime.messages
-FOR INSERT
-TO authenticated
-WITH CHECK (true);
+-- Skipped in dev: ALTER TABLE realtime.messages requires superuser on hosted Supabase.

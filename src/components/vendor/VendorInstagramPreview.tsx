@@ -19,7 +19,7 @@ function proxiedSrc(
   return src;
 }
 
-function SafeImg({
+export function SafeImg({
   src,
   alt,
   className,

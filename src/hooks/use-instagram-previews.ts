@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   useQuery,
@@ -29,14 +29,21 @@ const LS_KEY = "saffron.ig.previews.v1";
 const LS_MAX = 500;
 type LSCache = Record<string, VendorInstagramPreview>;
 
+// The blob reaches ~900KB at 500 vendors, so JSON.parse costs ~2ms a call and
+// readLS() is hit many times per render. Parse once and hold it; writeLS keeps
+// the memo in sync, so nothing else can observe a stale copy.
+let lsMemo: LSCache | null = null;
+
 function readLS(): LSCache {
   if (typeof window === "undefined") return {};
+  if (lsMemo) return lsMemo;
   try {
     const raw = window.localStorage.getItem(LS_KEY);
-    return raw ? (JSON.parse(raw) as LSCache) : {};
+    lsMemo = raw ? (JSON.parse(raw) as LSCache) : {};
   } catch {
-    return {};
+    lsMemo = {};
   }
+  return lsMemo;
 }
 
 function writeLS(rows: VendorInstagramPreview[]) {
@@ -54,6 +61,7 @@ function writeLS(rows: VendorInstagramPreview[]) {
     );
     const capped: LSCache = {};
     for (const e of entries.slice(0, LS_MAX)) capped[e.vendor_id] = e;
+    lsMemo = capped;
     window.localStorage.setItem(LS_KEY, JSON.stringify(capped));
   } catch {
     /* noop */
@@ -126,7 +134,9 @@ function findCachedOkPreview(
 export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enabled?: boolean }) {
   const fn = useServerFn(getVendorInstagramPreviewsBulk);
   const qc = useQueryClient();
-  const sortedKey = [...vendorIds].sort().join(",");
+  // Sorting + joining 500 ids builds a ~19KB string; without the memo it ran
+  // on every render of a list this size.
+  const sortedKey = useMemo(() => [...vendorIds].sort().join(","), [vendorIds]);
 
   // Gate on Supabase session readiness — without a bearer token the server fn
   // throws "You're not signed in." and every card silently falls into the
@@ -201,15 +211,17 @@ export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enable
         }
       }
       // 2. Per-vendor cache fallback for ids not in any bulk cache.
-      for (const id of vendorIds) {
-        if (seen.has(id)) continue;
-        const queries = qc.getQueriesData<VendorInstagramPreview>({
-          queryKey: ["instagram-preview", id],
+      // One sweep over the per-vendor caches — this used to call
+      // getQueriesData() per id, which is O(ids x cacheSize) deep key
+      // comparisons (~500 x 1000 on a full vendor list) and blocked the main
+      // thread for ~1s on every remount.
+      if (seen.size < vendorIds.length) {
+        const perVendor = qc.getQueriesData<VendorInstagramPreview>({
+          queryKey: ["instagram-preview"],
         });
-        for (const [, row] of queries) {
-          if (row && row.vendor_id === id) {
-            seen.set(id, row);
-            break;
+        for (const [, row] of perVendor) {
+          if (row && idSet.has(row.vendor_id) && !seen.has(row.vendor_id)) {
+            seen.set(row.vendor_id, row);
           }
         }
       }
@@ -228,17 +240,23 @@ export function useInstagramPreviewsBulk(vendorIds: string[], options?: { enable
   // For any vendor whose server row is `error` (e.g. scraper rate-limited),
   // substitute a previously cached `ok` preview from per-vendor cache,
   // other bulk caches, or localStorage. UI-only — not written back to DB.
-  const map = new Map<string, VendorInstagramPreview>();
-  (query.data ?? []).forEach((p) => {
-    if (p.status === "error") {
-      const cached = findCachedOkPreview(qc, p.vendor_id, p.handle);
-      if (cached) {
-        map.set(p.vendor_id, cached);
-        return;
+  // Memoized: findCachedOkPreview walks the query cache and localStorage, so
+  // rebuilding this every render was re-scanning both on each keystroke.
+  const map = useMemo(() => {
+    const next = new Map<string, VendorInstagramPreview>();
+    (query.data ?? []).forEach((p) => {
+      if (p.status === "error") {
+        const cached = findCachedOkPreview(qc, p.vendor_id, p.handle);
+        if (cached) {
+          next.set(p.vendor_id, cached);
+          return;
+        }
       }
-    }
-    map.set(p.vendor_id, p);
-  });
+      next.set(p.vendor_id, p);
+    });
+    return next;
+  }, [query.data, qc]);
+
   const hasAllRequestedRows = vendorIds.length === 0 || vendorIds.every((id) => map.has(id));
 
   // Surface error as "still loading" only while we genuinely have no usable

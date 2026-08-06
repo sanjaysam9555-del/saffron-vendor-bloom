@@ -1,9 +1,9 @@
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 interface VirtualGridProps<T> {
   items: T[];
-  /** Map viewport width → column count. Default matches Tailwind sm/lg/xl card grid. */
+  /** Map *container* width → column count. See `defaultGetColumns`. */
   getColumns?: (width: number) => number;
   /** Estimated row height in px (single card). Tune per use. */
   estimateRowHeight?: number;
@@ -19,11 +19,30 @@ interface VirtualGridProps<T> {
   overscan?: number;
 }
 
+/** Narrowest a card may get before we drop a column. */
+const MIN_CARD_WIDTH = 165;
+const COLUMN_GAP = 16;
+/** Real phones — viewport, not container. */
+const PHONE_VIEWPORT = 640;
+const MAX_COLUMNS = 4;
+
+/**
+ * Column count from the *container* width, not the viewport.
+ *
+ * This used to test viewport-scale breakpoints (1280/1024/640) against a value
+ * that is actually the grid's own width. With the admin sidebar and the vendor
+ * filter rail both open, that width drops to ~500px, which fell into the
+ * "<640 = 1 column" bucket and rendered a single card per row on a laptop.
+ *
+ * Packing by a minimum card width instead makes the grid respond to whatever
+ * space it actually has, so collapsing either rail immediately gains columns.
+ * The phone check reads the viewport deliberately: a narrow *container* on a
+ * laptop (both rails open) is not a phone and should still show a pair.
+ */
 const defaultGetColumns = (width: number) => {
-  if (width >= 1280) return 4; // xl
-  if (width >= 1024) return 3; // lg
-  if (width >= 640) return 2; // sm
-  return 1;
+  if (typeof window !== "undefined" && window.innerWidth < PHONE_VIEWPORT) return 1;
+  const fit = Math.floor((width + COLUMN_GAP) / (MIN_CARD_WIDTH + COLUMN_GAP));
+  return Math.max(2, Math.min(MAX_COLUMNS, fit));
 };
 
 /**
@@ -39,16 +58,23 @@ export function VirtualGrid<T>({
   renderItem,
   getKey,
   className = "",
-  overscan = 8,
+  overscan = 3,
 }: VirtualGridProps<T>) {
   const parentRef = useRef<HTMLDivElement | null>(null);
   const [columns, setColumns] = useState(1);
+  // Held in state, not read during render. Reading getBoundingClientRect() in
+  // the render body fed a value that changed on every scroll into the
+  // virtualizer options, which destabilised the range calculation and made it
+  // mount the entire list instead of a window.
+  const [scrollMargin, setScrollMargin] = useState(0);
 
-  // Track viewport width → column count.
+  // Track viewport width → column count, and the list's document offset.
   useEffect(() => {
     const update = () => {
-      const w = parentRef.current?.clientWidth ?? window.innerWidth;
-      setColumns(getColumns(w));
+      const el = parentRef.current;
+      if (!el) return;
+      setColumns(getColumns(el.clientWidth || window.innerWidth));
+      setScrollMargin(el.getBoundingClientRect().top + window.scrollY);
     };
     update();
     const ro = new ResizeObserver(update);
@@ -62,27 +88,19 @@ export function VirtualGrid<T>({
 
   const rowCount = Math.ceil(items.length / Math.max(columns, 1));
 
-  const rowVirtualizer = useVirtualizer({
+  // Window virtualizer, not useVirtualizer against document.scrollingElement:
+  // react-virtual sizes the viewport from getBoundingClientRect(), and on
+  // <html> that returns the whole document height (~280,000px here), so every
+  // row counted as visible and the entire list mounted.
+  const rowVirtualizer = useWindowVirtualizer({
     count: rowCount,
-    getScrollElement: () =>
-      typeof window === "undefined" ? null : (document.scrollingElement as HTMLElement) ?? document.documentElement,
     estimateSize: () => estimateRowHeight + gap,
     overscan,
-    // Anchor virtual coordinates to parentRef's offset within the document.
-    scrollMargin: parentRef.current?.getBoundingClientRect().top
-      ? parentRef.current.getBoundingClientRect().top + window.scrollY
-      : 0,
+    scrollMargin,
   });
-
-  // Recompute scrollMargin once parent mounts.
-  useEffect(() => {
-    rowVirtualizer.measure();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columns]);
 
   const virtualRows = rowVirtualizer.getVirtualItems();
   const totalHeight = rowVirtualizer.getTotalSize();
-  const scrollMargin = rowVirtualizer.options.scrollMargin;
 
   return (
     <div ref={parentRef} className={className} style={{ position: "relative" }}>

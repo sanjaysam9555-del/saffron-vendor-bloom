@@ -138,8 +138,8 @@ function ProjectsListPage() {
   return (
     <div>
       {/* Secondary toolbar (mirrors vendor TopNav) */}
-      <div className="border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
-        <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-3 py-2 sm:gap-4 sm:px-6">
+      <div className="h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
+        <div className="mx-auto flex w-full max-w-[1600px] items-center gap-2 h-full px-3 sm:gap-4 sm:px-6">
           <div className="relative min-w-0 flex-1 sm:max-w-[320px]">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/40" />
             <input
@@ -167,7 +167,7 @@ function ProjectsListPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5">
+      <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-baseline gap-3">
             <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">

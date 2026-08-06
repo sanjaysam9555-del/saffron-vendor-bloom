@@ -58,7 +58,7 @@ function SubmissionsPage() {
   return (
     <div className="min-h-screen bg-[var(--cream)]">
       <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--cream)]/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex w-full max-w-[1400px] items-center gap-3 px-4 py-3 sm:px-6">
           <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]">
             <ArrowLeft className="h-4 w-4" /> Back to dashboard
           </Link>
@@ -68,7 +68,7 @@ function SubmissionsPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
+      <main className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
         <div className="mb-6">
           <h1 className="brand-line font-display text-3xl font-semibold text-[var(--charcoal)]">
             Vendor Submissions

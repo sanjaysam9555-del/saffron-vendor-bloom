@@ -1,8 +1,21 @@
 // Insert an in-app staff notification (replaces previous email pipeline).
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
+/**
+ * Notification kinds the feed segregates on. `comment` and `status_change` are
+ * the only two currently emitted; the rest are reserved for the quote, payment
+ * and lead event sites and light up their filter chip as soon as they fire.
+ */
+export type StaffNotificationKind =
+  | "comment"
+  | "status_change"
+  | "quote_action"
+  | "payment"
+  | "inquiry"
+  | "system";
+
 export async function insertStaffNotification(params: {
-  kind: "comment" | "status_change";
+  kind: StaffNotificationKind;
   project_id?: string | null;
   vendor_id?: string | null;
   actor_user_id?: string | null;

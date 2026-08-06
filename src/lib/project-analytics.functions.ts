@@ -260,3 +260,183 @@ export const updateQuoteCommissionRemarks = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// -- Vendor Payment Matrix ---------------------------------------------------
+
+export type VendorPaymentStatus = "pending" | "partial" | "paid" | "overdue";
+export type VendorPaymentPaidBy = "planner" | "client";
+
+export interface VendorPaymentInstallmentSlot {
+  id: string | null;
+  installment_no: number;
+  expected_amount: number;
+  paid_amount: number;
+  paid_on: string | null;
+  status: VendorPaymentStatus;
+  paid_by: VendorPaymentPaidBy;
+}
+
+export interface VendorPaymentMatrixRow {
+  quote_id: string;
+  vendor_id: string;
+  vendor_name: string;
+  category: string | null;
+  vendor_cost: number;
+  total_installments: number;
+  payment_remarks: string | null;
+  total_paid: number;
+  installments: VendorPaymentInstallmentSlot[];
+}
+
+export const listVendorPaymentMatrix = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) => ProjectIdInput.parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { data: rows, error } = await context.supabase.rpc(
+      "admin_project_vendor_payment_matrix",
+      { _project_id: data.project_id },
+    );
+    if (error) throw new Error(error.message);
+    return (rows ?? []).map((r: any): VendorPaymentMatrixRow => {
+      const items = (Array.isArray(r.installments) ? r.installments : []) as any[];
+      const n = Math.max(1, Math.min(4, Number(r.total_installments ?? 1)));
+      const slots: VendorPaymentInstallmentSlot[] = [];
+      for (let i = 1; i <= n; i++) {
+        const found = items.find((x) => Number(x.installment_no) === i);
+        slots.push({
+          id: found?.id ?? null,
+          installment_no: i,
+          expected_amount: Number(found?.expected_amount ?? 0),
+          paid_amount: Number(found?.paid_amount ?? 0),
+          paid_on: found?.paid_on ?? null,
+          status: (found?.status ?? "pending") as VendorPaymentStatus,
+          paid_by: (found?.paid_by ?? "planner") as VendorPaymentPaidBy,
+        });
+      }
+      return {
+        quote_id: r.quote_id,
+        vendor_id: r.vendor_id,
+        vendor_name: r.vendor_name,
+        category: r.category,
+        vendor_cost: Number(r.vendor_cost ?? 0),
+        total_installments: n,
+        payment_remarks: r.payment_remarks ?? null,
+        total_paid: Number(r.total_paid ?? 0),
+        installments: slots,
+      };
+    });
+  });
+
+export const upsertVendorPaymentInstallment = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        quote_id: z.string().uuid(),
+        installment_no: z.number().int().min(1).max(4),
+        expected_amount: z.number().nonnegative().optional(),
+        paid_amount: z.number().nonnegative().optional(),
+        paid_on: z.string().nullable().optional(),
+        status: z.enum(["pending", "partial", "paid", "overdue"]).optional(),
+        paid_by: z.enum(["planner", "client"]).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { data: quote, error: qErr } = await supabaseAdmin
+      .from("project_vendor_quotes")
+      .select("id, project_id, vendor_id")
+      .eq("id", data.quote_id)
+      .maybeSingle();
+    if (qErr) throw new Error(qErr.message);
+    if (!quote) throw new Error("Quote not found");
+
+    const { data: existing } = await supabaseAdmin
+      .from("vendor_payment_installments")
+      .select("id")
+      .eq("quote_id", data.quote_id)
+      .eq("installment_no", data.installment_no)
+      .maybeSingle();
+
+    const patch: {
+      expected_amount?: number;
+      paid_amount?: number;
+      status?: VendorPaymentStatus;
+      paid_on?: string | null;
+      paid_by?: VendorPaymentPaidBy;
+    } = {};
+    if (data.expected_amount !== undefined) patch.expected_amount = data.expected_amount;
+    if (data.paid_amount !== undefined) patch.paid_amount = data.paid_amount;
+    if (data.status !== undefined) patch.status = data.status;
+    if (data.paid_on !== undefined) patch.paid_on = data.paid_on;
+    if (data.paid_by !== undefined) patch.paid_by = data.paid_by;
+
+    if (existing) {
+      const { error } = await supabaseAdmin
+        .from("vendor_payment_installments")
+        .update(patch)
+        .eq("id", existing.id);
+      if (error) throw new Error(error.message);
+      return { id: existing.id as string };
+    }
+    const { data: inserted, error } = await supabaseAdmin
+      .from("vendor_payment_installments")
+      .insert({
+        project_id: quote.project_id,
+        quote_id: data.quote_id,
+        vendor_id: quote.vendor_id,
+        installment_no: data.installment_no,
+        expected_amount: data.expected_amount ?? 0,
+        paid_amount: data.paid_amount ?? 0,
+        paid_on: data.paid_on ?? null,
+        status: data.status ?? "pending",
+        paid_by: data.paid_by ?? "planner",
+        created_by: context.userId,
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return { id: inserted.id as string };
+  });
+
+export const updateQuoteVendorPaymentInstallmentCount = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        quote_id: z.string().uuid(),
+        total_installments: z.number().int().min(1).max(4),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("project_vendor_quotes")
+      .update({ total_vendor_payment_installments: data.total_installments })
+      .eq("id", data.quote_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const updateQuoteVendorPaymentRemarks = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        quote_id: z.string().uuid(),
+        remarks: z.string().max(2000).nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("project_vendor_quotes")
+      .update({ vendor_payment_remarks: data.remarks ?? null })
+      .eq("id", data.quote_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

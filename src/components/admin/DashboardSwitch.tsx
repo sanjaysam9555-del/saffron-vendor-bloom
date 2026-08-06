@@ -1,19 +1,20 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Users, Heart, BarChart3 } from "lucide-react";
+import { Users, Heart, BarChart3, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 /**
- * Segmented control in the admin chrome for jumping between the Vendor,
- * Projects and (admin-only) Analytics panes.
+ * Segmented control in the admin chrome for jumping between the Dashboard,
+ * Vendor, Projects and (admin-only) Analytics panes.
  */
 export function DashboardSwitch() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { role } = useAuth();
   const isAdmin = role === "admin";
 
+  const onDashboard = pathname.startsWith("/admin/dashboard");
   const onProjects = pathname.startsWith("/admin/projects");
   const onAnalytics = pathname.startsWith("/admin/analytics");
-  const onVendors = !onProjects && !onAnalytics;
+  const onVendors = !onDashboard && !onProjects && !onAnalytics;
 
   const base =
     "inline-flex flex-1 items-center justify-center gap-1.5 px-3 py-1.5 transition-colors sm:flex-none sm:justify-start";
@@ -27,10 +28,19 @@ export function DashboardSwitch() {
       className="flex w-full items-stretch overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs sm:inline-flex sm:w-auto"
     >
       <Link
+        to="/admin/dashboard"
+        role="tab"
+        aria-selected={onDashboard}
+        className={`${base} ${onDashboard ? active : inactive}`}
+      >
+        <LayoutDashboard className="h-3.5 w-3.5" />
+        <span>Dashboard</span>
+      </Link>
+      <Link
         to="/admin"
         role="tab"
         aria-selected={onVendors}
-        className={`${base} ${onVendors ? active : inactive}`}
+        className={`${base} border-l border-[var(--border)] ${onVendors ? active : inactive}`}
       >
         <Users className="h-3.5 w-3.5" />
         <span>Vendors</span>

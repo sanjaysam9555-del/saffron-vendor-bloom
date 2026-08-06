@@ -123,14 +123,21 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
     return { roots: r, repliesByParent: byParent };
   }, [comments]);
 
-  const renderComment = (c: VendorComment, isReply = false) => {
+  // Root comments are wrapped by their own outer <li> below (so a <ul> of
+  // replies can nest inside it alongside the comment body); replies sit
+  // directly inside that nested <ul>. Rendering both as <li> produced
+  // <li><li>...</li></li> with no <ul> between them — invalid HTML and a
+  // hydration-mismatch warning. `asDiv` picks the right tag for each case
+  // while keeping every motion/AnimatePresence prop identical.
+  const renderComment = (c: VendorComment, isReply = false, asDiv = false) => {
     const canDelete =
       (adminCanDelete && !isPreview) ||
       (!isPreview && c.is_own);
     const isStaff = c.author_role === "staff";
     const isNew = highlightIds.has(c.id);
+    const MotionTag = asDiv ? motion.div : motion.li;
     return (
-      <motion.li
+      <MotionTag
         key={c.id}
         layout={!reduced}
         initial={reduced ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.98 }}
@@ -182,7 +189,7 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
             )}
           </div>
         </div>
-      </motion.li>
+      </MotionTag>
     );
   };
 
@@ -205,7 +212,7 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
           <AnimatePresence initial={false}>
             {roots.map((c) => (
               <li key={c.id} className="space-y-2">
-                {renderComment(c)}
+                {renderComment(c, false, true)}
                 {(repliesByParent.get(c.id) ?? []).length > 0 && (
                   <ul className="ml-5 space-y-2 border-l-2 border-[var(--terracotta)]/20 pl-3">
                     <AnimatePresence initial={false}>

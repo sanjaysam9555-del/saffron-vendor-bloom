@@ -41,6 +41,42 @@ export async function listProjectVendorQuotes(
   })) as ProjectVendorQuote[];
 }
 
+export interface ProjectVendorQuoteWithVendor extends ProjectVendorQuote {
+  vendor_name: string;
+}
+
+/**
+ * Every quote across every vendor on a project, in one call — backs the
+ * project-level Quotes tab. Grouped by vendor there; this just returns the
+ * flat list with the vendor name attached so the UI doesn't need a second
+ * round trip per vendor.
+ */
+export async function listProjectQuotesAllVendors(
+  projectId: string,
+): Promise<ProjectVendorQuoteWithVendor[]> {
+  const { data, error } = await supabase
+    .from("project_vendor_quotes")
+    .select(`${QUOTE_COLUMNS}, files:project_vendor_quote_files(*)`)
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  const rows = (data ?? []) as any[];
+  const vendorIds = Array.from(new Set(rows.map((r) => r.vendor_id)));
+  let nameMap = new Map<string, string>();
+  if (vendorIds.length > 0) {
+    const { data: vendorsData } = await supabase
+      .from("vendors")
+      .select("id, vendor_name")
+      .in("id", vendorIds);
+    nameMap = new Map((vendorsData ?? []).map((v) => [v.id, v.vendor_name]));
+  }
+  return rows.map((q) => ({
+    ...q,
+    vendor_name: nameMap.get(q.vendor_id) ?? "Vendor",
+    files: (q.files ?? []).sort((a: QuoteFile, b: QuoteFile) => (a.created_at < b.created_at ? -1 : 1)),
+  })) as ProjectVendorQuoteWithVendor[];
+}
+
 export async function listVendorQuoteHistory(
   vendorId: string,
 ): Promise<ProjectVendorQuote[]> {

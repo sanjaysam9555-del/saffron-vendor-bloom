@@ -72,7 +72,9 @@ export function AdminTabStateProvider({ children }: { children: ReactNode }) {
   const [view, setView] = useState<VendorView>("cards");
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<VendorSortKey>("date_added_desc");
-  const [sidebarCollapsed, setSidebarCollapsedRaw] = useState(false);
+  // Filters start collapsed — the vendor grid gets the full width by default
+  // and the rail is one click away.
+  const [sidebarCollapsed, setSidebarCollapsedRaw] = useState(true);
   const setSidebarCollapsed = (v: boolean | ((prev: boolean) => boolean)) =>
     setSidebarCollapsedRaw(v as never);
 

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "@/lib/auth";
+import { useContext, useEffect, useState } from "react";
+import { AuthCtx } from "@/lib/auth";
 
 const MIN_MS = 1200;
 const MAX_MS = 3000;
@@ -25,7 +25,8 @@ function markShown() {
 }
 
 export function SplashScreen() {
-  const { initialized } = useAuth();
+  const auth = useContext(AuthCtx);
+  const initialized = auth?.initialized ?? false;
   const [mounted, setMounted] = useState(false);
   // Skip entirely if we've already shown the splash this tab session.
   const [shouldShow] = useState(() => !alreadyShown());
