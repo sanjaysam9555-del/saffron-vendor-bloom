@@ -112,7 +112,7 @@ function AdminAnalyticsPage() {
         </div>
 
         {/* Overview cards */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-3 sm:mt-6 sm:grid-cols-2 lg:grid-cols-5">
           <OverviewCard label="Client Billing" value={overview.data?.client_billing ?? 0} />
           <OverviewCard label="Vendor Cost" value={overview.data?.vendor_cost ?? 0} valueClass="text-[var(--terracotta)]" />
           <OverviewCard label="Commission" value={overview.data?.commission ?? 0} valueClass="text-[var(--terracotta)]" />
