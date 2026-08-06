@@ -247,6 +247,16 @@ function AdminNotificationsPage() {
           </span>
           <div className="ml-auto flex items-center gap-1.5">
             <button
+              onClick={() => setUnreadOnly((v) => !v)}
+              className={`inline-flex shrink-0 items-center rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
+                unreadOnly
+                  ? "border-[var(--terracotta)] bg-[var(--terracotta)] text-[var(--cream)]"
+                  : "border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+              }`}
+            >
+              Unread only
+            </button>
+            <button
               onClick={() => refresh()}
               aria-label="Refresh"
               className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-xs font-medium text-[var(--charcoal)]/75 transition hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
@@ -267,26 +277,12 @@ function AdminNotificationsPage() {
       </div>
 
       <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-baseline gap-3">
-            <h1 className="brand-line hidden font-display text-xl font-semibold text-[var(--charcoal)] sm:block sm:text-2xl">
-              Activity feed
-            </h1>
-            <span className="text-xs text-[var(--charcoal)]/55">
-              {unreadCount} unread of {items.length}
-            </span>
-          </div>
-          <button
-            onClick={() => setUnreadOnly((v) => !v)}
-            className={`rounded-md border px-3 py-1.5 text-xs font-medium transition ${
-              unreadOnly
-                ? "border-[var(--terracotta)] bg-[var(--terracotta)] text-[var(--cream)]"
-                : "border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
-            }`}
-          >
-            Unread only
-          </button>
+        <div className="mb-4 hidden flex-wrap items-center justify-between gap-3 sm:mb-5 sm:flex">
+          <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
+            Activity feed
+          </h1>
         </div>
+
 
         {/* Category chips — only categories with data are shown */}
         <div className="mb-5 flex flex-wrap items-center gap-1 rounded-xl border border-[var(--border)] bg-white p-1">
@@ -388,7 +384,7 @@ function FeedRow({
 
   const iconBadge = (
     <span
-      className={`mt-0.5 shrink-0 rounded-full p-2.5 ${
+      className={`mt-0.5 shrink-0 rounded-full p-2 sm:p-2.5 ${
         groupUnread > 0
           ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
           : "bg-[var(--cream-deep)]/60 text-[var(--charcoal)]/40"
@@ -407,21 +403,19 @@ function FeedRow({
         <Link
           to={href}
           onClick={() => onMarkOne(it.id)}
-          className="flex items-start gap-3 px-4 py-3 transition hover:bg-[var(--cream)]/50"
+          className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 px-3 py-3 transition hover:bg-[var(--cream)]/50 sm:px-4"
         >
           {iconBadge}
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-3">
-              <div className={`text-sm ${unread ? "font-semibold text-[var(--charcoal)]" : "text-[var(--charcoal)]/70"}`}>
-                {it.title}
-              </div>
-              <div className="shrink-0 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/40">
-                {timeAgo(it.created_at)}
-              </div>
+          <div className="min-w-0">
+            <div className={`break-words text-sm leading-snug ${unread ? "font-semibold text-[var(--charcoal)]" : "text-[var(--charcoal)]/70"}`}>
+              {it.title}
             </div>
             {it.body && (
-              <div className="mt-0.5 line-clamp-2 text-xs text-[var(--charcoal)]/55">{it.body}</div>
+              <div className="mt-0.5 line-clamp-2 break-words text-xs text-[var(--charcoal)]/55">{it.body}</div>
             )}
+            <div className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/40">
+              {timeAgo(it.created_at)}
+            </div>
           </div>
         </Link>
       </div>
@@ -433,29 +427,32 @@ function FeedRow({
     <div className={`overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm ${groupUnread > 0 ? "border-l-2 border-l-[var(--terracotta)]" : ""}`}>
       <button
         onClick={onToggle}
-        className="flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-[var(--cream)]/50"
+        className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 px-3 py-3 text-left transition hover:bg-[var(--cream)]/50 sm:px-4"
       >
         {iconBadge}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-3">
-            <div className={`text-sm ${groupUnread > 0 ? "font-semibold text-[var(--charcoal)]" : "text-[var(--charcoal)]/70"}`}>
+        <div className="min-w-0">
+          <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-snug ${groupUnread > 0 ? "font-semibold text-[var(--charcoal)]" : "text-[var(--charcoal)]/70"}`}>
+            <span className="break-words">
               {entry.items.length} {meta.plural}
-              {groupUnread > 0 && (
-                <span className="ml-2 rounded-full bg-[var(--terracotta)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--cream)]">
-                  {groupUnread} new
-                </span>
-              )}
-            </div>
-            <div className="flex shrink-0 items-center gap-1.5 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/40">
-              {timeAgo(entry.latest)}
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-180" : ""}`} />
-            </div>
+            </span>
+            {groupUnread > 0 && (
+              <span className="rounded-full bg-[var(--terracotta)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--cream)]">
+                {groupUnread} new
+              </span>
+            )}
           </div>
           <div className="mt-0.5 truncate text-xs text-[var(--charcoal)]/55">
             {entry.projectName ?? entry.items[0].title}
           </div>
+          <div className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/40">
+            {timeAgo(entry.latest)}
+          </div>
         </div>
+        <ChevronDown
+          className={`mt-2 h-4 w-4 shrink-0 text-[var(--charcoal)]/40 transition-transform ${expanded ? "rotate-180" : ""}`}
+        />
       </button>
+
 
       {expanded && (
         <div className="border-t border-[var(--border)] bg-[var(--cream)]/30">
@@ -466,18 +463,18 @@ function FeedRow({
                 key={it.id}
                 to={href}
                 onClick={() => onMarkOne(it.id)}
-                className="flex items-start gap-3 border-b border-[var(--border)]/50 px-4 py-2.5 pl-14 transition last:border-b-0 hover:bg-white"
+                className="flex items-start gap-2 border-b border-[var(--border)]/50 px-3 py-2.5 pl-11 transition last:border-b-0 hover:bg-white sm:gap-3 sm:px-4 sm:pl-14"
               >
                 <div className="min-w-0 flex-1">
-                  <div className={`text-[13px] ${unread ? "font-medium text-[var(--charcoal)]" : "text-[var(--charcoal)]/65"}`}>
+                  <div className={`break-words text-[13px] leading-snug ${unread ? "font-medium text-[var(--charcoal)]" : "text-[var(--charcoal)]/65"}`}>
                     {it.title}
                   </div>
                   {it.body && (
-                    <div className="mt-0.5 line-clamp-1 text-[11px] text-[var(--charcoal)]/50">{it.body}</div>
+                    <div className="mt-0.5 line-clamp-2 break-words text-[11px] text-[var(--charcoal)]/50">{it.body}</div>
                   )}
-                </div>
-                <div className="shrink-0 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/35">
-                  {timeAgo(it.created_at)}
+                  <div className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/35">
+                    {timeAgo(it.created_at)}
+                  </div>
                 </div>
                 {unread && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--terracotta)]" />}
               </Link>

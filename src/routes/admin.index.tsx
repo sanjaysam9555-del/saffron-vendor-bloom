@@ -287,7 +287,7 @@ function DashboardPage() {
                 {filtered.length} of {vendors.length}
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex w-full items-center gap-2 sm:w-auto">
               {(() => {
                 const filtersActive = !!(filters.category || filters.locations.length || filters.minGoogleRating != null || filters.minSaffronRating != null || filters.submittedViaForm !== "any" || filters.assignedToProject !== "any" || filters.hasQuoteHistory !== "any" || filters.hasAttachment !== "any");
                 return (
@@ -295,25 +295,26 @@ function DashboardPage() {
                     onClick={() => setMobileFiltersOpen(true)}
                     aria-label="Filters"
                     title="Filters"
-                    className={`relative inline-flex h-8 w-8 items-center justify-center rounded-md border lg:hidden ${
+                    className={`relative inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border text-xs font-medium sm:h-8 sm:w-8 sm:flex-none lg:hidden ${
                       filtersActive
                         ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
                         : "border-[var(--border)] bg-white text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
                     }`}
                   >
                     <FilterIcon className="h-4 w-4" />
+                    <span className="sm:hidden">Filters</span>
                     {filtersActive && (
                       <span className="absolute right-1 top-1 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
                     )}
                   </button>
                 );
               })()}
-              <label className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-xs text-[var(--charcoal)]/75">
-                <ArrowUpDown className="h-3.5 w-3.5" />
+              <label className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2 text-xs text-[var(--charcoal)]/75 sm:h-auto sm:flex-none sm:py-1.5">
+                <ArrowUpDown className="h-3.5 w-3.5 shrink-0" />
                 <select
                   value={sort}
                   onChange={(e) => setSort(e.target.value as SortKey)}
-                  className="bg-transparent text-xs text-[var(--charcoal)] focus:outline-none"
+                  className="min-w-0 bg-transparent text-xs text-[var(--charcoal)] focus:outline-none"
                 >
                   <option value="date_added_desc">Newest added</option>
                   <option value="date_added_asc">Oldest added</option>
@@ -338,16 +339,16 @@ function DashboardPage() {
                   {bulkMode ? "Exit Bulk Edit" : "Bulk Edit"}
                 </button>
               )}
-              <div className="flex items-center gap-1 rounded-lg border border-[var(--border)] bg-white p-1">
+              <div className="flex h-9 flex-1 items-center gap-1 rounded-md border border-[var(--border)] bg-white p-1 sm:h-auto sm:flex-none sm:rounded-lg">
                 <button
                   onClick={() => setView("cards")}
-                  className={`flex items-center gap-1 rounded-md px-3 py-1 text-xs transition-colors ${view === "cards" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
+                  className={`flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1 text-xs transition-colors sm:flex-none sm:px-3 ${view === "cards" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
                 >
                   <LayoutGrid className="h-3.5 w-3.5" /> Cards
                 </button>
                 <button
                   onClick={() => setView("table")}
-                  className={`flex items-center gap-1 rounded-md px-3 py-1 text-xs transition-colors ${view === "table" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
+                  className={`flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1 text-xs transition-colors sm:flex-none sm:px-3 ${view === "table" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
                 >
                   <TableIcon className="h-3.5 w-3.5" /> Table
                 </button>
