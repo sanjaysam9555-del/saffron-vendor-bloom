@@ -206,26 +206,28 @@ function UpcomingWeddings({ weddings }: { weddings: DashboardData["upcoming_wedd
   if (weddings.length === 0) return <EmptyCard message="No upcoming weddings." />;
 
   return (
-    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
       {weddings.map((w) => (
         <Link
           key={w.id}
           to="/admin/projects/$id"
           params={{ id: w.id }}
-          className="group vendor-card flex flex-col rounded-lg bg-white p-3 text-[var(--charcoal)] sm:p-4"
+          className="group vendor-card flex flex-col rounded-lg bg-white p-2.5 text-[var(--charcoal)] sm:p-4"
         >
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+          <div className="flex flex-col gap-1.5 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-2">
             <div className="min-w-0">
-              <p className="truncate font-display text-base font-semibold leading-tight sm:text-lg">
+              <p className="truncate font-display text-sm font-semibold leading-tight sm:text-lg">
                 {w.bride_name} &amp; {w.groom_name}
               </p>
-              <p className="mt-0.5 text-xs text-[var(--charcoal)]/55">{fmtDate(w.wedding_date)}</p>
+              <p className="mt-0.5 text-[11px] text-[var(--charcoal)]/55 sm:text-xs">
+                {fmtDateShort(w.wedding_date)}
+              </p>
             </div>
-            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold sm:px-2.5 sm:text-[11px] ${daysClass(w.days_to_go)}`}>
+            <span className={`w-fit shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold sm:px-2.5 sm:text-[11px] ${daysClass(w.days_to_go)}`}>
               {w.days_to_go}d
             </span>
           </div>
-          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-[var(--charcoal)]/50 sm:mt-3">
+          <div className="mt-1.5 flex items-center gap-1 text-[10px] text-[var(--charcoal)]/50 sm:mt-3 sm:gap-1.5 sm:text-[11px]">
             <Users className="h-3 w-3 shrink-0" />
             {w.vendor_count} vendor{w.vendor_count !== 1 ? "s" : ""}
           </div>
@@ -233,6 +235,7 @@ function UpcomingWeddings({ weddings }: { weddings: DashboardData["upcoming_wedd
       ))}
     </div>
   );
+
 }
 
 function daysClass(d: number) {
