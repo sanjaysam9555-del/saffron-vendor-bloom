@@ -485,35 +485,6 @@ function PLTable({ rows }: { rows: PLRow[] }) {
   );
 }
 
-function PLStat({
-  label,
-  value,
-  strong,
-  accent,
-}: {
-  label: string;
-  value: string;
-  strong?: boolean;
-  accent?: boolean;
-}) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-[10px] uppercase tracking-widest text-[var(--charcoal)]/45">{label}</dt>
-      <dd
-        className={`truncate ${
-          accent
-            ? "font-semibold text-[var(--terracotta)]"
-            : strong
-              ? "font-semibold text-[var(--charcoal)]"
-              : "text-[var(--charcoal)]/70"
-        }`}
-      >
-        {value}
-      </dd>
-    </div>
-  );
-}
-
 // ── Vendor pipeline ───────────────────────────────────────────────────────────
 
 const PIPE_COLORS = [
