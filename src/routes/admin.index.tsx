@@ -295,14 +295,13 @@ function DashboardPage() {
                     onClick={() => setMobileFiltersOpen(true)}
                     aria-label="Filters"
                     title="Filters"
-                    className={`relative inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border text-xs font-medium sm:h-8 sm:w-8 sm:flex-none lg:hidden ${
+                    className={`relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border text-xs font-medium sm:h-8 sm:w-8 lg:hidden ${
                       filtersActive
                         ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
                         : "border-[var(--border)] bg-white text-[var(--charcoal)]/75 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
                     }`}
                   >
                     <FilterIcon className="h-4 w-4" />
-                    <span className="sm:hidden">Filters</span>
                     {filtersActive && (
                       <span className="absolute right-1 top-1 inline-flex h-1.5 w-1.5 rounded-full bg-[var(--terracotta)]" />
                     )}
@@ -310,6 +309,7 @@ function DashboardPage() {
                 );
               })()}
               <label className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2 text-xs text-[var(--charcoal)]/75 sm:h-auto sm:flex-none sm:py-1.5">
+
                 <ArrowUpDown className="h-3.5 w-3.5 shrink-0" />
                 <select
                   value={sort}
