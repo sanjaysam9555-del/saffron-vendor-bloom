@@ -338,3 +338,31 @@ export function AdminMobileTabBar() {
     </nav>
   );
 }
+
+/**
+ * Mobile-only page title shown on the right of the top bar, parallel to the
+ * brand name, so pages don't spend vertical space on their own heading.
+ */
+const MOBILE_TITLES: { match: (p: string) => boolean; title: string }[] = [
+  { match: (p) => p.startsWith("/admin/dashboard"), title: "Dashboard" },
+  { match: (p) => p.startsWith("/admin/analytics"), title: "Analytics" },
+  { match: (p) => p.startsWith("/admin/calendar"), title: "Calendar" },
+  { match: (p) => p.startsWith("/admin/notifications"), title: "Notifications" },
+  { match: (p) => p.startsWith("/admin/submissions"), title: "Submissions" },
+  { match: (p) => p.startsWith("/admin/users"), title: "Users" },
+  { match: (p) => p.startsWith("/admin/profile"), title: "Profile" },
+];
+
+function MobilePageTitle() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const entry = MOBILE_TITLES.find((t) => t.match(pathname));
+  if (!entry) return <span />;
+  return (
+    <div className="min-w-0 text-right">
+      <span className="block truncate font-display text-base font-semibold text-[var(--charcoal)]">
+        {entry.title}
+      </span>
+      <span className="ml-auto mt-0.5 block h-[2px] w-10 bg-[var(--terracotta)]" />
+    </div>
+  );
+}
