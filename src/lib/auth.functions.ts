@@ -1,36 +1,25 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/react-start/server";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { attachAuthToken } from "./auth-client-middleware";
 
+/**
+ * Resolves the signed-in user's role + display name.
+ *
+ * Uses the caller's own bearer token (RLS: users can read their own
+ * role/profile/client link) instead of the service-role client, so a
+ * rotated or mismatched service key can never lock everyone out of login.
+ */
 export const getCurrentUserAccess = createServerFn({ method: "GET" })
-  .middleware([attachAuthToken])
-  .handler(async () => {
-    const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-    if (!token) return null;
-
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    if (userError || !userData.user) return null;
-
-    const userId = userData.user.id;
-    const email = userData.user.email?.toLowerCase() ?? "";
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const supabase = context.supabase;
+    const userId = context.userId;
+    const email = String((context.claims as { email?: string }).email ?? "").toLowerCase();
 
     const [{ data: roleRows, error: roleError }, { data: profileRow, error: profileError }, { data: clientRow, error: clientError }] = await Promise.all([
-      supabaseAdmin
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId),
-      supabaseAdmin
-        .from("profiles")
-        .select("display_name")
-        .eq("user_id", userId)
-        .maybeSingle(),
-      supabaseAdmin
-        .from("project_clients")
-        .select("id")
-        .eq("user_id", userId)
-        .limit(1)
-        .maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", userId),
+      supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle(),
+      supabase.from("project_clients").select("id").eq("user_id", userId).limit(1).maybeSingle(),
     ]);
 
     if (roleError) throw new Error(roleError.message);
