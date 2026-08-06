@@ -18,6 +18,7 @@ import { useIsAdmin } from "@/lib/auth";
 import { useAutoEnsureMissingPreviews, useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
 import { useVendorTabState, type VendorSortKey } from "@/components/admin/admin-tab-state";
 import { useSetMobilePageTitle } from "@/lib/mobile-page-title";
+import { SkeletonBlock } from "@/components/ui/LoadingState";
 
 
 // Lazy-load heavy dialogs and the detail drawer so they don't bloat the
@@ -374,7 +375,7 @@ function DashboardPage() {
           {isLoading ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-40 animate-pulse rounded-lg border border-[var(--border)] bg-white" />
+                <SkeletonBlock key={i} className="h-40" />
               ))}
             </div>
           ) : filtered.length === 0 ? (

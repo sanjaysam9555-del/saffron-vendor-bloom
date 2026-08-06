@@ -18,6 +18,7 @@ import { AuthGate } from "@/components/AuthGate";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import {
+import { SkeletonBlock } from "@/components/ui/LoadingState";
   listStaffNotifications,
   markAllNotificationsRead,
   markNotificationRead,
@@ -303,7 +304,7 @@ function AdminNotificationsPage() {
         {loading ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-[76px] animate-pulse rounded-xl bg-[var(--cream-deep)]/50" />
+              <SkeletonBlock key={i} className="h-[76px]" />
             ))}
           </div>
         ) : entries.length === 0 ? (

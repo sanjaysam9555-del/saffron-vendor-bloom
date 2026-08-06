@@ -8,6 +8,7 @@ import { getProjectAsClientView } from "@/lib/projects.functions";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
 import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
 import type { ClientVendor } from "@/lib/project-types";
+import { LoadingState } from "@/components/ui/LoadingState";
 
 const ClientVendorDetail = lazy(() =>
   import("@/components/client/ClientVendorDetail").then((m) => ({ default: m.ClientVendorDetail })),

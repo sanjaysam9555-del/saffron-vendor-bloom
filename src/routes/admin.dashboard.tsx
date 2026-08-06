@@ -16,6 +16,7 @@ import { AuthGate } from "@/components/AuthGate";
 import { getDashboardData, type DashboardData } from "@/lib/dashboard.functions";
 import { analyticsProjects } from "@/lib/analytics.functions";
 import { formatINR, formatINRShort } from "@/lib/quote-types";
+import { LoadingState } from "@/components/ui/LoadingState";
 
 export const Route = createFileRoute("/admin/dashboard")({
   head: () => ({

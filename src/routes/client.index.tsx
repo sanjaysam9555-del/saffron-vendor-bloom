@@ -39,6 +39,7 @@ import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
 import { VendorTimeline } from "@/components/timeline/VendorTimeline";
 
 import { buildTimelineItems, otherExpensesAsTimelineItems } from "@/lib/build-timeline-items";
+import { LoadingState } from "@/components/ui/LoadingState";
 
 
 type ViewMode = "summary" | "timeline" | "table" | "category" | "grid" | "board";
