@@ -1,16 +1,26 @@
-# Standard branded loading screen
+# Standard loading screen
 
-Right now every loading state is hand-rolled and inconsistent: "Loading your dashboard…" (admin gate), "Loading your portal…" (client gate), "Loading dashboard…" with a sparkle icon, "Loading your vendors…", plus assorted grey pulse blocks. This replaces them with one branded loader used everywhere.
+Right now every loading state is hand-rolled and inconsistent: "Loading your dashboard…" (admin gate), "Loading your portal…" (client gate), "Loading dashboard…" with a sparkle icon, "Loading your vendors…", plus assorted grey pulse blocks. This replaces them with one clean, generic loader used everywhere. No brand name, no logo, no icon.
 
 ## The new loader
 
-A calm, Saffron-branded panel centred on the cream background:
+A quiet, centred composition on the cream background — pure geometry and type:
 
-- Small uppercase letterspaced eyebrow: "Saffron Planning Studio" in terracotta — same typographic voice as the app splash screen.
-- A marigold-inspired mark: three concentric terracotta rings that breathe/rotate softly (petal spinner), not a generic spinner circle.
-- One line of context text that each screen passes in ("Loading your dashboard", "Loading your vendors", "Loading your portal"), in charcoal at 60% opacity.
-- A thin terracotta rule and a slow shimmer bar underneath to signal progress without a fake percentage.
-- Respects reduced-motion: animation collapses to a static mark plus the text.
+```text
+        ────────────────────────
+          ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+             (soft arc)
+
+          Loading your dashboard
+        ──────────────────────────
+```
+
+- A single thin terracotta arc on a faint ring, rotating slowly and smoothly (1.4s, ease-in-out) — minimal, no chunky spinner.
+- Below it, one line of context text each screen passes in ("Loading your dashboard", "Loading your vendors"), small, charcoal at ~55% opacity, gentle letterspacing.
+- Beneath the text, a 120px hairline track with a terracotta sliver sweeping across it — implies progress without a fake percentage.
+- Everything fades in after ~200ms so fast loads never flash a loader.
+- Reduced motion: arc and sweep freeze into a static ring and full-width hairline; text stays.
+
 
 Two sizes from the same component:
 - `fullscreen` — min-h-screen cream backdrop, used by auth gates and full-page route loads.
