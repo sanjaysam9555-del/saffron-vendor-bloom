@@ -70,7 +70,7 @@ function SubmissionsPage() {
 
       <main className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
         <div className="mb-6">
-          <h1 className="brand-line font-display text-3xl font-semibold text-[var(--charcoal)]">
+          <h1 className="brand-line hidden font-display text-3xl font-semibold text-[var(--charcoal)] sm:block">
             Vendor Submissions
           </h1>
           <p className="mt-2 text-sm text-[var(--charcoal)]/60">

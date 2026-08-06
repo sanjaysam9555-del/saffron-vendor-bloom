@@ -278,7 +278,7 @@ function DashboardPage() {
         <main className={`min-w-0 flex-1 px-3 py-4 sm:px-6 sm:py-5 lg:px-8 ${bulkMode ? "pb-28" : ""}`}>
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-baseline gap-3">
-              <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
+              <h1 className="brand-line hidden font-display text-xl font-semibold text-[var(--charcoal)] sm:block sm:text-2xl">
                 {filters.category ?? "All Vendors"}
               </h1>
               <span className="text-xs text-[var(--charcoal)]/55">
