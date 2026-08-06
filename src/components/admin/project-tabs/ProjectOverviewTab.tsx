@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CheckSquare, AlertTriangle, MessageSquare } from "lucide-react";
 import { listProjectTasks } from "@/lib/project-tasks.functions";
+import { PriorityChip } from "./tasks/task-meta";
 import { listProjectGuests } from "@/lib/project-guests.functions";
 import { getProjectBudgetSummary } from "@/lib/project-budget.functions";
 import { listProjectQuotesAllVendors } from "@/lib/quote-api";
