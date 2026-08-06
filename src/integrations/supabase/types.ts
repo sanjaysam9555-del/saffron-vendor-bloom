@@ -373,6 +373,56 @@ export type Database = {
           },
         ]
       }
+      project_guests: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          meal: string | null
+          name: string
+          phone: string | null
+          plus_one: number
+          project_id: string
+          rsvp_status: string
+          side: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          meal?: string | null
+          name: string
+          phone?: string | null
+          plus_one?: number
+          project_id: string
+          rsvp_status?: string
+          side?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          meal?: string | null
+          name?: string
+          phone?: string | null
+          plus_one?: number
+          project_id?: string
+          rsvp_status?: string
+          side?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_guests_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_other_expenses: {
         Row: {
           actual_amount: number | null
@@ -517,6 +567,56 @@ export type Database = {
           },
         ]
       }
+      project_tasks: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          done: boolean
+          due_date: string | null
+          id: string
+          owner_name: string | null
+          priority: string
+          project_id: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          done?: boolean
+          due_date?: string | null
+          id?: string
+          owner_name?: string | null
+          priority?: string
+          project_id: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          done?: boolean
+          due_date?: string | null
+          id?: string
+          owner_name?: string | null
+          priority?: string
+          project_id?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_vendor_comments: {
         Row: {
           body: string
@@ -612,8 +712,10 @@ export type Database = {
           quote_text: string | null
           status: Database["public"]["Enums"]["quote_status"]
           total_commission_installments: number
+          total_vendor_payment_installments: number
           updated_at: string
           vendor_id: string
+          vendor_payment_remarks: string | null
         }
         Insert: {
           category?: string | null
@@ -630,8 +732,10 @@ export type Database = {
           quote_text?: string | null
           status?: Database["public"]["Enums"]["quote_status"]
           total_commission_installments?: number
+          total_vendor_payment_installments?: number
           updated_at?: string
           vendor_id: string
+          vendor_payment_remarks?: string | null
         }
         Update: {
           category?: string | null
@@ -648,8 +752,10 @@ export type Database = {
           quote_text?: string | null
           status?: Database["public"]["Enums"]["quote_status"]
           total_commission_installments?: number
+          total_vendor_payment_installments?: number
           updated_at?: string
           vendor_id?: string
+          vendor_payment_remarks?: string | null
         }
         Relationships: [
           {
@@ -791,6 +897,33 @@ export type Database = {
           read_by?: Json
           title?: string
           vendor_id?: string | null
+        }
+        Relationships: []
+      }
+      studio_settings: {
+        Row: {
+          brand_name: string
+          display_font: string
+          id: boolean
+          primary_color: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          brand_name?: string
+          display_font?: string
+          id?: boolean
+          primary_color?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          brand_name?: string
+          display_font?: string
+          id?: boolean
+          primary_color?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -1000,6 +1133,82 @@ export type Database = {
           },
         ]
       }
+      vendor_payment_installments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          expected_amount: number
+          id: string
+          installment_no: number
+          notes: string | null
+          paid_amount: number
+          paid_by: string
+          paid_on: string | null
+          project_id: string
+          quote_id: string
+          status: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          expected_amount?: number
+          id?: string
+          installment_no: number
+          notes?: string | null
+          paid_amount?: number
+          paid_by?: string
+          paid_on?: string | null
+          project_id: string
+          quote_id: string
+          status?: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          expected_amount?: number
+          id?: string
+          installment_no?: number
+          notes?: string | null
+          paid_amount?: number
+          paid_by?: string
+          paid_on?: string | null
+          project_id?: string
+          quote_id?: string
+          status?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_payment_installments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_payment_installments_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "project_vendor_quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_payment_installments_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendors: {
         Row: {
           category: string
@@ -1200,6 +1409,49 @@ export type Database = {
           vendor_cost: number
           vendor_id: string
           vendor_name: string
+        }[]
+      }
+      admin_project_vendor_payment_matrix: {
+        Args: { _project_id: string }
+        Returns: {
+          category: string
+          installments: Json
+          payment_remarks: string
+          quote_id: string
+          total_installments: number
+          total_paid: number
+          vendor_cost: number
+          vendor_id: string
+          vendor_name: string
+        }[]
+      }
+      admin_upcoming_payments: {
+        Args: never
+        Returns: {
+          bride_name: string
+          due_date: string
+          expected_amount: number
+          groom_name: string
+          installment_no: number
+          paid_amount: number
+          paid_by: string
+          project_id: string
+          status: string
+          vendor_id: string
+          vendor_name: string
+        }[]
+      }
+      admin_upcoming_receivables: {
+        Args: never
+        Returns: {
+          bride_name: string
+          due_date: string
+          expected_amount: number
+          groom_name: string
+          installment_no: number
+          project_id: string
+          received_amount: number
+          status: string
         }[]
       }
       client_can_access_quote: {
