@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -71,7 +72,7 @@ function AdminDashboardPage() {
 
       <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5">
         {/* Page heading */}
-        <div className="mb-4 sm:mb-8">
+        <div className="mb-3 sm:mb-8">
           <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
             Dashboard
           </h1>
@@ -86,7 +87,7 @@ function AdminDashboardPage() {
         </Section>
 
         {/* ── Two-column: deadlines + activity (equal height via overflow-y-auto) ── */}
-        <div className="mt-10 grid gap-6 lg:grid-cols-2">
+        <div className="mt-6 grid gap-6 sm:mt-10 lg:grid-cols-2">
           <div>
             <SectionTitle icon={<CalendarDays className="h-4 w-4" />} title="Deadlines · Next 30 Days" />
             <UpcomingDeadlines deadlines={data.upcoming_deadlines} />
@@ -124,7 +125,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mt-10">
+    <div className="mt-6 sm:mt-10">
       <SectionTitle icon={icon} title={title} />
       {children}
     </div>
@@ -133,10 +134,24 @@ function Section({
 
 function SectionTitle({ icon, title }: { icon?: React.ReactNode; title: string }) {
   return (
-    <div className="mb-3 flex items-center gap-2">
-      {icon && <span className="text-[var(--terracotta)]">{icon}</span>}
-      <h2 className="font-display text-xl text-[var(--charcoal)]">{title}</h2>
+    <div className="mb-2.5 flex items-center gap-2 sm:mb-3">
+      {icon && <span className="shrink-0 text-[var(--terracotta)]">{icon}</span>}
+      <h2 className="min-w-0 truncate font-display text-lg text-[var(--charcoal)] sm:text-xl">{title}</h2>
     </div>
+  );
+}
+
+/** Mobile lists show a short slice with a toggle so the page scrolls once. */
+function MobileMore({ expanded, hidden, onToggle }: { expanded: boolean; hidden: number; onToggle: () => void }) {
+  if (!expanded && hidden <= 0) return null;
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="w-full border-t border-[var(--border)] px-4 py-2.5 text-center text-xs font-medium text-[var(--terracotta)] lg:hidden"
+    >
+      {expanded ? "Show less" : `Show all (${hidden} more)`}
+    </button>
   );
 }
 
@@ -152,23 +167,29 @@ function StatCards({ stats }: { stats: DashboardData["stats"] }) {
   ];
 
   return (
-    <div className="no-scrollbar -mx-3 flex gap-3 overflow-x-auto px-3 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-5">
       {cards.map((c) => (
         <div
           key={c.label}
-          className={`w-[128px] shrink-0 rounded-lg border p-3 sm:w-auto sm:p-4 ${
+          className={`rounded-lg border p-3 sm:p-4 ${c.accent ? "col-span-2 lg:col-span-1" : ""} ${
             c.accent
               ? "border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)]"
               : "border-[var(--border)] bg-white"
           }`}
         >
-          <span className={c.accent ? "text-[var(--terracotta)]" : "text-[var(--charcoal)]/50"}>
-            {c.icon}
-          </span>
-          <div className={`mt-2 font-display text-2xl font-semibold sm:text-3xl ${c.accent ? "text-[var(--terracotta)]" : "text-[var(--charcoal)]"}`}>
-            {c.value}
+          <div className="flex items-center gap-2">
+            <span className={c.accent ? "text-[var(--terracotta)]" : "text-[var(--charcoal)]/50"}>
+              {c.icon}
+            </span>
+            <span
+              className={`font-display text-2xl font-semibold leading-none sm:text-3xl ${
+                c.accent ? "text-[var(--terracotta)]" : "text-[var(--charcoal)]"
+              }`}
+            >
+              {c.value}
+            </span>
           </div>
-          <div className="mt-1 text-[10px] font-medium uppercase tracking-widest text-[var(--charcoal)]/55">
+          <div className="mt-1.5 text-[10px] font-medium uppercase tracking-widest text-[var(--charcoal)]/55">
             {c.label}
           </div>
         </div>
@@ -183,7 +204,7 @@ function UpcomingWeddings({ weddings }: { weddings: DashboardData["upcoming_wedd
   if (weddings.length === 0) return <EmptyCard message="No upcoming weddings." />;
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
       {weddings.map((w) => (
         <Link
           key={w.id}
@@ -191,7 +212,7 @@ function UpcomingWeddings({ weddings }: { weddings: DashboardData["upcoming_wedd
           params={{ id: w.id }}
           className="group vendor-card flex flex-col rounded-lg bg-white p-3 text-[var(--charcoal)] sm:p-4"
         >
-          <div className="flex items-start justify-between gap-2">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
             <div className="min-w-0">
               <p className="truncate font-display text-base font-semibold leading-tight sm:text-lg">
                 {w.bride_name} &amp; {w.groom_name}
@@ -202,8 +223,8 @@ function UpcomingWeddings({ weddings }: { weddings: DashboardData["upcoming_wedd
               {w.days_to_go}d
             </span>
           </div>
-          <div className="mt-3 flex items-center gap-1.5 text-[11px] text-[var(--charcoal)]/50">
-            <Users className="h-3 w-3" />
+          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-[var(--charcoal)]/50 sm:mt-3">
+            <Users className="h-3 w-3 shrink-0" />
             {w.vendor_count} vendor{w.vendor_count !== 1 ? "s" : ""}
           </div>
         </Link>
@@ -220,33 +241,53 @@ function daysClass(d: number) {
 
 // ── Upcoming deadlines ────────────────────────────────────────────────────────
 
+const MOBILE_LIST_LIMIT = 6;
+
 function UpcomingDeadlines({ deadlines }: { deadlines: DashboardData["upcoming_deadlines"] }) {
+  const [expanded, setExpanded] = useState(false);
   if (deadlines.length === 0) return <EmptyCard message="No deadlines in the next 30 days." />;
+
+  const hidden = Math.max(0, deadlines.length - MOBILE_LIST_LIMIT);
 
   return (
     <div className="rounded-lg border border-[var(--border)] bg-white">
-      <ul className="no-scrollbar max-h-[540px] divide-y divide-[var(--border)] overflow-y-auto">
-        {deadlines.map((d) => (
-          <li key={d.id} className="flex items-center gap-3 px-4 py-2.5">
-            {/* Fixed-width badge so category always lines up */}
-            <span className={`w-14 shrink-0 rounded-full py-0.5 text-center text-[10px] font-semibold uppercase tracking-wide ${criticalityClass(d.criticality)}`}>
-              {d.criticality}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-[var(--charcoal)]">{d.category}</p>
-              <p className="text-[11px] text-[var(--charcoal)]/50">
-                {d.bride_name} &amp; {d.groom_name}
-              </p>
-            </div>
-            <div className="shrink-0 text-right">
-              <p className={`text-xs font-semibold ${d.days_to_go <= 7 ? "text-[var(--terracotta)]" : "text-[var(--charcoal)]/60"}`}>
-                {d.days_to_go}d
-              </p>
-              <p className="text-[10px] text-[var(--charcoal)]/40">{fmtDateShort(d.due_date)}</p>
+      <ul className="no-scrollbar divide-y divide-[var(--border)] lg:max-h-[540px] lg:overflow-y-auto">
+        {deadlines.map((d, i) => (
+          <li
+            key={d.id}
+            className={`px-3 py-2.5 sm:px-4 ${!expanded && i >= MOBILE_LIST_LIMIT ? "hidden lg:block" : ""}`}
+          >
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 lg:flex lg:items-center">
+              {/* Fixed-width badge lines categories up on desktop; inline chip on mobile */}
+              <span
+                className={`hidden w-14 shrink-0 rounded-full py-0.5 text-center text-[10px] font-semibold uppercase tracking-wide lg:inline-block ${criticalityClass(d.criticality)}`}
+              >
+                {d.criticality}
+              </span>
+              <div className="min-w-0 lg:flex-1">
+                <p className="truncate text-sm font-medium text-[var(--charcoal)]">{d.category}</p>
+                <p className="flex items-center gap-1.5 text-[11px] text-[var(--charcoal)]/50">
+                  <span
+                    className={`inline-block rounded-full px-1.5 text-[9px] font-semibold uppercase tracking-wide lg:hidden ${criticalityClass(d.criticality)}`}
+                  >
+                    {d.criticality}
+                  </span>
+                  <span className="truncate">
+                    {d.bride_name} &amp; {d.groom_name}
+                  </span>
+                </p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className={`text-xs font-semibold ${d.days_to_go <= 7 ? "text-[var(--terracotta)]" : "text-[var(--charcoal)]/60"}`}>
+                  {d.days_to_go}d
+                </p>
+                <p className="text-[10px] text-[var(--charcoal)]/40">{fmtDateShort(d.due_date)}</p>
+              </div>
             </div>
           </li>
         ))}
       </ul>
+      <MobileMore expanded={expanded} hidden={hidden} onToggle={() => setExpanded((v) => !v)} />
     </div>
   );
 }
@@ -272,27 +313,39 @@ const KIND_LABEL: Record<string, string> = {
 };
 
 function RecentActivity({ activity }: { activity: DashboardData["recent_activity"] }) {
+  const [expanded, setExpanded] = useState(false);
   if (activity.length === 0) return <EmptyCard message="No recent activity." />;
+
+  const hidden = Math.max(0, activity.length - MOBILE_LIST_LIMIT);
 
   return (
     <div className="rounded-lg border border-[var(--border)] bg-white">
-      <ul className="no-scrollbar max-h-[540px] divide-y divide-[var(--border)] overflow-y-auto">
-        {activity.map((a) => (
-          <li key={a.id} className="flex items-start gap-3 px-4 py-2.5">
-            {/* Fixed-width chip so title always lines up */}
-            <span className="mt-0.5 w-14 shrink-0 rounded border border-[var(--border)] bg-[var(--cream-deep)] py-0.5 text-center text-[10px] font-medium text-[var(--charcoal)]/60">
-              {KIND_LABEL[a.kind] ?? a.kind}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-[var(--charcoal)]">{a.title}</p>
-              {a.body && (
-                <p className="mt-0.5 truncate text-[11px] text-[var(--charcoal)]/50">{a.body}</p>
-              )}
+      <ul className="no-scrollbar divide-y divide-[var(--border)] lg:max-h-[540px] lg:overflow-y-auto">
+        {activity.map((a, i) => (
+          <li
+            key={a.id}
+            className={`px-3 py-2.5 sm:px-4 ${!expanded && i >= MOBILE_LIST_LIMIT ? "hidden lg:block" : ""}`}
+          >
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 lg:flex lg:items-start">
+              {/* Fixed-width chip lines titles up on desktop; inline chip on mobile */}
+              <span className="mt-0.5 hidden w-14 shrink-0 rounded border border-[var(--border)] bg-[var(--cream-deep)] py-0.5 text-center text-[10px] font-medium text-[var(--charcoal)]/60 lg:inline-block">
+                {KIND_LABEL[a.kind] ?? a.kind}
+              </span>
+              <div className="min-w-0 lg:flex-1">
+                <p className="truncate text-sm font-medium text-[var(--charcoal)]">{a.title}</p>
+                <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-[var(--charcoal)]/50">
+                  <span className="inline-block rounded border border-[var(--border)] bg-[var(--cream-deep)] px-1.5 text-[9px] font-medium text-[var(--charcoal)]/60 lg:hidden">
+                    {KIND_LABEL[a.kind] ?? a.kind}
+                  </span>
+                  {a.body && <span className="truncate">{a.body}</span>}
+                </p>
+              </div>
+              <span className="shrink-0 text-[11px] text-[var(--charcoal)]/40">{timeAgo(a.created_at)}</span>
             </div>
-            <span className="shrink-0 text-[11px] text-[var(--charcoal)]/40">{timeAgo(a.created_at)}</span>
           </li>
         ))}
       </ul>
+      <MobileMore expanded={expanded} hidden={hidden} onToggle={() => setExpanded((v) => !v)} />
     </div>
   );
 }
@@ -304,63 +357,129 @@ type PLRow = Awaited<ReturnType<typeof analyticsProjects>>[number];
 function PLTable({ rows }: { rows: PLRow[] }) {
   if (rows.length === 0) return <EmptyCard message="No project data yet." />;
 
+  const derive = (p: PLRow) => {
+    const planning = Number(p.planning_fee ?? 0);
+    const commission = Number(p.commission ?? 0);
+    const clientBilling = Number(p.client_billing ?? 0);
+    const vendorCost = Number(p.vendor_cost ?? 0);
+    return {
+      planning,
+      commission,
+      clientBilling,
+      vendorCost,
+      margin: clientBilling > 0 ? (commission / clientBilling) * 100 : 0,
+      totalIncome: planning + commission,
+    };
+  };
+
   return (
-    <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-white">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] text-sm">
-          <thead className="bg-[var(--charcoal)] text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/75">
-            <tr>
-              <th className="px-4 py-2.5">Project</th>
-              <th className="px-4 py-2.5">Wedding</th>
-              <th className="px-4 py-2.5 text-right">Planning fee</th>
-              <th className="px-4 py-2.5 text-right">Client billing</th>
-              <th className="px-4 py-2.5 text-right">Vendor cost</th>
-              <th className="px-4 py-2.5 text-right">Commission</th>
-              <th className="px-4 py-2.5 text-right">Margin</th>
-              <th className="px-4 py-2.5 text-right">Total income</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((p) => {
-              const planning = Number(p.planning_fee ?? 0);
-              const commission = Number(p.commission ?? 0);
-              const clientBilling = Number(p.client_billing ?? 0);
-              const vendorCost = Number(p.vendor_cost ?? 0);
-              const margin = clientBilling > 0 ? (commission / clientBilling) * 100 : 0;
-              const totalIncome = planning + commission;
-              return (
-                <tr key={p.project_id} className="border-t border-[var(--border)] hover:bg-[var(--cream)]/50">
-                  <td className="px-4 py-3">
-                    <Link
-                      to="/admin/projects/$id"
-                      params={{ id: p.project_id }}
-                      className="font-medium text-[var(--terracotta)] hover:underline"
-                    >
-                      {(p.bride_name || "?") + " & " + (p.groom_name || "?")}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-[var(--charcoal)]/55">
-                    {p.wedding_date ? fmtDate(p.wedding_date) : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{formatINR(planning)}</td>
-                  <td className="px-4 py-3 text-right font-medium text-[var(--charcoal)]">{formatINR(clientBilling)}</td>
-                  <td className="px-4 py-3 text-right text-[var(--charcoal)]/60">{formatINR(vendorCost)}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-[var(--terracotta)]">{formatINR(commission)}</td>
-                  <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{margin.toFixed(1)}%</td>
-                  <td className="px-4 py-3 text-right font-semibold text-[var(--charcoal)]">{formatINRShort(totalIncome)}</td>
-                </tr>
-              );
-            })}
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-[var(--charcoal)]/50">
-                  No projects with closed quotes yet.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+    <>
+      {/* Mobile: stacked cards so no money column is hidden off-screen */}
+      <div className="grid gap-2.5 lg:hidden">
+        {rows.map((p) => {
+          const d = derive(p);
+          return (
+            <div key={p.project_id} className="rounded-lg border border-[var(--border)] bg-white p-3">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-2">
+                <Link
+                  to="/admin/projects/$id"
+                  params={{ id: p.project_id }}
+                  className="truncate font-medium text-[var(--terracotta)]"
+                >
+                  {(p.bride_name || "?") + " & " + (p.groom_name || "?")}
+                </Link>
+                <span className="shrink-0 text-[11px] text-[var(--charcoal)]/55">
+                  {p.wedding_date ? fmtDateShort(p.wedding_date) : "—"}
+                </span>
+              </div>
+              <dl className="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                <PLStat label="Planning fee" value={formatINR(d.planning)} />
+                <PLStat label="Client billing" value={formatINR(d.clientBilling)} strong />
+                <PLStat label="Vendor cost" value={formatINR(d.vendorCost)} />
+                <PLStat label="Commission" value={formatINR(d.commission)} accent />
+                <PLStat label="Margin" value={`${d.margin.toFixed(1)}%`} />
+                <PLStat label="Total income" value={formatINRShort(d.totalIncome)} strong />
+              </dl>
+            </div>
+          );
+        })}
       </div>
+
+      {/* Desktop: full table */}
+      <div className="hidden overflow-hidden rounded-lg border border-[var(--border)] bg-white lg:block">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px] text-sm">
+            <thead className="bg-[var(--charcoal)] text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/75">
+              <tr>
+                <th className="px-4 py-2.5">Project</th>
+                <th className="px-4 py-2.5">Wedding</th>
+                <th className="px-4 py-2.5 text-right">Planning fee</th>
+                <th className="px-4 py-2.5 text-right">Client billing</th>
+                <th className="px-4 py-2.5 text-right">Vendor cost</th>
+                <th className="px-4 py-2.5 text-right">Commission</th>
+                <th className="px-4 py-2.5 text-right">Margin</th>
+                <th className="px-4 py-2.5 text-right">Total income</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((p) => {
+                const d = derive(p);
+                return (
+                  <tr key={p.project_id} className="border-t border-[var(--border)] hover:bg-[var(--cream)]/50">
+                    <td className="px-4 py-3">
+                      <Link
+                        to="/admin/projects/$id"
+                        params={{ id: p.project_id }}
+                        className="font-medium text-[var(--terracotta)] hover:underline"
+                      >
+                        {(p.bride_name || "?") + " & " + (p.groom_name || "?")}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-[var(--charcoal)]/55">
+                      {p.wedding_date ? fmtDate(p.wedding_date) : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{formatINR(d.planning)}</td>
+                    <td className="px-4 py-3 text-right font-medium text-[var(--charcoal)]">{formatINR(d.clientBilling)}</td>
+                    <td className="px-4 py-3 text-right text-[var(--charcoal)]/60">{formatINR(d.vendorCost)}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-[var(--terracotta)]">{formatINR(d.commission)}</td>
+                    <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{d.margin.toFixed(1)}%</td>
+                    <td className="px-4 py-3 text-right font-semibold text-[var(--charcoal)]">{formatINRShort(d.totalIncome)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function PLStat({
+  label,
+  value,
+  strong,
+  accent,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+  accent?: boolean;
+}) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[10px] uppercase tracking-widest text-[var(--charcoal)]/45">{label}</dt>
+      <dd
+        className={`truncate ${
+          accent
+            ? "font-semibold text-[var(--terracotta)]"
+            : strong
+              ? "font-semibold text-[var(--charcoal)]"
+              : "text-[var(--charcoal)]/70"
+        }`}
+      >
+        {value}
+      </dd>
     </div>
   );
 }
@@ -386,7 +505,7 @@ function VendorPipeline({ pipeline }: { pipeline: DashboardData["vendor_pipeline
   if (total === 0) return <EmptyCard message="No vendor quotes yet." />;
 
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-white p-5">
+    <div className="rounded-lg border border-[var(--border)] bg-white p-3 sm:p-5">
       <div className="flex h-3 w-full overflow-hidden rounded-full bg-[var(--cream-deep)]">
         {pipeline
           .filter((p) => p.count > 0)
@@ -399,12 +518,12 @@ function VendorPipeline({ pipeline }: { pipeline: DashboardData["vendor_pipeline
             />
           ))}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 sm:flex sm:flex-wrap sm:gap-6">
+      <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:mt-4 sm:flex sm:flex-wrap sm:gap-6">
         {pipeline.map((p, i) => (
-          <div key={p.label} className="flex items-center gap-2">
+          <div key={p.label} className="flex min-w-0 items-center gap-1.5 sm:gap-2">
             <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${PIPE_DOT_COLORS[i] ?? "bg-[var(--charcoal)]/20"}`} />
-            <span className="text-xs text-[var(--charcoal)]/65">{p.label}</span>
-            <span className="font-display text-sm font-semibold text-[var(--charcoal)]">{p.count}</span>
+            <span className="truncate text-[11px] text-[var(--charcoal)]/65 sm:text-xs">{p.label}</span>
+            <span className="ml-auto font-display text-sm font-semibold text-[var(--charcoal)] sm:ml-0">{p.count}</span>
           </div>
         ))}
       </div>
