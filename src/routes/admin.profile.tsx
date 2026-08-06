@@ -49,8 +49,8 @@ function ProfilePage() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5">
-        <div className="mb-6">
+      <div className="mx-auto w-full max-w-[1600px] px-3 py-2 sm:px-6 sm:py-5">
+        <div className="mb-6 hidden sm:block">
           <h1 className="brand-line hidden font-display text-xl font-semibold text-[var(--charcoal)] sm:block sm:text-2xl">
             Profile
           </h1>

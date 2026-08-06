@@ -310,29 +310,32 @@ function SidebarLogout({ collapsed }: { collapsed: boolean }) {
 // out) still lives behind the hamburger drawer above.
 
 const MOBILE_TAB_ITEMS = [
-  { to: "/admin/dashboard", icon: LayoutDashboard, label: "Home" },
-  { to: "/admin/calendar", icon: CalendarDays, label: "Calendar" },
-  { to: "/admin/projects", icon: Heart, label: "Projects" },
-  { to: "/admin/profile", icon: UserCircle, label: "Profile" },
+  { to: "/admin/dashboard", icon: LayoutDashboard, label: "Home", exact: false, adminOnly: false },
+  { to: "/admin", icon: Users, label: "Vendors", exact: true, adminOnly: false },
+  { to: "/admin/projects", icon: Heart, label: "Project", exact: false, adminOnly: false },
+  { to: "/admin/analytics", icon: BarChart3, label: "Analytics", exact: false, adminOnly: true },
+  { to: "/admin/calendar", icon: CalendarDays, label: "Calendar", exact: false, adminOnly: false },
+  { to: "/admin/notifications", icon: Bell, label: "Alerts", exact: false, adminOnly: false },
 ] as const;
 
 export function AdminMobileTabBar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { role } = useAuth();
 
   return (
     <nav className="app-footer-safe fixed inset-x-0 bottom-0 z-40 flex h-16 items-stretch border-t border-[var(--border)] bg-[var(--cream)] lg:hidden">
-      {MOBILE_TAB_ITEMS.map(({ to, icon: Icon, label }) => {
-        const active = pathname.startsWith(to);
+      {MOBILE_TAB_ITEMS.filter((i) => !i.adminOnly || role === "admin").map(({ to, icon: Icon, label, exact }) => {
+        const active = exact ? pathname === to || pathname === to + "/" : pathname.startsWith(to);
         return (
           <Link
             key={to}
             to={to}
-            className={`flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium ${
+            className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-0.5 text-[9px] font-medium ${
               active ? "text-[var(--terracotta)]" : "text-[var(--charcoal)]/55"
             }`}
           >
-            <Icon className="h-5 w-5" />
-            {label}
+            <Icon className="h-[18px] w-[18px]" />
+            <span className="truncate">{label}</span>
           </Link>
         );
       })}
