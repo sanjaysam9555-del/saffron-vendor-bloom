@@ -341,26 +341,38 @@ function Chip({
   onClick,
   label,
   count,
+  icon,
 }: {
   active: boolean;
   onClick: () => void;
   label: string;
   count: number;
+  icon?: React.ReactNode;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+      className={`inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium capitalize transition ${
         active
-          ? "bg-[var(--terracotta)] text-[var(--cream)]"
-          : "text-[var(--charcoal)]/65 hover:bg-[var(--cream-deep)] hover:text-[var(--charcoal)]"
+          ? "border-[var(--terracotta)] bg-[var(--terracotta)] text-[var(--cream)] shadow-sm"
+          : "border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
       }`}
     >
-      {label}
-      <span className={active ? "ml-1.5 opacity-75" : "ml-1.5 text-[var(--charcoal)]/40"}>{count}</span>
+      {icon && <span className="shrink-0 [&_svg]:h-3.5 [&_svg]:w-3.5">{icon}</span>}
+      <span className="truncate">{label}</span>
+      <span
+        className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none ${
+          active
+            ? "bg-[var(--cream)]/25 text-[var(--cream)]"
+            : "bg-[var(--cream-deep)] text-[var(--charcoal)]/60"
+        }`}
+      >
+        {count}
+      </span>
     </button>
   );
 }
+
 
 function FeedRow({
   entry,
