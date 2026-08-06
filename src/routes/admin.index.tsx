@@ -339,16 +339,16 @@ function DashboardPage() {
                   {bulkMode ? "Exit Bulk Edit" : "Bulk Edit"}
                 </button>
               )}
-              <div className="flex items-center gap-1 rounded-lg border border-[var(--border)] bg-white p-1">
+              <div className="flex h-9 flex-1 items-center gap-1 rounded-md border border-[var(--border)] bg-white p-1 sm:h-auto sm:flex-none sm:rounded-lg">
                 <button
                   onClick={() => setView("cards")}
-                  className={`flex items-center gap-1 rounded-md px-3 py-1 text-xs transition-colors ${view === "cards" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
+                  className={`flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1 text-xs transition-colors sm:flex-none sm:px-3 ${view === "cards" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
                 >
                   <LayoutGrid className="h-3.5 w-3.5" /> Cards
                 </button>
                 <button
                   onClick={() => setView("table")}
-                  className={`flex items-center gap-1 rounded-md px-3 py-1 text-xs transition-colors ${view === "table" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
+                  className={`flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1 text-xs transition-colors sm:flex-none sm:px-3 ${view === "table" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
                 >
                   <TableIcon className="h-3.5 w-3.5" /> Table
                 </button>
