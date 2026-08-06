@@ -247,6 +247,16 @@ function AdminNotificationsPage() {
           </span>
           <div className="ml-auto flex items-center gap-1.5">
             <button
+              onClick={() => setUnreadOnly((v) => !v)}
+              className={`inline-flex shrink-0 items-center rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
+                unreadOnly
+                  ? "border-[var(--terracotta)] bg-[var(--terracotta)] text-[var(--cream)]"
+                  : "border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+              }`}
+            >
+              Unread only
+            </button>
+            <button
               onClick={() => refresh()}
               aria-label="Refresh"
               className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-xs font-medium text-[var(--charcoal)]/75 transition hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
@@ -267,26 +277,12 @@ function AdminNotificationsPage() {
       </div>
 
       <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-baseline gap-3">
-            <h1 className="brand-line hidden font-display text-xl font-semibold text-[var(--charcoal)] sm:block sm:text-2xl">
-              Activity feed
-            </h1>
-            <span className="text-xs text-[var(--charcoal)]/55">
-              {unreadCount} unread of {items.length}
-            </span>
-          </div>
-          <button
-            onClick={() => setUnreadOnly((v) => !v)}
-            className={`rounded-md border px-3 py-1.5 text-xs font-medium transition ${
-              unreadOnly
-                ? "border-[var(--terracotta)] bg-[var(--terracotta)] text-[var(--cream)]"
-                : "border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
-            }`}
-          >
-            Unread only
-          </button>
+        <div className="mb-4 hidden flex-wrap items-center justify-between gap-3 sm:mb-5 sm:flex">
+          <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
+            Activity feed
+          </h1>
         </div>
+
 
         {/* Category chips — only categories with data are shown */}
         <div className="mb-5 flex flex-wrap items-center gap-1 rounded-xl border border-[var(--border)] bg-white p-1">
