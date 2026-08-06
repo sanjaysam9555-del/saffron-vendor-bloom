@@ -384,7 +384,7 @@ function FeedRow({
 
   const iconBadge = (
     <span
-      className={`mt-0.5 shrink-0 rounded-full p-2.5 ${
+      className={`mt-0.5 shrink-0 rounded-full p-2 sm:p-2.5 ${
         groupUnread > 0
           ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
           : "bg-[var(--cream-deep)]/60 text-[var(--charcoal)]/40"
@@ -403,21 +403,19 @@ function FeedRow({
         <Link
           to={href}
           onClick={() => onMarkOne(it.id)}
-          className="flex items-start gap-3 px-4 py-3 transition hover:bg-[var(--cream)]/50"
+          className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 px-3 py-3 transition hover:bg-[var(--cream)]/50 sm:px-4"
         >
           {iconBadge}
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-3">
-              <div className={`text-sm ${unread ? "font-semibold text-[var(--charcoal)]" : "text-[var(--charcoal)]/70"}`}>
-                {it.title}
-              </div>
-              <div className="shrink-0 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/40">
-                {timeAgo(it.created_at)}
-              </div>
+          <div className="min-w-0">
+            <div className={`break-words text-sm leading-snug ${unread ? "font-semibold text-[var(--charcoal)]" : "text-[var(--charcoal)]/70"}`}>
+              {it.title}
             </div>
             {it.body && (
-              <div className="mt-0.5 line-clamp-2 text-xs text-[var(--charcoal)]/55">{it.body}</div>
+              <div className="mt-0.5 line-clamp-2 break-words text-xs text-[var(--charcoal)]/55">{it.body}</div>
             )}
+            <div className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/40">
+              {timeAgo(it.created_at)}
+            </div>
           </div>
         </Link>
       </div>
@@ -429,29 +427,32 @@ function FeedRow({
     <div className={`overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm ${groupUnread > 0 ? "border-l-2 border-l-[var(--terracotta)]" : ""}`}>
       <button
         onClick={onToggle}
-        className="flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-[var(--cream)]/50"
+        className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 px-3 py-3 text-left transition hover:bg-[var(--cream)]/50 sm:px-4"
       >
         {iconBadge}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-3">
-            <div className={`text-sm ${groupUnread > 0 ? "font-semibold text-[var(--charcoal)]" : "text-[var(--charcoal)]/70"}`}>
+        <div className="min-w-0">
+          <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-snug ${groupUnread > 0 ? "font-semibold text-[var(--charcoal)]" : "text-[var(--charcoal)]/70"}`}>
+            <span className="break-words">
               {entry.items.length} {meta.plural}
-              {groupUnread > 0 && (
-                <span className="ml-2 rounded-full bg-[var(--terracotta)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--cream)]">
-                  {groupUnread} new
-                </span>
-              )}
-            </div>
-            <div className="flex shrink-0 items-center gap-1.5 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/40">
-              {timeAgo(entry.latest)}
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-180" : ""}`} />
-            </div>
+            </span>
+            {groupUnread > 0 && (
+              <span className="rounded-full bg-[var(--terracotta)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--cream)]">
+                {groupUnread} new
+              </span>
+            )}
           </div>
           <div className="mt-0.5 truncate text-xs text-[var(--charcoal)]/55">
             {entry.projectName ?? entry.items[0].title}
           </div>
+          <div className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/40">
+            {timeAgo(entry.latest)}
+          </div>
         </div>
+        <ChevronDown
+          className={`mt-2 h-4 w-4 shrink-0 text-[var(--charcoal)]/40 transition-transform ${expanded ? "rotate-180" : ""}`}
+        />
       </button>
+
 
       {expanded && (
         <div className="border-t border-[var(--border)] bg-[var(--cream)]/30">
