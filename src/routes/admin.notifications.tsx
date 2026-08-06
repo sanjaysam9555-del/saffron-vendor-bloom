@@ -269,7 +269,7 @@ function AdminNotificationsPage() {
       <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-baseline gap-3">
-            <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
+            <h1 className="brand-line hidden font-display text-xl font-semibold text-[var(--charcoal)] sm:block sm:text-2xl">
               Activity feed
             </h1>
             <span className="text-xs text-[var(--charcoal)]/55">

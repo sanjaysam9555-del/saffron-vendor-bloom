@@ -1,4 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useMobilePageTitleValue } from "@/lib/mobile-page-title";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -347,22 +348,26 @@ const MOBILE_TITLES: { match: (p: string) => boolean; title: string }[] = [
   { match: (p) => p.startsWith("/admin/dashboard"), title: "Dashboard" },
   { match: (p) => p.startsWith("/admin/analytics"), title: "Analytics" },
   { match: (p) => p.startsWith("/admin/calendar"), title: "Calendar" },
-  { match: (p) => p.startsWith("/admin/notifications"), title: "Notifications" },
+  { match: (p) => p.startsWith("/admin/notifications"), title: "Activity feed" },
   { match: (p) => p.startsWith("/admin/submissions"), title: "Submissions" },
-  { match: (p) => p.startsWith("/admin/users"), title: "Users" },
+  { match: (p) => p.startsWith("/admin/users"), title: "Admin" },
   { match: (p) => p.startsWith("/admin/profile"), title: "Profile" },
+  { match: (p) => p.startsWith("/admin/projects"), title: "Projects" },
+  { match: (p) => p === "/admin" || p === "/admin/", title: "Weddings" },
 ];
 
 function MobilePageTitle() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const entry = MOBILE_TITLES.find((t) => t.match(pathname));
-  if (!entry) return <span />;
+  const dynamic = useMobilePageTitleValue();
+  const title = dynamic ?? MOBILE_TITLES.find((t) => t.match(pathname))?.title;
+  if (!title) return <span />;
   return (
     <div className="min-w-0 text-right">
       <span className="block truncate font-display text-base font-semibold text-[var(--charcoal)]">
-        {entry.title}
+        {title}
       </span>
       <span className="ml-auto mt-0.5 block h-[2px] w-10 bg-[var(--terracotta)]" />
     </div>
   );
 }
+

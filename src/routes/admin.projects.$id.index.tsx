@@ -36,6 +36,7 @@ import { QuickAddVendorPanel } from "@/components/admin/QuickAddVendorPanel";
 import { ColumnFilter, type ColumnFilterOption } from "@/components/ui/ColumnFilter";
 import { useInstagramPreviewsBulk, useAutoEnsureMissingPreviews } from "@/hooks/use-instagram-previews";
 import { AssignedVendorCard } from "@/components/admin/AssignedVendorCard";
+import { useSetMobilePageTitle } from "@/lib/mobile-page-title";
 import { ProjectOverviewTab } from "@/components/admin/project-tabs/ProjectOverviewTab";
 import { ProjectQuotesTab } from "@/components/admin/project-tabs/ProjectQuotesTab";
 import { ProjectCategoriesTab } from "@/components/admin/project-tabs/ProjectCategoriesTab";
@@ -1529,11 +1530,12 @@ interface ProjectHeaderProps {
 
 function ProjectHeader({ project }: ProjectHeaderProps) {
   const isArchived = !!project.archived_at;
+  useSetMobilePageTitle(`${project.bride_name} & ${project.groom_name}`);
   return (
     <div className="flex flex-col gap-3">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="font-display text-2xl text-[var(--charcoal)] sm:text-3xl">
+          <h1 className="hidden font-display text-2xl text-[var(--charcoal)] sm:block sm:text-3xl">
             {project.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {project.groom_name}
           </h1>
           {isArchived && (

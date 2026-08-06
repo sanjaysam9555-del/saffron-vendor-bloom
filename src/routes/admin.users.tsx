@@ -128,7 +128,7 @@ function AdminUsersPage() {
         {/* Page heading — the only brand-line on the page; section cards
             below carry their own icon + title instead. */}
         <div className="mb-6">
-          <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
+          <h1 className="brand-line hidden font-display text-xl font-semibold text-[var(--charcoal)] sm:block sm:text-2xl">
             Admin
           </h1>
         </div>
