@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ArrowUpDown } from "lucide-react";
 import type { ProjectTask, TaskStage } from "@/lib/project-tasks.functions";
-import { PriorityChip, STAGE_LABEL, STAGE_ORDER, StagePill, formatDue, isOverdue } from "./task-meta";
+import { PriorityChip, STAGE_LABEL, STAGE_ORDER, formatDue, isOverdue } from "./task-meta";
 
 type SortKey = "title" | "priority" | "due_date" | "stage" | "assignee";
 
@@ -128,9 +128,6 @@ export function TaskTable({
           )}
         </tbody>
       </table>
-      <div className="hidden">
-        <StagePill stage="done" />
-      </div>
     </div>
   );
 }
