@@ -71,12 +71,14 @@ function AdminDashboardPage() {
       </div>
 
       <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5">
-        {/* Page heading */}
-        <div className="mb-3 sm:mb-8">
+        {/* Page heading — on mobile the title lives in the top bar next to the
+            brand name, so it is hidden here to save vertical space. */}
+        <div className="hidden sm:mb-8 sm:block">
           <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
             Dashboard
           </h1>
         </div>
+
 
         {/* ── Stat cards ── */}
         <StatCards stats={data.stats} />
