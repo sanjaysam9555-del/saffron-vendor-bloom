@@ -1,4 +1,4 @@
-import { Instagram, MapPin, MessageSquare, Phone, Plus, Star, Trash2 } from "lucide-react";
+import { IndianRupee, Instagram, MapPin, MessageSquare, Phone, Plus, Star, Trash2 } from "lucide-react";
 import { CATEGORY_COLORS } from "@/lib/categories";
 import { instagramUrl, instagramDisplay } from "@/lib/instagram";
 import { VendorMediaBand } from "@/components/vendor/VendorMediaBand";
@@ -16,7 +16,7 @@ const SLOT = {
   media: "h-24",
   name: "h-[2.6rem]",
   category: "h-4",
-  price: "h-[1.15rem]",
+  price: "h-4",
   status: "h-6",
   quotes: "h-6",
 } as const;
@@ -125,11 +125,14 @@ export function AssignedVendorCard({
         </div>
 
         {/* ── Price ── */}
-        <div className={`flex ${SLOT.price} items-center`}>
+        <div className={`mt-1.5 flex ${SLOT.price} items-center gap-1.5 text-xs text-[var(--charcoal)]/60`}>
           {vendor.price_text && (
-            <span className="truncate text-[13px] font-semibold text-[var(--terracotta)]" title={vendor.price_text}>
-              {vendor.price_text}
-            </span>
+            <>
+              <IndianRupee className="h-3 w-3 shrink-0" />
+              <span className="truncate" title={vendor.price_text}>
+                {vendor.price_text}
+              </span>
+            </>
           )}
         </div>
 
