@@ -30,7 +30,7 @@ const SLOT = {
   name: "h-[2.6rem]",
   category: "h-4",
   location: "h-4",
-  price: "h-[1.15rem]",
+  price: "h-4",
   contact: "h-7",
   assigner: "h-6",
 } as const;
