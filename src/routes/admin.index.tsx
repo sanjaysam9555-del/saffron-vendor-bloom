@@ -17,6 +17,7 @@ import { useAllCategories } from "@/lib/categories";
 import { useIsAdmin } from "@/lib/auth";
 import { useAutoEnsureMissingPreviews, useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
 import { useVendorTabState, type VendorSortKey } from "@/components/admin/admin-tab-state";
+import { useSetMobilePageTitle } from "@/lib/mobile-page-title";
 
 
 // Lazy-load heavy dialogs and the detail drawer so they don't bloat the
