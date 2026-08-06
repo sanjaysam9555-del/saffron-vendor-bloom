@@ -5,11 +5,12 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -372,6 +373,56 @@ export type Database = {
           },
         ]
       }
+      project_guests: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          meal: string | null
+          name: string
+          phone: string | null
+          plus_one: number
+          project_id: string
+          rsvp_status: string
+          side: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          meal?: string | null
+          name: string
+          phone?: string | null
+          plus_one?: number
+          project_id: string
+          rsvp_status?: string
+          side?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          meal?: string | null
+          name?: string
+          phone?: string | null
+          plus_one?: number
+          project_id?: string
+          rsvp_status?: string
+          side?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_guests_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_other_expenses: {
         Row: {
           actual_amount: number | null
@@ -512,6 +563,56 @@ export type Database = {
             columns: ["quote_id"]
             isOneToOne: true
             referencedRelation: "project_vendor_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_tasks: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          done: boolean
+          due_date: string | null
+          id: string
+          owner_name: string | null
+          priority: string
+          project_id: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          done?: boolean
+          due_date?: string | null
+          id?: string
+          owner_name?: string | null
+          priority?: string
+          project_id: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          done?: boolean
+          due_date?: string | null
+          id?: string
+          owner_name?: string | null
+          priority?: string
+          project_id?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -796,6 +897,33 @@ export type Database = {
           read_by?: Json
           title?: string
           vendor_id?: string | null
+        }
+        Relationships: []
+      }
+      studio_settings: {
+        Row: {
+          brand_name: string
+          display_font: string
+          id: boolean
+          primary_color: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          brand_name?: string
+          display_font?: string
+          id?: boolean
+          primary_color?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          brand_name?: string
+          display_font?: string
+          id?: boolean
+          primary_color?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -1338,6 +1466,7 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -1387,8 +1516,11 @@ export type Database = {
     }
   }
 }
+
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
@@ -1417,6 +1549,7 @@ export type Tables<
       ? R
       : never
     : never
+
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
@@ -1441,6 +1574,7 @@ export type TablesInsert<
       ? I
       : never
     : never
+
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
@@ -1465,6 +1599,7 @@ export type TablesUpdate<
       ? U
       : never
     : never
+
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
@@ -1481,6 +1616,7 @@ export type Enums<
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
+
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
@@ -1497,6 +1633,7 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
 export const Constants = {
   public: {
     Enums: {
