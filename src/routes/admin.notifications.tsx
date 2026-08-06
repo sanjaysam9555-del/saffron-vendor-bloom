@@ -285,8 +285,8 @@ function AdminNotificationsPage() {
 
 
         {/* Category chips — only categories with data are shown */}
-        <div className="mb-5 flex flex-wrap items-center gap-1 rounded-xl border border-[var(--border)] bg-white p-1">
-          <Chip active={category === "all"} onClick={() => setCategory("all")} label="all" count={items.length} />
+        <div className="mb-5 flex flex-wrap items-center gap-2">
+          <Chip active={category === "all"} onClick={() => setCategory("all")} label="All" count={items.length} icon={<Bell />} />
           {CATEGORY_ORDER.filter((c) => (counts.get(c) ?? 0) > 0).map((c) => (
             <Chip
               key={c}
@@ -294,9 +294,11 @@ function AdminNotificationsPage() {
               onClick={() => setCategory(c)}
               label={CATEGORY_META[c].label}
               count={counts.get(c) ?? 0}
+              icon={CATEGORY_META[c].icon}
             />
           ))}
         </div>
+
 
         {loading ? (
           <div className="space-y-2">
