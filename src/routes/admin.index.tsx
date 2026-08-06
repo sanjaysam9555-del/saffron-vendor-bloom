@@ -127,8 +127,9 @@ function DashboardPage() {
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
-  
-  
+
+  useSetMobilePageTitle(filters.category ?? "All Vendors");
+
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
