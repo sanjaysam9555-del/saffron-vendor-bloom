@@ -567,52 +567,123 @@ export type Database = {
           },
         ]
       }
+      project_task_vendors: {
+        Row: {
+          created_at: string
+          id: string
+          task_id: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          task_id: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          task_id?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_task_vendors_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "project_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_task_vendors_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_tasks: {
         Row: {
+          assignee_user_id: string | null
           created_at: string
           created_by: string | null
           done: boolean
           due_date: string | null
           id: string
           owner_name: string | null
+          preceding_task_id: string | null
           priority: string
           project_id: string
+          remarks: string | null
           sort_order: number
+          stage: Database["public"]["Enums"]["task_stage"]
+          succeeding_task_id: string | null
+          task_category: string | null
           title: string
           updated_at: string
+          vendor_category: string | null
         }
         Insert: {
+          assignee_user_id?: string | null
           created_at?: string
           created_by?: string | null
           done?: boolean
           due_date?: string | null
           id?: string
           owner_name?: string | null
+          preceding_task_id?: string | null
           priority?: string
           project_id: string
+          remarks?: string | null
           sort_order?: number
+          stage?: Database["public"]["Enums"]["task_stage"]
+          succeeding_task_id?: string | null
+          task_category?: string | null
           title: string
           updated_at?: string
+          vendor_category?: string | null
         }
         Update: {
+          assignee_user_id?: string | null
           created_at?: string
           created_by?: string | null
           done?: boolean
           due_date?: string | null
           id?: string
           owner_name?: string | null
+          preceding_task_id?: string | null
           priority?: string
           project_id?: string
+          remarks?: string | null
           sort_order?: number
+          stage?: Database["public"]["Enums"]["task_stage"]
+          succeeding_task_id?: string | null
+          task_category?: string | null
           title?: string
           updated_at?: string
+          vendor_category?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "project_tasks_preceding_task_id_fkey"
+            columns: ["preceding_task_id"]
+            isOneToOne: false
+            referencedRelation: "project_tasks"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "project_tasks_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_tasks_succeeding_task_id_fkey"
+            columns: ["succeeding_task_id"]
+            isOneToOne: false
+            referencedRelation: "project_tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -1510,6 +1581,14 @@ export type Database = {
         | "thinking"
       project_payment_status: "pending" | "partial" | "received" | "overdue"
       quote_status: "received" | "revised" | "closed" | "withdrawn"
+      task_stage:
+        | "not_picked"
+        | "in_progress"
+        | "pending_client"
+        | "pending_vendor"
+        | "pending_planner"
+        | "held_up"
+        | "done"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1647,6 +1726,15 @@ export const Constants = {
       ],
       project_payment_status: ["pending", "partial", "received", "overdue"],
       quote_status: ["received", "revised", "closed", "withdrawn"],
+      task_stage: [
+        "not_picked",
+        "in_progress",
+        "pending_client",
+        "pending_vendor",
+        "pending_planner",
+        "held_up",
+        "done",
+      ],
     },
   },
 } as const
