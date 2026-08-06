@@ -309,12 +309,12 @@ function DashboardPage() {
                   </button>
                 );
               })()}
-              <label className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-xs text-[var(--charcoal)]/75">
-                <ArrowUpDown className="h-3.5 w-3.5" />
+              <label className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2 text-xs text-[var(--charcoal)]/75 sm:h-auto sm:flex-none sm:py-1.5">
+                <ArrowUpDown className="h-3.5 w-3.5 shrink-0" />
                 <select
                   value={sort}
                   onChange={(e) => setSort(e.target.value as SortKey)}
-                  className="bg-transparent text-xs text-[var(--charcoal)] focus:outline-none"
+                  className="min-w-0 bg-transparent text-xs text-[var(--charcoal)] focus:outline-none"
                 >
                   <option value="date_added_desc">Newest added</option>
                   <option value="date_added_asc">Oldest added</option>
