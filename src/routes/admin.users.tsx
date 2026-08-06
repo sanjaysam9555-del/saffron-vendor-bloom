@@ -8,8 +8,8 @@ import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useVendors } from "@/hooks/useVendorData";
 import { BulkInstagramSyncDialog } from "@/components/vendor/BulkInstagramSyncDialog";
-import {
 import { SkeletonBlock } from "@/components/ui/LoadingState";
+import {
   listUsers,
   createEmployee,
   setUserPassword,

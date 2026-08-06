@@ -17,8 +17,8 @@ import { toast } from "sonner";
 import { AuthGate } from "@/components/AuthGate";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import {
 import { SkeletonBlock } from "@/components/ui/LoadingState";
+import {
   listStaffNotifications,
   markAllNotificationsRead,
   markNotificationRead,
