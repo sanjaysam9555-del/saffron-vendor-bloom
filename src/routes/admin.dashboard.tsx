@@ -379,36 +379,61 @@ function PLTable({ rows }: { rows: PLRow[] }) {
 
   return (
     <>
-      {/* Mobile: stacked cards so no money column is hidden off-screen */}
+      {/* Mobile: compact table-style card — dark header row per project, then a
+          3-column grid of the six numeric fields with ruled cells. */}
       <div className="grid gap-2.5 lg:hidden">
         {rows.map((p) => {
           const d = derive(p);
+          const cells = [
+            { label: "Planning fee", value: formatINRShort(d.planning) },
+            { label: "Client billing", value: formatINRShort(d.clientBilling), strong: true },
+            { label: "Vendor cost", value: formatINRShort(d.vendorCost) },
+            { label: "Commission", value: formatINRShort(d.commission), accent: true },
+            { label: "Margin", value: `${d.margin.toFixed(1)}%` },
+            { label: "Total income", value: formatINRShort(d.totalIncome), strong: true },
+          ];
           return (
-            <div key={p.project_id} className="rounded-lg border border-[var(--border)] bg-white p-3">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-2">
+            <div
+              key={p.project_id}
+              className="overflow-hidden rounded-lg border border-[var(--border)] bg-white"
+            >
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 bg-[var(--charcoal)] px-3 py-2">
                 <Link
                   to="/admin/projects/$id"
                   params={{ id: p.project_id }}
-                  className="truncate font-medium text-[var(--terracotta)]"
+                  className="truncate text-sm font-medium text-[var(--cream)]"
                 >
                   {(p.bride_name || "?") + " & " + (p.groom_name || "?")}
                 </Link>
-                <span className="shrink-0 text-[11px] text-[var(--charcoal)]/55">
+                <span className="shrink-0 text-[10px] uppercase tracking-wide text-[var(--cream)]/65">
                   {p.wedding_date ? fmtDateShort(p.wedding_date) : "—"}
                 </span>
               </div>
-              <dl className="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-                <PLStat label="Planning fee" value={formatINR(d.planning)} />
-                <PLStat label="Client billing" value={formatINR(d.clientBilling)} strong />
-                <PLStat label="Vendor cost" value={formatINR(d.vendorCost)} />
-                <PLStat label="Commission" value={formatINR(d.commission)} accent />
-                <PLStat label="Margin" value={`${d.margin.toFixed(1)}%`} />
-                <PLStat label="Total income" value={formatINRShort(d.totalIncome)} strong />
-              </dl>
+              <div className="grid grid-cols-3 divide-x divide-[var(--border)] border-t border-[var(--border)] [&>*:nth-child(n+4)]:border-t [&>*:nth-child(n+4)]:border-[var(--border)]">
+                {cells.map((c) => (
+                  <div key={c.label} className="min-w-0 px-2 py-1.5">
+                    <div className="truncate text-[9px] font-medium uppercase tracking-wide text-[var(--charcoal)]/45">
+                      {c.label}
+                    </div>
+                    <div
+                      className={`truncate text-xs tabular-nums ${
+                        c.accent
+                          ? "font-semibold text-[var(--terracotta)]"
+                          : c.strong
+                            ? "font-semibold text-[var(--charcoal)]"
+                            : "text-[var(--charcoal)]/75"
+                      }`}
+                    >
+                      {c.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           );
         })}
       </div>
+
 
       {/* Desktop: full table */}
       <div className="hidden overflow-hidden rounded-lg border border-[var(--border)] bg-white lg:block">
