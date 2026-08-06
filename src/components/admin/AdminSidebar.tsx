@@ -75,18 +75,20 @@ export function AdminSidebar() {
   return (
     <>
       {/* ── Mobile top bar ── */}
-      <div className="app-header-safe fixed inset-x-0 top-0 z-40 flex h-14 items-center border-b border-[var(--border)] bg-[var(--cream)] px-4 lg:hidden">
+      <div className="app-header-safe fixed inset-x-0 top-0 z-40 grid h-14 grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-3 border-b border-[var(--border)] bg-[var(--cream)] px-4 lg:hidden">
         <button
           onClick={() => setMobileOpen(true)}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--charcoal)]/70 hover:bg-[var(--cream-deep)]"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[var(--charcoal)]/70 hover:bg-[var(--cream-deep)]"
           aria-label="Open navigation"
         >
           <Menu className="h-5 w-5" />
         </button>
-        <Link to="/admin" className="ml-3 font-display text-base font-semibold text-[var(--terracotta)]">
+        <Link to="/admin" className="shrink-0 font-display text-base font-semibold text-[var(--terracotta)]">
           Saffron
         </Link>
+        <MobilePageTitle />
       </div>
+
 
       {/* ── Mobile overlay ── */}
       {mobileOpen && (
