@@ -7,6 +7,7 @@ import {
   deleteVendor,
   bulkUpdateVendors,
   bulkDeleteVendors,
+  bulkInsertVendors,
 } from "@/lib/vendor-api";
 import type { Vendor, VendorInput } from "@/lib/vendor-types";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,8 +75,12 @@ export function useVendorMutations() {
     mutationFn: (ids: string[]) => bulkDeleteVendors(ids),
     onSuccess: invalidate,
   });
+  const bulkInsert = useMutation({
+    mutationFn: (rows: VendorInput[]) => bulkInsertVendors(rows),
+    onSuccess: invalidate,
+  });
 
-  return { create, update, remove, bulkUpdate, bulkDelete };
+  return { create, update, remove, bulkUpdate, bulkDelete, bulkInsert };
 }
 
 export interface VendorModalState {

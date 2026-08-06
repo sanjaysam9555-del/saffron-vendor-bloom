@@ -1,13 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { KeyRound, Trash2, UserPlus, Pencil, Check, X, Users, ArrowRight, Instagram, ChevronDown, Inbox } from "lucide-react";
+import { KeyRound, Trash2, UserPlus, Pencil, Check, X, Users, ChevronDown, UserCog } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { AuthGate } from "@/components/AuthGate";
+import { AdminSectionBackBar } from "@/components/admin/AdminSectionBackBar";
 import { useAuth } from "@/lib/auth";
 import { useConfirmDelete } from "@/components/ui/confirm-dialog";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useVendors } from "@/hooks/useVendorData";
-import { BulkInstagramSyncDialog } from "@/components/vendor/BulkInstagramSyncDialog";
 import { SkeletonBlock } from "@/components/ui/LoadingState";
 import {
   listUsers,
@@ -16,11 +16,12 @@ import {
   setUserDisplayName,
   deleteUser,
 } from "@/lib/admin-users.functions";
+import { listProjectsOverview, createProjectClient } from "@/lib/projects.functions";
 
 export const Route = createFileRoute("/admin/users")({
   head: () => ({
     meta: [
-      { title: "Admin — Saffron Planning Studio" },
+      { title: "Manage Users — Saffron Planning Studio" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -37,9 +38,10 @@ const TEAM_PREVIEW_COUNT = 4;
 type Row = {
   id: string;
   email: string;
-  role: "admin" | "employee";
+  role: "admin" | "employee" | "client";
   display_name: string;
   created_at: string;
+  projects: string[];
 };
 
 function AdminUsersPage() {
@@ -48,9 +50,15 @@ function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
+  // Team = staff only; client accounts live in the Client Credentials
+  // section below instead — listUsers() returns everyone with a role,
+  // splitting here keeps "Team" meaning exactly what it says.
+  const staffRows = useMemo(() => rows.filter((r) => r.role !== "client"), [rows]);
+  const clientRows = useMemo(() => rows.filter((r) => r.role === "client"), [rows]);
+
   // Show a preview of the team by default; the rest is one click away.
   const [usersOpen, setUsersOpen] = useState(false);
-  const visibleRows = usersOpen ? rows : rows.slice(0, TEAM_PREVIEW_COUNT);
+  const visibleRows = usersOpen ? staffRows : staffRows.slice(0, TEAM_PREVIEW_COUNT);
 
   // create employee state
   const [showCreate, setShowCreate] = useState(false);
@@ -58,23 +66,6 @@ function AdminUsersPage() {
   const [newPwd, setNewPwd] = useState("");
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
-
-  // Submissions stats
-  const { data: vendors = [] } = useVendors();
-  const submissionStats = useMemo(() => {
-    const subs = vendors.filter((v) => v.submitted_via_form);
-    const now = Date.now();
-    const weekMs = 7 * 24 * 60 * 60 * 1000;
-    const monthMs = 30 * 24 * 60 * 60 * 1000;
-    return {
-      total: subs.length,
-      week: subs.filter((v) => now - new Date(v.date_added).getTime() < weekMs).length,
-      month: subs.filter((v) => now - new Date(v.date_added).getTime() < monthMs).length,
-    };
-  }, [vendors]);
-
-  // Instagram sync dialog
-  const [igSyncOpen, setIgSyncOpen] = useState(false);
 
   const refresh = async () => {
     setLoading(true);
@@ -118,19 +109,19 @@ function AdminUsersPage() {
 
   return (
     <div className="min-h-screen bg-[var(--cream)] pb-16">
+      <AdminSectionBackBar />
+
       {/* Secondary toolbar */}
-      <div className="h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
+      <div className="hidden h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70 sm:block">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 h-full px-3 sm:px-6">
-          <span className="text-sm text-[var(--charcoal)]/55">Create employees and manage their access.</span>
+          <span className="text-sm text-[var(--charcoal)]/55">Create staff and client accounts, and manage their access.</span>
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[1600px] px-3 py-2 sm:px-6 sm:py-5">
-        {/* Page heading — the only brand-line on the page; section cards
-            below carry their own icon + title instead. */}
+      <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5">
         <div className="mb-6 hidden sm:block">
-          <h1 className="brand-line hidden font-display text-xl font-semibold text-[var(--charcoal)] sm:block sm:text-2xl">
-            Admin
+          <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
+            Manage Users
           </h1>
         </div>
 
@@ -142,7 +133,7 @@ function AdminUsersPage() {
             icon={<Users className="h-4 w-4" />}
             title="Team"
             description="Employees who can sign in to the studio dashboard."
-            meta={loading ? undefined : `${rows.length} member${rows.length === 1 ? "" : "s"}`}
+            meta={loading ? undefined : `${staffRows.length} member${staffRows.length === 1 ? "" : "s"}`}
             action={
               <button
                 onClick={() => setShowCreate((s) => !s)}
@@ -177,7 +168,7 @@ function AdminUsersPage() {
                   <SkeletonBlock key={i} className="h-10 rounded-md" />
                 ))}
               </div>
-            ) : rows.length === 0 ? (
+            ) : staffRows.length === 0 ? (
               <EmptyState
                 compact
                 icon={<Users />}
@@ -205,7 +196,7 @@ function AdminUsersPage() {
                 </div>
                 {/* Explicit expand control — a preview is always visible, so
                     there is nothing hidden behind an unlabelled chevron. */}
-                {rows.length > TEAM_PREVIEW_COUNT && (
+                {staffRows.length > TEAM_PREVIEW_COUNT && (
                   <button
                     onClick={() => setUsersOpen((o) => !o)}
                     aria-expanded={usersOpen}
@@ -213,7 +204,7 @@ function AdminUsersPage() {
                   >
                     {usersOpen
                       ? "Show fewer"
-                      : `Show all ${rows.length} members`}
+                      : `Show all ${staffRows.length} members`}
                     <ChevronDown className={`h-3.5 w-3.5 transition-transform ${usersOpen ? "rotate-180" : ""}`} />
                   </button>
                 )}
@@ -221,50 +212,10 @@ function AdminUsersPage() {
             )}
           </SectionCard>
 
-          {/* ── Vendor Submissions ── */}
-          <SectionCard
-            icon={<Inbox className="h-4 w-4" />}
-            title="Vendor Submissions"
-            description="Vendors who registered through the public signup form."
-            action={
-              <Link
-                to="/admin/submissions"
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-3.5 py-1.5 text-sm font-medium text-[var(--charcoal)]/75 transition hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
-              >
-                View all <ArrowRight className="h-4 w-4" />
-              </Link>
-            }
-          >
-            <div className="grid divide-y divide-[var(--border)] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-              <StatTile label="Total submissions" value={submissionStats.total} />
-              <StatTile label="This week" value={submissionStats.week} />
-              <StatTile label="This month" value={submissionStats.month} />
-            </div>
-          </SectionCard>
-
-          {/* ── Instagram Sync ── */}
-          <SectionCard
-            icon={<Instagram className="h-4 w-4" />}
-            title="Instagram Sync"
-            description="Fetch Instagram previews for vendors that are missing or stale."
-            action={
-              <button
-                onClick={() => setIgSyncOpen(true)}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3.5 py-1.5 text-sm font-medium text-[var(--cream)] transition hover:bg-[var(--terracotta)]/90"
-              >
-                <Instagram className="h-4 w-4" /> Sync now
-              </button>
-            }
-          >
-            <p className="px-4 py-4 text-sm text-[var(--charcoal)]/65 sm:px-5">
-              Runs in the background and refreshes profile photos and recent posts for
-              vendors with an Instagram handle.
-            </p>
-          </SectionCard>
+          {/* ── Client Credentials ── */}
+          <CreateClientCredentialsCard clients={clientRows} loading={loading} onChanged={refresh} onError={setErr} />
         </div>
       </div>
-
-      <BulkInstagramSyncDialog open={igSyncOpen} onOpenChange={setIgSyncOpen} />
     </div>
   );
 }
@@ -274,7 +225,7 @@ function AdminUsersPage() {
  * on the right, content below. Section titles deliberately carry no
  * `brand-line` — that accent belongs to the page heading alone.
  */
-function SectionCard({
+export function SectionCard({
   icon,
   title,
   description,
@@ -311,7 +262,7 @@ function SectionCard({
   );
 }
 
-function StatTile({ label, value }: { label: string; value: number }) {
+export function StatTile({ label, value }: { label: string; value: number }) {
   return (
     <div className="p-4 sm:px-5">
       <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">{label}</div>
@@ -412,6 +363,214 @@ function UserRow({ row, isSelf, onChanged, onError }: { row: Row; isSelf: boolea
                 <Trash2 className="h-4 w-4" />
               </button>
             )}
+          </div>
+        )}
+      </td>
+    </tr>
+  );
+}
+
+// ── Create Client Credentials ────────────────────────────────────────────────
+// Separate from Team: clients are scoped to a project (createProjectClient
+// requires project_id), so this section adds a project picker in front of
+// the same create-account flow used inside a project's detail page.
+
+function CreateClientCredentialsCard({
+  clients,
+  loading,
+  onChanged,
+  onError,
+}: {
+  clients: Row[];
+  loading: boolean;
+  onChanged: () => void;
+  onError: (m: string) => void;
+}) {
+  const { data: projects = [], isLoading: projectsLoading } = useQuery({
+    queryKey: ["projects"],
+    queryFn: () => listProjectsOverview(),
+  });
+  const [open, setOpen] = useState(false);
+  const [projectId, setProjectId] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  const sortedProjects = useMemo(
+    () => [...projects].sort((a: any, b: any) => `${a.bride_name} ${a.groom_name}`.localeCompare(`${b.bride_name} ${b.groom_name}`)),
+    [projects],
+  );
+
+  const reset = () => {
+    setProjectId("");
+    setName("");
+    setEmail("");
+    setPassword("");
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!projectId) {
+      notifyError(null, "Choose a project first");
+      return;
+    }
+    setCreating(true);
+    try {
+      await createProjectClient({
+        data: { project_id: projectId, email: email.trim(), password, display_name: name.trim() || email.split("@")[0] },
+      });
+      notifySuccess("Client account created");
+      reset();
+      setOpen(false);
+    } catch (err) {
+      notifyError(err, "Could not create client account");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  return (
+    <SectionCard
+      icon={<UserCog className="h-4 w-4" />}
+      title="Client Credentials"
+      description="Sign-in accounts for couples to view their own project."
+      meta={loading ? undefined : `${clients.length} client${clients.length === 1 ? "" : "s"}`}
+      action={
+        <button
+          onClick={() => setOpen((s) => !s)}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3.5 py-1.5 text-sm font-medium text-[var(--cream)] transition hover:bg-[var(--terracotta)]/90"
+        >
+          <UserPlus className="h-4 w-4" /> Create client credentials
+        </button>
+      }
+    >
+      {open ? (
+        <form onSubmit={handleCreate} className="grid gap-2 p-4 sm:grid-cols-2">
+          <select
+            required
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
+            className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm sm:col-span-2"
+          >
+            <option value="">{projectsLoading ? "Loading projects…" : "Select a project…"}</option>
+            {sortedProjects.map((p: any) => (
+              <option key={p.id} value={p.id}>
+                {p.bride_name} & {p.groom_name} · {new Date(p.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                {p.client_count > 0 ? ` · ${p.client_count} existing login${p.client_count === 1 ? "" : "s"}` : ""}
+              </option>
+            ))}
+          </select>
+          <input className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" placeholder="Display name" value={name} onChange={(e) => setName(e.target.value)} />
+          <input className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" type="email" required placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm sm:col-span-2" required minLength={6} placeholder="Password (min 6)" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <p className="text-xs text-[var(--charcoal)]/60 sm:col-span-2">
+            A project can have more than one client login (e.g. both partners). This account will only see the selected project.
+          </p>
+          <div className="flex gap-2 sm:col-span-2">
+            <button type="submit" disabled={creating} className="flex-1 rounded-md bg-[var(--charcoal)] px-3 py-2 text-sm text-white hover:opacity-90 disabled:opacity-50">
+              {creating ? "Creating…" : "Create"}
+            </button>
+            <button type="button" onClick={() => { setOpen(false); reset(); }} className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm hover:bg-[var(--cream)]">
+              Cancel
+            </button>
+          </div>
+        </form>
+      ) : loading ? (
+        <div className="space-y-2 p-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <SkeletonBlock key={i} className="h-10 rounded-md" />
+          ))}
+        </div>
+      ) : clients.length === 0 ? (
+        <EmptyState
+          compact
+          icon={<UserCog />}
+          title="No client accounts yet"
+          description="Create your first client login above."
+        />
+      ) : (
+        <div className="overflow-x-auto touch-pan-x" style={{ WebkitOverflowScrolling: "touch" }}>
+          <table className="w-full min-w-[640px] text-sm">
+            <thead className="bg-[var(--charcoal)] text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/80">
+              <tr>
+                <th className="px-4 py-2.5">Name</th>
+                <th className="px-4 py-2.5">Email</th>
+                <th className="px-4 py-2.5">Project</th>
+                <th className="px-4 py-2.5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {clients.map((r) => (
+                <ClientRow key={r.id} row={r} onChanged={onChanged} onError={onError} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </SectionCard>
+  );
+}
+
+function ClientRow({ row, onChanged, onError }: { row: Row; onChanged: () => void; onError: (m: string) => void }) {
+  const confirmDelete = useConfirmDelete();
+  const [resetting, setResetting] = useState(false);
+  const [newPwd, setNewPwd] = useState("");
+
+  const savePwd = async () => {
+    try {
+      await setUserPassword({ data: { user_id: row.id, password: newPwd } });
+      notifySuccess("Password updated", { description: "User has been signed out of all sessions." });
+      setNewPwd("");
+      setResetting(false);
+      onChanged();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed";
+      onError(msg);
+      notifyError(e, msg);
+    }
+  };
+
+  const handleDelete = async () => {
+    const ok = await confirmDelete({
+      title: `Delete ${row.email}?`,
+      description: "Their account will be removed. This cannot be undone.",
+      confirmLabel: "Delete user",
+    });
+    if (!ok) return;
+    try {
+      await deleteUser({ data: { user_id: row.id } });
+      notifySuccess(`Deleted ${row.email}`);
+      onChanged();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed";
+      onError(msg);
+      notifyError(e, msg);
+    }
+  };
+
+  return (
+    <tr className="border-t border-[var(--border)]">
+      <td className="px-4 py-3">{row.display_name || "—"}</td>
+      <td className="px-4 py-3 text-[var(--charcoal)]/70">{row.email}</td>
+      <td className="px-4 py-3 text-[var(--charcoal)]/70">
+        {row.projects.length > 0 ? row.projects.join(", ") : <span className="text-[var(--charcoal)]/40">—</span>}
+      </td>
+      <td className="px-4 py-3">
+        {resetting ? (
+          <div className="flex items-center justify-end gap-1">
+            <input type="password" minLength={6} placeholder="New password" className="rounded border border-[var(--border)] px-2 py-1 text-sm" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} />
+            <button onClick={savePwd} disabled={newPwd.length < 6} title="Sets the new password and signs the user out of all sessions" className="rounded bg-[var(--terracotta)] px-2 py-1 text-xs text-white disabled:opacity-50">Set</button>
+            <button onClick={() => { setResetting(false); setNewPwd(""); }} className="rounded p-1 text-[var(--charcoal)]/60 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-end gap-1">
+            <button onClick={() => setResetting(true)} title="Change password (signs user out)" className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
+              <KeyRound className="h-4 w-4" />
+            </button>
+            <button onClick={handleDelete} title="Delete user" className="rounded p-1.5 text-red-600 hover:bg-red-50">
+              <Trash2 className="h-4 w-4" />
+            </button>
           </div>
         )}
       </td>

@@ -499,6 +499,57 @@ export const createProject = createServerFn({ method: "POST" })
     return row;
   });
 
+const projectInputSchema = z.object({
+  bride_name: z.string().min(1).max(120),
+  groom_name: z.string().min(1).max(120),
+  wedding_date: z.string().min(4),
+  notes: z.string().max(2000).optional().nullable(),
+  total_installments: z.number().int().min(1).max(4),
+  planning_fee: z.number().nonnegative(),
+  target_income: z.number().nonnegative().optional(),
+});
+
+export const bulkInsertProjectsServer = createServerFn({ method: "POST" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .inputValidator((d) => z.object({ rows: z.array(projectInputSchema) }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertStaff(context.userId);
+    let inserted = 0;
+    // One at a time (not a single bulk insert) — each project also needs its
+    // own seeded project_payments rows, same as the single-create path.
+    for (const row of data.rows) {
+      const { data: created, error } = await supabaseAdmin
+        .from("projects")
+        .insert({
+          bride_name: row.bride_name,
+          groom_name: row.groom_name,
+          wedding_date: row.wedding_date,
+          notes: row.notes ?? null,
+          total_installments: row.total_installments,
+          planning_fee: row.planning_fee,
+          target_income: row.target_income ?? 0,
+          created_by: context.userId,
+        })
+        .select("id")
+        .single();
+      if (error) throw new Error(error.message);
+      if (created?.id) {
+        const seedRows = Array.from({ length: row.total_installments }, (_, i) => ({
+          project_id: created.id as string,
+          installment_no: i + 1,
+          label: `Installment ${i + 1}`,
+          expected_amount: 0,
+          received_amount: 0,
+          status: "pending" as const,
+          created_by: context.userId,
+        }));
+        await supabaseAdmin.from("project_payments").insert(seedRows);
+        inserted++;
+      }
+    }
+    return inserted;
+  });
+
 export const updateProject = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) =>

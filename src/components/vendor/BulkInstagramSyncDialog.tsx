@@ -82,7 +82,7 @@ export function BulkInstagramSyncDialog({ open, onOpenChange }: Props) {
 
   const handleStart = async () => {
     try {
-      const result = await start.mutateAsync({ mode: "missing_or_stale" });
+      const result = await start.mutateAsync({ mode: "missing_only" });
       setStartedJob(result);
       setJobId(result.id);
       if (result.total === 0) {
@@ -102,7 +102,8 @@ export function BulkInstagramSyncDialog({ open, onOpenChange }: Props) {
             Sync Instagram previews
           </DialogTitle>
           <DialogDescription>
-            Fetches Instagram data for vendors that have no preview yet or whose preview is older than 30 days. Already-fresh vendors are skipped.
+            Fetches Instagram data only for vendors with no preview yet. Vendors that already have one are never
+            touched here — refresh those individually from the vendor's own card.
           </DialogDescription>
         </DialogHeader>
 

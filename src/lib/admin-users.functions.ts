@@ -24,10 +24,25 @@ export const listUsers = createServerFn({ method: "GET" })
     if (ue) throw new Error(ue.message);
 
     const ids = usersData.users.map((u) => u.id);
-    const [{ data: roles }, { data: profiles }] = await Promise.all([
+    const [{ data: roles }, { data: profiles }, { data: clientLinks }] = await Promise.all([
       supabaseAdmin.from("user_roles").select("user_id, role").in("user_id", ids),
       supabaseAdmin.from("profiles").select("user_id, display_name").in("user_id", ids),
+      supabaseAdmin.from("project_clients").select("user_id, project_id").in("user_id", ids),
     ]);
+
+    const projectIds = Array.from(new Set((clientLinks ?? []).map((l) => l.project_id)));
+    const { data: projectRows } = projectIds.length
+      ? await supabaseAdmin.from("projects").select("id, bride_name, groom_name").in("id", projectIds)
+      : { data: [] as { id: string; bride_name: string; groom_name: string }[] };
+    const projectNameMap = new Map((projectRows ?? []).map((p) => [p.id, `${p.bride_name} & ${p.groom_name}`]));
+    const projectsByUser = new Map<string, string[]>();
+    for (const link of clientLinks ?? []) {
+      const name = projectNameMap.get(link.project_id);
+      if (!name) continue;
+      const arr = projectsByUser.get(link.user_id) ?? [];
+      arr.push(name);
+      projectsByUser.set(link.user_id, arr);
+    }
 
     const roleMap = new Map(roles?.map((r) => [r.user_id, r.role]) ?? []);
     const nameMap = new Map(profiles?.map((p) => [p.user_id, p.display_name]) ?? []);
@@ -36,8 +51,9 @@ export const listUsers = createServerFn({ method: "GET" })
       id: u.id,
       email: u.email ?? "",
       created_at: u.created_at,
-      role: (roleMap.get(u.id) as "admin" | "employee") ?? "employee",
+      role: (roleMap.get(u.id) as "admin" | "employee" | "client" | undefined) ?? "employee",
       display_name: nameMap.get(u.id) ?? "",
+      projects: projectsByUser.get(u.id) ?? [],
     }));
   });
 

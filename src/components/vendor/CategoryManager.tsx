@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { X, Pencil, Trash2, Check, AlertTriangle, Loader2, Tag } from "lucide-react";
+import { X, Pencil, Trash2, Check, AlertTriangle, Loader2, Tag, Plus } from "lucide-react";
 import {
+  addCustomCategory,
   deleteCategory,
   renameCategory,
   useAllCategories,
@@ -23,6 +24,8 @@ export function CategoryManager({ vendors, onClose }: CategoryManagerProps) {
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [newName, setNewName] = useState("");
+  const [adding, setAdding] = useState(false);
 
   const counts = useMemo(() => {
     return vendors.reduce<Record<string, number>>((acc, v) => {
@@ -58,6 +61,20 @@ export function CategoryManager({ vendors, onClose }: CategoryManagerProps) {
     qc.invalidateQueries({ queryKey: ["vendors"] });
   };
 
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName.trim()) return;
+    setAdding(true);
+    setError(null);
+    const res = await addCustomCategory(newName);
+    setAdding(false);
+    if (!res.ok) {
+      setError(res.error ?? "Could not add category");
+      return;
+    }
+    setNewName("");
+  };
+
   const doDelete = async (name: string) => {
     setBusy(true);
     setError(null);
@@ -91,8 +108,26 @@ export function CategoryManager({ vendors, onClose }: CategoryManagerProps) {
 
         <div className="px-5 py-3 text-xs text-[var(--charcoal)]/65">
           Renaming a category updates every vendor using it. Deleting reassigns
-          its vendors to <strong>Miscellaneous</strong>.
+          its vendors to <strong>Non-Specified</strong>.
         </div>
+
+        <form onSubmit={handleAdd} className="mx-5 mb-3 flex items-center gap-2">
+          <input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="New category name…"
+            disabled={adding}
+            className="flex-1 rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-sm focus:border-[var(--terracotta)] focus:outline-none disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            disabled={adding || !newName.trim()}
+            className="inline-flex items-center gap-1 rounded-md bg-[var(--terracotta)] px-2.5 py-1.5 text-xs font-medium text-[var(--cream)] hover:bg-[var(--terracotta)]/90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+            Add
+          </button>
+        </form>
 
         {error && (
           <div className="mx-5 mb-2 flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -139,7 +174,7 @@ export function CategoryManager({ vendors, onClose }: CategoryManagerProps) {
                 ) : isConfirming ? (
                   <>
                     <span className="flex-1 truncate text-sm text-red-700">
-                      Delete “{c}”? {count > 0 && `${count} vendor${count === 1 ? "" : "s"} → Miscellaneous`}
+                      Delete “{c}”? {count > 0 && `${count} vendor${count === 1 ? "" : "s"} → Non-Specified`}
                     </span>
                     <button
                       onClick={() => doDelete(c)}

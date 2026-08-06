@@ -265,6 +265,7 @@ function ProjectSectionTabs({
       : []),
   ];
   const tabCols = tabDefs.length / 2;
+  const mobileCols = 5;
   const timelineItems = useMemo(
     () => [
       ...buildTimelineItems(vendors, deadlines, "admin"),
@@ -282,16 +283,15 @@ function ProjectSectionTabs({
     setDetailVendor(vendors.find((v: any) => v.id === vendorId) ?? null);
 
   return (
-    <section className="mt-10">
-      {/* Below sm: a single horizontally-scrollable row of full-width,
-          full-label buttons (a fixed equal-width grid would crush labels
-          like "Assigned Vendors" into unreadable slivers on a phone).
+    <section className="mt-2 sm:mt-10">
+      {/* Below sm: a fixed 5-column grid, two rows (icon over label, small
+          text) — no horizontal scrolling to hunt for a tab.
           sm and up: the even tab count (8 client / 10 admin) splits into
-          two symmetric rows of equal-width buttons. */}
+          two symmetric rows of equal-width, icon-beside-label buttons. */}
       <div
         role="tablist"
-        className="flex overflow-x-auto overflow-y-hidden rounded-xl border border-[var(--border)] bg-white sm:grid sm:overflow-hidden"
-        style={{ gridTemplateColumns: `repeat(${tabCols}, minmax(0, 1fr))` }}
+        className="grid grid-cols-5 overflow-hidden rounded-xl border border-[var(--border)] bg-white sm:grid-cols-[repeat(var(--tab-cols),minmax(0,1fr))]"
+        style={{ "--tab-cols": tabCols } as React.CSSProperties}
       >
         {tabDefs.map(({ key, label, icon: Icon }, i) => (
           <button
@@ -299,17 +299,17 @@ function ProjectSectionTabs({
             role="tab"
             aria-selected={tab === key}
             onClick={() => setTab(key)}
-            className={`inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap border-[var(--border)] px-3 py-2.5 text-xs sm:min-w-0 sm:px-2 sm:text-sm ${
-              i > 0 ? "border-l" : ""
-            } ${i % tabCols !== 0 ? "sm:border-l" : "sm:border-l-0"} ${
-              i >= tabCols ? "sm:border-t" : "sm:border-t-0"
-            } ${
+            className={`flex min-w-0 flex-col items-center justify-center gap-1 border-[var(--border)] px-1 py-2 text-center text-[9px] font-medium leading-tight sm:flex-row sm:gap-1.5 sm:px-2 sm:py-2.5 sm:text-sm ${
+              i % mobileCols !== 0 ? "border-l" : ""
+            } ${i >= mobileCols ? "border-t" : ""} ${
+              i % tabCols !== 0 ? "sm:border-l" : "sm:border-l-0"
+            } ${i >= tabCols ? "sm:border-t" : "sm:border-t-0"} ${
               tab === key
                 ? "bg-[var(--terracotta)] text-[var(--cream)]"
                 : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
             }`}
           >
-            <Icon className="h-4 w-4 shrink-0" /> <span className="truncate">{label}</span>
+            <Icon className="h-4 w-4 shrink-0" /> <span className="sm:truncate">{label}</span>
           </button>
         ))}
       </div>
@@ -1544,7 +1544,7 @@ function ProjectHeader({ project }: ProjectHeaderProps) {
             </span>
           )}
         </div>
-        <div className="mt-1 flex items-center gap-1.5 text-sm text-[var(--charcoal)]/65">
+        <div className="mt-1 hidden items-center gap-1.5 text-sm text-[var(--charcoal)]/65 sm:flex">
           <Calendar className="h-3.5 w-3.5" />
           {new Date(project.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
         </div>

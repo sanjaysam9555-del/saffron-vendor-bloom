@@ -527,7 +527,7 @@ export function useTriggerInstagramPreview() {
 export function useStartInstagramBackfill() {
   const fn = useServerFn(startInstagramBackfill);
   return useMutation({
-    mutationFn: (input: { mode: "missing_or_stale" | "all" }) => fn({ data: input }),
+    mutationFn: (input: { mode: "missing_or_stale" | "missing_only" | "all" }) => fn({ data: input }),
   });
 }
 

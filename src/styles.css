@@ -546,10 +546,6 @@ button:active, a:active, [role="button"]:active {
 @keyframes loader-spin {
   to { transform: rotate(360deg); }
 }
-@keyframes loader-sweep {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(320%); }
-}
 
 .loader-arc {
   display: block;
@@ -561,57 +557,24 @@ button:active, a:active, [role="button"]:active {
   animation: loader-spin 1.4s cubic-bezier(0.55, 0.15, 0.35, 0.9) infinite;
 }
 
-.loader-track {
-  position: relative;
-  display: block;
-  width: 120px;
-  height: 1px;
-  overflow: hidden;
-  background: color-mix(in oklab, var(--charcoal) 12%, transparent);
-}
-
-.loader-sliver {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 38px;
-  background: var(--terracotta);
-  animation: loader-sweep 1.6s ease-in-out infinite;
-}
-
-/* Phase: starting — quick, eager arc and a fast sliver. */
+/* Phase: starting — quick, eager spin. */
 .loader-arc[data-phase="starting"] { animation-duration: 0.9s; }
-.loader-sliver[data-phase="starting"] { animation-duration: 1s; }
 
-/* Phase: buffering — slower, heavier breathing so waits feel patient. */
+/* Phase: buffering — slower, heavier spin so waits feel patient. */
 .loader-arc[data-phase="buffering"] {
   animation-duration: 2.2s;
   border-top-color: color-mix(in oklab, var(--terracotta) 80%, transparent);
 }
-.loader-sliver[data-phase="buffering"] {
-  animation: loader-breathe 2.2s ease-in-out infinite;
-  width: 100%;
-  transform-origin: left center;
-}
-@keyframes loader-breathe {
-  0%, 100% { transform: scaleX(0.12); opacity: 0.5; }
-  50%      { transform: scaleX(0.7);  opacity: 1; }
-}
 
-/* Phase: done — motion settles, ring closes, track fills. */
+/* Phase: done — motion settles, ring closes. */
 .loader-arc[data-phase="done"] {
   animation: none;
   border-color: var(--terracotta);
   transition: border-color 0.35s ease;
 }
-.loader-sliver[data-phase="done"] {
-  animation: none;
-  width: 100%;
-  transform: none;
-}
 
 @media (prefers-reduced-motion: reduce) {
   .loader-arc { animation: none !important; border-top-color: var(--terracotta); }
-  .loader-sliver { animation: none !important; width: 100%; opacity: 0.5; transform: none !important; }
 }
 
 

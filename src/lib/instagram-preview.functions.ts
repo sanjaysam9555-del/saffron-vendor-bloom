@@ -173,7 +173,7 @@ export const ensureVendorInstagramPreview = createServerFn({ method: "POST" })
 export const startInstagramBackfill = createServerFn({ method: "POST" })
   .middleware([attachAuthToken])
   .inputValidator((d) =>
-    z.object({ mode: z.enum(["missing_or_stale", "all"]).default("missing_or_stale") }).parse(d),
+    z.object({ mode: z.enum(["missing_or_stale", "missing_only", "all"]).default("missing_or_stale") }).parse(d),
   )
   .handler(async ({ data }): Promise<InstagramBackfillJob> => {
     const { userId, isStaff } = await requireUser();
@@ -205,6 +205,17 @@ export const startInstagramBackfill = createServerFn({ method: "POST" })
           if (p.status === "ok" && ageOk) fresh.add(p.vendor_id);
         });
       pending = candidateIds.filter((id) => !fresh.has(id));
+    } else if (data.mode === "missing_only") {
+      // Bulk sync never touches a vendor that already has a preview row —
+      // refreshing an existing one is a manual, per-card action only.
+      const { data: previews } = await supabaseAdmin
+        .from("vendor_instagram_previews" as never)
+        .select("vendor_id")
+        .in("vendor_id", candidateIds);
+      const hasPreview = new Set(
+        ((previews ?? []) as unknown as Array<{ vendor_id: string }>).map((p) => p.vendor_id),
+      );
+      pending = candidateIds.filter((id) => !hasPreview.has(id));
     }
 
     const { data: job, error: jErr } = await (supabaseAdmin

@@ -134,12 +134,12 @@ export function ProjectQuotesTab({
           {quotes.length === 0 ? "No quotes yet on this project." : "No quotes match this filter."}
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="lg:columns-2 lg:gap-4">
           {byVendor.map(({ vendorId, vendorName, category, quotes: vqs }) => {
             const seqMap = buildQuoteSeqMap(vqs);
             const booked = vqs.some((q) => q.is_final || q.status === "closed");
             return (
-              <div key={vendorId} className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
+              <div key={vendorId} className="mb-3 overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm break-inside-avoid">
                 <button
                   onClick={() => onOpenVendorQuotes?.(vendorId, vendorName, category)}
                   disabled={!onOpenVendorQuotes}

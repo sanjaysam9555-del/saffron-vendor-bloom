@@ -22,6 +22,7 @@ import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { getUnreadNotificationCount } from "@/lib/notifications.functions";
 import { readTheme, applyTheme, DEFAULT_THEME, type StudioTheme } from "@/lib/studio-theme";
+import { ADMIN_SECTIONS, ADMIN_SETTINGS_HOME } from "@/components/admin/admin-sections";
 
 const COLLAPSED_KEY = "saffron.sidebar.collapsed";
 const WIDTH_EXPANDED = "200px";
@@ -153,7 +154,14 @@ export function AdminSidebar() {
           <div className="my-3 mx-3 border-t border-[var(--border)]" />
 
           <NavItem to="/admin/profile" icon={<UserCircle className="h-[18px] w-[18px]" />} label="Profile" collapsed={effectiveCollapsed} onClick={() => setMobileOpen(false)} />
-          <AdminNavItem to="/admin/users" icon={<Shield className="h-[18px] w-[18px]" />} label="Admin" collapsed={effectiveCollapsed} onClick={() => setMobileOpen(false)} />
+          <AdminNavItem
+            to={ADMIN_SETTINGS_HOME}
+            icon={<Shield className="h-[18px] w-[18px]" />}
+            label="Admin"
+            collapsed={effectiveCollapsed}
+            onClick={() => setMobileOpen(false)}
+            activeMatch={(p) => p.startsWith(ADMIN_SETTINGS_HOME) || ADMIN_SECTIONS.some((s) => p.startsWith(s.to))}
+          />
         </nav>
 
         {/* Bottom cluster */}
@@ -189,6 +197,7 @@ function NavItem({
   collapsed,
   onClick,
   badge,
+  activeMatch,
 }: {
   to: string;
   exact?: boolean;
@@ -197,11 +206,15 @@ function NavItem({
   collapsed: boolean;
   onClick?: () => void;
   badge?: number;
+  /** Overrides the default active check — used when a nav item covers more than one path prefix. */
+  activeMatch?: (pathname: string) => boolean;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const active = exact
-    ? pathname === to || pathname === to + "/"
-    : pathname.startsWith(to);
+  const active = activeMatch
+    ? activeMatch(pathname)
+    : exact
+      ? pathname === to || pathname === to + "/"
+      : pathname.startsWith(to);
 
   return (
     <Link
@@ -353,7 +366,12 @@ const MOBILE_TITLES: { match: (p: string) => boolean; title: string }[] = [
   { match: (p) => p.startsWith("/admin/calendar"), title: "Calendar" },
   { match: (p) => p.startsWith("/admin/notifications"), title: "Activity feed" },
   { match: (p) => p.startsWith("/admin/submissions"), title: "Submissions" },
-  { match: (p) => p.startsWith("/admin/users"), title: "Admin" },
+  { match: (p) => p.startsWith("/admin/settings"), title: "Admin" },
+  { match: (p) => p.startsWith("/admin/users"), title: "Manage Users" },
+  { match: (p) => p.startsWith("/admin/manage-vendors"), title: "Manage Vendors" },
+  { match: (p) => p.startsWith("/admin/manage-projects"), title: "Manage Projects" },
+  { match: (p) => p.startsWith("/admin/data"), title: "Data Management" },
+  { match: (p) => p.startsWith("/admin/backups"), title: "Backup & Restore" },
   { match: (p) => p.startsWith("/admin/profile"), title: "Profile" },
   { match: (p) => p.startsWith("/admin/projects"), title: "Projects" },
   { match: (p) => p === "/admin" || p === "/admin/", title: "Weddings" },

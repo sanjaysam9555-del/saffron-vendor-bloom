@@ -15,7 +15,7 @@ export const BASE_CATEGORIES = [
   "Car Rental & Transport",
   "Hotels & Venues",
   "DJs & Live Music",
-  "Miscellaneous",
+  "Non-Specified",
 ] as const;
 
 /** @deprecated Use useAllCategories() or getAllCategories() for the merged sorted list. */
@@ -184,13 +184,13 @@ export async function renameCategory(
 }
 
 /**
- * Delete a category. If vendors still use it, they're reassigned to "Miscellaneous".
+ * Delete a category. If vendors still use it, they're reassigned to "Non-Specified".
  * For base categories, hides them from the UI via the deleted-set; for custom
  * categories, removes them outright.
  */
 export async function deleteCategory(
   name: string,
-  fallback: string = "Miscellaneous",
+  fallback: string = "Non-Specified",
 ): Promise<{ ok: boolean; error?: string }> {
   const target = name.trim();
   if (!target) return { ok: false, error: "Name required" };
@@ -258,7 +258,7 @@ export function useAllCategories(): string[] {
 
 // ---------- Colors ----------
 export function getCategoryColor(name: string): { bg: string; text: string } {
-  return CATEGORY_COLORS[name] ?? CATEGORY_COLORS["Miscellaneous"];
+  return CATEGORY_COLORS[name] ?? CATEGORY_COLORS["Non-Specified"];
 }
 
 // Warm, brand-aligned muted hues for category chips (light backgrounds, charcoal text).
@@ -276,7 +276,7 @@ export const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   "Car Rental & Transport":        { bg: "bg-[hsl(240_20%_92%)]", text: "text-[hsl(240_35%_38%)]" },
   "Hotels & Venues":               { bg: "bg-[hsl(42_55%_88%)]",  text: "text-[hsl(42_65%_30%)]" },
   "DJs & Live Music":              { bg: "bg-[hsl(340_40%_92%)]", text: "text-[hsl(340_50%_38%)]" },
-  "Miscellaneous":                 { bg: "bg-[hsl(40_15%_88%)]",  text: "text-[hsl(20_15%_32%)]" },
+  "Non-Specified":                 { bg: "bg-[hsl(40_15%_88%)]",  text: "text-[hsl(20_15%_32%)]" },
 };
 
 export const LOCATION_OPTIONS = ["Delhi", "Gurugram", "Noida", "Pan India", "Rajasthan", "Other"] as const;

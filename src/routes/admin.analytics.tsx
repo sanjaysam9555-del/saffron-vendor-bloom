@@ -654,7 +654,7 @@ function fmtDate(d: string | null) {
 
 function UpcomingReceivablesTable({ rows, isLoading }: { rows: UpcomingReceivable[]; isLoading: boolean }) {
   return (
-    <div>
+    <div className="min-w-0">
       <div className="mb-3">
         <h2 className="font-display text-xl text-[var(--charcoal)]">Upcoming Receivables</h2>
         <p className="text-xs text-[var(--charcoal)]/55">Pending client payments — planning fee instalments not yet received.</p>
@@ -722,7 +722,7 @@ function UpcomingReceivablesTable({ rows, isLoading }: { rows: UpcomingReceivabl
 
 function UpcomingPaymentsTable({ rows, isLoading }: { rows: UpcomingPayment[]; isLoading: boolean }) {
   return (
-    <div>
+    <div className="min-w-0">
       <div className="mb-3">
         <h2 className="font-display text-xl text-[var(--charcoal)]">Upcoming Payments</h2>
         <p className="text-xs text-[var(--charcoal)]/55">Pending outgoing vendor payments — instalments not yet paid.</p>

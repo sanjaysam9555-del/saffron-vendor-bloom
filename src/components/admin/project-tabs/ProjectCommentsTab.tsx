@@ -40,7 +40,7 @@ export function ProjectCommentsTab({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="lg:columns-2 lg:gap-4">
       {byVendor.map(({ vendorId, vendorName, items }) => (
         <VendorCommentGroup
           key={vendorId}
@@ -90,7 +90,7 @@ function VendorCommentGroup({
   });
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
+    <div className="mb-4 overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm break-inside-avoid">
       <button
         type="button"
         onClick={() => onOpenVendor?.(vendorId)}

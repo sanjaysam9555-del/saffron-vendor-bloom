@@ -22,9 +22,9 @@ interface LoadingStateProps {
 }
 
 /**
- * The single loading treatment used across the app: a thin rotating arc, a
- * quiet context line, and a hairline sweep. No brand marks — geometry + type.
- * Pass `phase` during slow operations so the motion reflects what's happening.
+ * The single loading treatment used across the app: a thin rotating arc and
+ * a quiet context line. No brand marks — geometry + type. Pass `phase`
+ * during slow operations so the motion reflects what's happening.
  */
 export function LoadingState({
   variant = "inline",
@@ -64,11 +64,6 @@ export function LoadingState({
 
         <span className="max-w-[16rem] text-center text-[0.78rem] tracking-[0.14em] text-[var(--charcoal)]/55 transition-opacity duration-300">
           {text}
-        </span>
-
-        {/* Hairline track with a sweeping sliver */}
-        <span className="loader-track" aria-hidden>
-          <span className="loader-sliver" data-phase={phase} />
         </span>
       </div>
     </div>
