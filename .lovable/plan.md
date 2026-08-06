@@ -1,73 +1,33 @@
-## Add a project-level "Analytics" tab (admin-only)
+# Mobile-optimised Admin Dashboard
 
-Add a fourth tab in the project page tab row, visible only to admins, that mirrors the master Analytics page but scoped to a single project.
+Rework the Dashboard page so it reads well on a phone. Presentation only — no data, permissions, or calculation changes. Desktop layout stays as it is today.
 
-### Tab bar
+## What's wrong now
 
-In `src/routes/admin.projects.$id.index.tsx` (`ProjectSectionTabs`):
-- Extend `tab` union to include `"analytics"`.
-- Render a 4th tab pill "Analytics" (BarChart3 icon) only when `useAuth().role === "admin"` — same terracotta-active styling.
-- Order: Assigned Vendors, Budget & Deadlines, Project Details, Analytics.
+- Stat cards are a horizontal scroll strip of narrow 128px boxes, so most numbers are off-screen and it isn't obvious you can swipe.
+- Upcoming weddings sit two-per-row on a 393px screen, squeezing couple names and date into a very tight card.
+- Deadlines and Recent Activity are dense desktop rows (fixed badge column + right-aligned meta) that crowd on narrow widths, and each list can scroll up to 540px inside the page, creating a scroll-within-scroll.
+- Per-project P&L is an 8-column table with a 900px minimum width, so on mobile it is a sideways-scrolling table with all money columns hidden.
+- Big fixed vertical gaps (`mt-10`) between every section waste screen height.
 
-### Tab contents (new `ProjectAnalyticsTab` component)
+## What changes
 
-Reuse the visual language and helpers from `admin.analytics.tsx` (`OverviewCard`, table styles, dark charcoal header rows, formatINR).
+**Stat cards** — replace the swipe strip with a 2-column grid on mobile (the "Active weddings" card spans the full width as a hero stat). Compact padding, smaller number size, label under the value. No hidden content.
 
-1. **Callout cards row** — Client Billing (terracotta highlight — matches vendor cost tone used in master? Actually master uses: Client Billing default, Vendor Cost terracotta, Commission emerald). Use the same 3-card layout and same color mapping:
-   - Client Billing (neutral)
-   - Vendor Cost (terracotta)
-   - Commission (emerald)
-   Values computed from this project's closed quotes + commissions.
+**Upcoming weddings** — single column on mobile: each wedding becomes a full-width row with couple name, date, vendor count, and the days-to-go pill on the right. Two-up returns at `sm:`, four-up at `lg:`.
 
-2. **Project P&L table** — single-row table (or itemized per vendor) with the same columns as master P&L minus Received/Pending. Show per-closed-vendor: Vendor, Category, Client price (closed), Vendor cost, Commission. Footer totals row.
+**Deadlines & Recent activity** — on mobile, drop the fixed-width badge column and stack: title line, then a small meta line (couple / time-ago) with the criticality chip inline. Remove the inner max-height so the page scrolls once instead of nesting scroll areas; cap the mobile list to the first 6 items with a "Show all" toggle.
 
-3. **Project Payments** — reuse the existing `PaymentsMatrixTable` UI but for just this one project (single-row matrix): Closed Amount (planning_fee), Total Installments selector (1–4), Installment 1–4 status cells, Total Received, Total Pending, Remarks. Inline-editable, identical UX to master.
+**Per-project P&L** — on mobile, render as stacked cards instead of a table: couple name + wedding date as the header, then a 2-column key/value grid for Planning fee, Client billing, Vendor cost, Commission, Margin, Total income. The existing table stays for `lg:` and up.
 
-4. **Commission Tracking table (new)** — one row per closed vendor for this project. Columns:
-   - Vendor
-   - Category
-   - Closed Amount (client price)
-   - Commission (amount)
-   - Total Installments selector (default 2, range 1–4)
-   - Installment 1 / 2 / 3 / 4 status cells (Received / Pending / Partial / Overdue), editable inline with amount + received-on
-   - Total Received (sum)
-   - Total Pending
-   - Remarks (inline)
-   - Footer totals row
-   Same dark charcoal header, zebra rows, color-coded status cells as master payments matrix.
+**Vendor pipeline** — keep the bar, tighten card padding and switch the legend to a 2-column grid with smaller type on mobile.
 
-### Backend (`supabase--migration`)
+**Spacing & heading** — reduce section gaps on mobile (`mt-6` scaling to `mt-10` at `sm:`), tighten section title size, and keep the existing hidden-on-mobile toolbar.
 
-New table `public.vendor_commission_payments` to store per-quote commission installments:
-- `id`, `project_id` (FK projects), `quote_id` (FK project_vendor_quotes, unique constraint with installment_no), `vendor_id`, `installment_no smallint (1–4)`, `expected_amount numeric`, `received_amount numeric`, `received_on date`, `status` (pending/partial/received/overdue), `notes`, `created_by`, timestamps.
-- GRANT to authenticated + service_role; RLS: admin-only via `has_role(auth.uid(),'admin')`.
-- Add `total_commission_installments smallint default 2` and `commission_remarks text` to `project_vendor_quotes` (only meaningful when quote is closed).
-- New RPC `admin_project_commission_matrix(_project_id uuid)` returning one row per closed quote with `installments jsonb` (same shape as `admin_payments_matrix`).
-- New RPC `admin_project_analytics_overview(_project_id uuid)` returning `{client_billing, vendor_cost, commission}` for that project only (subset of `admin_analytics_overview`).
-- New RPC `admin_project_pnl(_project_id uuid)` returning per-closed-vendor rows.
+## Technical notes
 
-### New server functions (`src/lib/project-analytics.functions.ts`)
-
-Admin-gated (same `assertAdmin` pattern as `analytics.functions.ts`):
-- `projectAnalyticsOverview({project_id})`
-- `projectPnl({project_id})`
-- `listCommissionMatrix({project_id})`
-- `upsertCommissionInstallment({quote_id, installment_no, expected_amount?, received_amount?, received_on?, status?})`
-- `updateQuoteCommissionInstallmentCount({quote_id, total_installments})`
-- `updateQuoteCommissionRemarks({quote_id, remarks})`
-
-Project Payments reuses existing `listPaymentsMatrix`/`upsertInstallmentSlot` etc., filtered client-side to `project_id === id` (or add a `project_id` filter param — cleaner: extend `listPaymentsMatrix` to accept optional `project_id`).
-
-### Reuse
-
-Extract shared sub-components from `admin.analytics.tsx` into `src/components/admin/analytics/` (`OverviewCard`, `PaymentsMatrixTable`, `StatusCell`) so both master and project analytics render identically. If extraction risks regressions, duplicate minimally instead — noted as fallback.
-
-### Access control
-
-- Tab hidden for non-admin roles.
-- Server functions assert admin.
-- RPCs use `SECURITY DEFINER` + `has_role` check (same pattern as existing analytics RPCs).
-
-### Out of scope
-
-No changes to client-facing screens. Vendors still see only closed price, never commission.
+- All work is in `src/routes/admin.dashboard.tsx` (`StatCards`, `UpcomingWeddings`, `UpcomingDeadlines`, `RecentActivity`, `PLTable`, `VendorPipeline`, `Section`/`SectionTitle`).
+- Mobile-first Tailwind classes with `sm:`/`lg:` overrides restoring today's desktop rendering; existing CSS variables and card styles reused, no new tokens.
+- Header rows use `grid-cols-[minmax(0,1fr)_auto]` with `min-w-0` on text and `shrink-0` on pills so long couple names truncate instead of clipping.
+- The P&L card list and the table render from the same `plData` rows; only the presentation differs (`lg:hidden` / `hidden lg:block`).
+- No changes to queries, server functions, or the admin-only visibility of financial figures.
