@@ -71,12 +71,14 @@ function AdminDashboardPage() {
       </div>
 
       <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5">
-        {/* Page heading */}
-        <div className="mb-3 sm:mb-8">
+        {/* Page heading — on mobile the title lives in the top bar next to the
+            brand name, so it is hidden here to save vertical space. */}
+        <div className="hidden sm:mb-8 sm:block">
           <h1 className="brand-line font-display text-xl font-semibold text-[var(--charcoal)] sm:text-2xl">
             Dashboard
           </h1>
         </div>
+
 
         {/* ── Stat cards ── */}
         <StatCards stats={data.stats} />
@@ -204,26 +206,28 @@ function UpcomingWeddings({ weddings }: { weddings: DashboardData["upcoming_wedd
   if (weddings.length === 0) return <EmptyCard message="No upcoming weddings." />;
 
   return (
-    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
       {weddings.map((w) => (
         <Link
           key={w.id}
           to="/admin/projects/$id"
           params={{ id: w.id }}
-          className="group vendor-card flex flex-col rounded-lg bg-white p-3 text-[var(--charcoal)] sm:p-4"
+          className="group vendor-card flex flex-col rounded-lg bg-white p-2.5 text-[var(--charcoal)] sm:p-4"
         >
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+          <div className="flex flex-col gap-1.5 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-2">
             <div className="min-w-0">
-              <p className="truncate font-display text-base font-semibold leading-tight sm:text-lg">
+              <p className="truncate font-display text-sm font-semibold leading-tight sm:text-lg">
                 {w.bride_name} &amp; {w.groom_name}
               </p>
-              <p className="mt-0.5 text-xs text-[var(--charcoal)]/55">{fmtDate(w.wedding_date)}</p>
+              <p className="mt-0.5 text-[11px] text-[var(--charcoal)]/55 sm:text-xs">
+                {fmtDateShort(w.wedding_date)}
+              </p>
             </div>
-            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold sm:px-2.5 sm:text-[11px] ${daysClass(w.days_to_go)}`}>
+            <span className={`w-fit shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold sm:px-2.5 sm:text-[11px] ${daysClass(w.days_to_go)}`}>
               {w.days_to_go}d
             </span>
           </div>
-          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-[var(--charcoal)]/50 sm:mt-3">
+          <div className="mt-1.5 flex items-center gap-1 text-[10px] text-[var(--charcoal)]/50 sm:mt-3 sm:gap-1.5 sm:text-[11px]">
             <Users className="h-3 w-3 shrink-0" />
             {w.vendor_count} vendor{w.vendor_count !== 1 ? "s" : ""}
           </div>
@@ -231,6 +235,7 @@ function UpcomingWeddings({ weddings }: { weddings: DashboardData["upcoming_wedd
       ))}
     </div>
   );
+
 }
 
 function daysClass(d: number) {
@@ -374,36 +379,61 @@ function PLTable({ rows }: { rows: PLRow[] }) {
 
   return (
     <>
-      {/* Mobile: stacked cards so no money column is hidden off-screen */}
+      {/* Mobile: compact table-style card — dark header row per project, then a
+          3-column grid of the six numeric fields with ruled cells. */}
       <div className="grid gap-2.5 lg:hidden">
         {rows.map((p) => {
           const d = derive(p);
+          const cells = [
+            { label: "Planning fee", value: formatINRShort(d.planning) },
+            { label: "Client billing", value: formatINRShort(d.clientBilling), strong: true },
+            { label: "Vendor cost", value: formatINRShort(d.vendorCost) },
+            { label: "Commission", value: formatINRShort(d.commission), accent: true },
+            { label: "Margin", value: `${d.margin.toFixed(1)}%` },
+            { label: "Total income", value: formatINRShort(d.totalIncome), strong: true },
+          ];
           return (
-            <div key={p.project_id} className="rounded-lg border border-[var(--border)] bg-white p-3">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-2">
+            <div
+              key={p.project_id}
+              className="overflow-hidden rounded-lg border border-[var(--border)] bg-white"
+            >
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 bg-[var(--charcoal)] px-3 py-2">
                 <Link
                   to="/admin/projects/$id"
                   params={{ id: p.project_id }}
-                  className="truncate font-medium text-[var(--terracotta)]"
+                  className="truncate text-sm font-medium text-[var(--cream)]"
                 >
                   {(p.bride_name || "?") + " & " + (p.groom_name || "?")}
                 </Link>
-                <span className="shrink-0 text-[11px] text-[var(--charcoal)]/55">
+                <span className="shrink-0 text-[10px] uppercase tracking-wide text-[var(--cream)]/65">
                   {p.wedding_date ? fmtDateShort(p.wedding_date) : "—"}
                 </span>
               </div>
-              <dl className="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-                <PLStat label="Planning fee" value={formatINR(d.planning)} />
-                <PLStat label="Client billing" value={formatINR(d.clientBilling)} strong />
-                <PLStat label="Vendor cost" value={formatINR(d.vendorCost)} />
-                <PLStat label="Commission" value={formatINR(d.commission)} accent />
-                <PLStat label="Margin" value={`${d.margin.toFixed(1)}%`} />
-                <PLStat label="Total income" value={formatINRShort(d.totalIncome)} strong />
-              </dl>
+              <div className="grid grid-cols-3 divide-x divide-[var(--border)] border-t border-[var(--border)] [&>*:nth-child(n+4)]:border-t [&>*:nth-child(n+4)]:border-[var(--border)]">
+                {cells.map((c) => (
+                  <div key={c.label} className="min-w-0 px-2 py-1.5">
+                    <div className="truncate text-[9px] font-medium uppercase tracking-wide text-[var(--charcoal)]/45">
+                      {c.label}
+                    </div>
+                    <div
+                      className={`truncate text-xs tabular-nums ${
+                        c.accent
+                          ? "font-semibold text-[var(--terracotta)]"
+                          : c.strong
+                            ? "font-semibold text-[var(--charcoal)]"
+                            : "text-[var(--charcoal)]/75"
+                      }`}
+                    >
+                      {c.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           );
         })}
       </div>
+
 
       {/* Desktop: full table */}
       <div className="hidden overflow-hidden rounded-lg border border-[var(--border)] bg-white lg:block">
@@ -452,35 +482,6 @@ function PLTable({ rows }: { rows: PLRow[] }) {
         </div>
       </div>
     </>
-  );
-}
-
-function PLStat({
-  label,
-  value,
-  strong,
-  accent,
-}: {
-  label: string;
-  value: string;
-  strong?: boolean;
-  accent?: boolean;
-}) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-[10px] uppercase tracking-widest text-[var(--charcoal)]/45">{label}</dt>
-      <dd
-        className={`truncate ${
-          accent
-            ? "font-semibold text-[var(--terracotta)]"
-            : strong
-              ? "font-semibold text-[var(--charcoal)]"
-              : "text-[var(--charcoal)]/70"
-        }`}
-      >
-        {value}
-      </dd>
-    </div>
   );
 }
 

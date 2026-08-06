@@ -75,18 +75,20 @@ export function AdminSidebar() {
   return (
     <>
       {/* ── Mobile top bar ── */}
-      <div className="app-header-safe fixed inset-x-0 top-0 z-40 flex h-14 items-center border-b border-[var(--border)] bg-[var(--cream)] px-4 lg:hidden">
+      <div className="app-header-safe fixed inset-x-0 top-0 z-40 grid h-14 grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-3 border-b border-[var(--border)] bg-[var(--cream)] px-4 lg:hidden">
         <button
           onClick={() => setMobileOpen(true)}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--charcoal)]/70 hover:bg-[var(--cream-deep)]"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[var(--charcoal)]/70 hover:bg-[var(--cream-deep)]"
           aria-label="Open navigation"
         >
           <Menu className="h-5 w-5" />
         </button>
-        <Link to="/admin" className="ml-3 font-display text-base font-semibold text-[var(--terracotta)]">
+        <Link to="/admin" className="shrink-0 font-display text-base font-semibold text-[var(--terracotta)]">
           Saffron
         </Link>
+        <MobilePageTitle />
       </div>
+
 
       {/* ── Mobile overlay ── */}
       {mobileOpen && (
@@ -334,5 +336,33 @@ export function AdminMobileTabBar() {
         );
       })}
     </nav>
+  );
+}
+
+/**
+ * Mobile-only page title shown on the right of the top bar, parallel to the
+ * brand name, so pages don't spend vertical space on their own heading.
+ */
+const MOBILE_TITLES: { match: (p: string) => boolean; title: string }[] = [
+  { match: (p) => p.startsWith("/admin/dashboard"), title: "Dashboard" },
+  { match: (p) => p.startsWith("/admin/analytics"), title: "Analytics" },
+  { match: (p) => p.startsWith("/admin/calendar"), title: "Calendar" },
+  { match: (p) => p.startsWith("/admin/notifications"), title: "Notifications" },
+  { match: (p) => p.startsWith("/admin/submissions"), title: "Submissions" },
+  { match: (p) => p.startsWith("/admin/users"), title: "Users" },
+  { match: (p) => p.startsWith("/admin/profile"), title: "Profile" },
+];
+
+function MobilePageTitle() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const entry = MOBILE_TITLES.find((t) => t.match(pathname));
+  if (!entry) return <span />;
+  return (
+    <div className="min-w-0 text-right">
+      <span className="block truncate font-display text-base font-semibold text-[var(--charcoal)]">
+        {entry.title}
+      </span>
+      <span className="ml-auto mt-0.5 block h-[2px] w-10 bg-[var(--terracotta)]" />
+    </div>
   );
 }
