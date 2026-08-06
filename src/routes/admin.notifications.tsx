@@ -463,18 +463,18 @@ function FeedRow({
                 key={it.id}
                 to={href}
                 onClick={() => onMarkOne(it.id)}
-                className="flex items-start gap-3 border-b border-[var(--border)]/50 px-4 py-2.5 pl-14 transition last:border-b-0 hover:bg-white"
+                className="flex items-start gap-2 border-b border-[var(--border)]/50 px-3 py-2.5 pl-11 transition last:border-b-0 hover:bg-white sm:gap-3 sm:px-4 sm:pl-14"
               >
                 <div className="min-w-0 flex-1">
-                  <div className={`text-[13px] ${unread ? "font-medium text-[var(--charcoal)]" : "text-[var(--charcoal)]/65"}`}>
+                  <div className={`break-words text-[13px] leading-snug ${unread ? "font-medium text-[var(--charcoal)]" : "text-[var(--charcoal)]/65"}`}>
                     {it.title}
                   </div>
                   {it.body && (
-                    <div className="mt-0.5 line-clamp-1 text-[11px] text-[var(--charcoal)]/50">{it.body}</div>
+                    <div className="mt-0.5 line-clamp-2 break-words text-[11px] text-[var(--charcoal)]/50">{it.body}</div>
                   )}
-                </div>
-                <div className="shrink-0 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/35">
-                  {timeAgo(it.created_at)}
+                  <div className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/35">
+                    {timeAgo(it.created_at)}
+                  </div>
                 </div>
                 {unread && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--terracotta)]" />}
               </Link>
