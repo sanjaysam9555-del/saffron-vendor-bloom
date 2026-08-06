@@ -84,16 +84,16 @@ function AdminAnalyticsPage() {
   return (
     <div className="min-h-screen bg-[var(--cream)] pb-16">
       {/* Secondary toolbar */}
-      <div className="h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
-        <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 h-full px-3 sm:px-6">
-          <span className="text-sm text-[var(--charcoal)]/55">Revenue, commissions, project P&amp;L and payment tracking.</span>
-          <div className="ml-auto flex gap-1 rounded-lg border border-[var(--border)] bg-white p-1">
+      <div className="border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-2 px-3 py-2 sm:h-14 sm:flex-row sm:items-center sm:gap-4 sm:py-0 sm:px-6">
+          <span className="hidden text-sm text-[var(--charcoal)]/55 sm:inline">Revenue, commissions, project P&amp;L and payment tracking.</span>
+          <div className="flex w-full gap-1 rounded-lg border border-[var(--border)] bg-white p-1 sm:ml-auto sm:w-auto">
             {(["month", "quarter", "year", "all"] as Preset[]).map((p) => (
               <button
                 key={p}
                 onClick={() => setPreset(p)}
                 className={
-                  "rounded-md px-3 py-1.5 text-xs font-medium capitalize transition " +
+                  "flex-1 whitespace-nowrap rounded-md px-2 py-1.5 text-xs font-medium capitalize transition sm:flex-none sm:px-3 " +
                   (preset === p
                     ? "bg-[var(--terracotta)] text-[var(--cream)]"
                     : "text-[var(--charcoal)]/70 hover:bg-[var(--cream-deep)]")
@@ -106,8 +106,8 @@ function AdminAnalyticsPage() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-6 sm:py-5">
-        <div className="mb-6">
+      <div className="mx-auto w-full max-w-[1600px] px-3 py-2 sm:px-6 sm:py-5">
+        <div className="mb-6 hidden sm:block">
           <h1 className="brand-line hidden font-display text-xl font-semibold text-[var(--charcoal)] sm:block sm:text-2xl">Analytics</h1>
         </div>
 
