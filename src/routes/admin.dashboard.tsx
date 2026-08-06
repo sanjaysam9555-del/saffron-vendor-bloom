@@ -16,6 +16,7 @@ import { AuthGate } from "@/components/AuthGate";
 import { getDashboardData, type DashboardData } from "@/lib/dashboard.functions";
 import { analyticsProjects } from "@/lib/analytics.functions";
 import { formatINR, formatINRShort } from "@/lib/quote-types";
+import { LoadingState } from "@/components/ui/LoadingState";
 
 export const Route = createFileRoute("/admin/dashboard")({
   head: () => ({
@@ -51,12 +52,7 @@ function AdminDashboardPage() {
 
   if (isLoading || !data) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--cream)]">
-        <span className="flex items-center gap-2 text-sm text-[var(--charcoal)]/50">
-          <Sparkles className="h-4 w-4 animate-pulse text-[var(--terracotta)]" />
-          Loading dashboard…
-        </span>
-      </div>
+      <LoadingState variant="fullscreen" label="Loading your dashboard" />
     );
   }
 

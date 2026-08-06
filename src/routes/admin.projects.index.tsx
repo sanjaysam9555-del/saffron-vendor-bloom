@@ -12,6 +12,7 @@ import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { useIsAdmin } from "@/lib/auth";
 import { useNavigate } from "@tanstack/react-router";
 import { useProjectTabState, type ProjectSortKey, type ProjectTab } from "@/components/admin/admin-tab-state";
+import { SkeletonBlock } from "@/components/ui/LoadingState";
 
 export const Route = createFileRoute("/admin/projects/")({
   head: () => ({
@@ -221,7 +222,7 @@ function ProjectsListPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-56 animate-pulse rounded-xl border border-[var(--border)] bg-white" />
+              <SkeletonBlock key={i} className="h-56" />
             ))
           ) : filtered.length === 0 ? (
             <div className="sm:col-span-2 xl:col-span-3 rounded-xl border border-dashed border-[var(--champagne)] bg-white py-20 text-center">

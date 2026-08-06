@@ -8,6 +8,7 @@ import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useVendors } from "@/hooks/useVendorData";
 import { BulkInstagramSyncDialog } from "@/components/vendor/BulkInstagramSyncDialog";
+import { SkeletonBlock } from "@/components/ui/LoadingState";
 import {
   listUsers,
   createEmployee,
@@ -173,7 +174,7 @@ function AdminUsersPage() {
             {loading ? (
               <div className="space-y-2 p-4">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-10 animate-pulse rounded-md bg-[var(--cream-deep)]/60" />
+                  <SkeletonBlock key={i} className="h-10 rounded-md" />
                 ))}
               </div>
             ) : rows.length === 0 ? (

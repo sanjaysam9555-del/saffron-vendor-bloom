@@ -13,6 +13,7 @@ import {
 import { AuthGate } from "@/components/AuthGate";
 import { getCalendarEvents, type CalendarEvent, type CalendarEventKind } from "@/lib/calendar.functions";
 import { formatINRShort } from "@/lib/quote-types";
+import { LoadingState } from "@/components/ui/LoadingState";
 
 export const Route = createFileRoute("/admin/calendar")({
   head: () => ({
@@ -358,10 +359,7 @@ function AdminCalendarPage() {
               </div>
               <div className="max-h-[420px] overflow-y-auto p-3">
                 {isLoading ? (
-                  <p className="flex items-center justify-center gap-2 px-1 py-6 text-xs text-[var(--charcoal)]/45">
-                    <Sparkles className="h-3.5 w-3.5 animate-pulse text-[var(--terracotta)]" />
-                    Loading…
-                  </p>
+                  <LoadingState label="Loading events" className="py-6" />
                 ) : upcoming.length === 0 ? (
                   <p className="px-1 py-6 text-center text-xs text-[var(--charcoal)]/45">
                     Nothing on the horizon.

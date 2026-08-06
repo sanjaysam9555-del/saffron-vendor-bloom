@@ -8,6 +8,7 @@ import { getProjectAsClientView } from "@/lib/projects.functions";
 import { ClientVendorCard } from "@/components/client/ClientVendorCard";
 import { useInstagramPreviewsBulk } from "@/hooks/use-instagram-previews";
 import type { ClientVendor } from "@/lib/project-types";
+import { LoadingState } from "@/components/ui/LoadingState";
 
 const ClientVendorDetail = lazy(() =>
   import("@/components/client/ClientVendorDetail").then((m) => ({ default: m.ClientVendorDetail })),
@@ -41,12 +42,7 @@ function PreviewPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[var(--cream)] px-6 py-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="h-4 w-40 animate-pulse rounded bg-[var(--cream-deep)]" />
-          <div className="mt-4 h-8 w-72 animate-pulse rounded bg-[var(--cream-deep)]" />
-        </div>
-      </div>
+      <LoadingState variant="fullscreen" label="Loading client preview" />
     );
   }
   if (error || !data) {

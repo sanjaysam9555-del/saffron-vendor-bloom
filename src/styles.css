@@ -541,3 +541,45 @@ button:active, a:active, [role="button"]:active {
 @media (prefers-reduced-motion: reduce) {
   .animate-bell-shake { animation: none !important; }
 }
+
+/* ---- Standard loading treatment (LoadingState) ---- */
+@keyframes loader-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes loader-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(320%); }
+}
+
+.loader-arc {
+  display: block;
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  border: 1.5px solid color-mix(in oklab, var(--terracotta) 16%, transparent);
+  border-top-color: var(--terracotta);
+  animation: loader-spin 1.4s cubic-bezier(0.55, 0.15, 0.35, 0.9) infinite;
+}
+
+.loader-track {
+  position: relative;
+  display: block;
+  width: 120px;
+  height: 1px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--charcoal) 12%, transparent);
+}
+
+.loader-sliver {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 38px;
+  background: var(--terracotta);
+  animation: loader-sweep 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-arc { animation: none !important; border-top-color: var(--terracotta); }
+  .loader-sliver { animation: none !important; width: 100%; opacity: 0.5; }
+}
+
