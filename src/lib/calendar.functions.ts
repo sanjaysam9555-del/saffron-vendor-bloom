@@ -1,22 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/react-start/server";
 import { attachAuthToken } from "./auth-client-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-
-async function requireStaff(): Promise<{ userId: string }> {
-  const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  if (!token) throw new Error("Authentication is still loading.");
-  const { data: userData, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !userData.user) throw new Error("Authentication is still loading.");
-  const userId = userData.user.id;
-  const { data: roles } = await supabaseAdmin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .in("role", ["admin", "employee"]);
-  if (!roles || roles.length === 0) throw new Error("Forbidden: staff only");
-  return { userId };
-}
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type CalendarEventKind =
   | "wedding"
@@ -60,18 +44,24 @@ export interface CalendarEvent {
  * instant with no refetch.
  */
 export const getCalendarEvents = createServerFn({ method: "GET" })
-  .middleware([attachAuthToken])
-  .handler(async (): Promise<CalendarEvent[]> => {
-    await requireStaff();
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .handler(async ({ context }): Promise<CalendarEvent[]> => {
+    const { data: roles, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .in("role", ["admin", "employee"]);
+    if (roleError) throw new Error(roleError.message);
+    if (!roles || roles.length === 0) throw new Error("Forbidden: staff only");
 
     const [projectsRes, deadlinesRes, clientPayRes, vendorPayRes, commissionRes] =
       await Promise.all([
-        supabaseAdmin
+        context.supabase
           .from("projects")
           .select("id, bride_name, groom_name, wedding_date")
           .is("archived_at", null)
           .not("wedding_date", "is", null),
-        supabaseAdmin
+        context.supabase
           .from("project_category_deadlines")
           .select("id, project_id, category, due_date, criticality")
           .not("due_date", "is", null),
@@ -79,15 +69,15 @@ export const getCalendarEvents = createServerFn({ method: "GET" })
         // actual balance disagree in the data (rows marked received that still
         // have money outstanding), so the remaining balance is the only
         // reliable signal. Each loop below drops anything fully settled.
-        supabaseAdmin
+        context.supabase
           .from("project_payments")
           .select("id, project_id, label, installment_no, due_date, expected_amount, received_amount")
           .not("due_date", "is", null),
-        supabaseAdmin
+        context.supabase
           .from("vendor_payment_installments")
           .select("id, project_id, vendor_id, installment_no, due_date, expected_amount, paid_amount, paid_by")
           .not("due_date", "is", null),
-        supabaseAdmin
+        context.supabase
           .from("vendor_commission_payments")
           .select("id, project_id, vendor_id, installment_no, expected_amount, received_amount"),
       ]);
@@ -112,7 +102,7 @@ export const getCalendarEvents = createServerFn({ method: "GET" })
     ];
     let vendorNameOf = new Map<string, string>();
     if (vendorIds.length > 0) {
-      const { data: vendorRows } = await supabaseAdmin
+      const { data: vendorRows } = await context.supabase
         .from("vendors")
         .select("id, vendor_name")
         .in("id", vendorIds as string[]);
