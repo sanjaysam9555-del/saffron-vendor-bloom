@@ -306,7 +306,7 @@ function ProjectSectionTabs({
             } ${i >= tabCols ? "sm:border-t" : "sm:border-t-0"} ${
               tab === key
                 ? "bg-[var(--terracotta)] text-[var(--cream)]"
-                : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
+                : "text-[var(--charcoal)]/82 hover:bg-[var(--cream)]"
             }`}
           >
             <Icon className="h-4 w-4 shrink-0" /> <span className="sm:truncate">{label}</span>
@@ -361,7 +361,7 @@ function ProjectSectionTabs({
           />
         )}
         {tab === "analytics" && isAdmin && (
-          <Suspense fallback={<div className="rounded-lg border border-[var(--border)] bg-white p-6 text-sm text-[var(--charcoal)]/60">Loading analytics…</div>}>
+          <Suspense fallback={<div className="rounded-lg border border-[var(--border)] bg-white p-6 text-sm text-[var(--charcoal)]/74">Loading analytics…</div>}>
             <ProjectAnalyticsTab projectId={projectId} />
           </Suspense>
         )}
@@ -517,23 +517,23 @@ function ProjectDetailsTab({
             </span>
           )}
           <ChevronDown
-            className={`ml-auto h-4 w-4 shrink-0 text-[var(--charcoal)]/40 transition-transform group-hover:text-[var(--terracotta)] ${editOpen ? "rotate-180" : ""}`}
+            className={`ml-auto h-4 w-4 shrink-0 text-[var(--charcoal)]/58 transition-transform group-hover:text-[var(--terracotta)] ${editOpen ? "rotate-180" : ""}`}
           />
         </button>
         <div className={`mt-3 grid gap-3 sm:grid-cols-3 ${editOpen ? "" : "hidden"}`}>
-          <label className="text-xs text-[var(--charcoal)]/70">
+          <label className="text-xs text-[var(--charcoal)]/82">
             Bride name
             <input className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm" value={bride} onChange={(e) => setBride(e.target.value)} />
           </label>
-          <label className="text-xs text-[var(--charcoal)]/70">
+          <label className="text-xs text-[var(--charcoal)]/82">
             Groom name
             <input className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm" value={groom} onChange={(e) => setGroom(e.target.value)} />
           </label>
-          <label className="text-xs text-[var(--charcoal)]/70">
+          <label className="text-xs text-[var(--charcoal)]/82">
             Wedding date
             <input type="date" className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm" value={date} onChange={(e) => setDate(e.target.value)} />
           </label>
-          <label className="sm:col-span-3 text-xs text-[var(--charcoal)]/70">
+          <label className="sm:col-span-3 text-xs text-[var(--charcoal)]/82">
             Notes
             <textarea className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </label>
@@ -555,7 +555,7 @@ function ProjectDetailsTab({
           <div className="flex items-center gap-2">
             <KeyRound className="h-4 w-4 text-[var(--terracotta)]" />
             <h2 className="font-display text-base sm:text-lg text-[var(--charcoal)]">Client credentials</h2>
-            <span className="rounded-full bg-[var(--cream)] px-2 py-0.5 text-[11px] text-[var(--charcoal)]/65">
+            <span className="rounded-full bg-[var(--cream)] px-2 py-0.5 text-[11px] text-[var(--charcoal)]/78">
               {clients.length} {clients.length === 1 ? "login" : "logins"}
             </span>
           </div>
@@ -566,7 +566,7 @@ function ProjectDetailsTab({
             <UserPlus className="h-4 w-4" /> Add Client Login
           </button>
         </div>
-        <p className="text-xs text-[var(--charcoal)]/55">
+        <p className="text-xs text-[var(--charcoal)]/70">
           Share these credentials with the client. They sign in at <code>/login</code>.
         </p>
 
@@ -589,7 +589,7 @@ function ProjectDetailsTab({
 
         <div className="mt-3 rounded-lg border border-[var(--border)] bg-white overflow-hidden">
           {clients.length === 0 ? (
-            <div className="p-6 text-sm text-[var(--charcoal)]/60">No client login yet.</div>
+            <div className="p-6 text-sm text-[var(--charcoal)]/74">No client login yet.</div>
           ) : (
             <div className="overflow-x-auto touch-pan-x" style={{ WebkitOverflowScrolling: "touch" }}>
               <table className="w-full min-w-[560px] text-sm">
@@ -613,11 +613,11 @@ function ProjectDetailsTab({
 
       <div className="rounded-lg border border-[var(--border)] bg-white p-4">
         <div className="mb-3 flex items-center gap-2">
-          <Archive className="h-4 w-4 text-[var(--charcoal)]/70" />
+          <Archive className="h-4 w-4 text-[var(--charcoal)]/82" />
           <h2 className="font-display text-base sm:text-lg text-[var(--charcoal)]">Project lifecycle</h2>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-sm text-[var(--charcoal)]/70">
+          <div className="text-sm text-[var(--charcoal)]/82">
             {isArchived
               ? "This project is archived. Restore it to bring it back to the active list."
               : "Archive when the wedding is over to keep it out of the active list. You can restore anytime."}
@@ -734,18 +734,18 @@ function ClientRow({ c, projectId, onChanged }: { c: any; projectId: string; onC
               autoFocus
             />
             <button onClick={saveName} disabled={nameBusy || !nameVal.trim()} className="rounded p-1 text-green-700 hover:bg-green-50 disabled:opacity-50"><Check className="h-4 w-4" /></button>
-            <button onClick={() => { setEditingName(false); setNameVal(c.display_name ?? ""); }} className="rounded p-1 text-[var(--charcoal)]/60 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
+            <button onClick={() => { setEditingName(false); setNameVal(c.display_name ?? ""); }} className="rounded p-1 text-[var(--charcoal)]/74 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
             <span>{c.display_name || "—"}</span>
-            <button onClick={() => { setNameVal(c.display_name ?? ""); setEditingName(true); }} title="Change name" className="text-[var(--charcoal)]/40 hover:text-[var(--terracotta)]">
+            <button onClick={() => { setNameVal(c.display_name ?? ""); setEditingName(true); }} title="Change name" className="text-[var(--charcoal)]/58 hover:text-[var(--terracotta)]">
               <Pencil className="h-3.5 w-3.5" />
             </button>
           </div>
         )}
       </td>
-      <td className="px-4 py-3 text-[var(--charcoal)]/70">
+      <td className="px-4 py-3 text-[var(--charcoal)]/82">
         {editingEmail ? (
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1">
@@ -756,14 +756,14 @@ function ClientRow({ c, projectId, onChanged }: { c: any; projectId: string; onC
                 onChange={(e) => setEmailVal(e.target.value)}
               />
               <button onClick={saveEmail} disabled={emailBusy || !emailVal.trim()} className="rounded p-1 text-green-700 hover:bg-green-50 disabled:opacity-50"><Check className="h-4 w-4" /></button>
-              <button onClick={() => { setEditingEmail(false); setEmailVal(c.email ?? ""); setEmailErr(null); }} className="rounded p-1 text-[var(--charcoal)]/60 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
+              <button onClick={() => { setEditingEmail(false); setEmailVal(c.email ?? ""); setEmailErr(null); }} className="rounded p-1 text-[var(--charcoal)]/74 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
             </div>
             {emailErr && <span className="text-xs text-red-600">{emailErr}</span>}
           </div>
         ) : (
           <div className="flex items-center gap-2">
             <span>{c.email}</span>
-            <button onClick={() => setEditingEmail(true)} title="Change email" className="text-[var(--charcoal)]/40 hover:text-[var(--terracotta)]">
+            <button onClick={() => setEditingEmail(true)} title="Change email" className="text-[var(--charcoal)]/58 hover:text-[var(--terracotta)]">
               <Pencil className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -784,7 +784,7 @@ function ClientRow({ c, projectId, onChanged }: { c: any; projectId: string; onC
             <button onClick={savePwd} disabled={pwd.length < 6} className="rounded bg-[var(--terracotta)] px-2 py-1 text-xs text-white disabled:opacity-50">
               Set
             </button>
-            <button onClick={() => { setResetting(false); setPwd(""); }} className="rounded p-1 text-[var(--charcoal)]/60 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
+            <button onClick={() => { setResetting(false); setPwd(""); }} className="rounded p-1 text-[var(--charcoal)]/74 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
           </div>
         ) : (
           <div className="flex items-center justify-end gap-1">
@@ -792,14 +792,14 @@ function ClientRow({ c, projectId, onChanged }: { c: any; projectId: string; onC
               to="/admin/projects/$id/preview/$clientId"
               params={{ id: projectId, clientId: c.user_id }}
               title="View project as this client"
-              className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]"
+              className="rounded p-1.5 text-[var(--charcoal)]/74 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]"
             >
               <Eye className="h-4 w-4" />
             </Link>
-            <button onClick={() => setResetting(true)} title="Change password" className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
+            <button onClick={() => setResetting(true)} title="Change password" className="rounded p-1.5 text-[var(--charcoal)]/74 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
               <KeyRound className="h-4 w-4" />
             </button>
-            <button onClick={handleRemove} title="Remove client" className="rounded p-1.5 text-[var(--charcoal)]/55 hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]">
+            <button onClick={handleRemove} title="Remove client" className="rounded p-1.5 text-[var(--charcoal)]/70 hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]">
               <Trash2 className="h-4 w-4" />
             </button>
           </div>
@@ -1085,13 +1085,13 @@ function AssignedVendorsSection({
           <div className="inline-flex h-[30px] overflow-hidden rounded-md border border-[var(--border)] bg-white text-xs">
             <button
               onClick={() => setView("list")}
-              className={`inline-flex items-center justify-center gap-1 px-2.5 ${view === "list" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"}`}
+              className={`inline-flex items-center justify-center gap-1 px-2.5 ${view === "list" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/74 hover:bg-[var(--cream)]/60"}`}
             >
               <LayoutGrid className="h-3.5 w-3.5" /> <span>Thumbnail</span>
             </button>
             <button
               onClick={() => setView("table")}
-              className={`inline-flex items-center justify-center gap-1 border-l border-[var(--border)] px-2.5 ${view === "table" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"}`}
+              className={`inline-flex items-center justify-center gap-1 border-l border-[var(--border)] px-2.5 ${view === "table" ? "bg-[var(--cream)] text-[var(--charcoal)]" : "text-[var(--charcoal)]/74 hover:bg-[var(--cream)]/60"}`}
             >
               <TableIcon className="h-3.5 w-3.5" /> <span>Table</span>
             </button>
@@ -1100,7 +1100,7 @@ function AssignedVendorsSection({
       </div>
 
       {vendors.length === 0 ? (
-        <div className="mt-4 rounded-lg border border-dashed border-[var(--champagne)] bg-white py-10 text-center text-sm text-[var(--charcoal)]/60">
+        <div className="mt-4 rounded-lg border border-dashed border-[var(--champagne)] bg-white py-10 text-center text-sm text-[var(--charcoal)]/74">
           No vendors assigned to this project yet.
         </div>
       ) : view === "list" ? (
@@ -1198,7 +1198,7 @@ function AssignedVendorsSection({
                         </button>
                       </div>
                       {(v.comment_count ?? 0) > 0 && (
-                        <div className="mt-1 inline-flex items-center gap-0.5 text-[10px] text-[var(--charcoal)]/55">
+                        <div className="mt-1 inline-flex items-center gap-0.5 text-[10px] text-[var(--charcoal)]/70">
                           <MessageSquare className="h-3 w-3" /> {v.comment_count}
                         </div>
                       )}
@@ -1206,14 +1206,14 @@ function AssignedVendorsSection({
                     <td className="align-top px-3 py-2 text-[var(--charcoal)]/85">
                       {v.category}
                       {v.subcategory && (
-                        <div className="text-[10px] text-[var(--charcoal)]/55">{v.subcategory}</div>
+                        <div className="text-[10px] text-[var(--charcoal)]/70">{v.subcategory}</div>
                       )}
                     </td>
                     <td className="align-top px-3 py-2">
                       <div className="flex flex-wrap items-center gap-1">
                         <ClientStatusPill status={primary?.status ?? null} />
                         {rows.length > 1 && (
-                          <span className="text-[10px] text-[var(--charcoal)]/55" title={rows.map((r) => `${r.display_name || r.email}: ${r.status}`).join("\n")}>
+                          <span className="text-[10px] text-[var(--charcoal)]/70" title={rows.map((r) => `${r.display_name || r.email}: ${r.status}`).join("\n")}>
                             +{rows.length - 1}
                           </span>
                         )}
@@ -1230,7 +1230,7 @@ function AssignedVendorsSection({
                       <div className="inline-flex items-center gap-0.5 rounded-md border border-[var(--border)] bg-[var(--cream)]/70 p-0.5">
                         <button
                           onClick={() => setQuotesFor({ id: v.id, name: v.vendor_name, category: v.category ?? null, autoOpenForm: true })}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--charcoal)]/70 hover:bg-[var(--terracotta)] hover:text-[var(--cream)]"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--charcoal)]/82 hover:bg-[var(--terracotta)] hover:text-[var(--cream)]"
                           title="Add a new quote"
                           aria-label="Add a new quote"
                         >
@@ -1238,7 +1238,7 @@ function AssignedVendorsSection({
                         </button>
                         <button
                           onClick={() => setCommentsFor({ id: v.id, name: v.vendor_name })}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--charcoal)]/70 hover:bg-[var(--cream)] hover:text-[var(--charcoal)]"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--charcoal)]/82 hover:bg-[var(--cream)] hover:text-[var(--charcoal)]"
                           title="Comments"
                           aria-label="Comments"
                         >
@@ -1246,7 +1246,7 @@ function AssignedVendorsSection({
                         </button>
                         <button
                           onClick={() => onRemove(v.id, v.vendor_name)}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--charcoal)]/60 hover:bg-red-500/15 hover:text-red-600"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--charcoal)]/74 hover:bg-red-500/15 hover:text-red-600"
                           title="Remove from project"
                           aria-label="Remove from project"
                         >
@@ -1275,7 +1275,7 @@ function AssignedVendorsSection({
           >
             <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-[var(--border)] bg-[var(--cream)] px-5 py-3">
               <div>
-                <div className="text-[10px] uppercase tracking-widest text-[var(--charcoal)]/55">
+                <div className="text-[10px] uppercase tracking-widest text-[var(--charcoal)]/70">
                   Client comments
                 </div>
                 <h3 className="font-display text-xl text-[var(--charcoal)]">{commentsFor.name}</h3>
@@ -1344,7 +1344,7 @@ function AssignedVendorsFilterButton({
         className={`relative inline-flex h-[30px] items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition ${
           activeCount > 0
             ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
-            : "border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+            : "border-[var(--border)] bg-white text-[var(--charcoal)]/82 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
         }`}
       >
         <Filter className={`h-3.5 w-3.5 ${activeCount > 0 ? "fill-current" : ""}`} />
@@ -1361,7 +1361,7 @@ function AssignedVendorsFilterButton({
           <div className="fixed inset-0 z-30" onClick={() => onOpenChange(false)} />
           <div className="absolute left-0 z-40 mt-1.5 w-64 rounded-md border border-[var(--border)] bg-white p-3 shadow-lg">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/55">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/70">
                 Filter vendors
               </span>
               {activeCount > 0 && (
@@ -1407,7 +1407,7 @@ function FilterSection({
   };
   return (
     <div className="mt-2.5 border-t border-[var(--border)] pt-2.5 first:mt-2 first:border-t-0 first:pt-0">
-      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/45">{label}</div>
+      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/62">{label}</div>
       <div className="max-h-32 space-y-0.5 overflow-y-auto">
         {options.map((o) => (
           <label
@@ -1516,7 +1516,7 @@ function VendorQuotesPill({
         );
       })}
       {fileCount > 0 && (
-        <span className="inline-flex items-center gap-0.5 text-[10px] text-[var(--charcoal)]/55">
+        <span className="inline-flex items-center gap-0.5 text-[10px] text-[var(--charcoal)]/70">
           <Paperclip className="h-2.5 w-2.5" /> {fileCount}
         </span>
       )}
@@ -1539,16 +1539,16 @@ function ProjectHeader({ project }: ProjectHeaderProps) {
             {project.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {project.groom_name}
           </h1>
           {isArchived && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--charcoal)]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--charcoal)]/70">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--charcoal)]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--charcoal)]/82">
               <Archive className="h-3 w-3" /> Archived
             </span>
           )}
         </div>
-        <div className="mt-1 hidden items-center gap-1.5 text-sm text-[var(--charcoal)]/65 sm:flex">
+        <div className="mt-1 hidden items-center gap-1.5 text-sm text-[var(--charcoal)]/78 sm:flex">
           <Calendar className="h-3.5 w-3.5" />
           {new Date(project.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
         </div>
-        {project.notes && <p className="mt-2 text-sm text-[var(--charcoal)]/70 whitespace-pre-wrap">{project.notes}</p>}
+        {project.notes && <p className="mt-2 text-sm text-[var(--charcoal)]/82 whitespace-pre-wrap">{project.notes}</p>}
       </div>
     </div>
   );

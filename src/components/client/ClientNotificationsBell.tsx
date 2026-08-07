@@ -122,7 +122,7 @@ export function ClientNotificationsBell({
       <PopoverTrigger asChild>
         <button
           aria-label="Notifications"
-          className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-[var(--charcoal)]/70 transition hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
+          className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-[var(--charcoal)]/82 transition hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
         >
           <Bell className="h-4 w-4" />
           {totalBadge > 0 && (

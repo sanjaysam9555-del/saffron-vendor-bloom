@@ -22,7 +22,7 @@ function AdminSettingsHomePage() {
     <div className="min-h-screen bg-[var(--cream)] pb-16">
       <div className="hidden h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70 sm:block">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 h-full px-3 sm:px-6">
-          <span className="text-sm text-[var(--charcoal)]/55">Studio-wide settings, data, and access.</span>
+          <span className="text-sm text-[var(--charcoal)]/70">Studio-wide settings, data, and access.</span>
         </div>
       </div>
 
@@ -45,9 +45,9 @@ function AdminSettingsHomePage() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-display text-base leading-tight text-[var(--charcoal)]">{label}</span>
-                <span className="mt-0.5 block truncate text-xs text-[var(--charcoal)]/55">{description}</span>
+                <span className="mt-0.5 block truncate text-xs text-[var(--charcoal)]/70">{description}</span>
               </span>
-              <ChevronRight className="h-4 w-4 shrink-0 text-[var(--charcoal)]/30 transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--terracotta)]" />
+              <ChevronRight className="h-4 w-4 shrink-0 text-[var(--charcoal)]/52 transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--terracotta)]" />
             </Link>
           ))}
         </div>

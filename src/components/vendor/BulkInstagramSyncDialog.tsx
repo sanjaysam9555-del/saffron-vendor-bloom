@@ -128,18 +128,18 @@ export function BulkInstagramSyncDialog({ open, onOpenChange }: Props) {
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <div className="mt-2 flex items-center gap-3 text-xs text-[var(--charcoal)]/70">
+              <div className="mt-2 flex items-center gap-3 text-xs text-[var(--charcoal)]/82">
                 <span>✓ {job.ok} ok</span>
                 <span>✗ {job.errors} failed</span>
                 {isRunning && (
-                  <span className="ml-auto inline-flex items-center gap-1 text-[var(--charcoal)]/55">
+                  <span className="ml-auto inline-flex items-center gap-1 text-[var(--charcoal)]/70">
                     <Loader2 className="h-3 w-3 animate-spin" /> Working…
                   </span>
                 )}
               </div>
             </div>
             {job.last_error && (
-              <div className="truncate text-[11px] text-[var(--charcoal)]/55">
+              <div className="truncate text-[11px] text-[var(--charcoal)]/70">
                 Last error: {job.last_error}
               </div>
             )}

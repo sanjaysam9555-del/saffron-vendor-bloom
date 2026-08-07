@@ -86,7 +86,7 @@ export function Sidebar({
     `rounded-full border px-2.5 py-0.5 text-xs transition-colors ${
       active
         ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
-        : "border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--champagne)] hover:text-[var(--charcoal)]"
+        : "border-[var(--border)] bg-white text-[var(--charcoal)]/82 hover:border-[var(--champagne)] hover:text-[var(--charcoal)]"
     }`;
 
   const Body = (
@@ -94,13 +94,13 @@ export function Sidebar({
       {/* Categories */}
       <div className="mb-6">
         <div className="mb-2 flex items-center justify-between">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/66">
             Category
           </div>
           <button
             onClick={() => setManagerOpen(true)}
             title="Manage categories"
-            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-[var(--charcoal)]/55 hover:bg-white hover:text-[var(--terracotta)]"
+            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-[var(--charcoal)]/70 hover:bg-white hover:text-[var(--terracotta)]"
           >
             <Settings2 className="h-3 w-3" /> Manage
           </button>
@@ -116,7 +116,7 @@ export function Sidebar({
               }`}
             >
               <span>All Vendors</span>
-              <span className="text-xs text-[var(--charcoal)]/50">{vendors.length}</span>
+              <span className="text-xs text-[var(--charcoal)]/66">{vendors.length}</span>
             </button>
           </li>
           {allCategories.map((c) => (
@@ -130,7 +130,7 @@ export function Sidebar({
                 }`}
               >
                 <span className="truncate">{c}</span>
-                <span className="ml-2 shrink-0 text-xs text-[var(--charcoal)]/45">{counts[c] ?? 0}</span>
+                <span className="ml-2 shrink-0 text-xs text-[var(--charcoal)]/62">{counts[c] ?? 0}</span>
               </button>
             </li>
           ))}
@@ -139,7 +139,7 @@ export function Sidebar({
 
       {/* Locations */}
       <div className="mb-6">
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Location</div>
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/66">Location</div>
         <div className="flex flex-wrap gap-1">
           {LOCATION_OPTIONS.map((loc) => {
             const active = filters.locations.includes(loc);
@@ -158,7 +158,7 @@ export function Sidebar({
 
       {/* Google rating */}
       <div className="mb-6">
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Google rating</div>
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/66">Google rating</div>
         <div className="flex flex-wrap gap-1">
           <button
             onClick={() => onChange({ ...filters, minGoogleRating: null })}
@@ -180,7 +180,7 @@ export function Sidebar({
 
       {/* Saffron rating */}
       <div className="mb-6">
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Saffron rating</div>
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/66">Saffron rating</div>
         <div className="flex flex-wrap gap-1">
           <button
             onClick={() => onChange({ ...filters, minSaffronRating: null })}
@@ -202,7 +202,7 @@ export function Sidebar({
 
       {/* Source */}
       <div className="mb-6">
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Source</div>
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/66">Source</div>
         <div className="flex flex-wrap gap-1">
           {([
             ["any", "All"],
@@ -222,14 +222,14 @@ export function Sidebar({
 
       {/* Relationships */}
       <div className="mb-6">
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">Relationships</div>
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/66">Relationships</div>
         {([
           ["hasAttachment", "Has Attachment"],
           ["hasQuoteHistory", "Has Quote History"],
           ["assignedToProject", "Assigned to Project"],
         ] as const).map(([key, label]) => (
           <div key={key} className="mb-2 last:mb-0">
-            <div className="mb-1 text-xs text-[var(--charcoal)]/70">{label}</div>
+            <div className="mb-1 text-xs text-[var(--charcoal)]/82">{label}</div>
             <div className="flex flex-wrap gap-1">
               {([
                 ["any", "Any"],
@@ -263,7 +263,7 @@ export function Sidebar({
             {hasActive && (
               <button
                 onClick={() => onChange(clearAll())}
-                className="flex items-center gap-1 text-xs text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"
+                className="flex items-center gap-1 text-xs text-[var(--charcoal)]/74 hover:text-[var(--terracotta)]"
               >
                 <X className="h-3 w-3" /> Clear
               </button>
@@ -271,7 +271,7 @@ export function Sidebar({
             <button
               onClick={onMobileClose}
               title="Close"
-              className="rounded-md p-1 text-[var(--charcoal)]/55 hover:bg-white hover:text-[var(--terracotta)]"
+              className="rounded-md p-1 text-[var(--charcoal)]/70 hover:bg-white hover:text-[var(--terracotta)]"
             >
               <X className="h-4 w-4" />
             </button>
@@ -295,7 +295,7 @@ export function Sidebar({
             <ChevronRight className="h-4 w-4" />
           </button>
           <div className="mt-2 flex justify-center">
-            <div className="rounded-md p-2 text-[var(--charcoal)]/60" title="Filters">
+            <div className="rounded-md p-2 text-[var(--charcoal)]/74" title="Filters">
               <Filter className="h-4 w-4" />
             </div>
           </div>
@@ -321,7 +321,7 @@ export function Sidebar({
             {hasActive ? (
               <button
                 onClick={() => onChange(clearAll())}
-                className="flex items-center gap-1 text-xs text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"
+                className="flex items-center gap-1 text-xs text-[var(--charcoal)]/74 hover:text-[var(--terracotta)]"
               >
                 <X className="h-3 w-3" /> Clear
               </button>
@@ -329,7 +329,7 @@ export function Sidebar({
             <button
               onClick={onToggle}
               title="Collapse filters"
-              className="ml-1 rounded-md p-1 text-[var(--charcoal)]/55 hover:bg-white hover:text-[var(--terracotta)]"
+              className="ml-1 rounded-md p-1 text-[var(--charcoal)]/70 hover:bg-white hover:text-[var(--terracotta)]"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>

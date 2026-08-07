@@ -43,7 +43,7 @@ export function EmptyState({
       {description && (
         <p
           className={cn(
-            "mt-1.5 max-w-md text-[var(--charcoal)]/60",
+            "mt-1.5 max-w-md text-[var(--charcoal)]/74",
             compact ? "text-xs" : "text-sm",
           )}
         >

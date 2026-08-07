@@ -47,7 +47,7 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
           {vendor.category}
         </span>
         {vendor.subcategory && (
-          <span className="inline-flex shrink-0 items-center rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/65">
+          <span className="inline-flex shrink-0 items-center rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/78">
             {vendor.subcategory}
           </span>
         )}
@@ -123,7 +123,7 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
       {vendor.instagram_handle ? (
         <VendorInstagramCardStrip preview={instagramPreview} hasHandle />
       ) : (
-        <div className="mt-2 flex min-h-[148px] items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-2 text-[10px] text-[var(--charcoal)]/40">
+        <div className="mt-2 flex min-h-[148px] items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-2 text-[10px] text-[var(--charcoal)]/58">
           No Instagram linked
         </div>
       )}
@@ -165,13 +165,13 @@ export function ClientVendorCard({ vendor, onView, instagramPreview }: Props) {
               });
             })()}
             {vendor.attachments.length > 0 && (
-              <span className="inline-flex items-center gap-1 text-[10px] text-[var(--charcoal)]/55">
+              <span className="inline-flex items-center gap-1 text-[10px] text-[var(--charcoal)]/70">
                 <Paperclip className="h-3 w-3" />
                 {vendor.attachments.length} doc{vendor.attachments.length === 1 ? "" : "s"}
               </span>
             )}
             {vendor.comment_count != null && vendor.comment_count > 0 && (
-              <span className="inline-flex items-center gap-1 text-[10px] text-[var(--charcoal)]/55">
+              <span className="inline-flex items-center gap-1 text-[10px] text-[var(--charcoal)]/70">
                 <MessageSquare className="h-3 w-3" />
                 {vendor.comment_count}
               </span>

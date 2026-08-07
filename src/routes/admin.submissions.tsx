@@ -59,10 +59,10 @@ function SubmissionsPage() {
     <div className="min-h-screen bg-[var(--cream)]">
       <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--cream)]/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-[1400px] items-center gap-3 px-4 py-3 sm:px-6">
-          <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]">
+          <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-[var(--charcoal)]/74 hover:text-[var(--terracotta)]">
             <ArrowLeft className="h-4 w-4" /> Back to dashboard
           </Link>
-          <div className="ml-auto text-xs text-[var(--charcoal)]/50">
+          <div className="ml-auto text-xs text-[var(--charcoal)]/66">
             Public link: <code className="rounded bg-[var(--cream-deep)] px-1.5 py-0.5">/vendor-onboarding</code>
           </div>
         </div>
@@ -73,7 +73,7 @@ function SubmissionsPage() {
           <h1 className="brand-line hidden font-display text-3xl font-semibold text-[var(--charcoal)] sm:block">
             Vendor Submissions
           </h1>
-          <p className="mt-2 text-sm text-[var(--charcoal)]/60">
+          <p className="mt-2 text-sm text-[var(--charcoal)]/74">
             Vendors who registered themselves through the public signup form.
           </p>
         </div>
@@ -83,9 +83,9 @@ function SubmissionsPage() {
           <Stat label="This week" value={thisWeek} />
           <Stat label="This month" value={thisMonth} />
           <div className="rounded-lg border border-[var(--border)] bg-white p-4">
-            <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">Top categories</div>
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">Top categories</div>
             {topCategories.length === 0 ? (
-              <div className="mt-2 text-sm text-[var(--charcoal)]/50">—</div>
+              <div className="mt-2 text-sm text-[var(--charcoal)]/66">—</div>
             ) : (
               <ul className="mt-2 space-y-1 text-sm">
                 {topCategories.map(([cat, n]) => (
@@ -107,7 +107,7 @@ function SubmissionsPage() {
             onChange={(e) => setSearch(e.target.value)}
             className="w-full max-w-sm rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-[var(--terracotta)] focus:outline-none focus:ring-1 focus:ring-[var(--terracotta)]"
           />
-          <span className="text-xs text-[var(--charcoal)]/50">
+          <span className="text-xs text-[var(--charcoal)]/66">
             {filtered.length} of {submissions.length}
           </span>
         </div>
@@ -150,7 +150,7 @@ function SubmissionsPage() {
                     <td className="px-4 py-3 text-[var(--charcoal)]/75">{v.category}</td>
                     <td className="px-4 py-3 text-[var(--charcoal)]/75">{v.location ?? "—"}</td>
                     <td className="px-4 py-3 text-[var(--charcoal)]/75">{v.contact_number ?? "—"}</td>
-                    <td className="px-4 py-3 text-[var(--charcoal)]/60">
+                    <td className="px-4 py-3 text-[var(--charcoal)]/74">
                       {new Date(v.date_added).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                     </td>
                     <td className="px-4 py-3">
@@ -213,7 +213,7 @@ function SubmissionsPage() {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg border border-[var(--border)] bg-white p-4">
-      <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">{label}</div>
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">{label}</div>
       <div className="mt-1 font-display text-3xl font-semibold text-[var(--terracotta)]">{value}</div>
     </div>
   );

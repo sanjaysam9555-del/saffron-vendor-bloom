@@ -213,7 +213,7 @@ function ClientPortalPage() {
       <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] px-6">
         <div className="max-w-md rounded-xl bg-white p-6 text-center shadow-sm">
           <h2 className="font-display text-xl text-[var(--charcoal)]">Nothing here yet</h2>
-          <p className="mt-2 text-sm text-[var(--charcoal)]/60">
+          <p className="mt-2 text-sm text-[var(--charcoal)]/74">
             {error instanceof Error
               ? error.message
               : "Your planner hasn't shared vendors with you yet."}
@@ -267,7 +267,7 @@ function ClientPortalPage() {
                 )}
               </h1>
               {filters.category && (
-                <p className="mt-1 text-sm text-[var(--charcoal)]/65 sm:truncate">
+                <p className="mt-1 text-sm text-[var(--charcoal)]/78 sm:truncate">
                   {`${filtered.length} of ${vendors.length} vendor${vendors.length === 1 ? "" : "s"}`}
                 </p>
               )}
@@ -306,7 +306,7 @@ function ClientPortalPage() {
                     className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
                       view === "summary"
                         ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                        : "text-[var(--charcoal)]/78 hover:bg-[var(--cream)]"
                     }`}
                   >
                     <Gauge className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Summary</span>
@@ -320,7 +320,7 @@ function ClientPortalPage() {
                     className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
                       view === "timeline"
                         ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                        : "text-[var(--charcoal)]/78 hover:bg-[var(--cream)]"
                     }`}
                   >
                     <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Timeline</span>
@@ -334,7 +334,7 @@ function ClientPortalPage() {
                     className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
                       view === "category"
                         ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                        : "text-[var(--charcoal)]/78 hover:bg-[var(--cream)]"
                     }`}
                   >
                     <ListChecks className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Vendor Categories</span>
@@ -348,7 +348,7 @@ function ClientPortalPage() {
                     className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
                       view === "grid"
                         ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                        : "text-[var(--charcoal)]/78 hover:bg-[var(--cream)]"
                     }`}
                   >
                     <LayoutGrid className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Thumbnail View (Vendors)</span>
@@ -362,7 +362,7 @@ function ClientPortalPage() {
                     className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
                       view === "table"
                         ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                        : "text-[var(--charcoal)]/78 hover:bg-[var(--cream)]"
                     }`}
                   >
                     <TableIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Table View (Vendors)</span>
@@ -376,7 +376,7 @@ function ClientPortalPage() {
                     className={`inline-flex shrink-0 snap-start items-center justify-center gap-1 whitespace-nowrap border-l border-[var(--border)] px-2.5 py-1.5 transition-colors sm:gap-1.5 ${
                       view === "board"
                         ? "bg-[var(--charcoal)] text-[var(--cream)]"
-                        : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                        : "text-[var(--charcoal)]/78 hover:bg-[var(--cream)]"
                     }`}
                   >
                     <Columns3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span>Board</span>
@@ -471,7 +471,7 @@ function ClientPortalPage() {
       </div>
 
       <footer className="mt-auto border-t border-[var(--border)] bg-[var(--cream-deep)]">
-        <div className="mx-auto flex max-w-[1600px] flex-col items-start gap-2 px-3 py-3 text-xs text-[var(--charcoal)]/70 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="mx-auto flex max-w-[1600px] flex-col items-start gap-2 px-3 py-3 text-xs text-[var(--charcoal)]/82 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <span>
             Need help understanding your folio?{" "}
             <button
@@ -507,7 +507,7 @@ function EmptyState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--champagne)] bg-white py-20 text-center">
       <Sparkles className="mb-3 h-8 w-8 text-[var(--terracotta)] animate-pulse-subtle" />
-      <p className="text-sm text-[var(--charcoal)]/60">{message}</p>
+      <p className="text-sm text-[var(--charcoal)]/74">{message}</p>
     </div>
   );
 }

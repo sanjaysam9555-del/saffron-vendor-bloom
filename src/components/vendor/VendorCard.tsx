@@ -136,11 +136,11 @@ export function VendorCard({
                category readable without competing with the name ── */}
         <div className={`flex ${SLOT.category} items-center gap-1.5`}>
           <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${colors.bg}`} />
-          <span className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--charcoal)]/55">
+          <span className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--charcoal)]/70">
             {vendor.category}
           </span>
           {vendor.subcategory && (
-            <span className="truncate text-[10px] text-[var(--charcoal)]/35">
+            <span className="truncate text-[10px] text-[var(--charcoal)]/55">
               · {vendor.subcategory}
             </span>
           )}
@@ -155,7 +155,7 @@ export function VendorCard({
         </div>
 
         {/* ── Location ── */}
-        <div className={`mt-1.5 flex ${SLOT.location} items-center gap-1.5 text-xs text-[var(--charcoal)]/60`}>
+        <div className={`mt-1.5 flex ${SLOT.location} items-center gap-1.5 text-xs text-[var(--charcoal)]/74`}>
           {vendor.location && (
             <>
               <MapPin className="h-3 w-3 shrink-0" />
@@ -166,7 +166,7 @@ export function VendorCard({
 
         {/* ── Price — same treatment as location so the two read as one
                field group rather than one shouting over the other ── */}
-        <div className={`mt-1.5 flex ${SLOT.price} items-center gap-1.5 text-xs text-[var(--charcoal)]/60`}>
+        <div className={`mt-1.5 flex ${SLOT.price} items-center gap-1.5 text-xs text-[var(--charcoal)]/74`}>
           {vendor.price_text && (
             <>
               <IndianRupee className="h-3 w-3 shrink-0" />
@@ -185,7 +185,7 @@ export function VendorCard({
               <button
                 onClick={copyPhone}
                 title="Click to copy"
-                className="inline-flex min-w-0 items-center gap-1 text-xs text-[var(--charcoal)]/70 hover:text-[var(--terracotta)]"
+                className="inline-flex min-w-0 items-center gap-1 text-xs text-[var(--charcoal)]/82 hover:text-[var(--terracotta)]"
               >
                 <Phone className="h-3 w-3 shrink-0" />
                 <span className="truncate">{vendor.contact_number}</span>
@@ -196,7 +196,7 @@ export function VendorCard({
                 )}
               </button>
             ) : (
-              <span className="text-xs text-[var(--charcoal)]/30">No number</span>
+              <span className="text-xs text-[var(--charcoal)]/52">No number</span>
             )}
 
             <div className="ml-auto flex shrink-0 items-center gap-1">
@@ -208,7 +208,7 @@ export function VendorCard({
                   onClick={(e) => e.stopPropagation()}
                   aria-label={`Instagram — ${vendor.vendor_name}`}
                   title={igDisplay ?? "Instagram"}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-[var(--border)] text-[var(--charcoal)]/45 transition hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-[var(--border)] text-[var(--charcoal)]/62 transition hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
                 >
                   <Instagram className="h-3 w-3" />
                 </a>
@@ -255,7 +255,7 @@ export function VendorCard({
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--charcoal)]/70 transition hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+              className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--charcoal)]/82 transition hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
             >
               Edit
             </button>

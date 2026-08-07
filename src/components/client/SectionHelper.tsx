@@ -30,7 +30,7 @@ export function SectionHelper({ storageKey, children }: Props) {
           }
           setDismissed(true);
         }}
-        className="shrink-0 rounded p-0.5 text-[var(--charcoal)]/45 hover:bg-white hover:text-[var(--terracotta)]"
+        className="shrink-0 rounded p-0.5 text-[var(--charcoal)]/62 hover:bg-white hover:text-[var(--terracotta)]"
       >
         <X className="h-3 w-3" />
       </button>

@@ -153,13 +153,13 @@ function StatRow({
         {icon}
       </span>
       <div className="min-w-0 flex-1">
-        <span className="block text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--charcoal)]/55">
+        <span className="block text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--charcoal)]/70">
           {label}
         </span>
         <span className="mt-0.5 block font-display text-xl font-semibold text-[var(--charcoal)]">
           {value}
         </span>
-        {hint && <span className="block text-[11px] text-[var(--charcoal)]/60">{hint}</span>}
+        {hint && <span className="block text-[11px] text-[var(--charcoal)]/74">{hint}</span>}
         {typeof progress === "number" && (
           <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-[var(--cream-deep)]">
             <div
@@ -187,11 +187,11 @@ function CategoryList({
   const dot = tone === "ok" ? "bg-emerald-500" : "bg-[var(--terracotta)]";
   return (
     <div className="rounded-xl border border-[var(--border)] bg-white p-4 sm:p-5">
-      <h3 className="font-display text-sm font-semibold uppercase tracking-[0.14em] text-[var(--charcoal)]/70">
+      <h3 className="font-display text-sm font-semibold uppercase tracking-[0.14em] text-[var(--charcoal)]/82">
         {title}
       </h3>
       {items.length === 0 ? (
-        <p className="mt-3 text-xs text-[var(--charcoal)]/55">{emptyText}</p>
+        <p className="mt-3 text-xs text-[var(--charcoal)]/70">{emptyText}</p>
       ) : (
         <ul className="mt-3 divide-y divide-[var(--border)]">
           {items.map((it) => (
@@ -200,7 +200,7 @@ function CategoryList({
                 <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />
                 <span className="truncate text-[var(--charcoal)]">{it.name}</span>
               </span>
-              <span className="shrink-0 text-xs text-[var(--charcoal)]/60">{it.meta}</span>
+              <span className="shrink-0 text-xs text-[var(--charcoal)]/74">{it.meta}</span>
             </li>
           ))}
         </ul>

@@ -257,7 +257,7 @@ function VendorSignupPage() {
             <img src={logoLight} alt="Saffron Planning Studio" className="h-9 w-auto object-contain" />
             <div className="leading-tight hidden sm:block">
               <div className="font-display text-lg font-semibold text-[var(--terracotta)]">Saffron Planning Studio</div>
-              <div className="text-[9px] uppercase tracking-[0.22em] text-[var(--charcoal)]/55">Vendor Studio</div>
+              <div className="text-[9px] uppercase tracking-[0.22em] text-[var(--charcoal)]/70">Vendor Studio</div>
             </div>
           </div>
         </div>
@@ -275,7 +275,7 @@ function VendorSignupPage() {
               <h1 className="font-display text-4xl font-semibold text-[var(--charcoal)] sm:text-5xl">
                 List your business with us
               </h1>
-              <p className="mx-auto mt-3 max-w-xl text-sm text-[var(--charcoal)]/65 sm:text-base">
+              <p className="mx-auto mt-3 max-w-xl text-sm text-[var(--charcoal)]/78 sm:text-base">
                 Share your details below — our planning team reviews every submission and reaches out
                 when we have a project that fits your craft.
               </p>
@@ -543,7 +543,7 @@ function VendorSignupPage() {
 
               {/* Documents */}
               <SectionTitle>Documents &amp; portfolio files</SectionTitle>
-              <p className="mb-3 text-xs text-[var(--charcoal)]/60">
+              <p className="mb-3 text-xs text-[var(--charcoal)]/74">
                 Upload your rate card, brochure, sample work or anything else you'd like us to see.
                 PDF, DOC, PPT, XLS, JPG, PNG, WEBP — max 20 MB each, up to {MAX_FILES} files.
               </p>
@@ -565,7 +565,7 @@ function VendorSignupPage() {
               >
                 <Upload className="mb-1.5 h-6 w-6 text-[var(--terracotta)]" />
                 <div className="text-sm font-medium text-[var(--charcoal)]">Drag & drop files here</div>
-                <div className="text-xs text-[var(--charcoal)]/55">or click to browse</div>
+                <div className="text-xs text-[var(--charcoal)]/70">or click to browse</div>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -589,7 +589,7 @@ function VendorSignupPage() {
                       <div className="flex min-w-0 items-center gap-2">
                         <Paperclip className="h-3.5 w-3.5 shrink-0 text-[var(--terracotta)]" />
                         <span className="truncate">{f.name}</span>
-                        <span className="shrink-0 text-xs text-[var(--charcoal)]/50">
+                        <span className="shrink-0 text-xs text-[var(--charcoal)]/66">
                           {formatBytes(f.size)}
                         </span>
                       </div>
@@ -597,7 +597,7 @@ function VendorSignupPage() {
                         type="button"
                         onClick={() => removeFile(i)}
                         aria-label={`Remove file ${f.name}`}
-                        className="rounded p-1 text-[var(--charcoal)]/55 hover:bg-red-50 hover:text-red-600"
+                        className="rounded p-1 text-[var(--charcoal)]/70 hover:bg-red-50 hover:text-red-600"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -614,7 +614,7 @@ function VendorSignupPage() {
                 >
                   {submitting ? "Submitting…" : "Submit my details"}
                 </button>
-                <p className="text-center text-xs text-[var(--charcoal)]/50">
+                <p className="text-center text-xs text-[var(--charcoal)]/66">
                   By submitting, you agree to be contacted by Saffron Planning Studio about potential collaborations.
                 </p>
               </div>
@@ -645,7 +645,7 @@ function Field({
 }) {
   return (
     <label className={`block ${className ?? ""}`}>
-      <div className="mb-1 text-xs font-medium text-[var(--charcoal)]/70">
+      <div className="mb-1 text-xs font-medium text-[var(--charcoal)]/82">
         {label}{required && <span className="ml-0.5 text-[var(--terracotta)]">*</span>}
       </div>
       {children}

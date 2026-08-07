@@ -34,10 +34,10 @@ export function VendorQuoteHistory({ vendorId }: { vendorId: string }) {
 
   return (
     <div className="border-t border-[var(--border)] px-6 py-4">
-      <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+      <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
         <FileText className="h-3 w-3" /> Quote history
         {quotes.length > 0 && (
-          <span className="rounded-full bg-[var(--cream-deep)] px-1.5 text-[10px] text-[var(--charcoal)]/65">
+          <span className="rounded-full bg-[var(--cream-deep)] px-1.5 text-[10px] text-[var(--charcoal)]/78">
             {quotes.length}
           </span>
         )}
@@ -45,9 +45,9 @@ export function VendorQuoteHistory({ vendorId }: { vendorId: string }) {
 
       <div className="mt-3">
           {isLoading ? (
-            <div className="text-xs text-[var(--charcoal)]/55">Loading…</div>
+            <div className="text-xs text-[var(--charcoal)]/70">Loading…</div>
           ) : quotes.length === 0 ? (
-            <div className="text-xs text-[var(--charcoal)]/55">
+            <div className="text-xs text-[var(--charcoal)]/70">
               No quotes recorded for this vendor yet.
             </div>
           ) : (
@@ -74,9 +74,9 @@ export function VendorQuoteHistory({ vendorId }: { vendorId: string }) {
                             {proj.bride_name} & {proj.groom_name}
                           </Link>
                         ) : (
-                          <span className="font-medium text-[var(--charcoal)]/60">Project</span>
+                          <span className="font-medium text-[var(--charcoal)]/74">Project</span>
                         )}
-                        <span className="ml-1 text-[10px] text-[var(--charcoal)]/55">
+                        <span className="ml-1 text-[10px] text-[var(--charcoal)]/70">
                           {new Date(q.created_at).toLocaleDateString("en-IN", {
                             day: "numeric",
                             month: "short",
@@ -90,7 +90,7 @@ export function VendorQuoteHistory({ vendorId }: { vendorId: string }) {
                             <CircleCheck className="h-2.5 w-2.5" /> Closed
                           </span>
                         ) : (
-                          <span className="rounded-full bg-[var(--cream-deep)] px-1.5 py-0.5 text-[10px] text-[var(--charcoal)]/70">
+                          <span className="rounded-full bg-[var(--cream-deep)] px-1.5 py-0.5 text-[10px] text-[var(--charcoal)]/82">
                             {QUOTE_STATUS_LABEL[q.status]}
                           </span>
                         )}
@@ -100,7 +100,7 @@ export function VendorQuoteHistory({ vendorId }: { vendorId: string }) {
                           </span>
                         )}
                         {(q as any).files?.length > 0 && (
-                          <span className="inline-flex items-center gap-0.5 text-[10px] text-[var(--charcoal)]/55">
+                          <span className="inline-flex items-center gap-0.5 text-[10px] text-[var(--charcoal)]/70">
                             <Paperclip className="h-2.5 w-2.5" /> {(q as any).files.length}
                           </span>
                         )}
@@ -113,7 +113,7 @@ export function VendorQuoteHistory({ vendorId }: { vendorId: string }) {
                             <button
                               type="button"
                               onClick={() => setViewing(f)}
-                              className="inline-flex items-center gap-1 text-[10px] text-[var(--charcoal)]/65 hover:text-[var(--terracotta)]"
+                              className="inline-flex items-center gap-1 text-[10px] text-[var(--charcoal)]/78 hover:text-[var(--terracotta)]"
                             >
                               <FileText className="h-2.5 w-2.5" />
                               <span className="truncate">{f.file_name}</span>

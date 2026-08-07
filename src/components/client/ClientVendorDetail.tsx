@@ -140,7 +140,7 @@ export function ClientVendorDetail({ vendor, onClose, vendors, onNavigate }: Pro
                 {vendor.category}
               </span>
               {vendor.subcategory && (
-                <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/65">
+                <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/78">
                   {vendor.subcategory}
                 </span>
               )}
@@ -154,7 +154,7 @@ export function ClientVendorDetail({ vendor, onClose, vendors, onNavigate }: Pro
           </div>
           <div className="flex items-center gap-2">
             {canNavigate && (
-              <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-medium text-[var(--charcoal)]/65">
+              <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-medium text-[var(--charcoal)]/78">
                 {navIndex + 1} / {vendors!.length}
               </span>
             )}
@@ -166,7 +166,7 @@ export function ClientVendorDetail({ vendor, onClose, vendors, onNavigate }: Pro
 
 
         <div className="border-b border-[var(--border)] bg-[var(--cream-deep)]/40 px-6 py-3">
-          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
             Your status
           </div>
           <ClientStatusSelect vendorId={vendor.id} status={liveStatus} />
@@ -174,7 +174,7 @@ export function ClientVendorDetail({ vendor, onClose, vendors, onNavigate }: Pro
 
         {orderedQuotes.length > 0 && (
           <div className="border-b border-[var(--border)] bg-white px-6 py-3 space-y-3">
-            <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
               Quotes ({orderedQuotes.length})
             </div>
             {orderedQuotes.map((quote) => {
@@ -185,7 +185,7 @@ export function ClientVendorDetail({ vendor, onClose, vendors, onNavigate }: Pro
                   key={quote.id}
                   className={`rounded-md border p-3 ${isClosed ? "border-green-200 bg-green-50/40" : "border-[var(--border)] bg-[var(--cream)]/40"}`}
                 >
-                  <div className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+                  <div className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
                     {isClosed ? (
                       <><CircleCheck className="h-3 w-3 text-green-700" /> <span className="text-green-800">Your quote (closed)</span></>
                     ) : (
@@ -215,7 +215,7 @@ export function ClientVendorDetail({ vendor, onClose, vendors, onNavigate }: Pro
                               <FileText className="h-3.5 w-3.5 shrink-0 text-[var(--terracotta)]" />
                               <span className="truncate text-[var(--charcoal)] group-hover:text-[var(--terracotta)]">{f.file_name}</span>
                             </div>
-                            <span className="shrink-0 text-[10px] text-[var(--charcoal)]/55">{formatFileSize(f.size_bytes)}</span>
+                            <span className="shrink-0 text-[10px] text-[var(--charcoal)]/70">{formatFileSize(f.size_bytes)}</span>
                           </button>
                         </li>
                       ))}
@@ -270,7 +270,7 @@ export function ClientVendorDetail({ vendor, onClose, vendors, onNavigate }: Pro
 
         {vendor.attachments.length > 0 && (
           <div className="border-t border-[var(--border)] px-6 py-4">
-            <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+            <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
               <Paperclip className="h-3 w-3" /> Documents ({vendor.attachments.length})
             </div>
             <AttachmentThumbnailGrid attachments={vendor.attachments} onOpen={setViewing} />
@@ -330,7 +330,7 @@ function Row({
   if (!value) return null;
   return (
     <div className="rounded-lg bg-[var(--cream-deep)] p-3">
-      <div className="mb-0.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+      <div className="mb-0.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
         {icon && <span className="[&>svg]:h-3 [&>svg]:w-3">{icon}</span>}
         {label}
       </div>

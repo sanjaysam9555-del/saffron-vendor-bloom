@@ -43,7 +43,7 @@ function ProfilePage() {
     <div className="min-h-screen bg-[var(--cream)] pb-16">
       <div className="h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 h-full px-3 sm:px-6">
-          <span className="text-sm text-[var(--charcoal)]/55">
+          <span className="text-sm text-[var(--charcoal)]/70">
             Your account and studio appearance.
           </span>
         </div>
@@ -90,11 +90,11 @@ function SectionCard({
           </span>
           <div className="min-w-0">
             <h2 className="font-display text-lg leading-tight text-[var(--charcoal)]">{title}</h2>
-            <p className="truncate text-xs text-[var(--charcoal)]/55">{description}</p>
+            <p className="truncate text-xs text-[var(--charcoal)]/70">{description}</p>
           </div>
         </div>
         {locked && (
-          <span className="shrink-0 rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/50">
+          <span className="shrink-0 rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/66">
             Admin only
           </span>
         )}
@@ -106,7 +106,7 @@ function SectionCard({
 
 const fieldCls =
   "mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm focus:border-[var(--terracotta)] focus:outline-none focus:ring-2 focus:ring-[var(--terracotta-soft)]";
-const labelCls = "block text-xs font-medium text-[var(--charcoal)]/70";
+const labelCls = "block text-xs font-medium text-[var(--charcoal)]/82";
 const primaryBtn =
   "inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-3.5 py-1.5 text-sm font-medium text-[var(--cream)] transition hover:bg-[var(--terracotta)]/90 disabled:pointer-events-none disabled:opacity-40";
 
@@ -165,7 +165,7 @@ function AccountCard({
         <label className={labelCls}>
           Email
           <input
-            className={`${fieldCls} bg-[var(--cream)]/60 text-[var(--charcoal)]/55`}
+            className={`${fieldCls} bg-[var(--cream)]/60 text-[var(--charcoal)]/70`}
             value={profile?.email ?? ""}
             readOnly
             title="Email is managed by your administrator"
@@ -173,7 +173,7 @@ function AccountCard({
         </label>
       </div>
       <div className="mt-3 flex items-center justify-between gap-3">
-        <span className="text-[11px] uppercase tracking-wider text-[var(--charcoal)]/40">
+        <span className="text-[11px] uppercase tracking-wider text-[var(--charcoal)]/58">
           Role · {profile?.role ?? "—"}
         </span>
         <button onClick={save} disabled={!dirty || busy} className={primaryBtn}>
@@ -276,7 +276,7 @@ function AppearanceCard({ isAdmin }: { isAdmin: boolean }) {
         description="Studio brand name, colour and font."
         locked
       >
-        <p className="text-sm text-[var(--charcoal)]/55">
+        <p className="text-sm text-[var(--charcoal)]/70">
           Only an administrator can change the studio's branding.
         </p>
       </SectionCard>
@@ -332,7 +332,7 @@ function AppearanceCard({ isAdmin }: { isAdmin: boolean }) {
 
       {/* Live preview so a choice can be judged before committing. */}
       <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--cream)]/50 p-4">
-        <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/40">
+        <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/58">
           Preview
         </div>
         <div

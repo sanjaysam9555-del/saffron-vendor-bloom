@@ -100,7 +100,7 @@ export function ProjectCategoriesTab({ projectId, isAdmin }: { projectId: string
 
       {urgent.length > 0 && (
         <div className="rounded-xl border border-[var(--border)] bg-white p-3 shadow-sm">
-          <div className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/45">
+          <div className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/62">
             <AlertTriangle className="h-3 w-3 text-[var(--terracotta)]" /> Urgency
           </div>
           <div className="flex flex-wrap gap-2">
@@ -135,9 +135,9 @@ export function ProjectCategoriesTab({ projectId, isAdmin }: { projectId: string
             </thead>
             <tbody className="[&_tr:nth-child(even)]:bg-[var(--cream)]/25">
               {isLoading ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-[var(--charcoal)]/50">Loading…</td></tr>
+                <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-[var(--charcoal)]/66">Loading…</td></tr>
               ) : rows.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-[var(--charcoal)]/45">No category deadlines set.</td></tr>
+                <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-[var(--charcoal)]/62">No category deadlines set.</td></tr>
               ) : (
                 rows.map((r) => (
                   <CategoryRow
@@ -218,7 +218,7 @@ function CategoryRow({
             className="rounded border border-transparent bg-transparent px-1 py-0.5 text-xs hover:border-[var(--border)] focus:border-[var(--terracotta)] focus:outline-none"
           />
         ) : (
-          <span className="text-[var(--charcoal)]/70">
+          <span className="text-[var(--charcoal)]/82">
             {row.due_date ? new Date(row.due_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}
           </span>
         )}
@@ -235,13 +235,13 @@ function CategoryRow({
             <option value="high">High</option>
           </select>
         ) : (
-          <span className="inline-flex items-center gap-1.5 text-[var(--charcoal)]/70 capitalize">
+          <span className="inline-flex items-center gap-1.5 text-[var(--charcoal)]/82 capitalize">
             <span className={`h-1.5 w-1.5 rounded-full ${CRIT_DOT[row.criticality]}`} />
             {row.criticality}
           </span>
         )}
       </td>
-      <td className="px-4 py-2.5 text-right text-[var(--charcoal)]/70">
+      <td className="px-4 py-2.5 text-right text-[var(--charcoal)]/82">
         {row.planned_amount ? formatINRShort(row.planned_amount) : "—"}
       </td>
       <td className="px-4 py-2.5 text-right">
@@ -270,7 +270,7 @@ function CategoryRow({
           ) : (
             <button
               onClick={() => setNotesOpen(true)}
-              className="text-left text-xs italic text-[var(--charcoal)]/45 hover:text-[var(--terracotta)]"
+              className="text-left text-xs italic text-[var(--charcoal)]/62 hover:text-[var(--terracotta)]"
             >
               {row.notes || "click to edit"}
             </button>

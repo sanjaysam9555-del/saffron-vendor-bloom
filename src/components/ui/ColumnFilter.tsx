@@ -66,7 +66,7 @@ export function ColumnFilter({ options, selected, onChange, label, align = "left
             align === "right" ? "right-0" : "left-0"
           }`}
         >
-          <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
+          <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-wider text-[var(--charcoal)]/70">
             <span>{label ?? "Filter"}</span>
             {active && (
               <button
@@ -80,7 +80,7 @@ export function ColumnFilter({ options, selected, onChange, label, align = "left
           </div>
           <div className="max-h-60 overflow-auto">
             {options.length === 0 ? (
-              <div className="px-2 py-1.5 text-xs text-[var(--charcoal)]/55">No options</div>
+              <div className="px-2 py-1.5 text-xs text-[var(--charcoal)]/70">No options</div>
             ) : (
               options.map((o) => {
                 const checked = selected.includes(o.value);

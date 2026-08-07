@@ -96,7 +96,7 @@ export function UnifiedLoginForm({ compact = false }: { compact?: boolean } = {}
     <div className={compact ? "w-full" : "w-full max-w-md mx-auto"}>
       <div className="rounded-xl border border-[var(--border)] bg-white p-6 shadow-sm sm:p-8">
         <h2 className="text-lg font-semibold text-[var(--charcoal)]">Sign in</h2>
-        <p className="mt-1 text-sm text-[var(--charcoal)]/60">
+        <p className="mt-1 text-sm text-[var(--charcoal)]/74">
           Use the email and password shared by your Saffron planner.
         </p>
 

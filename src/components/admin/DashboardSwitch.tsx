@@ -19,7 +19,7 @@ export function DashboardSwitch() {
   const base =
     "inline-flex flex-1 items-center justify-center gap-1.5 px-3 py-1.5 transition-colors sm:flex-none sm:justify-start";
   const active = "bg-[var(--terracotta)] text-[var(--cream)]";
-  const inactive = "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]";
+  const inactive = "text-[var(--charcoal)]/82 hover:bg-[var(--cream)]";
 
   return (
     <div

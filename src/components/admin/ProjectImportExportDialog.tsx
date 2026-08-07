@@ -107,14 +107,14 @@ export function ProjectImportExportDialog({ open, projects, onClose, onImport }:
         <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] bg-white px-6 py-4">
           <div className="min-w-0">
             <h2 className="font-display text-2xl font-semibold text-[var(--charcoal)]">Import / Export Projects</h2>
-            <p className="mt-1 text-xs text-[var(--charcoal)]/55">
+            <p className="mt-1 text-xs text-[var(--charcoal)]/70">
               {projects.length} project{projects.length === 1 ? "" : "s"} currently on the books
             </p>
           </div>
           <button
             onClick={handleClose}
             disabled={busy}
-            className="rounded-md p-1.5 text-[var(--charcoal)]/55 hover:bg-[var(--cream-deep)] disabled:opacity-50"
+            className="rounded-md p-1.5 text-[var(--charcoal)]/70 hover:bg-[var(--cream-deep)] disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
@@ -131,7 +131,7 @@ export function ProjectImportExportDialog({ open, projects, onClose, onImport }:
               className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium capitalize transition-colors ${
                 tab === t
                   ? "border-[var(--terracotta)] text-[var(--terracotta)]"
-                  : "border-transparent text-[var(--charcoal)]/55 hover:text-[var(--charcoal)]"
+                  : "border-transparent text-[var(--charcoal)]/70 hover:text-[var(--charcoal)]"
               }`}
             >
               {t}
@@ -220,7 +220,7 @@ function ExportPane({ projects, onExport }: { projects: ProjectLike[]; onExport:
         <p className="text-sm font-medium text-[var(--charcoal)]">
           Export {projects.length} project{projects.length === 1 ? "" : "s"} to CSV
         </p>
-        <p className="mt-1 text-xs text-[var(--charcoal)]/55">
+        <p className="mt-1 text-xs text-[var(--charcoal)]/70">
           Core project details only — vendors, quotes, and payments stay in the app; use Backup &amp; Restore for a
           complete snapshot.
         </p>
@@ -252,7 +252,7 @@ function PickStep({
     <div className="space-y-5">
       <div className="rounded-lg border border-[var(--border)] bg-white p-4">
         <h3 className="text-sm font-semibold text-[var(--charcoal)]">How this works</h3>
-        <ol className="mt-2 list-decimal space-y-1.5 pl-4 text-xs text-[var(--charcoal)]/70">
+        <ol className="mt-2 list-decimal space-y-1.5 pl-4 text-xs text-[var(--charcoal)]/82">
           <li>
             Download the template below — it has every column the app understands, with one example row showing the
             expected format.
@@ -273,7 +273,7 @@ function PickStep({
         </button>
       </div>
 
-      <details className="rounded-lg border border-[var(--border)] bg-white p-4 text-xs text-[var(--charcoal)]/70">
+      <details className="rounded-lg border border-[var(--border)] bg-white p-4 text-xs text-[var(--charcoal)]/82">
         <summary className="cursor-pointer text-sm font-semibold text-[var(--charcoal)]">
           Column reference ({PROJECT_CSV_FIELDS.length} columns)
         </summary>
@@ -285,7 +285,7 @@ function PickStep({
             </div>
           ))}
         </div>
-        <p className="mt-2 text-[10px] text-[var(--charcoal)]/50">* Required</p>
+        <p className="mt-2 text-[10px] text-[var(--charcoal)]/66">* Required</p>
       </details>
 
       <label
@@ -303,7 +303,7 @@ function PickStep({
       >
         <Upload className="h-8 w-8 text-[var(--terracotta)]" />
         <p className="text-sm font-medium text-[var(--charcoal)]">Click to choose a CSV file, or drag it here</p>
-        <p className="text-xs text-[var(--charcoal)]/55">.csv files only</p>
+        <p className="text-xs text-[var(--charcoal)]/70">.csv files only</p>
         <input
           ref={fileInputRef}
           type="file"
@@ -337,7 +337,7 @@ function PreviewStep({
 }) {
   return (
     <div className="space-y-4">
-      <p className="text-xs text-[var(--charcoal)]/55">
+      <p className="text-xs text-[var(--charcoal)]/70">
         Previewing <span className="font-medium text-[var(--charcoal)]">{fileName}</span> —{" "}
         <button onClick={onPickAnother} className="text-[var(--terracotta)] hover:underline">
           choose a different file
@@ -358,7 +358,7 @@ function PreviewStep({
       </div>
 
       {unrecognizedColumns.length > 0 && (
-        <p className="text-xs text-[var(--charcoal)]/50">
+        <p className="text-xs text-[var(--charcoal)]/66">
           Ignored columns not recognized: {unrecognizedColumns.join(", ")}
         </p>
       )}
@@ -376,11 +376,11 @@ function PreviewStep({
           <tbody className="divide-y divide-[var(--border)]">
             {rows.map((r) => (
               <tr key={r.rowNumber} className={r.input ? "" : "bg-[var(--terracotta-soft)]/40"}>
-                <td className="px-3 py-2 text-[var(--charcoal)]/50">{r.rowNumber}</td>
+                <td className="px-3 py-2 text-[var(--charcoal)]/66">{r.rowNumber}</td>
                 <td className="px-3 py-2 text-[var(--charcoal)]">
                   {r.input ? `${r.input.bride_name} & ${r.input.groom_name}` : "—"}
                 </td>
-                <td className="px-3 py-2 text-[var(--charcoal)]/70">{r.input?.wedding_date || "—"}</td>
+                <td className="px-3 py-2 text-[var(--charcoal)]/82">{r.input?.wedding_date || "—"}</td>
                 <td className="px-3 py-2">
                   {r.input ? (
                     <span className="inline-flex items-center gap-1 text-[hsl(142_55%_28%)]">
@@ -409,7 +409,7 @@ function DoneStep({ importedCount, skippedCount }: { importedCount: number; skip
         Imported {importedCount} project{importedCount === 1 ? "" : "s"}
       </p>
       {skippedCount > 0 && (
-        <p className="text-xs text-[var(--charcoal)]/55">
+        <p className="text-xs text-[var(--charcoal)]/70">
           {skippedCount} row{skippedCount === 1 ? "" : "s"} were skipped due to errors — fix them and re-import if needed.
         </p>
       )}

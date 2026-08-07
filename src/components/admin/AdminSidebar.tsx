@@ -81,7 +81,7 @@ export function AdminSidebar() {
       <div className="app-header-safe fixed inset-x-0 top-0 z-40 grid h-14 grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-3 border-b border-[var(--border)] bg-[var(--cream)] px-4 lg:hidden">
         <button
           onClick={() => setMobileOpen(true)}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[var(--charcoal)]/70 hover:bg-[var(--cream-deep)]"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[var(--charcoal)]/82 hover:bg-[var(--cream-deep)]"
           aria-label="Open navigation"
         >
           <Menu className="h-5 w-5" />
@@ -127,7 +127,7 @@ export function AdminSidebar() {
                 {brandLead}
               </div>
               {brandTail && (
-                <div className="mt-1 truncate font-sans text-[10px] uppercase tracking-[0.18em] text-[var(--charcoal)]/45">
+                <div className="mt-1 truncate font-sans text-[10px] uppercase tracking-[0.18em] text-[var(--charcoal)]/62">
                   {brandTail}
                 </div>
               )}
@@ -136,7 +136,7 @@ export function AdminSidebar() {
           {/* Mobile close */}
           <button
             onClick={() => setMobileOpen(false)}
-            className="ml-auto flex h-7 w-7 items-center justify-center rounded text-[var(--charcoal)]/50 hover:text-[var(--charcoal)] lg:hidden"
+            className="ml-auto flex h-7 w-7 items-center justify-center rounded text-[var(--charcoal)]/66 hover:text-[var(--charcoal)] lg:hidden"
             aria-label="Close navigation"
           >
             <X className="h-4 w-4" />
@@ -174,7 +174,7 @@ export function AdminSidebar() {
             onClick={toggle}
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             className={[
-              "mx-2 my-0.5 hidden w-[calc(100%-16px)] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--charcoal)]/60 transition-colors hover:bg-[var(--cream-deep)] hover:text-[var(--charcoal)] lg:flex",
+              "mx-2 my-0.5 hidden w-[calc(100%-16px)] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--charcoal)]/74 transition-colors hover:bg-[var(--cream-deep)] hover:text-[var(--charcoal)] lg:flex",
               collapsed ? "justify-center px-0" : "",
             ].join(" ")}
           >
@@ -227,7 +227,7 @@ function NavItem({
         "mx-2 my-0.5 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
         active
           ? "bg-[var(--terracotta)] text-[var(--cream)]"
-          : "text-[var(--charcoal)]/70 hover:bg-[var(--cream-deep)] hover:text-[var(--charcoal)]",
+          : "text-[var(--charcoal)]/82 hover:bg-[var(--cream-deep)] hover:text-[var(--charcoal)]",
         collapsed ? "justify-center px-0" : "",
       ].join(" ")}
     >
@@ -309,7 +309,7 @@ function SidebarLogout({ collapsed }: { collapsed: boolean }) {
       onClick={handleSignOut}
       title={collapsed ? "Sign out" : undefined}
       className={[
-        "mx-2 my-0.5 flex w-[calc(100%-16px)] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--charcoal)]/60 transition-colors hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]",
+        "mx-2 my-0.5 flex w-[calc(100%-16px)] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--charcoal)]/74 transition-colors hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]",
         collapsed ? "justify-center px-0" : "",
       ].join(" ")}
     >
@@ -347,7 +347,7 @@ export function AdminMobileTabBar() {
             key={to}
             to={to}
             className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-0.5 text-[9px] font-medium ${
-              active ? "text-[var(--terracotta)]" : "text-[var(--charcoal)]/55"
+              active ? "text-[var(--terracotta)]" : "text-[var(--charcoal)]/70"
             }`}
           >
             <Icon className="h-[18px] w-[18px]" />

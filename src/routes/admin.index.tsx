@@ -284,7 +284,7 @@ function DashboardPage() {
               <h1 className="brand-line hidden font-display text-xl font-semibold text-[var(--charcoal)] sm:block sm:text-2xl">
                 {filters.category ?? "All Vendors"}
               </h1>
-              <span className="hidden text-xs text-[var(--charcoal)]/55 sm:inline">
+              <span className="hidden text-xs text-[var(--charcoal)]/70 sm:inline">
                 {filtered.length} of {vendors.length}
               </span>
             </div>
@@ -343,13 +343,13 @@ function DashboardPage() {
               <div className="flex h-9 flex-1 items-center gap-1 rounded-md border border-[var(--border)] bg-white p-1 sm:h-auto sm:flex-none sm:rounded-lg">
                 <button
                   onClick={() => setView("cards")}
-                  className={`flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1 text-xs transition-colors sm:flex-none sm:px-3 ${view === "cards" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
+                  className={`flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1 text-xs transition-colors sm:flex-none sm:px-3 ${view === "cards" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/74 hover:text-[var(--terracotta)]"}`}
                 >
                   <LayoutGrid className="h-3.5 w-3.5" /> Cards
                 </button>
                 <button
                   onClick={() => setView("table")}
-                  className={`flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1 text-xs transition-colors sm:flex-none sm:px-3 ${view === "table" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"}`}
+                  className={`flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1 text-xs transition-colors sm:flex-none sm:px-3 ${view === "table" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)] font-medium" : "text-[var(--charcoal)]/74 hover:text-[var(--terracotta)]"}`}
                 >
                   <TableIcon className="h-3.5 w-3.5" /> Table
                 </button>
@@ -520,7 +520,7 @@ function EmptyState({
       <h3 className="font-display text-2xl font-semibold text-[var(--charcoal)]">
         {category ? `No vendors in ${category} yet` : vendorsExist ? "No matching vendors" : "Your vendor book is empty"}
       </h3>
-      <p className="mb-5 mt-2 max-w-md text-sm text-[var(--charcoal)]/60">
+      <p className="mb-5 mt-2 max-w-md text-sm text-[var(--charcoal)]/74">
         {vendorsExist
           ? "Try adjusting filters or add a new vendor in this category."
           : "Start building your vendor book by adding your first vendor."}
@@ -649,7 +649,7 @@ function ActiveFilterChips({
       {(chips.length + (sortChip ? 1 : 0)) > 1 && (
         <button
           onClick={clearAll}
-          className="ml-1 text-[11px] text-[var(--charcoal)]/55 underline-offset-2 hover:text-[var(--terracotta)] hover:underline"
+          className="ml-1 text-[11px] text-[var(--charcoal)]/70 underline-offset-2 hover:text-[var(--terracotta)] hover:underline"
         >
           Clear all
         </button>
@@ -698,7 +698,7 @@ function VendorPagination({
 
   return (
     <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-      <p className="text-xs text-[var(--charcoal)]/50">
+      <p className="text-xs text-[var(--charcoal)]/66">
         Showing <span className="font-medium text-[var(--charcoal)]/75">{from}–{to}</span> of{" "}
         <span className="font-medium text-[var(--charcoal)]/75">{total}</span>
       </p>
@@ -709,14 +709,14 @@ function VendorPagination({
             onClick={() => onChange(page - 1)}
             disabled={page === 1}
             aria-label="Previous page"
-            className={`${btn} border border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] disabled:pointer-events-none disabled:opacity-40`}
+            className={`${btn} border border-[var(--border)] bg-white text-[var(--charcoal)]/82 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] disabled:pointer-events-none disabled:opacity-40`}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </button>
 
           {pages.map((p, i) =>
             p === "gap" ? (
-              <span key={`gap-${i}`} className="px-1 text-xs text-[var(--charcoal)]/30">
+              <span key={`gap-${i}`} className="px-1 text-xs text-[var(--charcoal)]/52">
                 …
               </span>
             ) : (
@@ -727,7 +727,7 @@ function VendorPagination({
                 className={`${btn} ${
                   p === page
                     ? "bg-[var(--terracotta)] text-[var(--cream)]"
-                    : "border border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+                    : "border border-[var(--border)] bg-white text-[var(--charcoal)]/82 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
                 }`}
               >
                 {p}
@@ -739,7 +739,7 @@ function VendorPagination({
             onClick={() => onChange(page + 1)}
             disabled={page === pageCount}
             aria-label="Next page"
-            className={`${btn} border border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] disabled:pointer-events-none disabled:opacity-40`}
+            className={`${btn} border border-[var(--border)] bg-white text-[var(--charcoal)]/82 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] disabled:pointer-events-none disabled:opacity-40`}
           >
             <ChevronRight className="h-3.5 w-3.5" />
           </button>

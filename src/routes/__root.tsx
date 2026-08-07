@@ -17,7 +17,7 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="font-display text-7xl text-[var(--terracotta)]">404</h1>
         <h2 className="mt-4 font-display text-2xl text-[var(--charcoal)]">Page not found</h2>
-        <p className="mt-2 text-sm text-[var(--charcoal)]/60">
+        <p className="mt-2 text-sm text-[var(--charcoal)]/74">
           The page you're looking for doesn't exist or has been moved.
         </p>
         <div className="mt-6">

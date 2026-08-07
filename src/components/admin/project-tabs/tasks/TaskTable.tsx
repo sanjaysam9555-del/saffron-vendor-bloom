@@ -74,7 +74,7 @@ export function TaskTable({
         <tbody className="[&_tr:nth-child(even)]:bg-[var(--cream)]/25">
           {sorted.length === 0 ? (
             <tr>
-              <td colSpan={showProject ? 8 : 7} className="px-4 py-10 text-center text-sm text-[var(--charcoal)]/45">
+              <td colSpan={showProject ? 8 : 7} className="px-4 py-10 text-center text-sm text-[var(--charcoal)]/62">
                 No tasks match this view.
               </td>
             </tr>
@@ -93,28 +93,28 @@ export function TaskTable({
                   <button
                     onClick={() => onOpen(t)}
                     className={`text-left font-medium transition hover:text-[var(--terracotta)] ${
-                      t.stage === "done" ? "text-[var(--charcoal)]/45" : "text-[var(--charcoal)]"
+                      t.stage === "done" ? "text-[var(--charcoal)]/62" : "text-[var(--charcoal)]"
                     }`}
                   >
                     {t.title}
                   </button>
                   {t.remarks && (
-                    <div className="mt-0.5 line-clamp-1 text-[11px] text-[var(--charcoal)]/50">{t.remarks}</div>
+                    <div className="mt-0.5 line-clamp-1 text-[11px] text-[var(--charcoal)]/66">{t.remarks}</div>
                   )}
                 </td>
                 {showProject && (
-                  <td className="max-w-[160px] px-3 py-2.5 text-xs text-[var(--charcoal)]/70">
+                  <td className="max-w-[160px] px-3 py-2.5 text-xs text-[var(--charcoal)]/82">
                     <span className="line-clamp-1">{t.project_label ?? "—"}</span>
                   </td>
                 )}
-                <td className="px-3 py-2.5 text-xs text-[var(--charcoal)]/70">{t.task_category || "—"}</td>
-                <td className="max-w-[200px] px-3 py-2.5 text-xs text-[var(--charcoal)]/70">
+                <td className="px-3 py-2.5 text-xs text-[var(--charcoal)]/82">{t.task_category || "—"}</td>
+                <td className="max-w-[200px] px-3 py-2.5 text-xs text-[var(--charcoal)]/82">
                   {t.vendors.length === 0 ? "—" : <span className="line-clamp-1">{t.vendors.map((v) => v.vendor_name).join(", ")}</span>}
                 </td>
-                <td className="px-3 py-2.5 text-xs text-[var(--charcoal)]/70">{t.assignee_name || "—"}</td>
+                <td className="px-3 py-2.5 text-xs text-[var(--charcoal)]/82">{t.assignee_name || "—"}</td>
                 <td
                   className={`px-3 py-2.5 text-xs ${
-                    isOverdue(t.due_date, t.stage) ? "font-semibold text-[var(--terracotta)]" : "text-[var(--charcoal)]/70"
+                    isOverdue(t.due_date, t.stage) ? "font-semibold text-[var(--terracotta)]" : "text-[var(--charcoal)]/82"
                   }`}
                 >
                   {formatDue(t.due_date)}

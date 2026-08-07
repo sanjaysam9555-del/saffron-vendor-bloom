@@ -39,10 +39,10 @@ export function VendorSignupSuccess({ vendorName }: VendorSignupSuccessProps) {
       <h2 className="font-display text-3xl font-semibold text-[var(--charcoal)] sm:text-4xl">
         Thank you{vendorName ? `, ${vendorName}` : ""}!
       </h2>
-      <p className="mx-auto mt-3 max-w-md text-sm text-[var(--charcoal)]/70 sm:text-base">
+      <p className="mx-auto mt-3 max-w-md text-sm text-[var(--charcoal)]/82 sm:text-base">
         We've received your details. Our team will review your profile and reach out shortly.
       </p>
-      <p className="mx-auto mt-4 max-w-md text-sm text-[var(--charcoal)]/65 sm:text-base">
+      <p className="mx-auto mt-4 max-w-md text-sm text-[var(--charcoal)]/78 sm:text-base">
         While you're here, follow us on Instagram for updates and inspiration.
       </p>
 

@@ -145,7 +145,7 @@ export function BulkEditDialog({ open, vendors, onClose, onApply }: BulkEditDial
 
     const disabled = s.clear || !s.enabled;
     const baseCls =
-      "w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--charcoal)] focus:border-[var(--terracotta)] focus:outline-none disabled:cursor-not-allowed disabled:bg-[var(--cream-deep)]/60 disabled:text-[var(--charcoal)]/40";
+      "w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--charcoal)] focus:border-[var(--terracotta)] focus:outline-none disabled:cursor-not-allowed disabled:bg-[var(--cream-deep)]/60 disabled:text-[var(--charcoal)]/58";
 
     if (f.kind === "select-category") {
       return (
@@ -210,21 +210,21 @@ export function BulkEditDialog({ open, vendors, onClose, onApply }: BulkEditDial
             <h2 className="font-display text-2xl font-semibold text-[var(--charcoal)]">
               Editing {vendors.length} vendor{vendors.length === 1 ? "" : "s"}
             </h2>
-            <p className="mt-1 truncate text-xs text-[var(--charcoal)]/55" title={names.join(", ")}>
+            <p className="mt-1 truncate text-xs text-[var(--charcoal)]/70" title={names.join(", ")}>
               {previewNames}{moreCount > 0 ? `, …and ${moreCount} more` : ""}
             </p>
           </div>
           <button
             onClick={handleClose}
             disabled={busy}
-            className="rounded-md p-1.5 text-[var(--charcoal)]/55 hover:bg-[var(--cream-deep)] disabled:opacity-50"
+            className="rounded-md p-1.5 text-[var(--charcoal)]/70 hover:bg-[var(--cream-deep)] disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          <p className="mb-3 text-xs text-[var(--charcoal)]/65">
+          <p className="mb-3 text-xs text-[var(--charcoal)]/78">
             Tick "Update this field" for each field you want to change. Unchecked fields are left untouched per vendor.
             Use "Clear value" to set a nullable field to empty.
           </p>
@@ -254,7 +254,7 @@ export function BulkEditDialog({ open, vendors, onClose, onApply }: BulkEditDial
                       Update {f.label.toLowerCase()}
                     </label>
                     {f.nullable && s.enabled && (
-                      <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-[var(--charcoal)]/65">
+                      <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-[var(--charcoal)]/78">
                         <input
                           type="checkbox"
                           checked={s.clear}
@@ -272,7 +272,7 @@ export function BulkEditDialog({ open, vendors, onClose, onApply }: BulkEditDial
                   </div>
                   {s.enabled && !s.clear && renderInput(f)}
                   {s.enabled && s.clear && (
-                    <div className="rounded-md border border-dashed border-[var(--border)] bg-[var(--cream-deep)]/40 px-3 py-2 text-xs italic text-[var(--charcoal)]/55">
+                    <div className="rounded-md border border-dashed border-[var(--border)] bg-[var(--cream-deep)]/40 px-3 py-2 text-xs italic text-[var(--charcoal)]/70">
                       Will set {f.label.toLowerCase()} to empty for all selected vendors.
                     </div>
                   )}
@@ -283,7 +283,7 @@ export function BulkEditDialog({ open, vendors, onClose, onApply }: BulkEditDial
         </div>
 
         <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] bg-white px-6 py-4">
-          <div className="text-xs text-[var(--charcoal)]/65">
+          <div className="text-xs text-[var(--charcoal)]/78">
             {enabledFields.length === 0
               ? "No fields selected"
               : `${enabledFields.length} field${enabledFields.length === 1 ? "" : "s"} will be updated`}

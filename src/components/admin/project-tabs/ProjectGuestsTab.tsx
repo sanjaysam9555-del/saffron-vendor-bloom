@@ -14,7 +14,7 @@ const RSVP_META: Record<RsvpStatus, { label: string; cls: string }> = {
   yes: { label: "Yes", cls: "bg-emerald-100 text-emerald-800" },
   no: { label: "No", cls: "bg-rose-100 text-rose-700" },
   maybe: { label: "Maybe", cls: "bg-[var(--gold-soft)] text-[hsl(38_45%_28%)]" },
-  pending: { label: "Pending", cls: "bg-[var(--cream-deep)] text-[var(--charcoal)]/55" },
+  pending: { label: "Pending", cls: "bg-[var(--cream-deep)] text-[var(--charcoal)]/70" },
 };
 const RSVP_ORDER: RsvpStatus[] = ["yes", "no", "maybe", "pending"];
 
@@ -81,14 +81,14 @@ export function ProjectGuestsTab({ projectId }: { projectId: string }) {
               className={`px-3 py-1.5 font-medium capitalize transition ${
                 filter === f
                   ? "bg-[var(--terracotta)] text-[var(--cream)]"
-                  : "text-[var(--charcoal)]/65 hover:bg-[var(--cream)]"
+                  : "text-[var(--charcoal)]/78 hover:bg-[var(--cream)]"
               }`}
             >
               {f}
             </button>
           ))}
         </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--charcoal)]/55">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--charcoal)]/70">
           {RSVP_ORDER.map((s) => (
             <span key={s}>
               {RSVP_META[s].label} · <span className="font-medium text-[var(--charcoal)]">{counts[s]}</span>
@@ -138,20 +138,20 @@ export function ProjectGuestsTab({ projectId }: { projectId: string }) {
             </thead>
             <tbody className="[&_tr:nth-child(even)]:bg-[var(--cream)]/25">
               {isLoading ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-[var(--charcoal)]/50">Loading…</td></tr>
+                <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-[var(--charcoal)]/66">Loading…</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-[var(--charcoal)]/45">No guests here.</td></tr>
+                <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-[var(--charcoal)]/62">No guests here.</td></tr>
               ) : (
                 filtered.map((g) => (
                   <tr key={g.id} className="border-t border-[var(--border)] group">
                     <td className="px-4 py-2.5">
                       <div className="font-medium text-[var(--charcoal)]">{g.name}</div>
-                      {g.phone && <div className="text-[11px] text-[var(--charcoal)]/45">{g.phone}</div>}
+                      {g.phone && <div className="text-[11px] text-[var(--charcoal)]/62">{g.phone}</div>}
                     </td>
-                    <td className="px-4 py-2.5 capitalize text-[var(--charcoal)]/70">{g.side || "—"}</td>
-                    <td className="px-4 py-2.5 text-[var(--charcoal)]/70">{g.category || "—"}</td>
-                    <td className="px-4 py-2.5 text-center text-[var(--charcoal)]/70">{g.plus_one}</td>
-                    <td className="px-4 py-2.5 text-[var(--charcoal)]/70">{g.meal || "—"}</td>
+                    <td className="px-4 py-2.5 capitalize text-[var(--charcoal)]/82">{g.side || "—"}</td>
+                    <td className="px-4 py-2.5 text-[var(--charcoal)]/82">{g.category || "—"}</td>
+                    <td className="px-4 py-2.5 text-center text-[var(--charcoal)]/82">{g.plus_one}</td>
+                    <td className="px-4 py-2.5 text-[var(--charcoal)]/82">{g.meal || "—"}</td>
                     <td className="px-4 py-2.5">
                       <select
                         value={g.rsvp_status}
@@ -167,7 +167,7 @@ export function ProjectGuestsTab({ projectId }: { projectId: string }) {
                       <button
                         onClick={() => remove.mutate(g.id)}
                         title="Remove guest"
-                        className="rounded p-1 text-[var(--charcoal)]/30 opacity-0 transition hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)] group-hover:opacity-100"
+                        className="rounded p-1 text-[var(--charcoal)]/52 opacity-0 transition hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)] group-hover:opacity-100"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>

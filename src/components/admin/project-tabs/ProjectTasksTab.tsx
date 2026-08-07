@@ -92,7 +92,7 @@ export function ProjectTasksTab({ projectId }: { projectId: string }) {
           matching the original inline desktop layout exactly. */}
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="relative w-full sm:min-w-[180px] sm:flex-1">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/35" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/55" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -146,7 +146,7 @@ export function ProjectTasksTab({ projectId }: { projectId: string }) {
               key={v}
               onClick={() => setView(v)}
               className={`inline-flex flex-1 items-center justify-center gap-1 px-2.5 py-1.5 text-xs transition sm:flex-initial ${
-                view === v ? "bg-[var(--charcoal)] text-[var(--cream)]" : "bg-white text-[var(--charcoal)]/60"
+                view === v ? "bg-[var(--charcoal)] text-[var(--cream)]" : "bg-white text-[var(--charcoal)]/74"
               }`}
             >
               {v === "board" ? <LayoutGrid className="h-3.5 w-3.5" /> : <Rows3 className="h-3.5 w-3.5" />}
@@ -183,12 +183,12 @@ export function ProjectTasksTab({ projectId }: { projectId: string }) {
 
       {/* ── Views ── */}
       {isLoading ? (
-        <div className="rounded-xl border border-[var(--border)] bg-white p-10 text-center text-sm text-[var(--charcoal)]/50">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-10 text-center text-sm text-[var(--charcoal)]/66">
           Loading tasks…
         </div>
       ) : tasks.length === 0 ? (
         <div className="rounded-xl border border-dashed border-[var(--border)] bg-white p-10 text-center">
-          <p className="text-sm text-[var(--charcoal)]/55">No tasks yet for this wedding.</p>
+          <p className="text-sm text-[var(--charcoal)]/70">No tasks yet for this wedding.</p>
           <button
             onClick={() => setComposing(true)}
             className="mt-3 inline-flex items-center gap-1 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)]"

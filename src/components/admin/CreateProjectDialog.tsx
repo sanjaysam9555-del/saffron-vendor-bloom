@@ -72,7 +72,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
       >
         <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] px-5 py-3">
           <div>
-            <div className="text-[10px] uppercase tracking-widest text-[var(--charcoal)]/55">New</div>
+            <div className="text-[10px] uppercase tracking-widest text-[var(--charcoal)]/70">New</div>
             <h3 className="font-display text-xl text-[var(--charcoal)]">Create a project</h3>
           </div>
           <button onClick={onClose} className="rounded p-1 hover:bg-[var(--cream-deep)]">
@@ -81,19 +81,19 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
         </div>
         <form onSubmit={submit} className="space-y-3 px-5 py-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-xs text-[var(--charcoal)]/70">
+            <label className="text-xs text-[var(--charcoal)]/82">
               Bride name
               <input required value={bride} onChange={(e) => setBride(e.target.value)} className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" />
             </label>
-            <label className="text-xs text-[var(--charcoal)]/70">
+            <label className="text-xs text-[var(--charcoal)]/82">
               Groom name
               <input required value={groom} onChange={(e) => setGroom(e.target.value)} className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" />
             </label>
-            <label className="text-xs text-[var(--charcoal)]/70">
+            <label className="text-xs text-[var(--charcoal)]/82">
               Wedding date
               <input required type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" />
             </label>
-            <label className="text-xs text-[var(--charcoal)]/70">
+            <label className="text-xs text-[var(--charcoal)]/82">
               Planning fee (₹)
               <input
                 required
@@ -106,7 +106,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
                 className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm"
               />
             </label>
-            <label className="text-xs text-[var(--charcoal)]/70">
+            <label className="text-xs text-[var(--charcoal)]/82">
               Target income (₹)
               <input
                 type="number"
@@ -117,11 +117,11 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
                 placeholder="e.g. 300000"
                 className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm"
               />
-              <span className="mt-1 block text-[10px] text-[var(--charcoal)]/50">
+              <span className="mt-1 block text-[10px] text-[var(--charcoal)]/66">
                 Planning fee + expected commission target
               </span>
             </label>
-            <label className="text-xs text-[var(--charcoal)]/70">
+            <label className="text-xs text-[var(--charcoal)]/82">
               Number of installments
               <select
                 required
@@ -137,7 +137,7 @@ export function CreateProjectDialog({ open, onClose, onCreated }: Props) {
               </select>
             </label>
 
-            <label className="sm:col-span-2 text-xs text-[var(--charcoal)]/70">
+            <label className="sm:col-span-2 text-xs text-[var(--charcoal)]/82">
               Notes (optional)
               <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" />
             </label>

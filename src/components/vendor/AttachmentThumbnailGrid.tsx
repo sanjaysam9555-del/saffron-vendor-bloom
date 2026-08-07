@@ -74,7 +74,7 @@ export function AttachmentThumbnailGrid<T extends AttachmentLike>({ attachments,
               <span className="line-clamp-2 break-all text-xs text-[var(--charcoal)] group-hover:text-[var(--terracotta)]">
                 {att.file_name}
               </span>
-              <span className="text-[10px] text-[var(--charcoal)]/55">
+              <span className="text-[10px] text-[var(--charcoal)]/70">
                 {formatFileSize(att.size_bytes)}
               </span>
             </div>
@@ -132,9 +132,9 @@ function VideoTile({ filePath }: { filePath: string }) {
 
 function FileTile({ name }: { name: string }) {
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-[var(--charcoal)]/70">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-[var(--charcoal)]/82">
       <FileText className="h-10 w-10 text-[var(--terracotta)]" />
-      <span className="rounded bg-white px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-[var(--charcoal)]/70">
+      <span className="rounded bg-white px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-[var(--charcoal)]/82">
         {extOf(name)}
       </span>
     </div>
@@ -143,7 +143,7 @@ function FileTile({ name }: { name: string }) {
 
 function Fallback({ icon }: { icon: React.ReactNode }) {
   return (
-    <div className="flex h-full w-full items-center justify-center text-[var(--charcoal)]/40">
+    <div className="flex h-full w-full items-center justify-center text-[var(--charcoal)]/58">
       {icon}
     </div>
   );

@@ -62,7 +62,7 @@ export function BulkActionBar({
             <button
               onClick={onClearSelection}
               disabled={busy || deleting}
-              className="text-xs text-[var(--charcoal)]/55 underline-offset-2 hover:text-[var(--terracotta)] hover:underline disabled:opacity-50"
+              className="text-xs text-[var(--charcoal)]/70 underline-offset-2 hover:text-[var(--terracotta)] hover:underline disabled:opacity-50"
             >
               Clear selection
             </button>
@@ -93,7 +93,7 @@ export function BulkActionBar({
           {confirmDelete && !deleting && (
             <button
               onClick={() => setConfirmDelete(false)}
-              className="rounded-md px-2 py-2 text-xs text-[var(--charcoal)]/55 hover:text-[var(--charcoal)]"
+              className="rounded-md px-2 py-2 text-xs text-[var(--charcoal)]/70 hover:text-[var(--charcoal)]"
             >
               Cancel
             </button>
@@ -101,7 +101,7 @@ export function BulkActionBar({
           <button
             onClick={onCancel}
             disabled={busy || deleting}
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm text-[var(--charcoal)]/60 hover:bg-[var(--cream-deep)] disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm text-[var(--charcoal)]/74 hover:bg-[var(--cream-deep)] disabled:opacity-50"
           >
             <X className="h-4 w-4" /> Exit bulk mode
           </button>

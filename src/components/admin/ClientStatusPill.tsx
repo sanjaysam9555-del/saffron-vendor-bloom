@@ -18,7 +18,7 @@ export function ClientStatusPill({ status, size = "sm" }: { status: ClientVendor
           className={
             opt
               ? `inline-flex items-center rounded-full font-medium ${opt.pill} ${sizeCls}`
-              : `inline-flex items-center rounded-full bg-[var(--cream)] text-[var(--charcoal)]/55 ${sizeCls}`
+              : `inline-flex items-center rounded-full bg-[var(--cream)] text-[var(--charcoal)]/70 ${sizeCls}`
           }
         >
           {opt ? opt.label : "No response"}

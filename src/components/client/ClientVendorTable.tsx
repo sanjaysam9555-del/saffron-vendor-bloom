@@ -144,7 +144,7 @@ export function ClientVendorTable({ vendors, onView }: Props) {
                     {v.vendor_name}
                   </button>
                   {(v.attachments.length > 0 || (v.comment_count ?? 0) > 0) && (
-                    <div className="mt-1 flex items-center gap-2 text-[10px] text-[var(--charcoal)]/55">
+                    <div className="mt-1 flex items-center gap-2 text-[10px] text-[var(--charcoal)]/70">
                       {v.attachments.length > 0 && (
                         <span className="inline-flex items-center gap-0.5">
                           <Paperclip className="h-3 w-3" /> {v.attachments.length}
@@ -165,7 +165,7 @@ export function ClientVendorTable({ vendors, onView }: Props) {
                     {v.category}
                   </span>
                   {v.subcategory && (
-                    <div className="mt-0.5 text-[10px] text-[var(--charcoal)]/55">
+                    <div className="mt-0.5 text-[10px] text-[var(--charcoal)]/70">
                       {v.subcategory}
                     </div>
                   )}
@@ -178,7 +178,7 @@ export function ClientVendorTable({ vendors, onView }: Props) {
                 </Td>
                 <Td>
                   {ordered.length === 0 ? (
-                    <span className="text-[10px] text-[var(--charcoal)]/45">—</span>
+                    <span className="text-[10px] text-[var(--charcoal)]/62">—</span>
                   ) : (
                     <div className="flex flex-wrap gap-1">
                       {ordered.map((q) => {
@@ -214,7 +214,7 @@ export function ClientVendorTable({ vendors, onView }: Props) {
                       {Number(v.google_rating).toFixed(1)}
                     </span>
                   ) : (
-                    <span className="text-[10px] text-[var(--charcoal)]/45">—</span>
+                    <span className="text-[10px] text-[var(--charcoal)]/62">—</span>
                   )}
                 </Td>
                 <Td className="text-right">

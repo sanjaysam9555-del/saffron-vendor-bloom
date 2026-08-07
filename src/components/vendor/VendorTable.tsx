@@ -242,7 +242,7 @@ export function VendorTable({
                       )}
                     </div>
                     {igLabel && (
-                      <div className="mt-0.5 truncate text-[11px] text-[var(--charcoal)]/45">{igLabel}</div>
+                      <div className="mt-0.5 truncate text-[11px] text-[var(--charcoal)]/62">{igLabel}</div>
                     )}
                   </td>
 
@@ -253,11 +253,11 @@ export function VendorTable({
                       {v.category}
                     </span>
                     {v.subcategory && (
-                      <div className="mt-0.5 truncate text-[11px] text-[var(--charcoal)]/40">{v.subcategory}</div>
+                      <div className="mt-0.5 truncate text-[11px] text-[var(--charcoal)]/58">{v.subcategory}</div>
                     )}
                   </td>
 
-                  <td className="px-4 py-3 text-[var(--charcoal)]/70">{v.location || "—"}</td>
+                  <td className="px-4 py-3 text-[var(--charcoal)]/82">{v.location || "—"}</td>
 
                   <td className="max-w-[200px] px-4 py-3">
                     {v.price_text ? (
@@ -265,7 +265,7 @@ export function VendorTable({
                         {v.price_text}
                       </span>
                     ) : (
-                      <span className="text-[var(--charcoal)]/30">—</span>
+                      <span className="text-[var(--charcoal)]/52">—</span>
                     )}
                   </td>
 
@@ -292,7 +292,7 @@ export function VendorTable({
                         </span>
                       )}
                       {v.google_rating == null && v.saffron_rating == null && (
-                        <span className="text-[var(--charcoal)]/30">—</span>
+                        <span className="text-[var(--charcoal)]/52">—</span>
                       )}
                     </div>
                   </td>
@@ -332,18 +332,18 @@ export function VendorTable({
                             onClick={(e) => e.stopPropagation()}
                             title={igLabel ?? "Instagram"}
                             aria-label={`Instagram — ${v.vendor_name}`}
-                            className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-[var(--border)] text-[var(--charcoal)]/65 transition hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+                            className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-[var(--border)] text-[var(--charcoal)]/78 transition hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
                           >
                             <Instagram className="h-3 w-3" />
                           </a>
                         )}
                       </div>
                     ) : (
-                      <span className="text-[var(--charcoal)]/30">—</span>
+                      <span className="text-[var(--charcoal)]/52">—</span>
                     )}
                   </td>
 
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-[11px] text-[var(--charcoal)]/45">
+                  <td className="whitespace-nowrap px-4 py-3 text-right text-[11px] text-[var(--charcoal)]/62">
                     {new Date(v.date_added).toLocaleDateString("en-IN", {
                       day: "2-digit",
                       month: "short",
@@ -358,7 +358,7 @@ export function VendorTable({
                           e.stopPropagation();
                           onEdit(v);
                         }}
-                        className="rounded p-1 text-[var(--charcoal)]/65 transition hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
+                        className="rounded p-1 text-[var(--charcoal)]/78 transition hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
                         title="Edit"
                       >
                         <Pencil className="h-3.5 w-3.5" />

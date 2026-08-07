@@ -13,7 +13,7 @@ export function AdminSectionBackBar() {
       <div className="mx-auto flex w-full max-w-[1600px] items-center px-3 py-2.5 sm:px-6">
         <Link
           to={ADMIN_SETTINGS_HOME}
-          className="inline-flex items-center gap-1 rounded-md py-1 pl-1 pr-2 text-sm font-medium text-[var(--charcoal)]/60 transition-colors hover:text-[var(--terracotta)]"
+          className="inline-flex items-center gap-1 rounded-md py-1 pl-1 pr-2 text-sm font-medium text-[var(--charcoal)]/74 transition-colors hover:text-[var(--terracotta)]"
         >
           <ChevronLeft className="h-4 w-4" /> Admin
         </Link>

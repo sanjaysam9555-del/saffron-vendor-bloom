@@ -51,17 +51,17 @@ export function ClientSidebar({
     `rounded-full border px-2.5 py-0.5 text-xs transition-colors ${
       active
         ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
-        : "border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--champagne)] hover:text-[var(--charcoal)]"
+        : "border-[var(--border)] bg-white text-[var(--charcoal)]/82 hover:border-[var(--champagne)] hover:text-[var(--charcoal)]"
     }`;
 
   const Body = (
     <>
       <div className="mb-5">
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/66">
           Search
         </div>
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/40" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/58" />
           <input
             data-tour="search-input"
             type="text"
@@ -69,13 +69,13 @@ export function ClientSidebar({
             aria-label="Search your vendors"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full rounded-md border border-[var(--border)] bg-white py-1.5 pl-8 pr-2 text-sm text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/40 focus:border-[var(--terracotta)] focus:outline-none focus:ring-2 focus:ring-[var(--terracotta-soft)]"
+            className="w-full rounded-md border border-[var(--border)] bg-white py-1.5 pl-8 pr-2 text-sm text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/58 focus:border-[var(--terracotta)] focus:outline-none focus:ring-2 focus:ring-[var(--terracotta-soft)]"
           />
         </div>
       </div>
 
       <div className="mb-6">
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/66">
           Category
         </div>
         <ul className="space-y-0.5">
@@ -89,7 +89,7 @@ export function ClientSidebar({
               }`}
             >
               <span>All Vendors</span>
-              <span className="text-xs text-[var(--charcoal)]/50">{vendors.length}</span>
+              <span className="text-xs text-[var(--charcoal)]/66">{vendors.length}</span>
             </button>
           </li>
           {categories.map((c) => (
@@ -103,7 +103,7 @@ export function ClientSidebar({
                 }`}
               >
                 <span className="truncate">{c}</span>
-                <span className="ml-2 shrink-0 text-xs text-[var(--charcoal)]/45">{counts[c] ?? 0}</span>
+                <span className="ml-2 shrink-0 text-xs text-[var(--charcoal)]/62">{counts[c] ?? 0}</span>
               </button>
             </li>
           ))}
@@ -112,7 +112,7 @@ export function ClientSidebar({
 
       {locations.length > 0 && (
         <div className="mb-6">
-          <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/50">
+          <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--charcoal)]/66">
             Location
           </div>
           <div className="flex flex-wrap gap-1">
@@ -146,7 +146,7 @@ export function ClientSidebar({
             {hasActive && (
               <button
                 onClick={() => onChange({ category: null, locations: [] })}
-                className="flex items-center gap-1 text-xs text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"
+                className="flex items-center gap-1 text-xs text-[var(--charcoal)]/74 hover:text-[var(--terracotta)]"
               >
                 <X className="h-3 w-3" /> Clear
               </button>
@@ -155,7 +155,7 @@ export function ClientSidebar({
               onClick={onMobileClose}
               title="Close"
               aria-label="Close filters"
-              className="rounded-md p-1 text-[var(--charcoal)]/55 hover:bg-white hover:text-[var(--terracotta)]"
+              className="rounded-md p-1 text-[var(--charcoal)]/70 hover:bg-white hover:text-[var(--terracotta)]"
             >
               <X className="h-4 w-4" />
             </button>
@@ -180,7 +180,7 @@ export function ClientSidebar({
             <ChevronRight className="h-4 w-4" />
           </button>
           <div className="mt-2 flex justify-center">
-            <div className="rounded-md p-2 text-[var(--charcoal)]/60" title="Filters">
+            <div className="rounded-md p-2 text-[var(--charcoal)]/74" title="Filters">
               <Filter className="h-4 w-4" />
             </div>
           </div>
@@ -206,7 +206,7 @@ export function ClientSidebar({
             {hasActive ? (
               <button
                 onClick={() => onChange({ category: null, locations: [] })}
-                className="flex items-center gap-1 text-xs text-[var(--charcoal)]/60 hover:text-[var(--terracotta)]"
+                className="flex items-center gap-1 text-xs text-[var(--charcoal)]/74 hover:text-[var(--terracotta)]"
               >
                 <X className="h-3 w-3" /> Clear
               </button>
@@ -215,7 +215,7 @@ export function ClientSidebar({
               onClick={onToggle}
               title="Collapse filters"
               aria-label="Collapse filters"
-              className="ml-1 rounded-md p-1 text-[var(--charcoal)]/55 hover:bg-white hover:text-[var(--terracotta)]"
+              className="ml-1 rounded-md p-1 text-[var(--charcoal)]/70 hover:bg-white hover:text-[var(--terracotta)]"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>

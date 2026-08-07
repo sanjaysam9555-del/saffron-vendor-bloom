@@ -56,12 +56,12 @@ function daysUntil(dateStr: string): number {
  */
 function countdown(dateStr: string) {
   const d = daysUntil(dateStr);
-  if (d < 0) return { text: `${Math.abs(d)} days ago`, cls: "text-[var(--charcoal)]/40" };
+  if (d < 0) return { text: `${Math.abs(d)} days ago`, cls: "text-[var(--charcoal)]/58" };
   if (d === 0) return { text: "Today", cls: "font-semibold text-[var(--terracotta)]" };
   if (d === 1) return { text: "Tomorrow", cls: "font-semibold text-[var(--terracotta)]" };
   if (d <= 7) return { text: `In ${d} days`, cls: "font-semibold text-[var(--terracotta)]" };
   if (d <= 30) return { text: `In ${d} days`, cls: "font-medium text-[hsl(38_45%_28%)]" };
-  return { text: `In ${d} days`, cls: "text-[var(--charcoal)]/45" };
+  return { text: `In ${d} days`, cls: "text-[var(--charcoal)]/62" };
 }
 
 /** Compact labels — the full option labels are too long for a card chip. */
@@ -128,7 +128,7 @@ export function ProjectCard({ project: p, canDelete, onArchiveToggle, onEdit, on
             <button
               type="button"
               aria-label="Project actions"
-              className="rounded p-1.5 text-[var(--charcoal)]/55 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]"
+              className="rounded p-1.5 text-[var(--charcoal)]/70 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]"
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>
@@ -174,13 +174,13 @@ export function ProjectCard({ project: p, canDelete, onArchiveToggle, onEdit, on
         </h3>
 
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-          <span className="inline-flex items-center gap-1.5 text-[var(--charcoal)]/70">
-            <Calendar className="h-3.5 w-3.5 text-[var(--charcoal)]/40" />
+          <span className="inline-flex items-center gap-1.5 text-[var(--charcoal)]/82">
+            <Calendar className="h-3.5 w-3.5 text-[var(--charcoal)]/58" />
             {dateLabel}
           </span>
-          <span className="text-[var(--charcoal)]/25">·</span>
+          <span className="text-[var(--charcoal)]/50">·</span>
           {archived ? (
-            <span className="rounded-full bg-[var(--charcoal)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/60">
+            <span className="rounded-full bg-[var(--charcoal)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/74">
               Archived
             </span>
           ) : (
@@ -189,7 +189,7 @@ export function ProjectCard({ project: p, canDelete, onArchiveToggle, onEdit, on
         </div>
 
         {p.notes && (
-          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[var(--charcoal)]/50">
+          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[var(--charcoal)]/66">
             {p.notes}
           </p>
         )}
@@ -197,18 +197,18 @@ export function ProjectCard({ project: p, canDelete, onArchiveToggle, onEdit, on
         {/* ── Progress band: the operational core, grouped as one unit ── */}
         <div className="mt-3 rounded-lg bg-[var(--cream)]/70 px-3 py-2.5">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="text-[11px] text-[var(--charcoal)]/60">
+            <span className="text-[11px] text-[var(--charcoal)]/74">
               <span className="font-display text-base font-semibold text-[var(--charcoal)]">
                 {finalised}
               </span>
-              <span className="text-[var(--charcoal)]/35"> / {vendors}</span> finalised
+              <span className="text-[var(--charcoal)]/55"> / {vendors}</span> finalised
             </span>
             {closedTotal > 0 && (
               <span className="shrink-0 text-right">
                 <span className="font-display text-base font-semibold text-[hsl(38_45%_28%)]">
                   {formatINRShort(closedTotal)}
                 </span>
-                <span className="ml-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/40">
+                <span className="ml-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/58">
                   closed
                 </span>
               </span>
@@ -228,7 +228,7 @@ export function ProjectCard({ project: p, canDelete, onArchiveToggle, onEdit, on
             {activeStatuses.map((o) => (
               <span
                 key={o.value}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[var(--cream)] px-2 py-0.5 text-[11px] text-[var(--charcoal)]/65"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[var(--cream)] px-2 py-0.5 text-[11px] text-[var(--charcoal)]/78"
               >
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: o.dot }} />
                 <span className="font-semibold tabular-nums text-[var(--charcoal)]">
@@ -246,7 +246,7 @@ export function ProjectCard({ project: p, canDelete, onArchiveToggle, onEdit, on
             rule on one element meant that once content filled the card the
             margin collapsed to 0 and the chips sat flush against the line. */}
         <div className="mt-auto pt-3">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)]/60 pt-2.5 text-[11px] text-[var(--charcoal)]/45">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)]/60 pt-2.5 text-[11px] text-[var(--charcoal)]/62">
             <div className="flex items-center gap-3">
               <span className="inline-flex items-center gap-1">
                 <Users className="h-3 w-3" /> {p.client_count} client{p.client_count === 1 ? "" : "s"}

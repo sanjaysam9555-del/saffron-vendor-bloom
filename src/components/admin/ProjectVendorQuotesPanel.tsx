@@ -87,12 +87,12 @@ export function ProjectVendorQuotesPanel({
       >
         <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] bg-white px-5 py-4">
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
               Quotes
             </div>
             <h2 className="font-display text-xl text-[var(--charcoal)]">{vendorName}</h2>
             {vendorCategory && (
-              <div className="text-xs text-[var(--charcoal)]/60">{vendorCategory}</div>
+              <div className="text-xs text-[var(--charcoal)]/74">{vendorCategory}</div>
             )}
           </div>
           <button onClick={onClose} className="rounded-md p-1 hover:bg-[var(--cream-deep)]">
@@ -101,7 +101,7 @@ export function ProjectVendorQuotesPanel({
         </div>
 
         <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--cream-deep)]/40 px-5 py-2.5">
-          <div className="text-xs text-[var(--charcoal)]/65">
+          <div className="text-xs text-[var(--charcoal)]/78">
             {isLoading ? "Loading…" : `${quotes.length} quote${quotes.length === 1 ? "" : "s"}`}
           </div>
           <button
@@ -117,7 +117,7 @@ export function ProjectVendorQuotesPanel({
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {quotes.length === 0 && !showAdd && (
-            <div className="rounded-lg border border-dashed border-[var(--border)] bg-white py-10 text-center text-sm text-[var(--charcoal)]/60">
+            <div className="rounded-lg border border-dashed border-[var(--border)] bg-white py-10 text-center text-sm text-[var(--charcoal)]/74">
               No quotes yet for this vendor on this project.
             </div>
           )}
@@ -224,7 +224,7 @@ function statusChip(status: QuoteStatus, isFinal: boolean) {
   }
   if (status === "withdrawn") {
     return (
-      <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/55">
+      <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/70">
         Withdrawn
       </span>
     );
@@ -283,12 +283,12 @@ function QuoteRow({
               </span>
             )}
             {quote.files.length > 0 && (
-              <span className="inline-flex items-center gap-1 text-[11px] text-[var(--charcoal)]/60">
+              <span className="inline-flex items-center gap-1 text-[11px] text-[var(--charcoal)]/74">
                 <Paperclip className="h-3 w-3" /> {quote.files.length}
               </span>
             )}
           </div>
-          <div className="mt-0.5 text-[11px] text-[var(--charcoal)]/55">
+          <div className="mt-0.5 text-[11px] text-[var(--charcoal)]/70">
             {new Date(quote.created_at).toLocaleString("en-IN", {
               day: "numeric",
               month: "short",
@@ -300,7 +300,7 @@ function QuoteRow({
           <button
             onClick={onEdit}
             title="Edit"
-            className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
+            className="rounded p-1.5 text-[var(--charcoal)]/74 hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
           >
             <Pencil className="h-3.5 w-3.5" />
           </button>
@@ -321,7 +321,7 @@ function QuoteRow({
       )}
 
       {quote.notes && (
-        <div className="mt-2 text-xs text-[var(--charcoal)]/60">
+        <div className="mt-2 text-xs text-[var(--charcoal)]/74">
           <span className="font-semibold">Notes:</span> {quote.notes}
         </div>
       )}
@@ -341,7 +341,7 @@ function QuoteRow({
                     {f.file_name}
                   </span>
                 </div>
-                <span className="shrink-0 text-[10px] text-[var(--charcoal)]/55">
+                <span className="shrink-0 text-[10px] text-[var(--charcoal)]/70">
                   {formatFileSize(f.size_bytes)}
                 </span>
               </button>
@@ -354,7 +354,7 @@ function QuoteRow({
         <div className="mt-2 border-t border-[var(--border)] pt-2">
           {showCloseInput ? (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs text-[var(--charcoal)]/65">Client price ₹</span>
+              <span className="text-xs text-[var(--charcoal)]/78">Client price ₹</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -391,7 +391,7 @@ function QuoteRow({
               </button>
               <button
                 onClick={onWithdraw}
-                className="rounded-md border border-[var(--border)] px-2 py-1 text-xs text-[var(--charcoal)]/65 hover:bg-[var(--cream-deep)]"
+                className="rounded-md border border-[var(--border)] px-2 py-1 text-xs text-[var(--charcoal)]/78 hover:bg-[var(--cream-deep)]"
               >
                 Withdraw
               </button>
@@ -600,7 +600,7 @@ function QuoteForm({
 
       <div className="grid gap-2 sm:grid-cols-2">
         <label className="text-xs">
-          <span className="mb-1 block font-medium text-[var(--charcoal)]/70">Vendor cost (₹)</span>
+          <span className="mb-1 block font-medium text-[var(--charcoal)]/82">Vendor cost (₹)</span>
           <input
             type="number"
             inputMode="decimal"
@@ -623,7 +623,7 @@ function QuoteForm({
               value={commission}
               onChange={(e) => setCommission(e.target.value)}
             />
-            <p className="mt-1 text-[10px] text-[var(--charcoal)]/55">
+            <p className="mt-1 text-[10px] text-[var(--charcoal)]/70">
               Client price = vendor cost + commission ={" "}
               <strong>{formatINR((Number(vendorCost) || 0) + (Number(commission) || 0))}</strong>
             </p>
@@ -633,7 +633,7 @@ function QuoteForm({
         )}
 
         <label className="text-xs sm:col-span-2">
-          <span className="mb-1 block font-medium text-[var(--charcoal)]/70">Quote text</span>
+          <span className="mb-1 block font-medium text-[var(--charcoal)]/82">Quote text</span>
           <textarea
             rows={3}
             className="w-full rounded border border-[var(--border)] px-2 py-1.5 text-sm"
@@ -643,7 +643,7 @@ function QuoteForm({
           />
         </label>
         <label className="text-xs sm:col-span-2">
-          <span className="mb-1 block font-medium text-[var(--charcoal)]/70">Internal notes</span>
+          <span className="mb-1 block font-medium text-[var(--charcoal)]/82">Internal notes</span>
           <input
             className="w-full rounded border border-[var(--border)] px-2 py-1.5 text-sm"
             placeholder="Optional notes"
@@ -654,7 +654,7 @@ function QuoteForm({
       </div>
 
       <div className="mt-3">
-        <div className="mb-1 text-xs font-medium text-[var(--charcoal)]/70">Quote files (PDF / image / doc)</div>
+        <div className="mb-1 text-xs font-medium text-[var(--charcoal)]/82">Quote files (PDF / image / doc)</div>
 
         {isEdit && quote && quote.files.length > 0 && (
           <ul className="mb-2 space-y-1">
@@ -672,7 +672,7 @@ function QuoteForm({
                   <span className="truncate">{f.file_name}</span>
                 </button>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-[10px] text-[var(--charcoal)]/55">
+                  <span className="text-[10px] text-[var(--charcoal)]/70">
                     {formatFileSize(f.size_bytes)}
                   </span>
                   <button
@@ -714,13 +714,13 @@ function QuoteForm({
                   <span className="truncate">{f.name}</span>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-[10px] text-[var(--charcoal)]/55">
+                  <span className="text-[10px] text-[var(--charcoal)]/70">
                     {formatFileSize(f.size)}
                   </span>
                   <button
                     type="button"
                     onClick={() => removePending(idx)}
-                    className="rounded p-1 text-[var(--charcoal)]/60 hover:bg-white"
+                    className="rounded p-1 text-[var(--charcoal)]/74 hover:bg-white"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -730,7 +730,7 @@ function QuoteForm({
           </ul>
         )}
 
-        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-dashed border-[var(--border)] px-3 py-1.5 text-xs text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]">
+        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-dashed border-[var(--border)] px-3 py-1.5 text-xs text-[var(--charcoal)]/82 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]">
           <Upload className="h-3.5 w-3.5" />
           {pendingFiles.length > 0 ? "Add more files" : "Attach files"}
           <input
@@ -744,7 +744,7 @@ function QuoteForm({
             }}
           />
         </label>
-        <p className="mt-1 text-[10px] text-[var(--charcoal)]/50">
+        <p className="mt-1 text-[10px] text-[var(--charcoal)]/66">
           PDF, Word, Excel, JPG, PNG, WEBP — max 20 MB each
         </p>
       </div>

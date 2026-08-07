@@ -73,7 +73,7 @@ export function VendorMediaBand({
           })}
         </div>
       ) : (
-        <div className="flex h-full flex-col items-center justify-center gap-1 text-[var(--charcoal)]/25">
+        <div className="flex h-full flex-col items-center justify-center gap-1 text-[var(--charcoal)]/50">
           <Instagram className="h-5 w-5" aria-hidden />
           <span className="text-[9px] uppercase tracking-[0.16em]">
             {instagramHandle ? "No preview" : "No Instagram"}
