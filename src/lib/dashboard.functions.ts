@@ -1,22 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { attachAuthToken } from "./auth-client-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getRequestHeader } from "@tanstack/react-start/server";
-
-async function requireStaff(): Promise<{ userId: string }> {
-  const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  if (!token) throw new Error("Authentication is still loading.");
-  const { data: userData, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !userData.user) throw new Error("Authentication is still loading.");
-  const userId = userData.user.id;
-  const { data: roles } = await supabaseAdmin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .in("role", ["admin", "employee"]);
-  if (!roles || roles.length === 0) throw new Error("Forbidden: staff only");
-  return { userId };
-}
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export interface DashboardData {
   stats: {
@@ -70,9 +54,16 @@ export interface DashboardData {
 }
 
 export const getDashboardData = createServerFn({ method: "GET" })
-  .middleware([attachAuthToken])
-  .handler(async (): Promise<DashboardData> => {
-    const { userId } = await requireStaff();
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .handler(async ({ context }): Promise<DashboardData> => {
+    const { data: roles, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .in("role", ["admin", "employee"]);
+    if (roleError) throw new Error(roleError.message);
+    if (!roles || roles.length === 0) throw new Error("Forbidden: staff only");
+    const userId = context.userId;
 
     const today = new Date().toISOString().slice(0, 10);
     const in30 = new Date(Date.now() + 30 * 86400_000).toISOString().slice(0, 10);
