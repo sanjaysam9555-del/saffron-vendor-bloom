@@ -157,6 +157,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Defer backend queries OUT of the auth callback to avoid the
           // auth client's internal lock deadlocking on nested calls.
           if (loadedForRef.current !== s.user.id && inflightUserRef.current !== s.user.id) {
+            // Keep protected screens gated until the deferred access check
+            // completes. A cached role must not make server functions fire
+            // before the auth client has finished restoring its token.
+            setLoading(true);
             setTimeout(() => {
               if (!mounted) return;
               if (loadedForRef.current !== s.user.id && inflightUserRef.current !== s.user.id) void loadAccess(s);
@@ -174,7 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       supabase.auth
         .getSession()
-        .then(({ data: { session: s } }) => {
+        .then(async ({ data: { session: s } }) => {
           if (!mounted) return;
           setSession(s);
           if (s?.user) {
@@ -183,7 +187,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setRole(cached.role);
               setDisplayName(cached.displayName);
             }
-            if (loadedForRef.current !== s.user.id && inflightUserRef.current !== s.user.id) void loadAccess(s);
+            if (loadedForRef.current !== s.user.id && inflightUserRef.current !== s.user.id) {
+              await loadAccess(s);
+              if (!mounted) return;
+            }
           }
           setInitialized(true);
         })
