@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
+import { useAuth } from "@/lib/auth";
 import { getDashboardData, type DashboardData } from "@/lib/dashboard.functions";
 import { analyticsProjects } from "@/lib/analytics.functions";
 import { formatINR, formatINRShort } from "@/lib/quote-types";
