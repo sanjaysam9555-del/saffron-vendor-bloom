@@ -1,31 +1,27 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { attachAuthToken } from "./auth-client-middleware";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-async function requireStaff(): Promise<{ userId: string }> {
-  const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  if (!token) throw new Error("Authentication is still loading.");
-  const { data: userData, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !userData.user) throw new Error("Authentication is still loading.");
-  const userId = userData.user.id;
-  const { data: roles } = await supabaseAdmin
+async function requireStaff(context: { supabase: any; userId: string }): Promise<{ userId: string }> {
+  const { data: roles, error } = await context.supabase
     .from("user_roles")
     .select("role")
-    .eq("user_id", userId)
+    .eq("user_id", context.userId)
     .in("role", ["admin", "employee"]);
+  if (error) throw new Error(error.message);
   if (!roles || roles.length === 0) throw new Error("Forbidden: staff only");
-  return { userId };
+  return { userId: context.userId };
 }
 
 export const listStaffNotifications = createServerFn({ method: "GET" })
-  .middleware([attachAuthToken])
+  .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) =>
     z.object({ limit: z.number().int().min(1).max(200).optional() }).parse(d ?? {}),
   )
-  .handler(async ({ data }) => {
-    await requireStaff();
+  .handler(async ({ data, context }) => {
+    await requireStaff(context);
     const limit = data.limit ?? 30;
     const { data: rows, error } = await supabaseAdmin
       .from("staff_notifications")
@@ -58,11 +54,11 @@ export const listStaffNotifications = createServerFn({ method: "GET" })
   });
 
 export const getUnreadNotificationCount = createServerFn({ method: "GET" })
-  .middleware([attachAuthToken])
-  .handler(async () => {
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .handler(async ({ context }) => {
     let userId: string;
     try {
-      ({ userId } = await requireStaff());
+      ({ userId } = await requireStaff(context));
     } catch {
       // Session not hydrated yet (or non-staff): no badge, no crash.
       return { count: 0 };
@@ -79,10 +75,10 @@ export const getUnreadNotificationCount = createServerFn({ method: "GET" })
   });
 
 export const markNotificationRead = createServerFn({ method: "POST" })
-  .middleware([attachAuthToken])
+  .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => {
-    const { userId } = await requireStaff();
+  .handler(async ({ data, context }) => {
+    const { userId } = await requireStaff(context);
     const { data: row, error: readErr } = await supabaseAdmin
       .from("staff_notifications")
       .select("read_by")
@@ -99,9 +95,9 @@ export const markNotificationRead = createServerFn({ method: "POST" })
   });
 
 export const markAllNotificationsRead = createServerFn({ method: "POST" })
-  .middleware([attachAuthToken])
-  .handler(async () => {
-    const { userId } = await requireStaff();
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = await requireStaff(context);
     const { data: rows, error: readErr } = await supabaseAdmin
       .from("staff_notifications")
       .select("id, read_by")
