@@ -59,8 +59,8 @@ export const listUsers = createServerFn({ method: "GET" })
 
 export const createEmployee = createServerFn({ method: "POST" })
   .middleware([attachAuthToken, requireSupabaseAuth])
-  .inputValidator((d) =>
-    z
+  .inputValidator((d) => {
+    const parsed = z
       .object({
         email: z
           .string()
@@ -71,8 +71,15 @@ export const createEmployee = createServerFn({ method: "POST" })
         password: z.string().min(6),
         display_name: z.string().min(1),
       })
-      .parse(d),
-  )
+      .safeParse(d);
+    if (!parsed.success) {
+      throw new Error(
+        parsed.error.issues[0]?.message ?? "Invalid employee details",
+      );
+    }
+    return parsed.data;
+  })
+
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
 
