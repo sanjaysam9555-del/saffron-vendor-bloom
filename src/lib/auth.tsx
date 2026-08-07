@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
-import { getCurrentUserAccess } from "@/lib/auth.functions";
 
 export type AppRole = "admin" | "employee" | "client";
 
@@ -59,18 +58,37 @@ function fallbackDisplayName(session: Session): string | null {
   return email ? email.split("@")[0] : null;
 }
 
-/**
- * Resolve role + display name via the server-side admin resolver. This
- * bypasses browser RLS timing/race issues and works the same for staff
- * and clients.
+/** Resolve access with the session that has just been established.
+ * These reads are protected by row-level access rules, so they avoid the
+ * server-function bearer-token race that can occur immediately after login.
  */
 async function resolveAccess(
   session: Session,
 ): Promise<{ role: AppRole | null; displayName: string | null }> {
-  const access = await getCurrentUserAccess();
+  const userId = session.user.id;
+  const [{ data: roleRows, error: roleError }, { data: profile, error: profileError }] = await Promise.all([
+    supabase.from("user_roles").select("role").eq("user_id", userId),
+    supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle(),
+  ]);
+
+  if (roleError) throw roleError;
+  if (profileError) console.warn("Unable to load profile", profileError.message);
+
+  const roles = new Set((roleRows ?? []).map((row) => row.role as AppRole));
+  const staffEmail = isStaffEmail(session.user.email);
+  let resolvedRole: AppRole | null = null;
+
+  if (staffEmail) {
+    if (roles.has("admin")) resolvedRole = "admin";
+    else if (roles.has("employee")) resolvedRole = "employee";
+    else if (roles.has("client")) resolvedRole = "client";
+  } else if (roles.has("client")) {
+    resolvedRole = "client";
+  }
+
   return {
-    role: (access?.role as AppRole | null) ?? null,
-    displayName: access?.displayName ?? fallbackDisplayName(session),
+    role: resolvedRole,
+    displayName: profile?.display_name ?? fallbackDisplayName(session),
   };
 }
 
