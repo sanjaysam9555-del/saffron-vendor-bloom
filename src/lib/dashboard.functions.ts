@@ -117,6 +117,10 @@ export const getDashboardData = createServerFn({ method: "GET" })
         .select("project_id, vendor_id"),
     ]);
 
+    for (const res of [projectsRes, deadlinesRes, notificationsRes, vendorQuotesRes, projectVendorsRes]) {
+      if (res.error) throw new Error(res.error.message);
+    }
+
     const projects = projectsRes.data ?? [];
     const projectMap = new Map(projects.map((p) => [p.id, p]));
 
