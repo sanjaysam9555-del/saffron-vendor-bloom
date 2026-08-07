@@ -60,7 +60,13 @@ export const listStaffNotifications = createServerFn({ method: "GET" })
 export const getUnreadNotificationCount = createServerFn({ method: "GET" })
   .middleware([attachAuthToken])
   .handler(async () => {
-    const { userId } = await requireStaff();
+    let userId: string;
+    try {
+      ({ userId } = await requireStaff());
+    } catch {
+      // Session not hydrated yet (or non-staff): no badge, no crash.
+      return { count: 0 };
+    }
     // Count rows where read_by does NOT have a key for this user.
     const { data, error } = await supabaseAdmin
       .from("staff_notifications")
