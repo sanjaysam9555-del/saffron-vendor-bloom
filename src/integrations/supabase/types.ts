@@ -10,32 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
-  }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -55,7 +30,7 @@ export type Database = {
           created_by?: string | null
           file_path: string
           id?: string
-          kind: string
+          kind?: string
           label: string
           row_counts?: Json
           size_bytes?: number | null
@@ -1029,6 +1004,33 @@ export type Database = {
         }
         Relationships: []
       }
+      studio_settings: {
+        Row: {
+          brand_name: string
+          display_font: string
+          id: boolean
+          primary_color: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          brand_name?: string
+          display_font?: string
+          id?: boolean
+          primary_color?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          brand_name?: string
+          display_font?: string
+          id?: boolean
+          primary_color?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -1568,6 +1570,7 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -1744,9 +1747,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       app_role: ["admin", "employee", "client"],
