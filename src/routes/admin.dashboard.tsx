@@ -38,23 +38,31 @@ export const Route = createFileRoute("/admin/dashboard")({
 });
 
 function AdminDashboardPage() {
+  const { session, initialized } = useAuth();
+  const authReady = initialized && !!session;
+
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard"],
     queryFn: () => getDashboardData(),
     staleTime: 60_000,
+    enabled: authReady,
+    retry: 2,
   });
 
   const { data: plData = [] } = useQuery({
     queryKey: ["analytics-projects-all"],
     queryFn: () => analyticsProjects({ data: { from: null, to: null } }),
     staleTime: 120_000,
+    enabled: authReady,
+    retry: 2,
   });
 
-  if (isLoading || !data) {
+  if (!authReady || isLoading || !data) {
     return (
       <LoadingState variant="fullscreen" label="Loading your dashboard" />
     );
   }
+
 
   return (
     <div className="min-h-screen bg-[var(--cream)] pb-16">
