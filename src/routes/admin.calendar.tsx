@@ -11,6 +11,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
+import { useAuth } from "@/lib/auth";
 import { getCalendarEvents, type CalendarEvent, type CalendarEventKind } from "@/lib/calendar.functions";
 import { formatINRShort } from "@/lib/quote-types";
 import { LoadingState } from "@/components/ui/LoadingState";
