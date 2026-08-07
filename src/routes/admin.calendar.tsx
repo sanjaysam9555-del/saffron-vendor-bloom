@@ -367,7 +367,7 @@ function AdminCalendarPage() {
                 <div className="font-display text-lg text-[var(--charcoal)]">What's Next</div>
               </div>
               <div className="max-h-[420px] overflow-y-auto p-3">
-                {isLoading ? (
+                {isLoading || !authReady ? (
                   <LoadingState label="Loading events" className="py-6" />
                 ) : upcoming.length === 0 ? (
                   <p className="px-1 py-6 text-center text-xs text-[var(--charcoal)]/62">
