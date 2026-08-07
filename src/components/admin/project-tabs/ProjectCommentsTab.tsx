@@ -28,12 +28,12 @@ export function ProjectCommentsTab({
   }, [comments]);
 
   if (isLoading) {
-    return <div className="rounded-xl border border-[var(--border)] bg-white p-6 text-center text-sm text-[var(--charcoal)]/50">Loading…</div>;
+    return <div className="rounded-xl border border-[var(--border)] bg-white p-6 text-center text-sm text-[var(--charcoal)]/66">Loading…</div>;
   }
 
   if (byVendor.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-[var(--border)] bg-white py-10 text-center text-sm text-[var(--charcoal)]/50">
+      <div className="rounded-xl border border-dashed border-[var(--border)] bg-white py-10 text-center text-sm text-[var(--charcoal)]/66">
         No comments yet on any vendor.
       </div>
     );
@@ -97,7 +97,7 @@ function VendorCommentGroup({
         disabled={!onOpenVendor}
         className="block w-full border-b border-[var(--border)] px-4 py-3 text-left transition hover:bg-[var(--cream)]/40 disabled:cursor-default disabled:hover:bg-transparent"
       >
-        <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/45">Allocation</div>
+        <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/62">Allocation</div>
         <h3 className="font-display text-lg text-[var(--charcoal)] hover:text-[var(--terracotta)]">{vendorName}</h3>
       </button>
       <div className="space-y-2 p-4">
@@ -112,7 +112,7 @@ function VendorCommentGroup({
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-sm text-[var(--charcoal)]">{c.body}</p>
-              <p className="mt-0.5 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/40">
+              <p className="mt-0.5 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/58">
                 {c.author_role === "staff" ? "Planner" : "Client"} · {timeAgo(c.created_at)}
               </p>
             </div>

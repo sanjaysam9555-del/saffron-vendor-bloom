@@ -55,7 +55,7 @@ function ManageVendorsPage() {
 
       <div className="hidden h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70 sm:block">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 h-full px-3 sm:px-6">
-          <span className="text-sm text-[var(--charcoal)]/55">Categories, incoming submissions, and Instagram sync.</span>
+          <span className="text-sm text-[var(--charcoal)]/70">Categories, incoming submissions, and Instagram sync.</span>
         </div>
       </div>
 
@@ -105,7 +105,7 @@ function ManageVendorsPage() {
               </button>
             }
           >
-            <p className="px-4 py-4 text-sm text-[var(--charcoal)]/65 sm:px-5">
+            <p className="px-4 py-4 text-sm text-[var(--charcoal)]/78 sm:px-5">
               Runs in the background and fetches profile photos and recent posts for vendors that have never had a
               preview fetched. Vendors with an existing preview are never touched here — refresh one individually
               from that vendor's own card.
@@ -261,16 +261,16 @@ function CategoryRow({ name, count }: { name: string; count: number }) {
             onChange={(e) => setValue(e.target.value)}
           />
           <button onClick={saveRename} disabled={saving} className="rounded p-1 text-green-700 hover:bg-green-50"><Check className="h-4 w-4" /></button>
-          <button onClick={() => { setEditing(false); setValue(name); }} className="rounded p-1 text-[var(--charcoal)]/60 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
+          <button onClick={() => { setEditing(false); setValue(name); }} className="rounded p-1 text-[var(--charcoal)]/74 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
         </div>
       ) : (
         <>
           <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: swatchColor }} aria-hidden />
           <span className="flex-1 truncate text-sm text-[var(--charcoal)]">{name}</span>
-          <span className="shrink-0 text-xs text-[var(--charcoal)]/45">
+          <span className="shrink-0 text-xs text-[var(--charcoal)]/62">
             {count} vendor{count === 1 ? "" : "s"}
           </span>
-          <button onClick={() => setEditing(true)} title="Rename category" className="shrink-0 rounded p-1.5 text-[var(--charcoal)]/50 transition-colors hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]">
+          <button onClick={() => setEditing(true)} title="Rename category" className="shrink-0 rounded p-1.5 text-[var(--charcoal)]/66 transition-colors hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]">
             <Pencil className="h-3.5 w-3.5" />
           </button>
           {!isFallback && (

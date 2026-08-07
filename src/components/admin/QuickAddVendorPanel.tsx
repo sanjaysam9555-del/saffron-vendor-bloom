@@ -62,17 +62,17 @@ export function QuickAddVendorPanel({ projectId, assignedVendorIds, className }:
   return (
     <div className={`relative ${className ?? "mb-4"}`}>
       <div className="flex h-[30px] items-center gap-2 rounded-md border border-[var(--border)] bg-white px-2.5 text-xs">
-        <Search className="h-3.5 w-3.5 shrink-0 text-[var(--charcoal)]/40" />
+        <Search className="h-3.5 w-3.5 shrink-0 text-[var(--charcoal)]/58" />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Add vendors…"
-          className="w-full bg-transparent text-xs placeholder:text-[var(--charcoal)]/60 focus:outline-none"
+          className="w-full bg-transparent text-xs placeholder:text-[var(--charcoal)]/74 focus:outline-none"
         />
         {q && (
           <button
             onClick={() => setQ("")}
-            className="rounded p-0.5 text-[var(--charcoal)]/50 hover:bg-[var(--cream)] hover:text-[var(--charcoal)]"
+            className="rounded p-0.5 text-[var(--charcoal)]/66 hover:bg-[var(--cream)] hover:text-[var(--charcoal)]"
             title="Clear"
           >
             <X className="h-3.5 w-3.5" />
@@ -85,11 +85,11 @@ export function QuickAddVendorPanel({ projectId, assignedVendorIds, className }:
       {q.trim() && (
         <div className="absolute left-0 top-full z-30 mt-1.5 max-h-[360px] w-full min-w-[340px] overflow-y-auto rounded-lg border border-[var(--border)] bg-white p-2 shadow-lg">
           {isLoading ? (
-            <div className="px-2 py-6 text-center text-xs text-[var(--charcoal)]/55">
+            <div className="px-2 py-6 text-center text-xs text-[var(--charcoal)]/70">
               Loading vendor library…
             </div>
           ) : filtered.length === 0 ? (
-            <div className="px-2 py-6 text-center text-xs text-[var(--charcoal)]/55">
+            <div className="px-2 py-6 text-center text-xs text-[var(--charcoal)]/70">
               No vendors match “{q}”.
             </div>
           ) : (
@@ -126,14 +126,14 @@ function QuickAddVendorRow({ vendor: v, alreadyAssigned, isPending, onAdd }: Row
     <li className="rounded-md border border-[var(--border)] bg-white p-2.5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
+          <div className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/70">
             {v.category}
             {v.subcategory ? ` · ${v.subcategory}` : ""}
           </div>
           <div className="truncate text-sm font-medium text-[var(--charcoal)]">
             {v.vendor_name}
           </div>
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[var(--charcoal)]/65">
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[var(--charcoal)]/78">
             {v.location && <span>{v.location}</span>}
             {v.price_text && (
               <span className="text-[var(--terracotta)]">{v.price_text}</span>
@@ -154,7 +154,7 @@ function QuickAddVendorRow({ vendor: v, alreadyAssigned, isPending, onAdd }: Row
         </div>
 
         {alreadyAssigned ? (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[var(--cream)] px-2.5 py-1 text-[11px] font-medium text-[var(--charcoal)]/60">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[var(--cream)] px-2.5 py-1 text-[11px] font-medium text-[var(--charcoal)]/74">
             <Check className="h-3 w-3" /> Added
           </span>
         ) : (
@@ -206,7 +206,7 @@ function CompactInstagramStrip({ preview }: { preview: PreviewData | null | unde
         <Instagram className="h-3 w-3 shrink-0 text-[var(--terracotta)]" />
       )}
       {handle && (
-        <span className="truncate text-[10px] text-[var(--charcoal)]/65">@{handle}</span>
+        <span className="truncate text-[10px] text-[var(--charcoal)]/78">@{handle}</span>
       )}
       {thumbs.length > 0 && (
         <div className="ml-auto flex gap-0.5">

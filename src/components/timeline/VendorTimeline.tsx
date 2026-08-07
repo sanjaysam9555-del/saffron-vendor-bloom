@@ -122,7 +122,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
                 className={`inline-flex flex-1 items-center justify-center gap-1 px-2.5 py-1.5 sm:flex-none ${
                   sub === "timeline"
                     ? "bg-[var(--cream)] text-[var(--charcoal)]"
-                    : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"
+                    : "text-[var(--charcoal)]/74 hover:bg-[var(--cream)]/60"
                 }`}
               >
                 <Clock className="h-3.5 w-3.5" /> <span>Timeline</span>
@@ -134,7 +134,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
                 className={`inline-flex flex-1 items-center justify-center gap-1 border-l border-[var(--border)] px-2.5 py-1.5 sm:flex-none ${
                   sub === "table"
                     ? "bg-[var(--cream)] text-[var(--charcoal)]"
-                    : "text-[var(--charcoal)]/60 hover:bg-[var(--cream)]/60"
+                    : "text-[var(--charcoal)]/74 hover:bg-[var(--cream)]/60"
                 }`}
               >
                 <ListChecks className="h-3.5 w-3.5" /> <span>Table</span>
@@ -153,7 +153,7 @@ export function VendorTimeline({ projectId, weddingDate, items, mode, registerRo
       )}
 
       {items.length === 0 ? (
-        <div className="rounded-md border border-dashed border-[var(--champagne)] bg-[var(--cream)] py-10 text-center text-sm text-[var(--charcoal)]/60">
+        <div className="rounded-md border border-dashed border-[var(--champagne)] bg-[var(--cream)] py-10 text-center text-sm text-[var(--charcoal)]/74">
           {mode === "admin"
             ? "No categories yet. Assign vendors or use “Add Category To Plan” to start tracking deadlines."
             : "Your planner hasn't added any vendor categories yet."}
@@ -282,7 +282,7 @@ export function AddCategoryDialog({
 
         <div className="grid gap-3">
           <label className="flex flex-col gap-1 text-xs">
-            <span className="text-[var(--charcoal)]/65">Category</span>
+            <span className="text-[var(--charcoal)]/78">Category</span>
             {!useCustom && available.length > 0 ? (
               <select
                 value={category}
@@ -318,7 +318,7 @@ export function AddCategoryDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <label className="flex flex-col gap-1 text-xs">
-              <span className="text-[var(--charcoal)]/65">Due date</span>
+              <span className="text-[var(--charcoal)]/78">Due date</span>
               <input
                 type="date"
                 value={due}
@@ -327,7 +327,7 @@ export function AddCategoryDialog({
               />
             </label>
             <label className="flex flex-col gap-1 text-xs">
-              <span className="text-[var(--charcoal)]/65">Criticality</span>
+              <span className="text-[var(--charcoal)]/78">Criticality</span>
               <select
                 value={crit}
                 onChange={(e) => setCrit(e.target.value as Criticality)}
@@ -341,7 +341,7 @@ export function AddCategoryDialog({
           </div>
 
           <label className="flex flex-col gap-1 text-xs">
-            <span className="text-[var(--charcoal)]/65">Planned amount (₹, optional)</span>
+            <span className="text-[var(--charcoal)]/78">Planned amount (₹, optional)</span>
             <input
               type="number"
               inputMode="numeric"
@@ -620,7 +620,7 @@ function RibbonRow({
               <h4 className="font-display text-lg leading-tight text-[var(--charcoal)]">
                 {item.category}
               </h4>
-              <p className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
+              <p className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/70">
                 {item.kind === "other" ? "Other expense" : `${item.vendor_count} shortlisted`}
                 {item.notes ? ` · ${item.notes}` : ""}
               </p>
@@ -649,7 +649,7 @@ function RibbonRow({
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--cream-deep)] pt-3 text-[11px]">
             <div className="flex gap-5">
               <div>
-                <p className="text-[9px] uppercase tracking-widest text-[var(--charcoal)]/45">
+                <p className="text-[9px] uppercase tracking-widest text-[var(--charcoal)]/62">
                   Planned
                 </p>
                 <p className="font-medium text-[var(--charcoal)]">
@@ -657,13 +657,13 @@ function RibbonRow({
                 </p>
               </div>
               <div>
-                <p className="text-[9px] uppercase tracking-widest text-[var(--charcoal)]/45">
+                <p className="text-[9px] uppercase tracking-widest text-[var(--charcoal)]/62">
                   Actual
                 </p>
                 <p className="font-medium text-[var(--charcoal)]">
                   {resolveActual(item) != null ? formatINR(resolveActual(item)) : "—"}
                   {item.actual_amount_override != null && (
-                    <span className="ml-1 rounded bg-[var(--champagne)]/40 px-1 text-[8px] uppercase tracking-wider text-[var(--charcoal)]/70">
+                    <span className="ml-1 rounded bg-[var(--champagne)]/40 px-1 text-[8px] uppercase tracking-wider text-[var(--charcoal)]/82">
                       manual
                     </span>
                   )}
@@ -673,7 +673,7 @@ function RibbonRow({
             {mode === "admin" && (
               <button
                 onClick={() => setEditing((e) => !e)}
-                className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/60 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+                className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/74 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
               >
                 {editing ? <X className="h-3 w-3" /> : <Pencil className="h-3 w-3" />}
                 {editing ? "Close" : "Edit"}
@@ -762,7 +762,7 @@ function UnscheduledBand({
   return (
     <div className="relative my-2">
       <div className="mb-6 flex items-center justify-center">
-        <span className="z-10 bg-[var(--cream)] px-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--charcoal)]/45">
+        <span className="z-10 bg-[var(--cream)] px-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--charcoal)]/62">
           To Be Scheduled
         </span>
       </div>
@@ -799,7 +799,7 @@ function UnscheduledCard({
     item.criticality === "high"
       ? "bg-[var(--criticality-high-bg)] text-[var(--terracotta)]"
       : item.criticality === "low"
-        ? "bg-[var(--criticality-low-bg)] text-[var(--charcoal)]/60"
+        ? "bg-[var(--criticality-low-bg)] text-[var(--charcoal)]/74"
         : "bg-[var(--criticality-med-bg)] text-[var(--charcoal)]/80";
   return (
     <div
@@ -815,7 +815,7 @@ function UnscheduledCard({
           {item.criticality}
         </span>
       </div>
-      <p className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/50">
+      <p className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/66">
         {item.kind === "other" ? "Other expense" : `${item.vendor_count} shortlisted`}
       </p>
       <div className="mt-3 flex items-center justify-between">
@@ -825,7 +825,7 @@ function UnscheduledCard({
         {mode === "admin" && (
           <button
             onClick={() => setEditing((e) => !e)}
-            className="rounded-md p-1.5 text-[var(--charcoal)]/45 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]"
+            className="rounded-md p-1.5 text-[var(--charcoal)]/62 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]"
             aria-label="Edit deadline"
           >
             {editing ? <X className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
@@ -988,7 +988,7 @@ function DeadlineEditor({
     <div className="mt-3 rounded-md bg-[var(--cream)] p-3">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-[auto_auto_auto_auto_minmax(0,1fr)]">
         <label className="flex min-w-0 flex-col gap-1 text-xs">
-          <span className="text-[var(--charcoal)]/65">Due date</span>
+          <span className="text-[var(--charcoal)]/78">Due date</span>
           <input
             type="date"
             value={due}
@@ -997,7 +997,7 @@ function DeadlineEditor({
           />
         </label>
         <label className="flex min-w-0 flex-col gap-1 text-xs">
-          <span className="text-[var(--charcoal)]/65">Criticality</span>
+          <span className="text-[var(--charcoal)]/78">Criticality</span>
           <select
             value={crit}
             onChange={(e) => setCrit(e.target.value as Criticality)}
@@ -1009,7 +1009,7 @@ function DeadlineEditor({
           </select>
         </label>
         <label className="flex min-w-0 flex-col gap-1 text-xs">
-          <span className="text-[var(--charcoal)]/65">Planned Budget (₹)</span>
+          <span className="text-[var(--charcoal)]/78">Planned Budget (₹)</span>
           <input
             type="number"
             min={0}
@@ -1021,7 +1021,7 @@ function DeadlineEditor({
           />
         </label>
         <label className="flex min-w-0 flex-col gap-1 text-xs">
-          <span className="text-[var(--charcoal)]/65">
+          <span className="text-[var(--charcoal)]/78">
             Actual Cost(₹)
           </span>
           <input
@@ -1035,7 +1035,7 @@ function DeadlineEditor({
           />
         </label>
         <label className="col-span-2 flex min-w-0 flex-col gap-1 text-xs sm:col-span-3 lg:col-span-1">
-          <span className="text-[var(--charcoal)]/65">Notes</span>
+          <span className="text-[var(--charcoal)]/78">Notes</span>
           <input
             type="text"
             value={notes}
@@ -1096,7 +1096,7 @@ function TableView({
       ? "text-[var(--terracotta)]"
       : variance < 0
         ? "text-emerald-700"
-        : "text-[var(--charcoal)]/70";
+        : "text-[var(--charcoal)]/82";
   const colSpan = mode === "admin" ? 9 : 8;
   return (
     <div className="space-y-2">
@@ -1140,7 +1140,7 @@ function TableView({
           </tbody>
           <tfoot className="bg-[var(--cream)] text-sm">
             <tr className="border-t-2 border-[var(--border)]">
-              <td className="px-3 py-2 font-semibold uppercase tracking-wider text-xs text-[var(--charcoal)]/70" colSpan={6}>
+              <td className="px-3 py-2 font-semibold uppercase tracking-wider text-xs text-[var(--charcoal)]/82" colSpan={6}>
                 Totals
               </td>
               <td className="px-3 py-2 text-right font-semibold">{formatINR(totalPlanned)}</td>
@@ -1221,7 +1221,7 @@ function TableRow({
         <td className="px-3 py-2 text-right tabular-nums">
           {actual != null ? formatINR(actual) : "—"}
           {item.actual_amount_override != null && (
-            <span className="ml-1 rounded bg-[var(--champagne)]/50 px-1 text-[9px] uppercase tracking-wide text-[var(--charcoal)]/70">
+            <span className="ml-1 rounded bg-[var(--champagne)]/50 px-1 text-[9px] uppercase tracking-wide text-[var(--charcoal)]/82">
               manual
             </span>
           )}
@@ -1402,7 +1402,7 @@ function OtherExpenseEditor({
     <div className="rounded-md bg-[var(--cream)] p-3">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)]">
         <label className="col-span-2 flex min-w-0 flex-col gap-1 text-xs sm:col-span-1">
-          <span className="text-[var(--charcoal)]/65">Label</span>
+          <span className="text-[var(--charcoal)]/78">Label</span>
           <input
             type="text"
             value={label}
@@ -1411,7 +1411,7 @@ function OtherExpenseEditor({
           />
         </label>
         <label className="flex min-w-0 flex-col gap-1 text-xs">
-          <span className="text-[var(--charcoal)]/65">Due date</span>
+          <span className="text-[var(--charcoal)]/78">Due date</span>
           <input
             type="date"
             value={due}
@@ -1420,7 +1420,7 @@ function OtherExpenseEditor({
           />
         </label>
         <label className="flex min-w-0 flex-col gap-1 text-xs">
-          <span className="text-[var(--charcoal)]/65">Criticality</span>
+          <span className="text-[var(--charcoal)]/78">Criticality</span>
           <select
             value={crit}
             onChange={(e) => setCrit(e.target.value as Criticality)}
@@ -1432,7 +1432,7 @@ function OtherExpenseEditor({
           </select>
         </label>
         <label className="flex min-w-0 flex-col gap-1 text-xs">
-          <span className="text-[var(--charcoal)]/65">Planned (₹)</span>
+          <span className="text-[var(--charcoal)]/78">Planned (₹)</span>
           <input
             type="number"
             min={0}
@@ -1443,7 +1443,7 @@ function OtherExpenseEditor({
           />
         </label>
         <label className="flex min-w-0 flex-col gap-1 text-xs">
-          <span className="text-[var(--charcoal)]/65">Actual (₹)</span>
+          <span className="text-[var(--charcoal)]/78">Actual (₹)</span>
           <input
             type="number"
             min={0}
@@ -1454,7 +1454,7 @@ function OtherExpenseEditor({
           />
         </label>
         <label className="col-span-2 flex min-w-0 flex-col gap-1 text-xs sm:col-span-1">
-          <span className="text-[var(--charcoal)]/65">Notes</span>
+          <span className="text-[var(--charcoal)]/78">Notes</span>
           <input
             type="text"
             value={notes}
@@ -1464,7 +1464,7 @@ function OtherExpenseEditor({
           />
         </label>
       </div>
-      <p className="mt-2 text-[11px] italic text-[var(--charcoal)]/55">
+      <p className="mt-2 text-[11px] italic text-[var(--charcoal)]/70">
         Entering an actual amount marks this expense as booked.
       </p>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
@@ -1480,7 +1480,7 @@ function OtherExpenseEditor({
                 if (ok) deleteM.mutate();
               }}
               disabled={deleteM.isPending}
-              className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1.5 text-xs text-[var(--charcoal)]/70 hover:border-red-500 hover:text-red-600 disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1.5 text-xs text-[var(--charcoal)]/82 hover:border-red-500 hover:text-red-600 disabled:opacity-50"
             >
               <Trash2 className="h-3 w-3" /> Delete
             </button>
@@ -1570,15 +1570,15 @@ export function AddOtherExpenseDialog({
       >
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-display text-base text-[var(--charcoal)]">Add other expense</h3>
-          <button onClick={onClose} className="rounded-md p-1 text-[var(--charcoal)]/50 hover:bg-[var(--cream)]" aria-label="Close">
+          <button onClick={onClose} className="rounded-md p-1 text-[var(--charcoal)]/66 hover:bg-[var(--cream)]" aria-label="Close">
             <X className="h-4 w-4" />
           </button>
         </div>
-        <p className="mb-3 text-xs text-[var(--charcoal)]/55">
+        <p className="mb-3 text-xs text-[var(--charcoal)]/70">
           Non-vendor line items (e.g. Dhol Wala, Heaters, Transport). They appear alongside vendor categories on the timeline and in the budget table.
         </p>
         <div className="mb-3 flex flex-wrap gap-1.5">
-          <span className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">Quick:</span>
+          <span className="text-[10px] uppercase tracking-wider text-[var(--charcoal)]/70">Quick:</span>
           {OTHER_PRESETS.filter((p) => !existingSet.has(p.toLowerCase())).map((p) => (
             <button
               key={p}
@@ -1592,7 +1592,7 @@ export function AddOtherExpenseDialog({
         </div>
         <div className="space-y-2">
           <label className="flex flex-col gap-1 text-xs">
-            <span className="text-[var(--charcoal)]/65">Label</span>
+            <span className="text-[var(--charcoal)]/78">Label</span>
             <input
               type="text"
               value={label}
@@ -1604,7 +1604,7 @@ export function AddOtherExpenseDialog({
           </label>
           <div className="grid grid-cols-2 gap-2">
             <label className="flex flex-col gap-1 text-xs">
-              <span className="text-[var(--charcoal)]/65">Planned (₹)</span>
+              <span className="text-[var(--charcoal)]/78">Planned (₹)</span>
               <input
                 type="number"
                 min={0}
@@ -1615,7 +1615,7 @@ export function AddOtherExpenseDialog({
               />
             </label>
             <label className="flex flex-col gap-1 text-xs">
-              <span className="text-[var(--charcoal)]/65">Actual (₹)</span>
+              <span className="text-[var(--charcoal)]/78">Actual (₹)</span>
               <input
                 type="number"
                 min={0}
@@ -1628,7 +1628,7 @@ export function AddOtherExpenseDialog({
           </div>
           <div className="grid grid-cols-2 gap-2">
             <label className="flex flex-col gap-1 text-xs">
-              <span className="text-[var(--charcoal)]/65">Criticality</span>
+              <span className="text-[var(--charcoal)]/78">Criticality</span>
               <select
                 value={crit}
                 onChange={(e) => setCrit(e.target.value as Criticality)}
@@ -1640,7 +1640,7 @@ export function AddOtherExpenseDialog({
               </select>
             </label>
             <label className="flex flex-col gap-1 text-xs">
-              <span className="text-[var(--charcoal)]/65">Due date</span>
+              <span className="text-[var(--charcoal)]/78">Due date</span>
               <input
                 type="date"
                 value={due}
@@ -1649,11 +1649,11 @@ export function AddOtherExpenseDialog({
               />
             </label>
           </div>
-          <p className="text-[11px] italic text-[var(--charcoal)]/55">
+          <p className="text-[11px] italic text-[var(--charcoal)]/70">
             Entering an actual amount marks this expense as booked.
           </p>
           <label className="flex flex-col gap-1 text-xs">
-            <span className="text-[var(--charcoal)]/65">Notes</span>
+            <span className="text-[var(--charcoal)]/78">Notes</span>
             <input
               type="text"
               value={notes}
@@ -1842,7 +1842,7 @@ function HorizontalTimeline({
                 style={{ left: x, top: axisY }}
               >
                 <div className="h-2 w-px bg-[var(--champagne)]" />
-                <div className="mt-1 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/55">
+                <div className="mt-1 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/70">
                   {mm.toLocaleDateString(undefined, { month: "short" })}
                   {showYear ? ` '${String(mm.getFullYear()).slice(2)}` : ""}
                 </div>
@@ -1948,7 +1948,7 @@ function HorizontalTimeline({
             </h4>
             <button
               onClick={() => setEditingCategory(null)}
-              className="rounded-md p-1 text-[var(--charcoal)]/50 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]"
+              className="rounded-md p-1 text-[var(--charcoal)]/66 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]"
               aria-label="Close editor"
             >
               <X className="h-4 w-4" />
@@ -2063,7 +2063,7 @@ function HorizontalCard({
           {pillLabel}
         </span>
       </div>
-      <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/70">
+      <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/82">
         {item.due_date ? formatDueDate(item.due_date) : "No date"}
       </p>
       {subLine && (
@@ -2072,10 +2072,10 @@ function HorizontalCard({
         </p>
       )}
       <div className="mt-1.5 flex items-center justify-between border-t border-[var(--cream-deep)] pt-1.5">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--charcoal)]/45">
+        <span className="text-[9px] uppercase tracking-wider text-[var(--charcoal)]/62">
           {item.planned_amount != null ? formatINR(item.planned_amount) : "—"}
         </span>
-        <span className="text-[9px] text-[var(--charcoal)]/45">
+        <span className="text-[9px] text-[var(--charcoal)]/62">
           {item.kind === "other" ? "Other expense" : `${item.vendor_count} shortlisted`}
         </span>
       </div>

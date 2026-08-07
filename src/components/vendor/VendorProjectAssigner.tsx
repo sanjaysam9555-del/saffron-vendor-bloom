@@ -127,7 +127,7 @@ export function VendorProjectAssigner({ vendorId, compact = false }: Props) {
             e.stopPropagation();
             setOpen((o) => !o);
           }}
-          className="inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--border)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/65 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+          className="inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--border)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/78 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
         >
           <Briefcase className="h-2.5 w-2.5" />
           {compact ? "+ Project" : "Assign to project"}
@@ -153,7 +153,7 @@ export function VendorProjectAssigner({ vendorId, compact = false }: Props) {
             </DialogHeader>
 
             <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
-              <Search className="h-4 w-4 shrink-0 text-[var(--charcoal)]/40" />
+              <Search className="h-4 w-4 shrink-0 text-[var(--charcoal)]/58" />
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -165,7 +165,7 @@ export function VendorProjectAssigner({ vendorId, compact = false }: Props) {
 
             <div className="flex-1 overflow-y-auto py-1">
               {filteredProjects.length === 0 ? (
-                <div className="px-4 py-6 text-center text-xs text-[var(--charcoal)]/55">
+                <div className="px-4 py-6 text-center text-xs text-[var(--charcoal)]/70">
                   {projectList.length === 0 ? "No projects yet — create one in Projects." : "No matches."}
                 </div>
               ) : (
@@ -181,7 +181,7 @@ export function VendorProjectAssigner({ vendorId, compact = false }: Props) {
                         <div className="truncate font-medium text-[var(--charcoal)]">
                           {p.bride_name} &amp; {p.groom_name}
                         </div>
-                        <div className="text-[11px] text-[var(--charcoal)]/55">
+                        <div className="text-[11px] text-[var(--charcoal)]/70">
                           {new Date(p.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                         </div>
                       </div>
@@ -192,7 +192,7 @@ export function VendorProjectAssigner({ vendorId, compact = false }: Props) {
               )}
             </div>
 
-            <DialogPrimitive.Close className="absolute right-3 top-3 rounded-md p-1 text-[var(--charcoal)]/50 hover:bg-[var(--cream)] hover:text-[var(--charcoal)]">
+            <DialogPrimitive.Close className="absolute right-3 top-3 rounded-md p-1 text-[var(--charcoal)]/66 hover:bg-[var(--cream)] hover:text-[var(--charcoal)]">
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
             </DialogPrimitive.Close>

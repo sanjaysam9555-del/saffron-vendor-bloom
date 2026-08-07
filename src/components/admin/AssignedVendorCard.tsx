@@ -73,7 +73,7 @@ export function AssignedVendorCard({
         onClick={onRemove}
         title="Remove from project"
         aria-label={`Remove ${vendor.vendor_name} from project`}
-        className="absolute right-2 top-2 z-20 rounded-md bg-white/90 p-1.5 text-[var(--charcoal)]/50 opacity-0 shadow-sm transition hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)] group-hover:opacity-100"
+        className="absolute right-2 top-2 z-20 rounded-md bg-white/90 p-1.5 text-[var(--charcoal)]/66 opacity-0 shadow-sm transition hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)] group-hover:opacity-100"
       >
         <Trash2 className="h-3.5 w-3.5" />
       </button>
@@ -110,14 +110,14 @@ export function AssignedVendorCard({
         {/* ── Category ── */}
         <div className={`flex ${SLOT.category} items-center gap-1.5`}>
           <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${colors.bg}`} />
-          <span className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--charcoal)]/55">
+          <span className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--charcoal)]/70">
             {vendor.category}
           </span>
           {vendor.subcategory && (
-            <span className="truncate text-[10px] text-[var(--charcoal)]/35">· {vendor.subcategory}</span>
+            <span className="truncate text-[10px] text-[var(--charcoal)]/55">· {vendor.subcategory}</span>
           )}
           {vendor.location && (
-            <span className="ml-auto inline-flex shrink-0 items-center gap-0.5 truncate text-[10px] text-[var(--charcoal)]/40">
+            <span className="ml-auto inline-flex shrink-0 items-center gap-0.5 truncate text-[10px] text-[var(--charcoal)]/58">
               <MapPin className="h-2.5 w-2.5" />
               {vendor.location}
             </span>
@@ -125,7 +125,7 @@ export function AssignedVendorCard({
         </div>
 
         {/* ── Price ── */}
-        <div className={`mt-1.5 flex ${SLOT.price} items-center gap-1.5 text-xs text-[var(--charcoal)]/60`}>
+        <div className={`mt-1.5 flex ${SLOT.price} items-center gap-1.5 text-xs text-[var(--charcoal)]/74`}>
           {vendor.price_text && (
             <>
               <IndianRupee className="h-3 w-3 shrink-0" />
@@ -141,7 +141,7 @@ export function AssignedVendorCard({
           <ClientStatusPill status={primarySelection?.status ?? null} size="xs" />
           {otherResponses > 0 && (
             <span
-              className="text-[10px] text-[var(--charcoal)]/40"
+              className="text-[10px] text-[var(--charcoal)]/58"
               title={selectionRows.map((r) => `${r.display_name || r.email}: ${r.status}`).join("\n")}
             >
               +{otherResponses} more
@@ -161,7 +161,7 @@ export function AssignedVendorCard({
             <button
               onClick={onOpenComments}
               title="View client comments"
-              className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] px-2 py-1 text-[11px] text-[var(--charcoal)]/65 transition hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+              className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] px-2 py-1 text-[11px] text-[var(--charcoal)]/78 transition hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
             >
               <MessageSquare className="h-3 w-3" />
               {commentCount > 0 ? commentCount : ""}
@@ -176,7 +176,7 @@ export function AssignedVendorCard({
                   onClick={(e) => e.stopPropagation()}
                   aria-label={`Instagram — ${vendor.vendor_name}`}
                   title={igDisplay ?? "Instagram"}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-[var(--border)] text-[var(--charcoal)]/45 transition hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-[var(--border)] text-[var(--charcoal)]/62 transition hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
                 >
                   <Instagram className="h-3 w-3" />
                 </a>

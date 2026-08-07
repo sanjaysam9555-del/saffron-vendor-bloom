@@ -60,14 +60,14 @@ export function ClientSummaryStats({ vendors, items, brideName, groomName, weddi
     <button onClick={opts.onClick} className={clickableTile}>
       <span className={iconWrap}>{opts.icon}</span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[9px] font-medium uppercase tracking-[0.14em] text-[var(--charcoal)]/55">
+        <span className="block text-[9px] font-medium uppercase tracking-[0.14em] text-[var(--charcoal)]/70">
           {opts.label}
         </span>
         <span className="block truncate font-display text-sm font-semibold text-[var(--charcoal)] sm:text-base">
           {opts.value}
         </span>
         {opts.sub && (
-          <span className="block truncate text-[10px] text-[var(--charcoal)]/55">{opts.sub}</span>
+          <span className="block truncate text-[10px] text-[var(--charcoal)]/70">{opts.sub}</span>
         )}
       </span>
     </button>
@@ -85,13 +85,13 @@ export function ClientSummaryStats({ vendors, items, brideName, groomName, weddi
             <Sparkles className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[9px] font-medium uppercase tracking-[0.14em] text-[var(--charcoal)]/55">
+            <span className="block text-[9px] font-medium uppercase tracking-[0.14em] text-[var(--charcoal)]/70">
               The Couple
             </span>
             <span className="block truncate font-display text-sm font-semibold text-[var(--charcoal)] sm:text-base">
               {brideName} <span className="text-[var(--terracotta)]">&amp;</span> {groomName}
             </span>
-            <span className="block truncate text-[10px] text-[var(--charcoal)]/55">{dateFmt}</span>
+            <span className="block truncate text-[10px] text-[var(--charcoal)]/70">{dateFmt}</span>
           </span>
         </div>
 
@@ -101,13 +101,13 @@ export function ClientSummaryStats({ vendors, items, brideName, groomName, weddi
             <CalendarHeart className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[9px] font-medium uppercase tracking-[0.14em] text-[var(--charcoal)]/55">
+            <span className="block text-[9px] font-medium uppercase tracking-[0.14em] text-[var(--charcoal)]/70">
               Countdown
             </span>
             <span className="block truncate font-display text-sm font-semibold text-[var(--charcoal)] sm:text-base">
               {countdown}
             </span>
-            <span className="block truncate text-[10px] text-[var(--charcoal)]/55">to the big day</span>
+            <span className="block truncate text-[10px] text-[var(--charcoal)]/70">to the big day</span>
           </span>
         </div>
 

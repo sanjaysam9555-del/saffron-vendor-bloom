@@ -142,17 +142,17 @@ function ProjectsListPage() {
       <div className="h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-2 h-full px-3 sm:gap-4 sm:px-6">
           <div className="relative min-w-0 flex-1 sm:max-w-[320px]">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/40" />
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/58" />
             <input
               type="text"
               placeholder="Search projects…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-md border border-[var(--border)] bg-white py-1.5 pl-8 pr-2 text-sm text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/40 focus:border-[var(--terracotta)] focus:outline-none focus:ring-2 focus:ring-[var(--terracotta-soft)]"
+              className="w-full rounded-md border border-[var(--border)] bg-white py-1.5 pl-8 pr-2 text-sm text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/58 focus:border-[var(--terracotta)] focus:outline-none focus:ring-2 focus:ring-[var(--terracotta-soft)]"
             />
           </div>
 
-          <div className="hidden items-center gap-4 text-xs text-[var(--charcoal)]/60 lg:flex">
+          <div className="hidden items-center gap-4 text-xs text-[var(--charcoal)]/74 lg:flex">
             <div><span className="font-semibold text-[var(--terracotta)]">{active.length}</span> active</div>
             <div><span className="font-semibold text-[var(--terracotta)]">{archived.length}</span> archived</div>
           </div>
@@ -174,7 +174,7 @@ function ProjectsListPage() {
             <h1 className="brand-line hidden font-display text-xl font-semibold text-[var(--charcoal)] sm:block sm:text-2xl">
               Projects
             </h1>
-            <span className="hidden text-xs text-[var(--charcoal)]/55 sm:inline">
+            <span className="hidden text-xs text-[var(--charcoal)]/70 sm:inline">
               {filtered.length} of {totalProjects}
             </span>
           </div>
@@ -188,7 +188,7 @@ function ProjectsListPage() {
                 role="tab"
                 aria-selected={tab === "active"}
                 onClick={() => setTab("active")}
-                className={`px-3 py-1 text-xs ${tab === "active" ? "bg-[var(--terracotta)] text-[var(--cream)]" : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"}`}
+                className={`px-3 py-1 text-xs ${tab === "active" ? "bg-[var(--terracotta)] text-[var(--cream)]" : "text-[var(--charcoal)]/82 hover:bg-[var(--cream)]"}`}
               >
                 Active <span className="ml-1 opacity-70">({active.length})</span>
               </button>
@@ -196,7 +196,7 @@ function ProjectsListPage() {
                 role="tab"
                 aria-selected={tab === "archived"}
                 onClick={() => setTab("archived")}
-                className={`border-l border-[var(--border)] px-3 py-1 text-xs inline-flex items-center gap-1.5 ${tab === "archived" ? "bg-[var(--terracotta)] text-[var(--cream)]" : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"}`}
+                className={`border-l border-[var(--border)] px-3 py-1 text-xs inline-flex items-center gap-1.5 ${tab === "archived" ? "bg-[var(--terracotta)] text-[var(--cream)]" : "text-[var(--charcoal)]/82 hover:bg-[var(--cream)]"}`}
               >
                 <Archive className="h-3.5 w-3.5" />
                 Archived <span className="opacity-70">({archived.length})</span>
@@ -226,7 +226,7 @@ function ProjectsListPage() {
             ))
           ) : filtered.length === 0 ? (
             <div className="sm:col-span-2 xl:col-span-3 rounded-xl border border-dashed border-[var(--champagne)] bg-white py-20 text-center">
-              <p className="text-sm text-[var(--charcoal)]/60">
+              <p className="text-sm text-[var(--charcoal)]/74">
                 {tab === "active"
                   ? archived.length > 0
                     ? "No active projects. Check the Archived tab."

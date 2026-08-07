@@ -40,7 +40,7 @@ function slotCellClass(status: string) {
     return "bg-[var(--champagne)] text-[var(--terracotta)] border-[var(--terracotta)]/30 hover:border-[var(--terracotta)]/60";
   if (status === "overdue")
     return "bg-[var(--terracotta-soft)] text-[var(--terracotta)] border-[var(--terracotta)]/50 hover:border-[var(--terracotta)]";
-  return "bg-[var(--cream)] text-[var(--charcoal)]/60 border-[var(--border)] hover:bg-[var(--cream-deep)]";
+  return "bg-[var(--cream)] text-[var(--charcoal)]/74 border-[var(--border)] hover:bg-[var(--cream-deep)]";
 }
 
 function slotLabel(status: string) {
@@ -57,7 +57,7 @@ function SectionHeading({ title, sub }: { title: string; sub: string }) {
   return (
     <div className="mb-3">
       <h2 className="font-display text-xl text-[var(--charcoal)]">{title}</h2>
-      <p className="text-xs text-[var(--charcoal)]/55">{sub}</p>
+      <p className="text-xs text-[var(--charcoal)]/70">{sub}</p>
     </div>
   );
 }
@@ -171,8 +171,8 @@ function OverviewCard({
       <div className={`font-display text-2xl font-semibold leading-tight ${valueClass}`}>
         {formatINR(Number(value))}
       </div>
-      {hint && <div className="mt-1 text-[11px] text-[var(--charcoal)]/50">{hint}</div>}
-      <div className="mt-auto pt-3 text-[10px] font-medium uppercase tracking-widest text-[var(--charcoal)]/55">{label}</div>
+      {hint && <div className="mt-1 text-[11px] text-[var(--charcoal)]/66">{hint}</div>}
+      <div className="mt-auto pt-3 text-[10px] font-medium uppercase tracking-widest text-[var(--charcoal)]/70">{label}</div>
     </div>
   );
 }
@@ -210,7 +210,7 @@ function TargetIncomeCard({
     <div className="flex flex-col rounded-lg border border-[var(--border)] bg-white p-4">
       {editing ? (
         <div className="flex items-center gap-1">
-          <span className="text-[var(--charcoal)]/40 text-sm">₹</span>
+          <span className="text-[var(--charcoal)]/58 text-sm">₹</span>
           <input
             type="number" min={0} step="0.01" value={value} autoFocus
             onChange={(e) => setValue(e.target.value)}
@@ -224,7 +224,7 @@ function TargetIncomeCard({
           </button>
           <button
             onClick={() => setEditing(false)}
-            className="shrink-0 rounded border border-[var(--border)] px-2 py-1 text-xs text-[var(--charcoal)]/60 hover:bg-[var(--cream)]"
+            className="shrink-0 rounded border border-[var(--border)] px-2 py-1 text-xs text-[var(--charcoal)]/74 hover:bg-[var(--cream)]"
           >
             ✕
           </button>
@@ -240,7 +240,7 @@ function TargetIncomeCard({
         </div>
       )}
       <div className="mt-auto flex items-center justify-between gap-1 pt-3">
-        <div className="text-[10px] font-medium uppercase tracking-widest text-[var(--charcoal)]/55">Target Income</div>
+        <div className="text-[10px] font-medium uppercase tracking-widest text-[var(--charcoal)]/70">Target Income</div>
         {!editing && (
           <button
             onClick={() => { setValue(String(target || 0)); setEditing(true); }}
@@ -330,20 +330,20 @@ function PnlTable({
           return (
             <tr key={p.quote_id} className="border-t border-[var(--border)]">
               <td className="px-4 py-3 font-medium text-[var(--charcoal)]">{p.vendor_name}</td>
-              <td className="px-4 py-3 text-[var(--charcoal)]/60">{p.category ?? "—"}</td>
-              <td className="px-4 py-3 text-right text-[var(--charcoal)]/30">—</td>
+              <td className="px-4 py-3 text-[var(--charcoal)]/74">{p.category ?? "—"}</td>
+              <td className="px-4 py-3 text-right text-[var(--charcoal)]/52">—</td>
               <td className="px-4 py-3 text-right font-medium text-[var(--charcoal)]">{formatINR(Number(p.client_billing))}</td>
-              <td className="px-4 py-3 text-right text-[var(--charcoal)]/60">{formatINR(Number(p.vendor_cost))}</td>
+              <td className="px-4 py-3 text-right text-[var(--charcoal)]/74">{formatINR(Number(p.vendor_cost))}</td>
               <td className="px-4 py-3 text-right font-semibold text-[var(--terracotta)]">{formatINR(Number(p.commission))}</td>
-              <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{margin.toFixed(1)}%</td>
-              <td className="px-4 py-3 text-right text-[var(--charcoal)]/30">—</td>
-              <td className="px-4 py-3 text-right text-[var(--charcoal)]/30">—</td>
+              <td className="px-4 py-3 text-right text-[var(--charcoal)]/82">{margin.toFixed(1)}%</td>
+              <td className="px-4 py-3 text-right text-[var(--charcoal)]/52">—</td>
+              <td className="px-4 py-3 text-right text-[var(--charcoal)]/52">—</td>
             </tr>
           );
         })}
         {pnl.length === 0 && (
           <tr>
-            <td colSpan={9} className="px-4 py-8 text-center text-[var(--charcoal)]/50">
+            <td colSpan={9} className="px-4 py-8 text-center text-[var(--charcoal)]/66">
               {isLoading ? "Loading…" : "No closed quotes for this project yet."}
             </td>
           </tr>
@@ -351,15 +351,15 @@ function PnlTable({
       </tbody>
       {pnl.length > 0 && (
         <TotalsRow>
-          <td className="px-4 py-3 text-[11px] uppercase tracking-widest text-[var(--charcoal)]/60">Totals</td>
+          <td className="px-4 py-3 text-[11px] uppercase tracking-widest text-[var(--charcoal)]/74">Totals</td>
           <td className="px-4 py-3" />
-          <td className="px-4 py-3 text-right text-[var(--charcoal)]/60">{formatINR(planningFee)}</td>
+          <td className="px-4 py-3 text-right text-[var(--charcoal)]/74">{formatINR(planningFee)}</td>
           <td className="px-4 py-3 text-right">{formatINR(t.client)}</td>
-          <td className="px-4 py-3 text-right text-[var(--charcoal)]/60">{formatINR(t.vendor)}</td>
+          <td className="px-4 py-3 text-right text-[var(--charcoal)]/74">{formatINR(t.vendor)}</td>
           <td className="px-4 py-3 text-right text-[var(--terracotta)]">{formatINR(t.comm)}</td>
-          <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{totalMargin.toFixed(1)}%</td>
+          <td className="px-4 py-3 text-right text-[var(--charcoal)]/82">{totalMargin.toFixed(1)}%</td>
           <td className="px-4 py-3 text-right text-[hsl(38_45%_28%)]">{formatINR(totalIncome)}</td>
-          <td className="px-4 py-3 text-right text-[var(--charcoal)]/50">{formatINR(targetIncome)}</td>
+          <td className="px-4 py-3 text-right text-[var(--charcoal)]/66">{formatINR(targetIncome)}</td>
         </TotalsRow>
       )}
     </TableShell>
@@ -392,10 +392,10 @@ function ProjectPaymentsMatrix({ projectId }: { projectId: string }) {
   };
 
   if (isLoading)
-    return <div className="rounded-xl border border-[var(--border)] bg-white p-6 text-sm text-[var(--charcoal)]/50">Loading…</div>;
+    return <div className="rounded-xl border border-[var(--border)] bg-white p-6 text-sm text-[var(--charcoal)]/66">Loading…</div>;
   if (!row)
     return (
-      <div className="rounded-xl border border-[var(--border)] bg-white p-6 text-sm text-[var(--charcoal)]/50">
+      <div className="rounded-xl border border-[var(--border)] bg-white p-6 text-sm text-[var(--charcoal)]/66">
         No payment record yet for this project.
       </div>
     );
@@ -464,7 +464,7 @@ function ProjectPaymentRow({ row, onChanged }: { row: PaymentMatrixRow; onChange
       </td>
       {[1, 2, 3, 4].map((slotNo) => {
         if (slotNo > row.total_installments)
-          return <td key={slotNo} className="px-2 py-2.5 text-center text-[var(--charcoal)]/25">—</td>;
+          return <td key={slotNo} className="px-2 py-2.5 text-center text-[var(--charcoal)]/50">—</td>;
         const slot =
           row.installments.find((s) => s.installment_no === slotNo) ??
           ({ id: null, installment_no: slotNo, expected_amount: 0, received_amount: 0, received_on: null, status: "pending" } as InstallmentSlot);
@@ -612,7 +612,7 @@ function CommissionMatrixTable({ projectId }: { projectId: string }) {
         {rows.map((r) => <CommissionRow key={r.quote_id} row={r} onChanged={refresh} />)}
         {rows.length === 0 && (
           <tr>
-            <td colSpan={10} className="px-4 py-8 text-center text-[var(--charcoal)]/50">
+            <td colSpan={10} className="px-4 py-8 text-center text-[var(--charcoal)]/66">
               {isLoading ? "Loading…" : "No closed vendors yet."}
             </td>
           </tr>
@@ -620,13 +620,13 @@ function CommissionMatrixTable({ projectId }: { projectId: string }) {
       </tbody>
       {rows.length > 0 && (
         <TotalsRow>
-          <td className="px-4 py-3 text-[11px] uppercase tracking-widest text-[var(--charcoal)]/60">
+          <td className="px-4 py-3 text-[11px] uppercase tracking-widest text-[var(--charcoal)]/74">
             Totals · {rows.length} vendor{rows.length === 1 ? "" : "s"}
           </td>
           <td className="px-4 py-3" />
           <td className="px-4 py-3 text-right">{formatINR(totals.closed)}</td>
           <td className="px-4 py-3 text-right text-[var(--terracotta)]">{formatINR(totals.commission)}</td>
-          <td className="px-3 py-3 text-center text-[var(--charcoal)]/40">—</td>
+          <td className="px-3 py-3 text-center text-[var(--charcoal)]/58">—</td>
           <td className="px-2 py-3 text-center text-xs">{totals.s1 > 0 ? formatINRShort(totals.s1) : "—"}</td>
           <td className="px-2 py-3 text-center text-xs">{totals.s2 > 0 ? formatINRShort(totals.s2) : "—"}</td>
           <td className="px-4 py-3 text-right text-[hsl(38_45%_28%)]">{formatINR(totals.received)}</td>
@@ -658,8 +658,8 @@ function CommissionRow({ row, onChanged }: { row: CommissionMatrixRow; onChanged
   return (
     <tr className="border-t border-[var(--border)] align-middle">
       <td className="px-4 py-2.5 font-medium text-[var(--charcoal)]">{row.vendor_name}</td>
-      <td className="px-4 py-2.5 text-[var(--charcoal)]/60">{row.category ?? "—"}</td>
-      <td className="px-4 py-2.5 text-right text-[var(--charcoal)]/70">{formatINR(row.closed_amount)}</td>
+      <td className="px-4 py-2.5 text-[var(--charcoal)]/74">{row.category ?? "—"}</td>
+      <td className="px-4 py-2.5 text-right text-[var(--charcoal)]/82">{formatINR(row.closed_amount)}</td>
       <td className="px-4 py-2.5 text-right">
         <input
           type="number" min={0} step="0.01" value={commission}
@@ -684,7 +684,7 @@ function CommissionRow({ row, onChanged }: { row: CommissionMatrixRow; onChanged
       </td>
       {[1, 2].map((slotNo) => {
         if (slotNo > row.total_installments)
-          return <td key={slotNo} className="px-2 py-2.5 text-center text-[var(--charcoal)]/25">—</td>;
+          return <td key={slotNo} className="px-2 py-2.5 text-center text-[var(--charcoal)]/50">—</td>;
         const slot =
           row.installments.find((s) => s.installment_no === slotNo) ??
           ({ id: null, installment_no: slotNo, expected_amount: 0, received_amount: 0, received_on: null, status: "pending" } as CommissionInstallmentSlot);
@@ -829,7 +829,7 @@ function VendorPaymentMatrixTable({ projectId }: { projectId: string }) {
         {rows.map((r) => <VendorPaymentRow key={r.quote_id} row={r} maxSlots={maxSlots} onChanged={refresh} />)}
         {rows.length === 0 && (
           <tr>
-            <td colSpan={colSpan} className="px-4 py-8 text-center text-[var(--charcoal)]/50">
+            <td colSpan={colSpan} className="px-4 py-8 text-center text-[var(--charcoal)]/66">
               {isLoading ? "Loading…" : "No closed vendors yet."}
             </td>
           </tr>
@@ -837,12 +837,12 @@ function VendorPaymentMatrixTable({ projectId }: { projectId: string }) {
       </tbody>
       {rows.length > 0 && (
         <TotalsRow>
-          <td className="px-4 py-3 text-[11px] uppercase tracking-widest text-[var(--charcoal)]/60">
+          <td className="px-4 py-3 text-[11px] uppercase tracking-widest text-[var(--charcoal)]/74">
             Totals · {rows.length} vendor{rows.length === 1 ? "" : "s"}
           </td>
           <td className="px-4 py-3" />
           <td className="px-4 py-3 text-right">{formatINR(totals.vendor_cost)}</td>
-          <td className="px-3 py-3 text-center text-[var(--charcoal)]/40">—</td>
+          <td className="px-3 py-3 text-center text-[var(--charcoal)]/58">—</td>
           {Array.from({ length: maxSlots }, (_, i) => (
             <td key={i} className="px-2 py-3 text-center text-xs">
               {totals.per_slot[i] > 0 ? formatINRShort(totals.per_slot[i]) : "—"}
@@ -870,8 +870,8 @@ function VendorPaymentRow({ row, maxSlots, onChanged }: { row: VendorPaymentMatr
   return (
     <tr className="border-t border-[var(--border)] align-middle">
       <td className="px-4 py-2.5 font-medium text-[var(--charcoal)]">{row.vendor_name}</td>
-      <td className="px-4 py-2.5 text-[var(--charcoal)]/60">{row.category ?? "—"}</td>
-      <td className="px-4 py-2.5 text-right text-[var(--charcoal)]/70">{formatINR(row.vendor_cost)}</td>
+      <td className="px-4 py-2.5 text-[var(--charcoal)]/74">{row.category ?? "—"}</td>
+      <td className="px-4 py-2.5 text-right text-[var(--charcoal)]/82">{formatINR(row.vendor_cost)}</td>
       <td className="px-3 py-2.5 text-center">
         <select
           value={row.total_installments}
@@ -889,7 +889,7 @@ function VendorPaymentRow({ row, maxSlots, onChanged }: { row: VendorPaymentMatr
       {Array.from({ length: maxSlots }, (_, i) => {
         const slotNo = i + 1;
         if (slotNo > row.total_installments)
-          return <td key={slotNo} className="px-2 py-2.5 text-center text-[var(--charcoal)]/25">—</td>;
+          return <td key={slotNo} className="px-2 py-2.5 text-center text-[var(--charcoal)]/50">—</td>;
         const slot =
           row.installments.find((s) => s.installment_no === slotNo) ??
           ({ id: null, installment_no: slotNo, expected_amount: 0, paid_amount: 0, paid_on: null, status: "pending", paid_by: "planner" } as VendorPaymentInstallmentSlot);
@@ -1003,7 +1003,7 @@ const inputCls = "mt-1 w-full rounded border border-[var(--border)] bg-white px-
 
 function FieldLabel({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="block text-xs font-medium text-[var(--charcoal)]/70">
+    <label className="block text-xs font-medium text-[var(--charcoal)]/82">
       {label}
       {children}
     </label>
@@ -1022,7 +1022,7 @@ function DialogShell({
           <button
             onClick={onClose}
             disabled={busy}
-            className="rounded-lg border border-[var(--border)] bg-white px-4 py-1.5 text-sm text-[var(--charcoal)]/70 hover:border-[var(--charcoal)]/30 disabled:opacity-50"
+            className="rounded-lg border border-[var(--border)] bg-white px-4 py-1.5 text-sm text-[var(--charcoal)]/82 hover:border-[var(--charcoal)]/30 disabled:opacity-50"
           >
             Cancel
           </button>

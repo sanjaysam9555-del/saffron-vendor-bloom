@@ -143,7 +143,7 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete, vendors, onNav
                 {vendor.category}
               </span>
               {vendor.subcategory && (
-                <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/65">{vendor.subcategory}</span>
+                <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/78">{vendor.subcategory}</span>
               )}
               {vendor.submitted_via_form && (
                 <span
@@ -171,7 +171,7 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete, vendors, onNav
           </div>
           <div className="flex items-center gap-2">
             {canNavigate && (
-              <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-medium text-[var(--charcoal)]/65">
+              <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-medium text-[var(--charcoal)]/78">
                 {navIndex + 1} / {vendors!.length}
               </span>
             )}
@@ -211,7 +211,7 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete, vendors, onNav
 
           {vendor.remarks && (
             <div className="sm:col-span-2 min-w-0 rounded-lg bg-[var(--cream-deep)] p-3">
-              <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">Remarks</div>
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">Remarks</div>
               <div className="text-sm text-[var(--charcoal)]/80 whitespace-pre-wrap break-words">{vendor.remarks}</div>
             </div>
           )}
@@ -225,7 +225,7 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete, vendors, onNav
         />
 
         <div className="border-t border-[var(--border)] px-6 py-4">
-          <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+          <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
             Assigned to Projects
           </div>
           <VendorProjectAssigner vendorId={vendor.id} />
@@ -235,7 +235,7 @@ export function VendorDetail({ vendor, onClose, onEdit, onDelete, vendors, onNav
 
         {attachments.length > 0 && (
           <div className="border-t border-[var(--border)] px-6 py-4">
-            <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+            <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
               <Paperclip className="h-3 w-3" /> Documents ({attachments.length})
             </div>
             <AttachmentThumbnailGrid attachments={attachments} onOpen={setViewing} />
@@ -321,7 +321,7 @@ function Row({ icon, label, value, link, copy, className }: { icon?: React.React
   };
   return (
     <div className={`rounded-lg bg-[var(--cream-deep)] p-3 min-w-0 ${className ?? ""}`}>
-      <div className="mb-0.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+      <div className="mb-0.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
         {icon && <span className="[&>svg]:h-3 [&>svg]:w-3">{icon}</span>}
         {label}
       </div>

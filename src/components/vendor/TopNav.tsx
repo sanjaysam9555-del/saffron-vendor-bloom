@@ -23,18 +23,18 @@ export function TopNav({ search, onSearchChange, onAddVendor, totalVendors, tota
     <div className="h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
       <div className="mx-auto flex w-full max-w-[1600px] items-center gap-2 h-full px-3 sm:gap-4 sm:px-6">
         <div className="relative min-w-0 flex-1 sm:max-w-[320px]">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/40" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/58" />
           <input
             type="text"
             placeholder="Search vendors…"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full rounded-md border border-[var(--border)] bg-white py-1.5 pl-8 pr-2 text-sm text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/40 focus:border-[var(--terracotta)] focus:outline-none focus:ring-2 focus:ring-[var(--terracotta-soft)]"
+            className="w-full rounded-md border border-[var(--border)] bg-white py-1.5 pl-8 pr-2 text-sm text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/58 focus:border-[var(--terracotta)] focus:outline-none focus:ring-2 focus:ring-[var(--terracotta-soft)]"
           />
         </div>
 
         {mounted && (
-          <div className="hidden items-center gap-4 text-xs text-[var(--charcoal)]/60 lg:flex">
+          <div className="hidden items-center gap-4 text-xs text-[var(--charcoal)]/74 lg:flex">
             <div><span className="font-semibold text-[var(--terracotta)]">{totalVendors}</span> vendors</div>
             <div><span className="font-semibold text-[var(--terracotta)]">{totalCategories}</span> categories</div>
             {lastAdded && <div className="truncate max-w-[160px]">Last: {lastAdded}</div>}

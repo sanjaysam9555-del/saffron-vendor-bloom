@@ -86,7 +86,7 @@ function AdminAnalyticsPage() {
       {/* Secondary toolbar */}
       <div className="border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
         <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-2 px-3 py-2 sm:h-14 sm:flex-row sm:items-center sm:gap-4 sm:py-0 sm:px-6">
-          <span className="hidden text-sm text-[var(--charcoal)]/55 sm:inline">Revenue, commissions, project P&amp;L and payment tracking.</span>
+          <span className="hidden text-sm text-[var(--charcoal)]/70 sm:inline">Revenue, commissions, project P&amp;L and payment tracking.</span>
           <div className="flex w-full gap-1 rounded-lg border border-[var(--border)] bg-white p-1 sm:ml-auto sm:w-auto">
             {(["month", "quarter", "year", "all"] as Preset[]).map((p) => (
               <button
@@ -96,7 +96,7 @@ function AdminAnalyticsPage() {
                   "flex-1 whitespace-nowrap rounded-md px-2 py-1.5 text-xs font-medium capitalize transition sm:flex-none sm:px-3 " +
                   (preset === p
                     ? "bg-[var(--terracotta)] text-[var(--cream)]"
-                    : "text-[var(--charcoal)]/70 hover:bg-[var(--cream-deep)]")
+                    : "text-[var(--charcoal)]/82 hover:bg-[var(--cream-deep)]")
                 }
               >
                 {p === "all" ? "All time" : `This ${p}`}
@@ -134,7 +134,7 @@ function AdminAnalyticsPage() {
         <section className="mt-10">
           <div className="mb-3">
             <h2 className="font-display text-xl text-[var(--charcoal)]">Per-project P&L</h2>
-            <p className="text-xs text-[var(--charcoal)]/55">Per closed vendor — client billing, vendor cost and commission breakdown.</p>
+            <p className="text-xs text-[var(--charcoal)]/70">Per closed vendor — client billing, vendor cost and commission breakdown.</p>
           </div>
           <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
             <div className="overflow-x-auto">
@@ -169,22 +169,22 @@ function AdminAnalyticsPage() {
                             {(p.bride_name || "?") + " & " + (p.groom_name || "?")}
                           </Link>
                         </td>
-                        <td className="px-4 py-3 text-[var(--charcoal)]/70">
+                        <td className="px-4 py-3 text-[var(--charcoal)]/82">
                           {p.wedding_date ? new Date(p.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
                         </td>
-                        <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{formatINR(planning)}</td>
+                        <td className="px-4 py-3 text-right text-[var(--charcoal)]/82">{formatINR(planning)}</td>
                         <td className="px-4 py-3 text-right font-medium text-[var(--charcoal)]">{formatINR(Number(p.client_billing))}</td>
-                        <td className="px-4 py-3 text-right text-[var(--charcoal)]/60">{formatINR(Number(p.vendor_cost))}</td>
+                        <td className="px-4 py-3 text-right text-[var(--charcoal)]/74">{formatINR(Number(p.vendor_cost))}</td>
                         <td className="px-4 py-3 text-right font-semibold text-[var(--terracotta)]">{formatINR(Number(p.commission))}</td>
-                        <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{margin.toFixed(1)}%</td>
+                        <td className="px-4 py-3 text-right text-[var(--charcoal)]/82">{margin.toFixed(1)}%</td>
                         <td className="px-4 py-3 text-right font-semibold text-[hsl(38_45%_28%)]">{formatINR(totalIncome)}</td>
-                        <td className="px-4 py-3 text-right text-[var(--charcoal)]/60">{formatINR(target)}</td>
+                        <td className="px-4 py-3 text-right text-[var(--charcoal)]/74">{formatINR(target)}</td>
                       </tr>
                     );
                   })}
                   {(projects.data ?? []).length === 0 && (
                     <tr>
-                      <td colSpan={9} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
+                      <td colSpan={9} className="px-4 py-8 text-center text-[var(--charcoal)]/74">
                         {projects.isLoading ? "Loading…" : "No closed quotes in this range yet."}
                       </td>
                     </tr>
@@ -200,7 +200,7 @@ function AdminAnalyticsPage() {
         <section className="mt-10">
           <div className="mb-3">
             <h2 className="font-display text-xl text-[var(--charcoal)]">Project Payments</h2>
-            <p className="text-xs text-[var(--charcoal)]/55">One row per project. Click an installment to record the amount and mark it received.</p>
+            <p className="text-xs text-[var(--charcoal)]/70">One row per project. Click an installment to record the amount and mark it received.</p>
           </div>
           <PaymentsMatrixTable range={range} />
         </section>
@@ -231,8 +231,8 @@ function OverviewCard({
       <div className={`font-display text-2xl font-semibold leading-tight ${valueClass}`}>
         {formatINR(Number(value))}
       </div>
-      {hint && <div className="mt-1 text-[11px] text-[var(--charcoal)]/50">{hint}</div>}
-      <div className="mt-auto pt-3 text-[10px] font-medium uppercase tracking-widest text-[var(--charcoal)]/55">{label}</div>
+      {hint && <div className="mt-1 text-[11px] text-[var(--charcoal)]/66">{hint}</div>}
+      <div className="mt-auto pt-3 text-[10px] font-medium uppercase tracking-widest text-[var(--charcoal)]/70">{label}</div>
     </div>
   );
 }
@@ -305,7 +305,7 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-[var(--charcoal)]/60">
+                <td colSpan={9} className="px-4 py-8 text-center text-[var(--charcoal)]/74">
                   {isLoading ? "Loading…" : "No projects in this range."}
                 </td>
               </tr>
@@ -314,11 +314,11 @@ function PaymentsMatrixTable({ range }: { range: { from: string | null; to: stri
           {rows.length > 0 && (
             <tfoot>
               <tr className="border-t-2 border-[var(--terracotta)]/30 bg-[var(--terracotta-soft)]/60 font-semibold text-[var(--charcoal)]">
-                <td className="px-3 py-3 text-[11px] uppercase tracking-widest text-[var(--charcoal)]/70">
+                <td className="px-3 py-3 text-[11px] uppercase tracking-widest text-[var(--charcoal)]/82">
                   Totals · {rows.length} project{rows.length === 1 ? "" : "s"}
                 </td>
                 <td className="px-3 py-3 text-right">{formatINR(totals.planning_fee)}</td>
-                <td className="px-3 py-3 text-center text-[var(--charcoal)]/50">—</td>
+                <td className="px-3 py-3 text-center text-[var(--charcoal)]/66">—</td>
                 {totals.per_slot.map((v, i) => (
                   <td key={i} className="px-2 py-3 text-center text-xs">{v > 0 ? formatINRShort(v) : "—"}</td>
                 ))}
@@ -382,7 +382,7 @@ function MatrixRow({
         >
           {(row.bride_name || "?") + " & " + (row.groom_name || "?")}
         </Link>
-        <div className="text-[11px] text-[var(--charcoal)]/55">
+        <div className="text-[11px] text-[var(--charcoal)]/70">
           {row.wedding_date ? new Date(row.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
         </div>
       </td>
@@ -423,7 +423,7 @@ function MatrixRow({
       </td>
       {[1, 2, 3, 4].map((slotNo) => {
         if (slotNo > row.total_installments) {
-          return <td key={slotNo} className="px-2 py-2 text-center text-[var(--charcoal)]/30">—</td>;
+          return <td key={slotNo} className="px-2 py-2 text-center text-[var(--charcoal)]/52">—</td>;
         }
         const slot =
           row.installments.find((s) => s.installment_no === slotNo) ??
@@ -476,7 +476,7 @@ function InstallmentCell({
     ? "bg-[var(--gold-soft)] text-[hsl(38_45%_28%)] border-[var(--gold)]/40 hover:border-[var(--gold)]/70"
     : partial
     ? "bg-[var(--champagne)] text-[var(--terracotta)] border-[var(--terracotta)]/30 hover:border-[var(--terracotta)]/60"
-    : "bg-[var(--cream)] text-[var(--charcoal)]/60 border-[var(--border)] hover:bg-[var(--cream-deep)]";
+    : "bg-[var(--cream)] text-[var(--charcoal)]/74 border-[var(--border)] hover:bg-[var(--cream-deep)]";
 
   return (
     <>
@@ -560,7 +560,7 @@ function InstallmentEditDialog({
         className="w-full max-w-sm rounded-xl bg-[var(--cream)] p-5 shadow-2xl"
       >
         <h3 className="font-display text-lg text-[var(--charcoal)]">Installment {slot.installment_no}</h3>
-        <div className="mt-3 grid gap-2 text-xs text-[var(--charcoal)]/70">
+        <div className="mt-3 grid gap-2 text-xs text-[var(--charcoal)]/82">
           <label>
             Expected amount
             <input
@@ -624,7 +624,7 @@ function InstallmentEditDialog({
 // -------------------- Shared helpers --------------------
 
 function daysLabel(due_date: string | null): { text: string; cls: string } {
-  if (!due_date) return { text: "No date set", cls: "text-[var(--charcoal)]/40" };
+  if (!due_date) return { text: "No date set", cls: "text-[var(--charcoal)]/58" };
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const d = new Date(due_date);
@@ -634,7 +634,7 @@ function daysLabel(due_date: string | null): { text: string; cls: string } {
   if (diff === 0) return { text: "Due today", cls: "text-[var(--terracotta)] font-semibold" };
   if (diff <= 7) return { text: `${diff}d left`, cls: "text-[var(--terracotta)]" };
   if (diff <= 30) return { text: `${diff}d left`, cls: "text-[hsl(38_45%_28%)]" };
-  return { text: `${diff}d left`, cls: "text-[var(--charcoal)]/55" };
+  return { text: `${diff}d left`, cls: "text-[var(--charcoal)]/70" };
 }
 
 function statusBadge(status: string) {
@@ -642,7 +642,7 @@ function statusBadge(status: string) {
     return <span className="rounded-full bg-[var(--terracotta-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--terracotta)]">Overdue</span>;
   if (status === "partial")
     return <span className="rounded-full bg-[var(--champagne)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--terracotta)]">Partial</span>;
-  return <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/55">Pending</span>;
+  return <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/70">Pending</span>;
 }
 
 function fmtDate(d: string | null) {
@@ -657,7 +657,7 @@ function UpcomingReceivablesTable({ rows, isLoading }: { rows: UpcomingReceivabl
     <div className="min-w-0">
       <div className="mb-3">
         <h2 className="font-display text-xl text-[var(--charcoal)]">Upcoming Receivables</h2>
-        <p className="text-xs text-[var(--charcoal)]/55">Pending client payments — planning fee instalments not yet received.</p>
+        <p className="text-xs text-[var(--charcoal)]/70">Pending client payments — planning fee instalments not yet received.</p>
       </div>
       <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
         <div className="overflow-x-auto">
@@ -687,13 +687,13 @@ function UpcomingReceivablesTable({ rows, isLoading }: { rows: UpcomingReceivabl
                         {(r.bride_name ?? "?") + " & " + (r.groom_name ?? "?")}
                       </Link>
                     </td>
-                    <td className="px-3 py-2.5 text-center text-[var(--charcoal)]/60">
+                    <td className="px-3 py-2.5 text-center text-[var(--charcoal)]/74">
                       {r.installment_no != null ? `#${r.installment_no}` : "—"}
                     </td>
                     <td className="px-3 py-2.5 text-right font-semibold text-[hsl(38_45%_28%)]">
                       {formatINR(pending)}
                     </td>
-                    <td className="px-3 py-2.5 text-center text-[11px] text-[var(--charcoal)]/60">
+                    <td className="px-3 py-2.5 text-center text-[11px] text-[var(--charcoal)]/74">
                       {fmtDate(r.due_date)}
                     </td>
                     <td className={`px-3 py-2.5 text-right text-[11px] ${days.cls}`}>
@@ -705,7 +705,7 @@ function UpcomingReceivablesTable({ rows, isLoading }: { rows: UpcomingReceivabl
               })}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-[var(--charcoal)]/50">
+                  <td colSpan={6} className="px-4 py-8 text-center text-[var(--charcoal)]/66">
                     {isLoading ? "Loading…" : "No pending receivables."}
                   </td>
                 </tr>
@@ -725,7 +725,7 @@ function UpcomingPaymentsTable({ rows, isLoading }: { rows: UpcomingPayment[]; i
     <div className="min-w-0">
       <div className="mb-3">
         <h2 className="font-display text-xl text-[var(--charcoal)]">Upcoming Payments</h2>
-        <p className="text-xs text-[var(--charcoal)]/55">Pending outgoing vendor payments — instalments not yet paid.</p>
+        <p className="text-xs text-[var(--charcoal)]/70">Pending outgoing vendor payments — instalments not yet paid.</p>
       </div>
       <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
         <div className="overflow-x-auto">
@@ -754,16 +754,16 @@ function UpcomingPaymentsTable({ rows, isLoading }: { rows: UpcomingPayment[]; i
                       >
                         {(r.bride_name ?? "?") + " & " + (r.groom_name ?? "?")}
                       </Link>
-                      <div className="text-[11px] text-[var(--charcoal)]/55">{r.vendor_name}</div>
-                      <div className="text-[10px] text-[var(--charcoal)]/40 uppercase tracking-wider">
+                      <div className="text-[11px] text-[var(--charcoal)]/70">{r.vendor_name}</div>
+                      <div className="text-[10px] text-[var(--charcoal)]/58 uppercase tracking-wider">
                         Paid by {r.paid_by}
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 text-center text-[var(--charcoal)]/60">#{r.installment_no}</td>
+                    <td className="px-3 py-2.5 text-center text-[var(--charcoal)]/74">#{r.installment_no}</td>
                     <td className="px-3 py-2.5 text-right font-semibold text-[var(--terracotta)]">
                       {formatINR(pending)}
                     </td>
-                    <td className="px-3 py-2.5 text-center text-[11px] text-[var(--charcoal)]/60">
+                    <td className="px-3 py-2.5 text-center text-[11px] text-[var(--charcoal)]/74">
                       {fmtDate(r.due_date)}
                     </td>
                     <td className={`px-3 py-2.5 text-right text-[11px] ${days.cls}`}>
@@ -775,7 +775,7 @@ function UpcomingPaymentsTable({ rows, isLoading }: { rows: UpcomingPayment[]; i
               })}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-[var(--charcoal)]/50">
+                  <td colSpan={6} className="px-4 py-8 text-center text-[var(--charcoal)]/66">
                     {isLoading ? "Loading…" : "No pending vendor payments."}
                   </td>
                 </tr>

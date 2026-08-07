@@ -83,7 +83,7 @@ function ManageProjectsPage() {
 
       <div className="hidden h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70 sm:block">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 h-full px-3 sm:px-6">
-          <span className="text-sm text-[var(--charcoal)]/55">Create, edit, archive, or delete wedding projects.</span>
+          <span className="text-sm text-[var(--charcoal)]/70">Create, edit, archive, or delete wedding projects.</span>
         </div>
       </div>
 
@@ -141,11 +141,11 @@ function ManageProjectsPage() {
                       return (
                         <tr key={p.id} className="border-t border-[var(--border)] transition-colors hover:bg-[var(--cream)]/60">
                           <td className="px-4 py-3 text-[var(--charcoal)]">{label}</td>
-                          <td className="px-4 py-3 text-[var(--charcoal)]/70">
+                          <td className="px-4 py-3 text-[var(--charcoal)]/82">
                             {new Date(p.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${archived ? "bg-[var(--cream)] text-[var(--charcoal)]/70" : "bg-[var(--terracotta-soft)] text-[var(--terracotta)]"}`}>
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${archived ? "bg-[var(--cream)] text-[var(--charcoal)]/82" : "bg-[var(--terracotta-soft)] text-[var(--terracotta)]"}`}>
                               {archived ? "Archived" : "Active"}
                             </span>
                           </td>
@@ -154,14 +154,14 @@ function ManageProjectsPage() {
                               <button
                                 onClick={() => navigate({ to: "/admin/projects/$id", params: { id: p.id } })}
                                 title="Edit project"
-                                className="rounded p-1.5 text-[var(--charcoal)]/60 transition-colors hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
+                                className="rounded p-1.5 text-[var(--charcoal)]/74 transition-colors hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
                               >
                                 <Pencil className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={() => handleArchiveToggle(p.id, !archived)}
                                 title={archived ? "Unarchive project" : "Archive project"}
-                                className="rounded p-1.5 text-[var(--charcoal)]/60 transition-colors hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
+                                className="rounded p-1.5 text-[var(--charcoal)]/74 transition-colors hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
                               >
                                 {archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
                               </button>
@@ -188,7 +188,7 @@ function ManageProjectsPage() {
             title="Archiving vs. deleting"
             description="A quick reminder before you remove anything."
           >
-            <p className="px-4 py-4 text-sm text-[var(--charcoal)]/65 sm:px-5">
+            <p className="px-4 py-4 text-sm text-[var(--charcoal)]/78 sm:px-5">
               <strong>Archive</strong> hides a project from the active list without losing any data — reversible any time
               from the project's card. <strong>Delete</strong> is permanent: it removes the project and every client login
               tied to it. Deleting is admin-only and asks for confirmation first.

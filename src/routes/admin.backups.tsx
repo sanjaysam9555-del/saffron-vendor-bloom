@@ -86,7 +86,7 @@ function BackupsPage() {
 
       <div className="hidden h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70 sm:block">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 h-full px-3 sm:px-6">
-          <span className="text-sm text-[var(--charcoal)]/55">A snapshot of the whole database is taken automatically every midnight.</span>
+          <span className="text-sm text-[var(--charcoal)]/70">A snapshot of the whole database is taken automatically every midnight.</span>
         </div>
       </div>
 
@@ -143,17 +143,17 @@ function BackupsPage() {
                       <tr key={b.id} className="border-t border-[var(--border)] transition-colors hover:bg-[var(--cream)]/60">
                         <td className="px-4 py-3 text-[var(--charcoal)]">{b.label}</td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${b.kind === "automatic" ? "bg-[var(--cream-deep)] text-[var(--charcoal)]/70" : "bg-[var(--terracotta-soft)] text-[var(--terracotta)]"}`}>
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${b.kind === "automatic" ? "bg-[var(--cream-deep)] text-[var(--charcoal)]/82" : "bg-[var(--terracotta-soft)] text-[var(--terracotta)]"}`}>
                             {b.kind}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-[var(--charcoal)]/60">{formatBytes(b.size_bytes)}</td>
+                        <td className="px-4 py-3 text-[var(--charcoal)]/74">{formatBytes(b.size_bytes)}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-end gap-1">
-                            <button onClick={() => handleDownload(b.id)} title="Download" className="rounded p-1.5 text-[var(--charcoal)]/60 transition-colors hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
+                            <button onClick={() => handleDownload(b.id)} title="Download" className="rounded p-1.5 text-[var(--charcoal)]/74 transition-colors hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
                               <Download className="h-4 w-4" />
                             </button>
-                            <button onClick={() => setRestoreTarget(b)} title="Restore this backup" className="rounded p-1.5 text-[var(--charcoal)]/60 transition-colors hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
+                            <button onClick={() => setRestoreTarget(b)} title="Restore this backup" className="rounded p-1.5 text-[var(--charcoal)]/74 transition-colors hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
                               <RotateCcw className="h-4 w-4" />
                             </button>
                             <button onClick={() => handleDelete(b.id)} title="Delete backup" className="rounded p-1.5 text-red-600 hover:bg-red-50">
@@ -174,7 +174,7 @@ function BackupsPage() {
             title="Before you restore"
             description="What actually happens when you restore a backup."
           >
-            <p className="px-4 py-4 text-sm text-[var(--charcoal)]/65 sm:px-5">
+            <p className="px-4 py-4 text-sm text-[var(--charcoal)]/78 sm:px-5">
               Restoring replaces <strong>every</strong> table with the backup's contents — anything created or changed
               since that backup is lost. A fresh safety backup is taken automatically the moment before a restore
               starts, so you can always undo a restore by restoring that one. Restore is admin-only and asks you to
@@ -232,10 +232,10 @@ function RestoreConfirmDialog({
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
             <div>
               <h2 className="font-display text-lg font-semibold text-[var(--charcoal)]">Restore this backup?</h2>
-              <p className="mt-0.5 text-xs text-[var(--charcoal)]/55">{backup.label}</p>
+              <p className="mt-0.5 text-xs text-[var(--charcoal)]/70">{backup.label}</p>
             </div>
           </div>
-          <button onClick={onClose} disabled={busy} className="rounded-md p-1 text-[var(--charcoal)]/55 hover:bg-[var(--cream-deep)] disabled:opacity-50">
+          <button onClick={onClose} disabled={busy} className="rounded-md p-1 text-[var(--charcoal)]/70 hover:bg-[var(--cream-deep)] disabled:opacity-50">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -247,7 +247,7 @@ function RestoreConfirmDialog({
             first.
           </p>
           <div>
-            <label className="mb-1 block text-xs font-medium text-[var(--charcoal)]/70">
+            <label className="mb-1 block text-xs font-medium text-[var(--charcoal)]/82">
               Type the backup label exactly to confirm:
             </label>
             <input

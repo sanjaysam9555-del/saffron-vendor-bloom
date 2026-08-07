@@ -130,7 +130,7 @@ export function AdminProjectVendorDetail({
                 {vendor.category}
               </span>
               {vendor.subcategory && (
-                <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/65">
+                <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/78">
                   {vendor.subcategory}
                 </span>
               )}
@@ -147,7 +147,7 @@ export function AdminProjectVendorDetail({
           </div>
           <div className="flex items-center gap-2">
             {canNavigate && (
-              <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-medium text-[var(--charcoal)]/65">
+              <span className="rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] font-medium text-[var(--charcoal)]/78">
                 {navIndex + 1} / {vendors!.length}
               </span>
             )}
@@ -159,11 +159,11 @@ export function AdminProjectVendorDetail({
 
         {/* Client status rows */}
         <div className="border-b border-[var(--border)] bg-[var(--cream-deep)]/30 px-6 py-3">
-          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
             Client status on this project
           </div>
           {selections.length === 0 ? (
-            <div className="text-xs text-[var(--charcoal)]/55">No client has responded yet.</div>
+            <div className="text-xs text-[var(--charcoal)]/70">No client has responded yet.</div>
           ) : (
             <ul className="space-y-1.5">
               {selections.map((s, i) => (
@@ -179,7 +179,7 @@ export function AdminProjectVendorDetail({
         {/* Quotes summary */}
         <div className="border-b border-[var(--border)] px-6 py-3">
           <div className="mb-2 flex items-center justify-between">
-            <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
               Quotes ({orderedQuotes.length})
             </div>
             <button
@@ -190,7 +190,7 @@ export function AdminProjectVendorDetail({
             </button>
           </div>
           {orderedQuotes.length === 0 ? (
-            <div className="text-xs text-[var(--charcoal)]/55">No quotes yet for this vendor on this project.</div>
+            <div className="text-xs text-[var(--charcoal)]/70">No quotes yet for this vendor on this project.</div>
           ) : (
             <ul className="space-y-1.5">
               {orderedQuotes.map((q) => {
@@ -210,7 +210,7 @@ export function AdminProjectVendorDetail({
                     <span className="inline-flex items-center gap-1.5 truncate">
                       {closed ? <CircleCheck className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
                       <span className="truncate">{seqLabel}</span>
-                      <span className="text-[10px] text-[var(--charcoal)]/55">
+                      <span className="text-[10px] text-[var(--charcoal)]/70">
                         {new Date(q.created_at).toLocaleDateString("en-IN")}
                       </span>
                     </span>
@@ -259,7 +259,7 @@ export function AdminProjectVendorDetail({
           )}
           {vendor.remarks && (
             <div className="sm:col-span-2 rounded-lg bg-[var(--cream-deep)] p-3">
-              <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">Remarks</div>
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">Remarks</div>
               <div className="whitespace-pre-wrap text-sm text-[var(--charcoal)]/80">{vendor.remarks}</div>
             </div>
           )}
@@ -271,7 +271,7 @@ export function AdminProjectVendorDetail({
         {/* Attachments */}
         {attachments.length > 0 && (
           <div className="border-t border-[var(--border)] px-6 py-4">
-            <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+            <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
               <Paperclip className="h-3 w-3" /> Documents ({attachments.length})
             </div>
             <AttachmentThumbnailGrid attachments={attachments} onOpen={setViewing} />
@@ -280,7 +280,7 @@ export function AdminProjectVendorDetail({
 
         {/* Comments */}
         <div className="border-t border-[var(--border)] px-6 py-4">
-          <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+          <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
             <MessageSquare className="h-3 w-3" /> Client comments
           </div>
           <VendorCommentsThread projectId={projectId} vendorId={vendor.id} asStaff adminCanDelete />
@@ -332,7 +332,7 @@ function Row({
   if (!value) return null;
   return (
     <div className="rounded-lg bg-[var(--cream-deep)] p-3 min-w-0">
-      <div className="mb-0.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+      <div className="mb-0.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
         {icon && <span className="[&>svg]:h-3 [&>svg]:w-3">{icon}</span>}
         {label}
       </div>

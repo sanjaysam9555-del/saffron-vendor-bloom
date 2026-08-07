@@ -103,7 +103,7 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
 
   if (!preview) {
     return (
-      <div className="mt-2 flex min-h-[148px] items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-2 text-[10px] text-[var(--charcoal)]/40">
+      <div className="mt-2 flex min-h-[148px] items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-2 text-[10px] text-[var(--charcoal)]/58">
         No Instagram preview
       </div>
     );
@@ -117,7 +117,7 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
 
   if (!hasAnything) {
     return (
-      <div className="mt-2 flex min-h-[148px] items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-2 text-[10px] text-[var(--charcoal)]/40">
+      <div className="mt-2 flex min-h-[148px] items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-2 text-[10px] text-[var(--charcoal)]/58">
         No Instagram preview
       </div>
     );
@@ -141,7 +141,7 @@ export function VendorInstagramCardStrip({ preview, hasHandle = true }: CardProp
             <span className="truncate">{preview.display_name ?? `@${preview.handle ?? ""}`}</span>
           </div>
           {preview.bio && (
-            <div className="truncate text-[10px] text-[var(--charcoal)]/60">{preview.bio}</div>
+            <div className="truncate text-[10px] text-[var(--charcoal)]/74">{preview.bio}</div>
           )}
         </div>
       </div>
@@ -199,7 +199,7 @@ export function VendorInstagramDetailBlock({ vendorId, handle, canRefresh = fals
   return (
     <div className="border-t border-[var(--border)] px-6 py-4">
       <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
           <Instagram className="h-3 w-3" /> Instagram Preview
         </div>
         {canRefresh && (
@@ -207,7 +207,7 @@ export function VendorInstagramDetailBlock({ vendorId, handle, canRefresh = fals
             type="button"
             onClick={() => refresh.mutate({ vendorId, handle })}
             disabled={refresh.isPending}
-            className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1 text-[10px] font-medium text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1 text-[10px] font-medium text-[var(--charcoal)]/82 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)] disabled:opacity-50"
           >
             <RefreshCw className={`h-3 w-3 ${refresh.isPending ? "animate-spin" : ""}`} />
             {refresh.isPending ? "Fetching…" : "Refresh"}
@@ -216,7 +216,7 @@ export function VendorInstagramDetailBlock({ vendorId, handle, canRefresh = fals
       </div>
 
       {(!preview || status !== "ok") && (
-        <div className="rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-3 text-xs text-[var(--charcoal)]/60">
+        <div className="rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/30 p-3 text-xs text-[var(--charcoal)]/74">
           {status === "not_found"
             ? "Profile is private or unavailable."
             : status === "error"
@@ -254,10 +254,10 @@ export function VendorInstagramDetailBlock({ vendorId, handle, canRefresh = fals
                 {preview.display_name ?? `@${preview.handle ?? handle}`}
               </div>
               {preview.handle && (
-                <div className="text-[11px] text-[var(--charcoal)]/55">@{preview.handle}</div>
+                <div className="text-[11px] text-[var(--charcoal)]/70">@{preview.handle}</div>
               )}
               {preview.followers_text && (
-                <div className="mt-0.5 text-[11px] text-[var(--charcoal)]/70">
+                <div className="mt-0.5 text-[11px] text-[var(--charcoal)]/82">
                   {preview.followers_text}
                 </div>
               )}

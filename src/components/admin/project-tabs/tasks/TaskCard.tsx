@@ -34,7 +34,7 @@ const fieldCls =
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/50">
+    <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/66">
       {children}
     </span>
   );
@@ -47,7 +47,7 @@ function SectionHeading({ index, title, hint }: { index: string; title: string; 
         {index}
       </span>
       <h4 className="font-display text-base text-[var(--charcoal)]">{title}</h4>
-      <span className="text-[11px] text-[var(--charcoal)]/45">{hint}</span>
+      <span className="text-[11px] text-[var(--charcoal)]/62">{hint}</span>
     </div>
   );
 }
@@ -178,7 +178,7 @@ export function TaskCard({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="What needs to happen?"
-          className="w-full bg-transparent font-display text-xl text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/30 focus:outline-none"
+          className="w-full bg-transparent font-display text-xl text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/52 focus:outline-none"
         />
       </div>
 
@@ -252,9 +252,9 @@ export function TaskCard({
           <div>
             <Label>Vendors</Label>
             {!project ? (
-              <p className="text-xs text-[var(--charcoal)]/45">Select a project first.</p>
+              <p className="text-xs text-[var(--charcoal)]/62">Select a project first.</p>
             ) : visibleVendors.length === 0 ? (
-              <p className="text-xs text-[var(--charcoal)]/45">No vendors assigned in this category.</p>
+              <p className="text-xs text-[var(--charcoal)]/62">No vendors assigned in this category.</p>
             ) : (
               <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-[var(--border)] p-1.5">
                 {visibleVendors.map((v) => {
@@ -285,7 +285,7 @@ export function TaskCard({
                           className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
                             v.quote_status === "closed"
                               ? "bg-emerald-100 text-emerald-800"
-                              : "bg-[var(--cream-deep)] text-[var(--charcoal)]/65"
+                              : "bg-[var(--cream-deep)] text-[var(--charcoal)]/78"
                           }`}
                         >
                           {QUOTE_STATUS_LABEL[v.quote_status] ?? v.quote_status}
@@ -342,7 +342,7 @@ export function TaskCard({
                       ? p === "P0"
                         ? "bg-[var(--terracotta)] text-[var(--cream)]"
                         : "bg-[var(--charcoal)] text-[var(--cream)]"
-                      : "text-[var(--charcoal)]/55 hover:bg-[var(--cream)]"
+                      : "text-[var(--charcoal)]/70 hover:bg-[var(--cream)]"
                   }`}
                 >
                   {p}
@@ -356,8 +356,8 @@ export function TaskCard({
             <Popover open={dueOpen} onOpenChange={setDueOpen}>
               <PopoverTrigger asChild>
                 <button type="button" className={`${fieldCls} flex items-center justify-between text-left`}>
-                  <span className={due ? "" : "text-[var(--charcoal)]/40"}>{due ? formatDue(due) : "Pick a date"}</span>
-                  <CalendarIcon className="h-3.5 w-3.5 text-[var(--charcoal)]/45" />
+                  <span className={due ? "" : "text-[var(--charcoal)]/58"}>{due ? formatDue(due) : "Pick a date"}</span>
+                  <CalendarIcon className="h-3.5 w-3.5 text-[var(--charcoal)]/62" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -380,7 +380,7 @@ export function TaskCard({
               <button
                 type="button"
                 onClick={() => setDue("")}
-                className="mt-1 text-[10px] text-[var(--charcoal)]/45 hover:text-[var(--terracotta)]"
+                className="mt-1 text-[10px] text-[var(--charcoal)]/62 hover:text-[var(--terracotta)]"
               >
                 Clear date
               </button>
@@ -432,7 +432,7 @@ export function TaskCard({
             <button
               type="button"
               onClick={() => remove.mutate()}
-              className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-[var(--charcoal)]/50 transition hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-[var(--charcoal)]/66 transition hover:bg-[var(--terracotta-soft)] hover:text-[var(--terracotta)]"
             >
               <Trash2 className="h-3.5 w-3.5" /> Delete
             </button>
@@ -442,7 +442,7 @@ export function TaskCard({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md px-3 py-1.5 text-sm text-[var(--charcoal)]/60 transition hover:bg-white"
+            className="rounded-md px-3 py-1.5 text-sm text-[var(--charcoal)]/74 transition hover:bg-white"
           >
             Cancel
           </button>

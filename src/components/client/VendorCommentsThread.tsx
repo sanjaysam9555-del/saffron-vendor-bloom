@@ -150,7 +150,7 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
             : "border-[var(--border)] bg-white"
         } ${isNew ? "animate-ring-flash ring-1 ring-[var(--terracotta)]/40" : ""}`}
       >
-        <div className="mb-0.5 flex items-baseline justify-between gap-2 text-[11px] text-[var(--charcoal)]/60">
+        <div className="mb-0.5 flex items-baseline justify-between gap-2 text-[11px] text-[var(--charcoal)]/74">
           <span className="inline-flex items-center gap-1 font-medium text-[var(--charcoal)]/80">
             {isStaff && <Sparkles className="h-3 w-3 text-[var(--terracotta)]" />}
             <span className={isStaff ? "text-[var(--terracotta)]" : ""}>{c.author_name}</span>
@@ -165,7 +165,7 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
               <button
                 type="button"
                 onClick={() => setReplyTo(c)}
-                className="rounded p-1 text-[var(--charcoal)]/55 hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
+                className="rounded p-1 text-[var(--charcoal)]/70 hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
                 title="Reply"
               >
                 <Reply className="h-3.5 w-3.5" />
@@ -195,16 +195,16 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">
+      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">
         <MessageSquare className="h-3 w-3" /> Comments ({comments.length})
       </div>
 
       {isLoading ? (
-        <div className="flex items-center gap-2 text-xs text-[var(--charcoal)]/55">
+        <div className="flex items-center gap-2 text-xs text-[var(--charcoal)]/70">
           <Loader2 className="h-3 w-3 animate-spin" /> Loading…
         </div>
       ) : comments.length === 0 ? (
-        <div className="rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/40 px-3 py-3 text-xs text-[var(--charcoal)]/55">
+        <div className="rounded-md border border-dashed border-[var(--border)] bg-[var(--cream)]/40 px-3 py-3 text-xs text-[var(--charcoal)]/70">
           No comments yet. {canPost ? "Add the first one below." : ""}
         </div>
       ) : (
@@ -260,7 +260,7 @@ export function VendorCommentsThread({ projectId, vendorId, asStaff = false, adm
             <div className="text-xs text-red-600">{(post.error as Error).message}</div>
           )}
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] text-[var(--charcoal)]/45">
+            <span className="text-[10px] text-[var(--charcoal)]/62">
               {asStaff
                 ? "Visible to the client and the Saffron team."
                 : "Visible to the Saffron team and other clients on this project."}

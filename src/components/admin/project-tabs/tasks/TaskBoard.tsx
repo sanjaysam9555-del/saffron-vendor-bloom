@@ -40,17 +40,17 @@ export function TaskBoard({
           >
             <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
               <span className={`h-2 w-2 rounded-full ${STAGE_ACCENT[stage]}`} />
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/70">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--charcoal)]/82">
                 {STAGE_LABEL[stage]}
               </span>
-              <span className="ml-auto rounded-full bg-white px-1.5 text-[10px] text-[var(--charcoal)]/55">
+              <span className="ml-auto rounded-full bg-white px-1.5 text-[10px] text-[var(--charcoal)]/70">
                 {items.length}
               </span>
             </div>
 
             <div className="flex min-h-[80px] flex-col gap-2 p-2">
               {items.length === 0 ? (
-                <p className="px-1 py-4 text-center text-[11px] text-[var(--charcoal)]/35">Nothing here</p>
+                <p className="px-1 py-4 text-center text-[11px] text-[var(--charcoal)]/55">Nothing here</p>
               ) : (
                 items.map((t) => {
                   const overdue = isOverdue(t.due_date, t.stage);
@@ -66,7 +66,7 @@ export function TaskBoard({
                         <PriorityChip priority={t.priority} />
                         <span
                           className={`min-w-0 flex-1 text-sm leading-snug ${
-                            t.stage === "done" ? "text-[var(--charcoal)]/45" : "text-[var(--charcoal)]"
+                            t.stage === "done" ? "text-[var(--charcoal)]/62" : "text-[var(--charcoal)]"
                           }`}
                         >
                           {t.title}
@@ -80,19 +80,19 @@ export function TaskBoard({
                       )}
 
                       {t.task_category && (
-                        <div className="mt-1.5 inline-flex rounded bg-[var(--cream-deep)] px-1.5 py-0.5 text-[10px] text-[var(--charcoal)]/60">
+                        <div className="mt-1.5 inline-flex rounded bg-[var(--cream-deep)] px-1.5 py-0.5 text-[10px] text-[var(--charcoal)]/74">
                           {t.task_category}
                         </div>
                       )}
 
                       {t.vendors.length > 0 && (
-                        <div className="mt-1.5 flex items-center gap-1 text-[10px] text-[var(--charcoal)]/60">
+                        <div className="mt-1.5 flex items-center gap-1 text-[10px] text-[var(--charcoal)]/74">
                           <Users className="h-3 w-3 shrink-0" />
                           <span className="truncate">{t.vendors.map((v) => v.vendor_name).join(", ")}</span>
                         </div>
                       )}
 
-                      <div className="mt-2 flex items-center gap-2 text-[10px] text-[var(--charcoal)]/55">
+                      <div className="mt-2 flex items-center gap-2 text-[10px] text-[var(--charcoal)]/70">
                         {t.due_date && (
                           <span className={`inline-flex items-center gap-1 ${overdue ? "font-semibold text-[var(--terracotta)]" : ""}`}>
                             <CalendarClock className="h-3 w-3" /> {formatDue(t.due_date)}

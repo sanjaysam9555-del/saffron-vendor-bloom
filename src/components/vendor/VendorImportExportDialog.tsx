@@ -107,14 +107,14 @@ export function VendorImportExportDialog({ open, vendors, onClose, onImport }: P
         <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] bg-white px-6 py-4">
           <div className="min-w-0">
             <h2 className="font-display text-2xl font-semibold text-[var(--charcoal)]">Import / Export Vendors</h2>
-            <p className="mt-1 text-xs text-[var(--charcoal)]/55">
+            <p className="mt-1 text-xs text-[var(--charcoal)]/70">
               {vendors.length} vendor{vendors.length === 1 ? "" : "s"} currently in your library
             </p>
           </div>
           <button
             onClick={handleClose}
             disabled={busy}
-            className="rounded-md p-1.5 text-[var(--charcoal)]/55 hover:bg-[var(--cream-deep)] disabled:opacity-50"
+            className="rounded-md p-1.5 text-[var(--charcoal)]/70 hover:bg-[var(--cream-deep)] disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
@@ -131,7 +131,7 @@ export function VendorImportExportDialog({ open, vendors, onClose, onImport }: P
               className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium capitalize transition-colors ${
                 tab === t
                   ? "border-[var(--terracotta)] text-[var(--terracotta)]"
-                  : "border-transparent text-[var(--charcoal)]/55 hover:text-[var(--charcoal)]"
+                  : "border-transparent text-[var(--charcoal)]/70 hover:text-[var(--charcoal)]"
               }`}
             >
               {t}
@@ -221,7 +221,7 @@ function ExportPane({ vendors, onExport }: { vendors: Vendor[]; onExport: () => 
         <p className="text-sm font-medium text-[var(--charcoal)]">
           Export {vendors.length} vendor{vendors.length === 1 ? "" : "s"} to CSV
         </p>
-        <p className="mt-1 text-xs text-[var(--charcoal)]/55">
+        <p className="mt-1 text-xs text-[var(--charcoal)]/70">
           Every field currently on each vendor's profile is included — opens cleanly in Excel, Sheets, or Numbers.
         </p>
       </div>
@@ -252,7 +252,7 @@ function PickStep({
     <div className="space-y-5">
       <div className="rounded-lg border border-[var(--border)] bg-white p-4">
         <h3 className="text-sm font-semibold text-[var(--charcoal)]">How this works</h3>
-        <ol className="mt-2 list-decimal space-y-1.5 pl-4 text-xs text-[var(--charcoal)]/70">
+        <ol className="mt-2 list-decimal space-y-1.5 pl-4 text-xs text-[var(--charcoal)]/82">
           <li>
             Download the template below — it has every column the app understands, with one example row showing the
             expected format.
@@ -272,7 +272,7 @@ function PickStep({
         </button>
       </div>
 
-      <details className="rounded-lg border border-[var(--border)] bg-white p-4 text-xs text-[var(--charcoal)]/70">
+      <details className="rounded-lg border border-[var(--border)] bg-white p-4 text-xs text-[var(--charcoal)]/82">
         <summary className="cursor-pointer text-sm font-semibold text-[var(--charcoal)]">
           Column reference ({VENDOR_CSV_FIELDS.length} columns)
         </summary>
@@ -284,7 +284,7 @@ function PickStep({
             </div>
           ))}
         </div>
-        <p className="mt-2 text-[10px] text-[var(--charcoal)]/50">* Required</p>
+        <p className="mt-2 text-[10px] text-[var(--charcoal)]/66">* Required</p>
       </details>
 
       <label
@@ -302,7 +302,7 @@ function PickStep({
       >
         <Upload className="h-8 w-8 text-[var(--terracotta)]" />
         <p className="text-sm font-medium text-[var(--charcoal)]">Click to choose a CSV file, or drag it here</p>
-        <p className="text-xs text-[var(--charcoal)]/55">.csv files only</p>
+        <p className="text-xs text-[var(--charcoal)]/70">.csv files only</p>
         <input
           ref={fileInputRef}
           type="file"
@@ -338,7 +338,7 @@ function PreviewStep({
 }) {
   return (
     <div className="space-y-4">
-      <p className="text-xs text-[var(--charcoal)]/55">
+      <p className="text-xs text-[var(--charcoal)]/70">
         Previewing <span className="font-medium text-[var(--charcoal)]">{fileName}</span> —{" "}
         <button onClick={onPickAnother} className="text-[var(--terracotta)] hover:underline">
           choose a different file
@@ -364,7 +364,7 @@ function PreviewStep({
       </div>
 
       {unrecognizedColumns.length > 0 && (
-        <p className="text-xs text-[var(--charcoal)]/50">
+        <p className="text-xs text-[var(--charcoal)]/66">
           Ignored columns not recognized: {unrecognizedColumns.join(", ")}
         </p>
       )}
@@ -382,9 +382,9 @@ function PreviewStep({
           <tbody className="divide-y divide-[var(--border)]">
             {rows.map((r) => (
               <tr key={r.rowNumber} className={r.input ? "" : "bg-[var(--terracotta-soft)]/40"}>
-                <td className="px-3 py-2 text-[var(--charcoal)]/50">{r.rowNumber}</td>
+                <td className="px-3 py-2 text-[var(--charcoal)]/66">{r.rowNumber}</td>
                 <td className="px-3 py-2 text-[var(--charcoal)]">{r.input?.vendor_name || "—"}</td>
-                <td className="px-3 py-2 text-[var(--charcoal)]/70">
+                <td className="px-3 py-2 text-[var(--charcoal)]/82">
                   {r.input?.category || "—"}
                   {r.isNewCategory && (
                     <span className="ml-1.5 rounded-full bg-[var(--gold-soft)] px-1.5 py-0.5 text-[9px] font-medium text-[hsl(38_45%_28%)]">
@@ -420,7 +420,7 @@ function DoneStep({ importedCount, skippedCount }: { importedCount: number; skip
         Imported {importedCount} vendor{importedCount === 1 ? "" : "s"}
       </p>
       {skippedCount > 0 && (
-        <p className="text-xs text-[var(--charcoal)]/55">
+        <p className="text-xs text-[var(--charcoal)]/70">
           {skippedCount} row{skippedCount === 1 ? "" : "s"} were skipped due to errors — fix them and re-import if needed.
         </p>
       )}

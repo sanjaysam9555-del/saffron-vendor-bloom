@@ -123,12 +123,12 @@ function SystemTasksPage() {
       <div className="h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-2 h-full px-3 sm:gap-4 sm:px-6">
           <div className="relative min-w-0 flex-1 sm:max-w-[320px]">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/35" />
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/55" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search tasks, projects, vendors…"
-              className="w-full rounded-md border border-[var(--border)] bg-white py-1.5 pl-8 pr-3 text-sm text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/40 focus:border-[var(--terracotta)] focus:outline-none focus:ring-2 focus:ring-[var(--terracotta-soft)]"
+              className="w-full rounded-md border border-[var(--border)] bg-white py-1.5 pl-8 pr-3 text-sm text-[var(--charcoal)] placeholder:text-[var(--charcoal)]/58 focus:border-[var(--terracotta)] focus:outline-none focus:ring-2 focus:ring-[var(--terracotta-soft)]"
             />
           </div>
 
@@ -212,7 +212,7 @@ function SystemTasksPage() {
                     key={v}
                     onClick={() => setView(v)}
                     className={`inline-flex flex-1 items-center justify-center gap-1 px-2.5 py-1.5 text-xs transition sm:flex-initial ${
-                      view === v ? "bg-[var(--charcoal)] text-[var(--cream)]" : "bg-white text-[var(--charcoal)]/60"
+                      view === v ? "bg-[var(--charcoal)] text-[var(--cream)]" : "bg-white text-[var(--charcoal)]/74"
                     }`}
                   >
                     {v === "board" ? <LayoutGrid className="h-3.5 w-3.5" /> : <Rows3 className="h-3.5 w-3.5" />}
@@ -240,13 +240,13 @@ function SystemTasksPage() {
 
           {/* ── Views ── */}
           {isLoading ? (
-            <div className="rounded-xl border border-[var(--border)] bg-white p-10 text-center text-sm text-[var(--charcoal)]/50">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-10 text-center text-sm text-[var(--charcoal)]/66">
               Loading tasks…
             </div>
           ) : tasks.length === 0 ? (
             <div className="rounded-xl border border-dashed border-[var(--border)] bg-white p-10 text-center">
-              <CheckSquare className="mx-auto h-6 w-6 text-[var(--charcoal)]/25" />
-              <p className="mt-2 text-sm text-[var(--charcoal)]/55">No tasks yet across any project.</p>
+              <CheckSquare className="mx-auto h-6 w-6 text-[var(--charcoal)]/50" />
+              <p className="mt-2 text-sm text-[var(--charcoal)]/70">No tasks yet across any project.</p>
               <button
                 onClick={() => setComposing(true)}
                 className="mt-3 inline-flex items-center gap-1 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)]"
@@ -255,7 +255,7 @@ function SystemTasksPage() {
               </button>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[var(--border)] bg-white py-10 text-center text-sm text-[var(--charcoal)]/50">
+            <div className="rounded-xl border border-dashed border-[var(--border)] bg-white py-10 text-center text-sm text-[var(--charcoal)]/66">
               No tasks match this view.
             </div>
           ) : view === "board" ? (

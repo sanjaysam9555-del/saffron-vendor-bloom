@@ -136,9 +136,9 @@ export function ProjectOverviewTab({
           </div>
           <div className="divide-y divide-[var(--border)]">
             {tasksQ.isLoading ? (
-              <div className="p-4 text-sm text-[var(--charcoal)]/50">Loading…</div>
+              <div className="p-4 text-sm text-[var(--charcoal)]/66">Loading…</div>
             ) : openTasks.length === 0 ? (
-              <div className="p-6 text-center text-sm text-[var(--charcoal)]/45">Nothing open — all caught up.</div>
+              <div className="p-6 text-center text-sm text-[var(--charcoal)]/62">Nothing open — all caught up.</div>
             ) : (
               openTasks.slice(0, 6).map((t) => (
                 <div key={t.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
@@ -158,9 +158,9 @@ export function ProjectOverviewTab({
           </div>
           <div className="divide-y divide-[var(--border)]">
             {deadlinesQ.isLoading ? (
-              <div className="p-4 text-sm text-[var(--charcoal)]/50">Loading…</div>
+              <div className="p-4 text-sm text-[var(--charcoal)]/66">Loading…</div>
             ) : urgentCategories.length === 0 ? (
-              <div className="p-6 text-center text-sm text-[var(--charcoal)]/45">Nothing urgent right now.</div>
+              <div className="p-6 text-center text-sm text-[var(--charcoal)]/62">Nothing urgent right now.</div>
             ) : (
               urgentCategories.map((d) => (
                 <div key={d.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
@@ -185,9 +185,9 @@ export function ProjectOverviewTab({
           </div>
           <div className="divide-y divide-[var(--border)]">
             {budgetQ.isLoading ? (
-              <div className="p-4 text-sm text-[var(--charcoal)]/50">Loading…</div>
+              <div className="p-4 text-sm text-[var(--charcoal)]/66">Loading…</div>
             ) : !budget || budget.categories.length === 0 ? (
-              <div className="p-6 text-center text-sm text-[var(--charcoal)]/45">No categories yet.</div>
+              <div className="p-6 text-center text-sm text-[var(--charcoal)]/62">No categories yet.</div>
             ) : (
               budget.categories.map((c) => {
                 const pct = c.planned > 0 ? Math.min(100, Math.round((c.actualClosed / c.planned) * 100)) : c.actualClosed > 0 ? 100 : 0;
@@ -195,7 +195,7 @@ export function ProjectOverviewTab({
                   <div key={c.category} className="px-4 py-2.5">
                     <div className="flex items-baseline justify-between text-xs">
                       <span className="text-[var(--charcoal)]/75">{c.category}</span>
-                      <span className="text-[var(--charcoal)]/45">
+                      <span className="text-[var(--charcoal)]/62">
                         {formatINRShort(c.actualClosed)} / {formatINRShort(c.planned)}
                       </span>
                     </div>
@@ -217,9 +217,9 @@ export function ProjectOverviewTab({
           </div>
           <div className="divide-y divide-[var(--border)]">
             {commentsQ.isLoading ? (
-              <div className="p-4 text-sm text-[var(--charcoal)]/50">Loading…</div>
+              <div className="p-4 text-sm text-[var(--charcoal)]/66">Loading…</div>
             ) : recentComments.length === 0 ? (
-              <div className="p-6 text-center text-sm text-[var(--charcoal)]/45">No comments yet.</div>
+              <div className="p-6 text-center text-sm text-[var(--charcoal)]/62">No comments yet.</div>
             ) : (
               recentComments.map((c) => (
                 <button
@@ -232,7 +232,7 @@ export function ProjectOverviewTab({
                     <div className="truncate text-xs font-medium text-[var(--terracotta)]">{c.vendor_name}</div>
                     <p className="mt-0.5 line-clamp-1 text-sm text-[var(--charcoal)]">{c.body}</p>
                   </div>
-                  <span className="shrink-0 text-[10px] text-[var(--charcoal)]/40">{timeAgo(c.created_at)}</span>
+                  <span className="shrink-0 text-[10px] text-[var(--charcoal)]/58">{timeAgo(c.created_at)}</span>
                 </button>
               ))
             )}
@@ -247,8 +247,8 @@ function StatCard({ label, value, hint }: { label: string; value: string; hint?:
   return (
     <div className="flex flex-col rounded-lg border border-[var(--border)] bg-white p-4">
       <div className="font-display text-2xl font-semibold leading-tight text-[var(--charcoal)]">{value}</div>
-      {hint && <div className="mt-1 text-[11px] text-[var(--charcoal)]/50">{hint}</div>}
-      <div className="mt-auto pt-3 text-[10px] font-medium uppercase tracking-widest text-[var(--charcoal)]/55">{label}</div>
+      {hint && <div className="mt-1 text-[11px] text-[var(--charcoal)]/66">{hint}</div>}
+      <div className="mt-auto pt-3 text-[10px] font-medium uppercase tracking-widest text-[var(--charcoal)]/70">{label}</div>
     </div>
   );
 }
@@ -259,7 +259,7 @@ export function PriorityPill({ priority }: { priority: "low" | "medium" | "high"
       ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
       : priority === "medium"
         ? "bg-[var(--gold-soft)] text-[hsl(38_45%_28%)]"
-        : "bg-[var(--cream-deep)] text-[var(--charcoal)]/55";
+        : "bg-[var(--cream-deep)] text-[var(--charcoal)]/70";
   return (
     <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${cls}`}>
       {priority}

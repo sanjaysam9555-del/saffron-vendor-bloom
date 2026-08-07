@@ -177,7 +177,7 @@ function AdminCalendarPage() {
       {/* Secondary toolbar */}
       <div className="h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 h-full px-3 sm:px-6">
-          <span className="hidden text-sm text-[var(--charcoal)]/55 sm:inline">
+          <span className="hidden text-sm text-[var(--charcoal)]/70 sm:inline">
             Weddings, deadlines and payment dates across every project.
           </span>
           <div className="ml-auto flex items-center gap-1.5">
@@ -191,14 +191,14 @@ function AdminCalendarPage() {
               <button
                 onClick={() => shiftMonth(-1)}
                 aria-label="Previous month"
-                className="px-2 py-1.5 text-[var(--charcoal)]/60 transition hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
+                className="px-2 py-1.5 text-[var(--charcoal)]/74 transition hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 onClick={() => shiftMonth(1)}
                 aria-label="Next month"
-                className="border-l border-[var(--border)] px-2 py-1.5 text-[var(--charcoal)]/60 transition hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
+                className="border-l border-[var(--border)] px-2 py-1.5 text-[var(--charcoal)]/74 transition hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -221,7 +221,7 @@ function AdminCalendarPage() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
               <h2 className="font-display text-2xl text-[var(--charcoal)]">
                 {MONTHS[cursor.m]}{" "}
-                <span className="text-[var(--charcoal)]/40">{cursor.y}</span>
+                <span className="text-[var(--charcoal)]/58">{cursor.y}</span>
               </h2>
               <div className="flex flex-wrap items-center gap-1.5">
                 {KIND_ORDER.map((k) => {
@@ -233,8 +233,8 @@ function AdminCalendarPage() {
                       title={off ? `Show ${KIND_META[k].label.toLowerCase()}` : `Hide ${KIND_META[k].label.toLowerCase()}`}
                       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
                         off
-                          ? "border-[var(--border)] bg-white text-[var(--charcoal)]/35"
-                          : "border-[var(--border)] bg-[var(--cream)]/60 text-[var(--charcoal)]/70"
+                          ? "border-[var(--border)] bg-white text-[var(--charcoal)]/55"
+                          : "border-[var(--border)] bg-[var(--cream)]/60 text-[var(--charcoal)]/82"
                       }`}
                     >
                       <span className={`h-2 w-2 rounded-full ${off ? "bg-[var(--charcoal)]/20" : KIND_META[k].dot}`} />
@@ -250,7 +250,7 @@ function AdminCalendarPage() {
               {WEEKDAYS.map((w) => (
                 <div
                   key={w}
-                  className="px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/45"
+                  className="px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/62"
                 >
                   <span className="hidden sm:inline">{w}</span>
                   <span className="sm:hidden">{w[0]}</span>
@@ -288,7 +288,7 @@ function AdminCalendarPage() {
                           ? "bg-[var(--terracotta)] font-semibold text-[var(--cream)]"
                           : isSelected
                           ? "text-[var(--terracotta)]"
-                          : "text-[var(--charcoal)]/70"
+                          : "text-[var(--charcoal)]/82"
                       }`}
                     >
                       {dayNum}
@@ -315,7 +315,7 @@ function AdminCalendarPage() {
                               className={`h-1.5 w-1.5 shrink-0 rounded-full ${KIND_META[e.kind].dot}`}
                             />
                           ))}
-                          <span className="text-[10px] font-medium text-[var(--charcoal)]/45">
+                          <span className="text-[10px] font-medium text-[var(--charcoal)]/62">
                             +{dayEvents.length - 2}
                           </span>
                         </div>
@@ -332,14 +332,14 @@ function AdminCalendarPage() {
             {/* Selected day */}
             <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
               <div className="border-b border-[var(--border)] bg-[var(--cream)]/40 px-4 py-3">
-                <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/45">
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/62">
                   {selected === today ? "Today" : "Selected"}
                 </div>
                 <div className="font-display text-lg text-[var(--charcoal)]">{prettyDate(selected)}</div>
               </div>
               <div className="max-h-[300px] overflow-y-auto p-3">
                 {selectedEvents.length === 0 ? (
-                  <p className="px-1 py-6 text-center text-xs text-[var(--charcoal)]/45">
+                  <p className="px-1 py-6 text-center text-xs text-[var(--charcoal)]/62">
                     Nothing scheduled.
                   </p>
                 ) : (
@@ -361,7 +361,7 @@ function AdminCalendarPage() {
                 {isLoading ? (
                   <LoadingState label="Loading events" className="py-6" />
                 ) : upcoming.length === 0 ? (
-                  <p className="px-1 py-6 text-center text-xs text-[var(--charcoal)]/45">
+                  <p className="px-1 py-6 text-center text-xs text-[var(--charcoal)]/62">
                     Nothing on the horizon.
                   </p>
                 ) : (
@@ -401,9 +401,9 @@ function EventRow({
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium text-[var(--charcoal)]">{event.title}</div>
         {event.subtitle && (
-          <div className="truncate text-[11px] text-[var(--charcoal)]/55">{event.subtitle}</div>
+          <div className="truncate text-[11px] text-[var(--charcoal)]/70">{event.subtitle}</div>
         )}
-        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] text-[var(--charcoal)]/45">
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] text-[var(--charcoal)]/62">
           {showDate && (
             <span>
               {prettyDate(event.date)}

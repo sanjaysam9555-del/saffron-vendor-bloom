@@ -9,7 +9,7 @@ export function AdminLink() {
   return (
     <Link
       to="/admin/users"
-      className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-xs text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+      className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-white px-2.5 py-1.5 text-xs text-[var(--charcoal)]/82 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
     >
       <Shield className="h-3.5 w-3.5" /> Admin
     </Link>
@@ -33,7 +33,7 @@ export function LogoutButton() {
       onClick={handleSignOut}
       title="Sign out"
       aria-label="Sign out"
-      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] bg-white text-[var(--charcoal)]/82 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
     >
       <LogOut className="h-3.5 w-3.5" />
     </button>

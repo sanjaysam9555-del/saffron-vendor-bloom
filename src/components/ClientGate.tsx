@@ -28,7 +28,7 @@ export function ClientGate({ children }: { children: ReactNode }) {
       <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] px-6">
         <div className="max-w-md rounded-xl bg-white p-6 text-center shadow-sm">
           <h2 className="font-display text-xl text-[var(--charcoal)]">Account not ready</h2>
-          <p className="mt-2 text-sm text-[var(--charcoal)]/65">
+          <p className="mt-2 text-sm text-[var(--charcoal)]/78">
             We couldn't find a project linked to this account yet. Please contact your
             Saffron planner if you believe this is a mistake.
           </p>

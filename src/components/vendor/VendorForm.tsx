@@ -249,7 +249,7 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
                   <button
                     type="button"
                     onClick={() => { set("category", prevCategoryRef.current); setShowNewCategory(false); }}
-                    className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--charcoal)]/70 hover:bg-white"
+                    className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--charcoal)]/82 hover:bg-white"
                   >
                     Cancel
                   </button>
@@ -347,7 +347,7 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
           <div className="mb-2 flex items-center gap-2 font-display text-lg text-[var(--terracotta)]">
             <Paperclip className="h-4 w-4" /> Attachments
           </div>
-          <p className="mb-3 text-xs text-[var(--charcoal)]/60">
+          <p className="mb-3 text-xs text-[var(--charcoal)]/74">
             PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, JPG, PNG, WEBP — max 20 MB each.
           </p>
 
@@ -368,7 +368,7 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
           >
             <Upload className="mb-1.5 h-5 w-5 text-[var(--terracotta)]" />
             <div className="text-sm font-medium text-[var(--charcoal)]">Drag & drop files here</div>
-            <div className="text-xs text-[var(--charcoal)]/55">or click to browse</div>
+            <div className="text-xs text-[var(--charcoal)]/70">or click to browse</div>
             <input
               ref={fileInputRef}
               type="file"
@@ -390,19 +390,19 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
                   className="flex items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm"
                 >
                   <div className="flex min-w-0 items-center gap-2">
-                    <Paperclip className="h-3.5 w-3.5 shrink-0 text-[var(--charcoal)]/55" />
+                    <Paperclip className="h-3.5 w-3.5 shrink-0 text-[var(--charcoal)]/70" />
                     <span className="truncate">{att.file_name}</span>
-                    <span className="shrink-0 text-xs text-[var(--charcoal)]/50">
+                    <span className="shrink-0 text-xs text-[var(--charcoal)]/66">
                       {formatFileSize(att.size_bytes)}
                     </span>
-                    <span className="shrink-0 rounded-full bg-[var(--cream-deep)] px-1.5 py-0.5 text-[10px] text-[var(--charcoal)]/55">
+                    <span className="shrink-0 rounded-full bg-[var(--cream-deep)] px-1.5 py-0.5 text-[10px] text-[var(--charcoal)]/70">
                       saved
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => removeExisting(att)}
-                    className="rounded p-1 text-[var(--charcoal)]/55 hover:bg-red-50 hover:text-red-600"
+                    className="rounded p-1 text-[var(--charcoal)]/70 hover:bg-red-50 hover:text-red-600"
                     title="Remove"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -417,7 +417,7 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
                   <div className="flex min-w-0 items-center gap-2">
                     <Paperclip className="h-3.5 w-3.5 shrink-0 text-[var(--terracotta)]" />
                     <span className="truncate">{f.name}</span>
-                    <span className="shrink-0 text-xs text-[var(--charcoal)]/50">
+                    <span className="shrink-0 text-xs text-[var(--charcoal)]/66">
                       {formatFileSize(f.size)}
                     </span>
                     <span className="shrink-0 rounded-full bg-[var(--terracotta-soft)] px-1.5 py-0.5 text-[10px] text-[var(--terracotta)]">
@@ -427,7 +427,7 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
                   <button
                     type="button"
                     onClick={() => removePending(i)}
-                    className="rounded p-1 text-[var(--charcoal)]/55 hover:bg-red-50 hover:text-red-600"
+                    className="rounded p-1 text-[var(--charcoal)]/70 hover:bg-red-50 hover:text-red-600"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -444,7 +444,7 @@ export function VendorForm({ open, initial, onClose, onSubmit }: VendorFormProps
             type="button"
             onClick={onClose}
             disabled={submitting || saved}
-            className="rounded-md px-4 py-2 text-sm text-[var(--charcoal)]/65 hover:bg-[var(--cream-deep)] disabled:opacity-40"
+            className="rounded-md px-4 py-2 text-sm text-[var(--charcoal)]/78 hover:bg-[var(--cream-deep)] disabled:opacity-40"
           >
             Cancel
           </button>
@@ -493,7 +493,7 @@ const inputCls = "w-full rounded-md border border-[var(--border)] bg-white px-3 
 function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (
     <label className={`block ${className ?? ""}`}>
-      <div className="mb-1 text-xs font-medium text-[var(--charcoal)]/65">{label}</div>
+      <div className="mb-1 text-xs font-medium text-[var(--charcoal)]/78">{label}</div>
       {children}
     </label>
   );

@@ -5,10 +5,10 @@ import { listProjectQuotesAllVendors } from "@/lib/quote-api";
 import { formatINR, ordinal, buildQuoteSeqMap, QUOTE_STATUS_LABEL, type QuoteStatus } from "@/lib/quote-types";
 
 const STATUS_CLS: Record<QuoteStatus, string> = {
-  received: "bg-[var(--cream-deep)] text-[var(--charcoal)]/70",
+  received: "bg-[var(--cream-deep)] text-[var(--charcoal)]/82",
   revised: "bg-[var(--terracotta-soft)] text-[var(--terracotta)]",
   closed: "bg-emerald-100 text-emerald-800",
-  withdrawn: "bg-[var(--charcoal)]/10 text-[var(--charcoal)]/45 line-through",
+  withdrawn: "bg-[var(--charcoal)]/10 text-[var(--charcoal)]/62 line-through",
 };
 
 const STATUS_ORDER: QuoteStatus[] = ["received", "revised", "closed", "withdrawn"];
@@ -78,7 +78,7 @@ export function ProjectQuotesTab({
     });
 
   if (isLoading) {
-    return <div className="rounded-xl border border-[var(--border)] bg-white p-6 text-center text-sm text-[var(--charcoal)]/50">Loading…</div>;
+    return <div className="rounded-xl border border-[var(--border)] bg-white p-6 text-center text-sm text-[var(--charcoal)]/66">Loading…</div>;
   }
 
   return (
@@ -101,7 +101,7 @@ export function ProjectQuotesTab({
                 className={`rounded-full px-2.5 py-1 text-[11px] font-medium capitalize transition ${
                   active
                     ? "bg-[var(--terracotta)] text-[var(--cream)]"
-                    : "border border-[var(--border)] bg-white text-[var(--charcoal)]/65 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+                    : "border border-[var(--border)] bg-white text-[var(--charcoal)]/78 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
                 }`}
               >
                 {QUOTE_STATUS_LABEL[s]}
@@ -130,7 +130,7 @@ export function ProjectQuotesTab({
       </div>
 
       {byVendor.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--border)] bg-white py-10 text-center text-sm text-[var(--charcoal)]/50">
+        <div className="rounded-xl border border-dashed border-[var(--border)] bg-white py-10 text-center text-sm text-[var(--charcoal)]/66">
           {quotes.length === 0 ? "No quotes yet on this project." : "No quotes match this filter."}
         </div>
       ) : (
@@ -147,11 +147,11 @@ export function ProjectQuotesTab({
                 >
                   <div>
                     <h3 className="font-display text-lg text-[var(--charcoal)] hover:text-[var(--terracotta)]">{vendorName}</h3>
-                    <p className="text-xs text-[var(--charcoal)]/50">
+                    <p className="text-xs text-[var(--charcoal)]/66">
                       {vqs.length} quote{vqs.length === 1 ? "" : "s"}{booked ? " · Booked" : ""}
                     </p>
                   </div>
-                  {onOpenVendorQuotes && <Pencil className="h-3.5 w-3.5 shrink-0 text-[var(--charcoal)]/30" />}
+                  {onOpenVendorQuotes && <Pencil className="h-3.5 w-3.5 shrink-0 text-[var(--charcoal)]/52" />}
                 </button>
                 <div className="divide-y divide-[var(--border)]">
                   {vqs.map((q) => {
@@ -178,17 +178,17 @@ export function ProjectQuotesTab({
                                 Final
                               </span>
                             )}
-                            <span className="text-[11px] text-[var(--charcoal)]/40">
+                            <span className="text-[11px] text-[var(--charcoal)]/58">
                               {new Date(q.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                             </span>
                           </div>
-                          {q.notes && <p className="mt-1 text-xs text-[var(--charcoal)]/55">{q.notes}</p>}
+                          {q.notes && <p className="mt-1 text-xs text-[var(--charcoal)]/70">{q.notes}</p>}
                           {q.files.length > 0 && (
                             <div className="mt-1.5 flex flex-wrap gap-1.5">
                               {q.files.map((f) => (
                                 <span
                                   key={f.id}
-                                  className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-1.5 py-0.5 text-[10px] text-[var(--charcoal)]/60"
+                                  className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-1.5 py-0.5 text-[10px] text-[var(--charcoal)]/74"
                                 >
                                   <FileText className="h-2.5 w-2.5" />
                                   {f.file_name}
@@ -214,7 +214,7 @@ export function ProjectQuotesTab({
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-[var(--border)] bg-white p-4 shadow-sm">
-      <div className="text-xs text-[var(--charcoal)]/55">{label}</div>
+      <div className="text-xs text-[var(--charcoal)]/70">{label}</div>
       <div className="mt-1 font-display text-2xl font-semibold text-[var(--charcoal)]">{value}</div>
     </div>
   );

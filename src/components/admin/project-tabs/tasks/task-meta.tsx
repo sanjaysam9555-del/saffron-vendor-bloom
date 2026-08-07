@@ -13,7 +13,7 @@ const PRIORITY_CLASS: Record<TaskPriority, string> = {
   P0: "bg-[var(--terracotta)] text-[var(--cream)]",
   P1: "bg-[var(--terracotta-soft)] text-[var(--terracotta)]",
   P2: "bg-[var(--gold-soft)] text-[hsl(38_45%_28%)]",
-  P3: "bg-[var(--cream-deep)] text-[var(--charcoal)]/55",
+  P3: "bg-[var(--cream-deep)] text-[var(--charcoal)]/70",
 };
 
 export const STAGE_ORDER: TaskStage[] = [
@@ -37,7 +37,7 @@ export const STAGE_LABEL: Record<TaskStage, string> = {
 };
 
 const STAGE_CLASS: Record<TaskStage, string> = {
-  not_picked: "bg-[var(--cream-deep)] text-[var(--charcoal)]/60",
+  not_picked: "bg-[var(--cream-deep)] text-[var(--charcoal)]/74",
   in_progress: "bg-sky-100 text-sky-800",
   pending_client: "bg-violet-100 text-violet-800",
   pending_vendor: "bg-amber-100 text-amber-900",

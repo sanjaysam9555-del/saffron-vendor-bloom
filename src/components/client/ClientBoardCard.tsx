@@ -53,7 +53,7 @@ export function ClientBoardCard({ vendor, onView }: Props) {
             {...attributes}
             {...listeners}
             aria-label="Drag vendor"
-            className="-ml-0.5 mt-0.5 cursor-grab touch-none rounded p-0.5 text-[var(--charcoal)]/30 hover:bg-[var(--cream)] hover:text-[var(--charcoal)]/70 active:cursor-grabbing"
+            className="-ml-0.5 mt-0.5 cursor-grab touch-none rounded p-0.5 text-[var(--charcoal)]/52 hover:bg-[var(--cream)] hover:text-[var(--charcoal)]/82 active:cursor-grabbing"
             onClick={(e) => e.stopPropagation()}
           >
             <GripVertical className="h-3.5 w-3.5" />
@@ -74,12 +74,12 @@ export function ClientBoardCard({ vendor, onView }: Props) {
                 {vendor.category}
               </span>
               {vendor.subcategory && (
-                <span className="inline-flex items-center rounded-full bg-[var(--cream-deep)] px-1.5 py-0.5 text-[9px] text-[var(--charcoal)]/65">
+                <span className="inline-flex items-center rounded-full bg-[var(--cream-deep)] px-1.5 py-0.5 text-[9px] text-[var(--charcoal)]/78">
                   {vendor.subcategory}
                 </span>
               )}
             </div>
-            <div className="mt-1.5 space-y-0.5 text-[11px] text-[var(--charcoal)]/70">
+            <div className="mt-1.5 space-y-0.5 text-[11px] text-[var(--charcoal)]/82">
               {vendor.location && (
                 <div className="flex items-center gap-1">
                   <MapPin className="h-3 w-3 shrink-0" />

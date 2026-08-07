@@ -106,7 +106,7 @@ export function CategoryManager({ vendors, onClose }: CategoryManagerProps) {
           </button>
         </div>
 
-        <div className="px-5 py-3 text-xs text-[var(--charcoal)]/65">
+        <div className="px-5 py-3 text-xs text-[var(--charcoal)]/78">
           Renaming a category updates every vendor using it. Deleting reassigns
           its vendors to <strong>Non-Specified</strong>.
         </div>
@@ -195,13 +195,13 @@ export function CategoryManager({ vendors, onClose }: CategoryManagerProps) {
                 ) : (
                   <>
                     <span className="flex-1 truncate text-sm">{c}</span>
-                    <span className="shrink-0 rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/60">
+                    <span className="shrink-0 rounded-full bg-[var(--cream-deep)] px-2 py-0.5 text-[10px] text-[var(--charcoal)]/74">
                       {count}
                     </span>
                     <button
                       onClick={() => beginRename(c)}
                       title="Rename"
-                      className="rounded-md p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
+                      className="rounded-md p-1.5 text-[var(--charcoal)]/74 hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
@@ -209,7 +209,7 @@ export function CategoryManager({ vendors, onClose }: CategoryManagerProps) {
                       <button
                         onClick={() => setConfirmingDelete(c)}
                         title="Delete"
-                        className="rounded-md p-1.5 text-[var(--charcoal)]/60 hover:bg-red-50 hover:text-red-600"
+                        className="rounded-md p-1.5 text-[var(--charcoal)]/74 hover:bg-red-50 hover:text-red-600"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>

@@ -39,7 +39,7 @@ export function ClientBoardColumn({ id, option, count, children }: Props) {
             {option?.label ?? "No status"}
           </span>
         </div>
-        <span className="text-xs font-medium text-[var(--charcoal)]/55">
+        <span className="text-xs font-medium text-[var(--charcoal)]/70">
           <FlipNumber value={count} duration={0.45} />
         </span>
       </div>

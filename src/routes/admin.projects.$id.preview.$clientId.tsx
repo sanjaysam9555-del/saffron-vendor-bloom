@@ -82,12 +82,12 @@ function PreviewPage() {
           <h1 className="font-display text-2xl text-[var(--charcoal)] sm:text-3xl">
             {project.bride_name} <span className="text-[var(--terracotta)]">&amp;</span> {project.groom_name}
           </h1>
-          <p className="mt-1 text-sm text-[var(--charcoal)]/65">
+          <p className="mt-1 text-sm text-[var(--charcoal)]/78">
             {new Date(project.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
           </p>
 
           {vendors.length === 0 ? (
-            <div className="mt-8 rounded-lg border border-[var(--border)] bg-white p-8 text-center text-sm text-[var(--charcoal)]/60">
+            <div className="mt-8 rounded-lg border border-[var(--border)] bg-white p-8 text-center text-sm text-[var(--charcoal)]/74">
               No vendors assigned to this project yet.
             </div>
           ) : (

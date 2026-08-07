@@ -62,7 +62,7 @@ export function LoadingState({
         {/* Thin arc on a faint ring */}
         <span className="loader-arc" data-phase={phase} aria-hidden />
 
-        <span className="max-w-[16rem] text-center text-[0.78rem] tracking-[0.14em] text-[var(--charcoal)]/55 transition-opacity duration-300">
+        <span className="max-w-[16rem] text-center text-[0.78rem] tracking-[0.14em] text-[var(--charcoal)]/70 transition-opacity duration-300">
           {text}
         </span>
       </div>

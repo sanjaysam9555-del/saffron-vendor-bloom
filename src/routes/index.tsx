@@ -64,7 +64,7 @@ function RootIndex() {
           <h1 className="mt-3 font-display text-3xl text-[var(--charcoal)] sm:text-4xl lg:text-5xl">
             Wedding & Event Planning Studio in India
           </h1>
-          <p className="mt-4 max-w-lg text-sm text-[var(--charcoal)]/70 sm:text-base">
+          <p className="mt-4 max-w-lg text-sm text-[var(--charcoal)]/82 sm:text-base">
             We curate vendors, manage logistics and design weddings end-to-end across
             Delhi NCR and destinations across India. Couples we work with use this portal
             to view their shortlist, share feedback and finalise decisions with their planner.

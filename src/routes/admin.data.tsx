@@ -66,7 +66,7 @@ function DataManagementPage() {
 
       <div className="hidden h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70 sm:block">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 h-full px-3 sm:px-6">
-          <span className="text-sm text-[var(--charcoal)]/55">Move vendors and projects in and out of the studio, or take everything with you.</span>
+          <span className="text-sm text-[var(--charcoal)]/70">Move vendors and projects in and out of the studio, or take everything with you.</span>
         </div>
       </div>
 
@@ -92,7 +92,7 @@ function DataManagementPage() {
               </button>
             }
           >
-            <p className="px-4 py-4 text-sm text-[var(--charcoal)]/65 sm:px-5">
+            <p className="px-4 py-4 text-sm text-[var(--charcoal)]/78 sm:px-5">
               Import is guided — download a template, fill it in, and preview every row before anything is saved.
               Export includes every field on each vendor's profile.
             </p>
@@ -112,7 +112,7 @@ function DataManagementPage() {
               </button>
             }
           >
-            <p className="px-4 py-4 text-sm text-[var(--charcoal)]/65 sm:px-5">
+            <p className="px-4 py-4 text-sm text-[var(--charcoal)]/78 sm:px-5">
               Each imported row creates a new project with its planning-fee instalments already set up, exactly like
               creating one by hand. Vendors, quotes, and guests aren't part of this — assign those after import.
             </p>
@@ -133,7 +133,7 @@ function DataManagementPage() {
               </button>
             }
           >
-            <p className="px-4 py-4 text-sm text-[var(--charcoal)]/65 sm:px-5">
+            <p className="px-4 py-4 text-sm text-[var(--charcoal)]/78 sm:px-5">
               A single JSON file covering every vendor, project, quote, payment, and behind-the-scenes record — readable
               in any text editor. For a snapshot you can restore later, use Backup &amp; Restore instead.
             </p>

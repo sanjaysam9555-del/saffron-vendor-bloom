@@ -98,7 +98,7 @@ export function ClientBoardView({ vendors, onView }: Props) {
                 count={items.length}
               >
                 {items.length === 0 ? (
-                  <div className="rounded-md border border-dashed border-[var(--border)] py-6 text-center text-[11px] text-[var(--charcoal)]/40">
+                  <div className="rounded-md border border-dashed border-[var(--border)] py-6 text-center text-[11px] text-[var(--charcoal)]/58">
                     Drop vendors here
                   </div>
                 ) : (

@@ -243,7 +243,7 @@ function AdminNotificationsPage() {
       {/* Secondary toolbar */}
       <div className="h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 h-full px-3 sm:px-6">
-          <span className="hidden text-sm text-[var(--charcoal)]/55 sm:inline">
+          <span className="hidden text-sm text-[var(--charcoal)]/70 sm:inline">
             Comments, status changes and studio activity.
           </span>
           <div className="ml-auto flex items-center gap-1.5">
@@ -252,7 +252,7 @@ function AdminNotificationsPage() {
               className={`inline-flex shrink-0 items-center rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
                 unreadOnly
                   ? "border-[var(--terracotta)] bg-[var(--terracotta)] text-[var(--cream)]"
-                  : "border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+                  : "border-[var(--border)] bg-white text-[var(--charcoal)]/82 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
               }`}
             >
               Unread only
@@ -309,11 +309,11 @@ function AdminNotificationsPage() {
           </div>
         ) : entries.length === 0 ? (
           <div className="rounded-xl border border-[var(--border)] bg-white py-16 text-center shadow-sm">
-            <Bell className="mx-auto h-8 w-8 text-[var(--charcoal)]/20" />
+            <Bell className="mx-auto h-8 w-8 text-[var(--charcoal)]/45" />
             <p className="mt-3 font-display text-lg text-[var(--charcoal)]">
               {unreadOnly ? "All caught up" : "Nothing here yet"}
             </p>
-            <p className="mt-1 text-xs text-[var(--charcoal)]/50">
+            <p className="mt-1 text-xs text-[var(--charcoal)]/66">
               {unreadOnly
                 ? "Every notification in this view has been read."
                 : "Activity will appear here as it happens."}
@@ -358,7 +358,7 @@ function Chip({
       className={`inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium capitalize transition ${
         active
           ? "border-[var(--terracotta)] bg-[var(--terracotta)] text-[var(--cream)] shadow-sm"
-          : "border-[var(--border)] bg-white text-[var(--charcoal)]/70 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+          : "border-[var(--border)] bg-white text-[var(--charcoal)]/82 hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
       }`}
     >
       {icon && <span className="shrink-0 [&_svg]:h-3.5 [&_svg]:w-3.5">{icon}</span>}
@@ -367,7 +367,7 @@ function Chip({
         className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none ${
           active
             ? "bg-[var(--cream)]/25 text-[var(--cream)]"
-            : "bg-[var(--cream-deep)] text-[var(--charcoal)]/60"
+            : "bg-[var(--cream-deep)] text-[var(--charcoal)]/74"
         }`}
       >
         {count}
@@ -402,7 +402,7 @@ function FeedRow({
       className={`mt-0.5 shrink-0 rounded-full p-2 sm:p-2.5 ${
         groupUnread > 0
           ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)]"
-          : "bg-[var(--cream-deep)]/60 text-[var(--charcoal)]/40"
+          : "bg-[var(--cream-deep)]/60 text-[var(--charcoal)]/58"
       }`}
     >
       {meta.icon}
@@ -422,13 +422,13 @@ function FeedRow({
         >
           {iconBadge}
           <div className="min-w-0">
-            <div className={`break-words text-sm leading-snug ${unread ? "font-semibold text-[var(--charcoal)]" : "text-[var(--charcoal)]/70"}`}>
+            <div className={`break-words text-sm leading-snug ${unread ? "font-semibold text-[var(--charcoal)]" : "text-[var(--charcoal)]/82"}`}>
               {it.title}
             </div>
             {it.body && (
-              <div className="mt-0.5 line-clamp-2 break-words text-xs text-[var(--charcoal)]/55">{it.body}</div>
+              <div className="mt-0.5 line-clamp-2 break-words text-xs text-[var(--charcoal)]/70">{it.body}</div>
             )}
-            <div className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/40">
+            <div className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/58">
               {timeAgo(it.created_at)}
             </div>
           </div>
@@ -446,7 +446,7 @@ function FeedRow({
       >
         {iconBadge}
         <div className="min-w-0">
-          <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-snug ${groupUnread > 0 ? "font-semibold text-[var(--charcoal)]" : "text-[var(--charcoal)]/70"}`}>
+          <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-snug ${groupUnread > 0 ? "font-semibold text-[var(--charcoal)]" : "text-[var(--charcoal)]/82"}`}>
             <span className="break-words">
               {entry.items.length} {meta.plural}
             </span>
@@ -456,15 +456,15 @@ function FeedRow({
               </span>
             )}
           </div>
-          <div className="mt-0.5 truncate text-xs text-[var(--charcoal)]/55">
+          <div className="mt-0.5 truncate text-xs text-[var(--charcoal)]/70">
             {entry.projectName ?? entry.items[0].title}
           </div>
-          <div className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/40">
+          <div className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/58">
             {timeAgo(entry.latest)}
           </div>
         </div>
         <ChevronDown
-          className={`mt-2 h-4 w-4 shrink-0 text-[var(--charcoal)]/40 transition-transform ${expanded ? "rotate-180" : ""}`}
+          className={`mt-2 h-4 w-4 shrink-0 text-[var(--charcoal)]/58 transition-transform ${expanded ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -481,13 +481,13 @@ function FeedRow({
                 className="flex items-start gap-2 border-b border-[var(--border)]/50 px-3 py-2.5 pl-11 transition last:border-b-0 hover:bg-white sm:gap-3 sm:px-4 sm:pl-14"
               >
                 <div className="min-w-0 flex-1">
-                  <div className={`break-words text-[13px] leading-snug ${unread ? "font-medium text-[var(--charcoal)]" : "text-[var(--charcoal)]/65"}`}>
+                  <div className={`break-words text-[13px] leading-snug ${unread ? "font-medium text-[var(--charcoal)]" : "text-[var(--charcoal)]/78"}`}>
                     {it.title}
                   </div>
                   {it.body && (
-                    <div className="mt-0.5 line-clamp-2 break-words text-[11px] text-[var(--charcoal)]/50">{it.body}</div>
+                    <div className="mt-0.5 line-clamp-2 break-words text-[11px] text-[var(--charcoal)]/66">{it.body}</div>
                   )}
-                  <div className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/35">
+                  <div className="mt-1 text-[10px] uppercase tracking-wider text-[var(--charcoal)]/55">
                     {timeAgo(it.created_at)}
                   </div>
                 </div>

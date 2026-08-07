@@ -62,7 +62,7 @@ function AdminDashboardPage() {
           mobile, where every line of vertical space is precious. */}
       <div className="hidden h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70 sm:block">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 h-full px-3 sm:px-6">
-          <span className="text-sm text-[var(--charcoal)]/55">All active weddings at a glance.</span>
+          <span className="text-sm text-[var(--charcoal)]/70">All active weddings at a glance.</span>
         </div>
       </div>
 
@@ -176,7 +176,7 @@ function StatCards({ stats }: { stats: DashboardData["stats"] }) {
           }`}
         >
           <div className="flex items-center gap-2">
-            <span className={c.accent ? "text-[var(--terracotta)]" : "text-[var(--charcoal)]/50"}>
+            <span className={c.accent ? "text-[var(--terracotta)]" : "text-[var(--charcoal)]/66"}>
               {c.icon}
             </span>
             <span
@@ -187,7 +187,7 @@ function StatCards({ stats }: { stats: DashboardData["stats"] }) {
               {c.value}
             </span>
           </div>
-          <div className="mt-1.5 text-[10px] font-medium uppercase tracking-widest text-[var(--charcoal)]/55">
+          <div className="mt-1.5 text-[10px] font-medium uppercase tracking-widest text-[var(--charcoal)]/70">
             {c.label}
           </div>
         </div>
@@ -215,7 +215,7 @@ function UpcomingWeddings({ weddings }: { weddings: DashboardData["upcoming_wedd
               <p className="truncate font-display text-sm font-semibold leading-tight sm:text-lg">
                 {w.bride_name} &amp; {w.groom_name}
               </p>
-              <p className="mt-0.5 text-[11px] text-[var(--charcoal)]/55 sm:text-xs">
+              <p className="mt-0.5 text-[11px] text-[var(--charcoal)]/70 sm:text-xs">
                 {fmtDateShort(w.wedding_date)}
               </p>
             </div>
@@ -223,7 +223,7 @@ function UpcomingWeddings({ weddings }: { weddings: DashboardData["upcoming_wedd
               {w.days_to_go}d
             </span>
           </div>
-          <div className="mt-1.5 flex items-center gap-1 text-[10px] text-[var(--charcoal)]/50 sm:mt-3 sm:gap-1.5 sm:text-[11px]">
+          <div className="mt-1.5 flex items-center gap-1 text-[10px] text-[var(--charcoal)]/66 sm:mt-3 sm:gap-1.5 sm:text-[11px]">
             <Users className="h-3 w-3 shrink-0" />
             {w.vendor_count} vendor{w.vendor_count !== 1 ? "s" : ""}
           </div>
@@ -237,7 +237,7 @@ function UpcomingWeddings({ weddings }: { weddings: DashboardData["upcoming_wedd
 function daysClass(d: number) {
   if (d <= 14) return "bg-[var(--terracotta-soft)] text-[var(--terracotta)] border border-[var(--terracotta)]/20";
   if (d <= 60) return "bg-[var(--gold-soft)] text-[var(--gold)] border border-[var(--gold)]/20";
-  return "bg-[var(--cream-deep)] text-[var(--charcoal)]/60 border border-[var(--border)]";
+  return "bg-[var(--cream-deep)] text-[var(--charcoal)]/74 border border-[var(--border)]";
 }
 
 // ── Upcoming deadlines ────────────────────────────────────────────────────────
@@ -267,7 +267,7 @@ function UpcomingDeadlines({ deadlines }: { deadlines: DashboardData["upcoming_d
               </span>
               <div className="min-w-0 lg:flex-1">
                 <p className="truncate text-sm font-medium text-[var(--charcoal)]">{d.category}</p>
-                <p className="flex items-center gap-1.5 text-[11px] text-[var(--charcoal)]/50">
+                <p className="flex items-center gap-1.5 text-[11px] text-[var(--charcoal)]/66">
                   <span
                     className={`inline-block rounded-full px-1.5 text-[9px] font-semibold uppercase tracking-wide lg:hidden ${criticalityClass(d.criticality)}`}
                   >
@@ -279,10 +279,10 @@ function UpcomingDeadlines({ deadlines }: { deadlines: DashboardData["upcoming_d
                 </p>
               </div>
               <div className="shrink-0 text-right">
-                <p className={`text-xs font-semibold ${d.days_to_go <= 7 ? "text-[var(--terracotta)]" : "text-[var(--charcoal)]/60"}`}>
+                <p className={`text-xs font-semibold ${d.days_to_go <= 7 ? "text-[var(--terracotta)]" : "text-[var(--charcoal)]/74"}`}>
                   {d.days_to_go}d
                 </p>
-                <p className="text-[10px] text-[var(--charcoal)]/40">{fmtDateShort(d.due_date)}</p>
+                <p className="text-[10px] text-[var(--charcoal)]/58">{fmtDateShort(d.due_date)}</p>
               </div>
             </div>
           </li>
@@ -296,7 +296,7 @@ function UpcomingDeadlines({ deadlines }: { deadlines: DashboardData["upcoming_d
 function criticalityClass(c: string) {
   if (c === "high") return "bg-[var(--criticality-high-bg)] text-[var(--terracotta)]";
   if (c === "medium") return "bg-[var(--criticality-med-bg)] text-[hsl(30_50%_30%)]";
-  return "bg-[var(--criticality-low-bg)] text-[var(--charcoal)]/60";
+  return "bg-[var(--criticality-low-bg)] text-[var(--charcoal)]/74";
 }
 
 // ── Recent activity ───────────────────────────────────────────────────────────
@@ -329,19 +329,19 @@ function RecentActivity({ activity }: { activity: DashboardData["recent_activity
           >
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 lg:flex lg:items-start">
               {/* Fixed-width chip lines titles up on desktop; inline chip on mobile */}
-              <span className="mt-0.5 hidden w-14 shrink-0 rounded border border-[var(--border)] bg-[var(--cream-deep)] py-0.5 text-center text-[10px] font-medium text-[var(--charcoal)]/60 lg:inline-block">
+              <span className="mt-0.5 hidden w-14 shrink-0 rounded border border-[var(--border)] bg-[var(--cream-deep)] py-0.5 text-center text-[10px] font-medium text-[var(--charcoal)]/74 lg:inline-block">
                 {KIND_LABEL[a.kind] ?? a.kind}
               </span>
               <div className="min-w-0 lg:flex-1">
                 <p className="truncate text-sm font-medium text-[var(--charcoal)]">{a.title}</p>
-                <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-[var(--charcoal)]/50">
-                  <span className="inline-block rounded border border-[var(--border)] bg-[var(--cream-deep)] px-1.5 text-[9px] font-medium text-[var(--charcoal)]/60 lg:hidden">
+                <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-[var(--charcoal)]/66">
+                  <span className="inline-block rounded border border-[var(--border)] bg-[var(--cream-deep)] px-1.5 text-[9px] font-medium text-[var(--charcoal)]/74 lg:hidden">
                     {KIND_LABEL[a.kind] ?? a.kind}
                   </span>
                   {a.body && <span className="truncate">{a.body}</span>}
                 </p>
               </div>
-              <span className="shrink-0 text-[11px] text-[var(--charcoal)]/40">{timeAgo(a.created_at)}</span>
+              <span className="shrink-0 text-[11px] text-[var(--charcoal)]/58">{timeAgo(a.created_at)}</span>
             </div>
           </li>
         ))}
@@ -401,14 +401,14 @@ function PLTable({ rows }: { rows: PLRow[] }) {
                 >
                   {(p.bride_name || "?") + " & " + (p.groom_name || "?")}
                 </Link>
-                <span className="shrink-0 text-[10px] uppercase tracking-wide text-[var(--cream)]/65">
+                <span className="shrink-0 text-[10px] uppercase tracking-wide text-[var(--cream)]/82">
                   {p.wedding_date ? fmtDateShort(p.wedding_date) : "—"}
                 </span>
               </div>
               <div className="grid grid-cols-3 divide-x divide-[var(--border)] border-t border-[var(--border)] [&>*:nth-child(n+4)]:border-t [&>*:nth-child(n+4)]:border-[var(--border)]">
                 {cells.map((c) => (
                   <div key={c.label} className="min-w-0 px-2 py-1.5">
-                    <div className="truncate text-[9px] font-medium uppercase tracking-wide text-[var(--charcoal)]/45">
+                    <div className="truncate text-[9px] font-medium uppercase tracking-wide text-[var(--charcoal)]/62">
                       {c.label}
                     </div>
                     <div
@@ -435,7 +435,7 @@ function PLTable({ rows }: { rows: PLRow[] }) {
       <div className="hidden overflow-hidden rounded-lg border border-[var(--border)] bg-white lg:block">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-sm">
-            <thead className="bg-[var(--charcoal)] text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/75">
+            <thead className="bg-[var(--charcoal)] text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/88">
               <tr>
                 <th className="px-4 py-2.5">Project</th>
                 <th className="px-4 py-2.5">Wedding</th>
@@ -461,14 +461,14 @@ function PLTable({ rows }: { rows: PLRow[] }) {
                         {(p.bride_name || "?") + " & " + (p.groom_name || "?")}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-[var(--charcoal)]/55">
+                    <td className="px-4 py-3 text-[var(--charcoal)]/70">
                       {p.wedding_date ? fmtDate(p.wedding_date) : "—"}
                     </td>
-                    <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{formatINR(d.planning)}</td>
+                    <td className="px-4 py-3 text-right text-[var(--charcoal)]/82">{formatINR(d.planning)}</td>
                     <td className="px-4 py-3 text-right font-medium text-[var(--charcoal)]">{formatINR(d.clientBilling)}</td>
-                    <td className="px-4 py-3 text-right text-[var(--charcoal)]/60">{formatINR(d.vendorCost)}</td>
+                    <td className="px-4 py-3 text-right text-[var(--charcoal)]/74">{formatINR(d.vendorCost)}</td>
                     <td className="px-4 py-3 text-right font-semibold text-[var(--terracotta)]">{formatINR(d.commission)}</td>
-                    <td className="px-4 py-3 text-right text-[var(--charcoal)]/70">{d.margin.toFixed(1)}%</td>
+                    <td className="px-4 py-3 text-right text-[var(--charcoal)]/82">{d.margin.toFixed(1)}%</td>
                     <td className="px-4 py-3 text-right font-semibold text-[var(--charcoal)]">{formatINRShort(d.totalIncome)}</td>
                   </tr>
                 );
@@ -519,7 +519,7 @@ function VendorPipeline({ pipeline }: { pipeline: DashboardData["vendor_pipeline
         {pipeline.map((p, i) => (
           <div key={p.label} className="flex min-w-0 items-center gap-1.5 sm:gap-2">
             <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${PIPE_DOT_COLORS[i] ?? "bg-[var(--charcoal)]/20"}`} />
-            <span className="truncate text-[11px] text-[var(--charcoal)]/65 sm:text-xs">{p.label}</span>
+            <span className="truncate text-[11px] text-[var(--charcoal)]/78 sm:text-xs">{p.label}</span>
             <span className="ml-auto font-display text-sm font-semibold text-[var(--charcoal)] sm:ml-0">{p.count}</span>
           </div>
         ))}
@@ -532,7 +532,7 @@ function VendorPipeline({ pipeline }: { pipeline: DashboardData["vendor_pipeline
 
 function EmptyCard({ message }: { message: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-[var(--champagne)] bg-white px-6 py-10 text-center text-sm text-[var(--charcoal)]/50">
+    <div className="rounded-lg border border-dashed border-[var(--champagne)] bg-white px-6 py-10 text-center text-sm text-[var(--charcoal)]/66">
       {message}
     </div>
   );

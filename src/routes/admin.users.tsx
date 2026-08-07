@@ -114,7 +114,7 @@ function AdminUsersPage() {
       {/* Secondary toolbar */}
       <div className="hidden h-14 border-b border-[var(--border)]/60 bg-[var(--cream)]/70 sm:block">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 h-full px-3 sm:px-6">
-          <span className="text-sm text-[var(--charcoal)]/55">Create staff and client accounts, and manage their access.</span>
+          <span className="text-sm text-[var(--charcoal)]/70">Create staff and client accounts, and manage their access.</span>
         </div>
       </div>
 
@@ -148,7 +148,7 @@ function AdminUsersPage() {
                 <input className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" placeholder="Display name" value={newName} onChange={(e) => setNewName(e.target.value)} />
                 <input className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" type="email" required placeholder="Email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
                 <input className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" required minLength={6} placeholder="Password (min 6)" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} />
-                <p className="sm:col-span-3 text-xs text-[var(--charcoal)]/60">
+                <p className="sm:col-span-3 text-xs text-[var(--charcoal)]/74">
                   The employee will use this password to sign in. They cannot change it — only you can update it from this page.
                 </p>
                 <div className="sm:col-span-3 flex gap-2">
@@ -250,9 +250,9 @@ export function SectionCard({
           <div className="min-w-0">
             <div className="flex items-baseline gap-2">
               <h2 className="font-display text-lg leading-tight text-[var(--charcoal)]">{title}</h2>
-              {meta && <span className="text-xs text-[var(--charcoal)]/45">{meta}</span>}
+              {meta && <span className="text-xs text-[var(--charcoal)]/62">{meta}</span>}
             </div>
-            <p className="truncate text-xs text-[var(--charcoal)]/55">{description}</p>
+            <p className="truncate text-xs text-[var(--charcoal)]/70">{description}</p>
           </div>
         </div>
         {action}
@@ -265,7 +265,7 @@ export function SectionCard({
 export function StatTile({ label, value }: { label: string; value: number }) {
   return (
     <div className="p-4 sm:px-5">
-      <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/55">{label}</div>
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--charcoal)]/70">{label}</div>
       <div className="mt-1 font-display text-3xl font-semibold text-[var(--terracotta)]">{value}</div>
     </div>
   );
@@ -330,32 +330,32 @@ function UserRow({ row, isSelf, onChanged, onError }: { row: Row; isSelf: boolea
           <div className="flex items-center gap-1">
             <input className="rounded border border-[var(--border)] px-2 py-1 text-sm" value={name} onChange={(e) => setName(e.target.value)} />
             <button onClick={saveName} className="rounded p-1 text-green-700 hover:bg-green-50"><Check className="h-4 w-4" /></button>
-            <button onClick={() => { setEditing(false); setName(row.display_name); }} className="rounded p-1 text-[var(--charcoal)]/60 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
+            <button onClick={() => { setEditing(false); setName(row.display_name); }} className="rounded p-1 text-[var(--charcoal)]/74 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
             <span>{row.display_name || "—"}</span>
-            <button onClick={() => setEditing(true)} className="text-[var(--charcoal)]/40 hover:text-[var(--terracotta)]"><Pencil className="h-3.5 w-3.5" /></button>
+            <button onClick={() => setEditing(true)} className="text-[var(--charcoal)]/58 hover:text-[var(--terracotta)]"><Pencil className="h-3.5 w-3.5" /></button>
           </div>
         )}
       </td>
-      <td className="px-4 py-3 text-[var(--charcoal)]/70">{row.email}</td>
+      <td className="px-4 py-3 text-[var(--charcoal)]/82">{row.email}</td>
       <td className="px-4 py-3">
-        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.role === "admin" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)]" : "bg-[var(--cream)] text-[var(--charcoal)]/70"}`}>
+        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.role === "admin" ? "bg-[var(--terracotta-soft)] text-[var(--terracotta)]" : "bg-[var(--cream)] text-[var(--charcoal)]/82"}`}>
           {row.role}
         </span>
-        {isSelf && <span className="ml-2 text-xs text-[var(--charcoal)]/40">(you)</span>}
+        {isSelf && <span className="ml-2 text-xs text-[var(--charcoal)]/58">(you)</span>}
       </td>
       <td className="px-4 py-3">
         {resetting ? (
           <div className="flex items-center justify-end gap-1">
             <input type="password" minLength={6} placeholder="New password" className="rounded border border-[var(--border)] px-2 py-1 text-sm" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} />
             <button onClick={savePwd} disabled={newPwd.length < 6} title="Sets the new password and signs the user out of all sessions" className="rounded bg-[var(--terracotta)] px-2 py-1 text-xs text-white disabled:opacity-50">Set</button>
-            <button onClick={() => { setResetting(false); setNewPwd(""); }} className="rounded p-1 text-[var(--charcoal)]/60 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
+            <button onClick={() => { setResetting(false); setNewPwd(""); }} className="rounded p-1 text-[var(--charcoal)]/74 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
           </div>
         ) : (
           <div className="flex items-center justify-end gap-1">
-            <button onClick={() => setResetting(true)} title="Change password (signs user out)" className="rounded p-1.5 text-[var(--charcoal)]/60 transition-colors hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
+            <button onClick={() => setResetting(true)} title="Change password (signs user out)" className="rounded p-1.5 text-[var(--charcoal)]/74 transition-colors hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
               <KeyRound className="h-4 w-4" />
             </button>
             {!isSelf && (
@@ -464,7 +464,7 @@ function CreateClientCredentialsCard({
           <input className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" placeholder="Display name" value={name} onChange={(e) => setName(e.target.value)} />
           <input className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm" type="email" required placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
           <input className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm sm:col-span-2" required minLength={6} placeholder="Password (min 6)" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <p className="text-xs text-[var(--charcoal)]/60 sm:col-span-2">
+          <p className="text-xs text-[var(--charcoal)]/74 sm:col-span-2">
             A project can have more than one client login (e.g. both partners). This account will only see the selected project.
           </p>
           <div className="flex gap-2 sm:col-span-2">
@@ -552,20 +552,20 @@ function ClientRow({ row, onChanged, onError }: { row: Row; onChanged: () => voi
   return (
     <tr className="border-t border-[var(--border)] transition-colors hover:bg-[var(--cream)]/60">
       <td className="px-4 py-3">{row.display_name || "—"}</td>
-      <td className="px-4 py-3 text-[var(--charcoal)]/70">{row.email}</td>
-      <td className="px-4 py-3 text-[var(--charcoal)]/70">
-        {row.projects.length > 0 ? row.projects.join(", ") : <span className="text-[var(--charcoal)]/40">—</span>}
+      <td className="px-4 py-3 text-[var(--charcoal)]/82">{row.email}</td>
+      <td className="px-4 py-3 text-[var(--charcoal)]/82">
+        {row.projects.length > 0 ? row.projects.join(", ") : <span className="text-[var(--charcoal)]/58">—</span>}
       </td>
       <td className="px-4 py-3">
         {resetting ? (
           <div className="flex items-center justify-end gap-1">
             <input type="password" minLength={6} placeholder="New password" className="rounded border border-[var(--border)] px-2 py-1 text-sm" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} />
             <button onClick={savePwd} disabled={newPwd.length < 6} title="Sets the new password and signs the user out of all sessions" className="rounded bg-[var(--terracotta)] px-2 py-1 text-xs text-white disabled:opacity-50">Set</button>
-            <button onClick={() => { setResetting(false); setNewPwd(""); }} className="rounded p-1 text-[var(--charcoal)]/60 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
+            <button onClick={() => { setResetting(false); setNewPwd(""); }} className="rounded p-1 text-[var(--charcoal)]/74 hover:bg-[var(--cream)]"><X className="h-4 w-4" /></button>
           </div>
         ) : (
           <div className="flex items-center justify-end gap-1">
-            <button onClick={() => setResetting(true)} title="Change password (signs user out)" className="rounded p-1.5 text-[var(--charcoal)]/60 transition-colors hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
+            <button onClick={() => setResetting(true)} title="Change password (signs user out)" className="rounded p-1.5 text-[var(--charcoal)]/74 transition-colors hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
               <KeyRound className="h-4 w-4" />
             </button>
             <button onClick={handleDelete} title="Delete user" className="rounded p-1.5 text-red-600 hover:bg-red-50">

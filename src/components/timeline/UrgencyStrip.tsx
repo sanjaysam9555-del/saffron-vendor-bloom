@@ -144,7 +144,7 @@ export function UrgencyStrip({ items, onChipClick }: Props) {
                     >
                       {BUCKET_LABEL[c.bucket]}
                     </span>
-                    <span className="shrink-0 text-[10px] text-[var(--charcoal)]/60">
+                    <span className="shrink-0 text-[10px] text-[var(--charcoal)]/74">
                       {daysLeftLabel(c.daysLeft)}
                     </span>
                   </button>

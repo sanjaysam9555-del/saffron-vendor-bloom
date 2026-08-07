@@ -194,7 +194,7 @@ export function ClientStatusSelect({ vendorId, status, compact = false }: Props)
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onSelect={() => handleSelect(null)}
-                className="text-[var(--charcoal)]/70"
+                className="text-[var(--charcoal)]/82"
               >
                 <X className="mr-2 h-3.5 w-3.5" /> Clear status
               </DropdownMenuItem>
