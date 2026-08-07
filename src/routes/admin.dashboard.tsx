@@ -39,8 +39,12 @@ export const Route = createFileRoute("/admin/dashboard")({
 });
 
 function AdminDashboardPage() {
-  const { session, initialized } = useAuth();
-  const authReady = initialized && !!session;
+  const { session, initialized, loading: authLoading, role } = useAuth();
+  const authReady =
+    initialized &&
+    !!session?.access_token &&
+    !authLoading &&
+    (role === "admin" || role === "employee");
 
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard"],
