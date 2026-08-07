@@ -79,40 +79,40 @@ export const getDashboardData = createServerFn({ method: "GET" })
       vendorQuotesRes,
       projectVendorsRes,
     ] = await Promise.all([
-      supabaseAdmin
+      context.supabase
         .from("projects")
         .select("id, bride_name, groom_name, wedding_date, planning_fee, archived_at")
         .is("archived_at", null)
         .order("wedding_date", { ascending: true }),
-      supabaseAdmin.from("vendors").select("id", { count: "exact", head: true }),
-      supabaseAdmin
+      context.supabase.from("vendors").select("id", { count: "exact", head: true }),
+      context.supabase
         .from("project_vendor_quotes")
         .select("id", { count: "exact", head: true })
         .eq("is_final", false)
         .neq("status", "closed"),
-      supabaseAdmin
+      context.supabase
         .from("project_payments")
         .select("id", { count: "exact", head: true })
         .eq("status", "pending"),
-      supabaseAdmin
+      context.supabase
         .from("project_category_deadlines")
         .select("id, project_id, category, due_date, criticality")
         .gte("due_date", today)
         .lte("due_date", in30)
         .order("due_date", { ascending: true })
         .limit(20),
-      supabaseAdmin
+      context.supabase
         .from("staff_notifications")
         .select("id, kind, title, body, created_at, project_id, vendor_id, read_by")
         .order("created_at", { ascending: false })
         .limit(25),
-      supabaseAdmin
+      context.supabase
         .from("project_payments")
         .select("project_id, received_amount"),
-      supabaseAdmin
+      context.supabase
         .from("project_vendor_quotes")
         .select("project_id, status, is_final, closed_amount, quote_amount"),
-      supabaseAdmin
+      context.supabase
         .from("project_vendors")
         .select("project_id, vendor_id"),
     ]);
