@@ -121,35 +121,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      if (!mounted) return;
-      setSession(s);
-      if (s?.user) {
-        const cached = readCache();
-        if (cached && cached.userId === s.user.id && cached.role) {
-          setRole(cached.role);
-          setDisplayName(cached.displayName);
-        }
-        // Defer Supabase queries OUT of the auth callback to avoid the
-        // gotrue-js internal lock deadlocking on nested supabase calls.
-        if (loadedForRef.current !== s.user.id) {
-          setTimeout(() => {
-            if (!mounted) return;
-            if (loadedForRef.current !== s.user.id) void loadAccess(s);
-          }, 0);
-        }
-      } else {
-        loadedForRef.current = null;
-        setRole(null);
-        setDisplayName(null);
-        setLoading(false);
-        writeCache(null);
-      }
-    });
+    let unsubscribe: (() => void) | undefined;
 
-    supabase.auth
-      .getSession()
-      .then(({ data: { session: s } }) => {
+    try {
+      const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
         if (!mounted) return;
         setSession(s);
         if (s?.user) {
@@ -158,25 +133,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setRole(cached.role);
             setDisplayName(cached.displayName);
           }
-          if (loadedForRef.current !== s.user.id) void loadAccess(s);
+          // Defer backend queries OUT of the auth callback to avoid the
+          // auth client's internal lock deadlocking on nested calls.
+          if (loadedForRef.current !== s.user.id) {
+            setTimeout(() => {
+              if (!mounted) return;
+              if (loadedForRef.current !== s.user.id) void loadAccess(s);
+            }, 0);
+          }
+        } else {
+          loadedForRef.current = null;
+          setRole(null);
+          setDisplayName(null);
+          setLoading(false);
+          writeCache(null);
         }
-        setInitialized(true);
-      })
-      .catch(async (err) => {
-        console.error("getSession failed", err);
-        try { await supabase.auth.signOut(); } catch { /* noop */ }
-        if (!mounted) return;
-        writeCache(null);
-        setSession(null);
-        setRole(null);
-        setDisplayName(null);
-        setLoading(false);
-        setInitialized(true);
       });
+      unsubscribe = () => sub.subscription.unsubscribe();
+
+      supabase.auth
+        .getSession()
+        .then(({ data: { session: s } }) => {
+          if (!mounted) return;
+          setSession(s);
+          if (s?.user) {
+            const cached = readCache();
+            if (cached && cached.userId === s.user.id && cached.role) {
+              setRole(cached.role);
+              setDisplayName(cached.displayName);
+            }
+            if (loadedForRef.current !== s.user.id) void loadAccess(s);
+          }
+          setInitialized(true);
+        })
+        .catch(async (err) => {
+          console.error("getSession failed", err);
+          try { await supabase.auth.signOut(); } catch { /* noop */ }
+          if (!mounted) return;
+          writeCache(null);
+          setSession(null);
+          setRole(null);
+          setDisplayName(null);
+          setLoading(false);
+          setInitialized(true);
+        });
+    } catch (err) {
+      // A transient missing preview binding must not take down the public
+      // app shell. Auth actions can recover after the binding is restored.
+      console.error("Auth initialization failed", err);
+      writeCache(null);
+      setSession(null);
+      setRole(null);
+      setDisplayName(null);
+      setLoading(false);
+      setInitialized(true);
+    }
 
     return () => {
       mounted = false;
-      sub.subscription.unsubscribe();
+      unsubscribe?.();
     };
   }, []);
 
