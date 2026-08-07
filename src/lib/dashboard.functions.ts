@@ -1,22 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { attachAuthToken } from "./auth-client-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getRequestHeader } from "@tanstack/react-start/server";
-
-async function requireStaff(): Promise<{ userId: string }> {
-  const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  if (!token) throw new Error("Authentication is still loading.");
-  const { data: userData, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !userData.user) throw new Error("Authentication is still loading.");
-  const userId = userData.user.id;
-  const { data: roles } = await supabaseAdmin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .in("role", ["admin", "employee"]);
-  if (!roles || roles.length === 0) throw new Error("Forbidden: staff only");
-  return { userId };
-}
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export interface DashboardData {
   stats: {
@@ -70,9 +54,16 @@ export interface DashboardData {
 }
 
 export const getDashboardData = createServerFn({ method: "GET" })
-  .middleware([attachAuthToken])
-  .handler(async (): Promise<DashboardData> => {
-    const { userId } = await requireStaff();
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .handler(async ({ context }): Promise<DashboardData> => {
+    const { data: roles, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .in("role", ["admin", "employee"]);
+    if (roleError) throw new Error(roleError.message);
+    if (!roles || roles.length === 0) throw new Error("Forbidden: staff only");
+    const userId = context.userId;
 
     const today = new Date().toISOString().slice(0, 10);
     const in30 = new Date(Date.now() + 30 * 86400_000).toISOString().slice(0, 10);
@@ -88,40 +79,40 @@ export const getDashboardData = createServerFn({ method: "GET" })
       vendorQuotesRes,
       projectVendorsRes,
     ] = await Promise.all([
-      supabaseAdmin
+      context.supabase
         .from("projects")
         .select("id, bride_name, groom_name, wedding_date, planning_fee, archived_at")
         .is("archived_at", null)
         .order("wedding_date", { ascending: true }),
-      supabaseAdmin.from("vendors").select("id", { count: "exact", head: true }),
-      supabaseAdmin
+      context.supabase.from("vendors").select("id", { count: "exact", head: true }),
+      context.supabase
         .from("project_vendor_quotes")
         .select("id", { count: "exact", head: true })
         .eq("is_final", false)
         .neq("status", "closed"),
-      supabaseAdmin
+      context.supabase
         .from("project_payments")
         .select("id", { count: "exact", head: true })
         .eq("status", "pending"),
-      supabaseAdmin
+      context.supabase
         .from("project_category_deadlines")
         .select("id, project_id, category, due_date, criticality")
         .gte("due_date", today)
         .lte("due_date", in30)
         .order("due_date", { ascending: true })
         .limit(20),
-      supabaseAdmin
+      context.supabase
         .from("staff_notifications")
         .select("id, kind, title, body, created_at, project_id, vendor_id, read_by")
         .order("created_at", { ascending: false })
         .limit(25),
-      supabaseAdmin
+      context.supabase
         .from("project_payments")
         .select("project_id, received_amount"),
-      supabaseAdmin
+      context.supabase
         .from("project_vendor_quotes")
         .select("project_id, status, is_final, closed_amount, quote_amount"),
-      supabaseAdmin
+      context.supabase
         .from("project_vendors")
         .select("project_id, vendor_id"),
     ]);
