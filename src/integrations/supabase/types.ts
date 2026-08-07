@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      backups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          file_path: string
+          id: string
+          kind: string
+          label: string
+          row_counts: Json
+          size_bytes: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          file_path: string
+          id?: string
+          kind?: string
+          label: string
+          row_counts?: Json
+          size_bytes?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          file_path?: string
+          id?: string
+          kind?: string
+          label?: string
+          row_counts?: Json
+          size_bytes?: number | null
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
