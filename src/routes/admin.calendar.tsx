@@ -106,10 +106,18 @@ const KIND_ORDER: CalendarEventKind[] = [
 ];
 
 function AdminCalendarPage() {
+  const { session, initialized, loading: authLoading, role } = useAuth();
+  const authReady =
+    initialized &&
+    !!session?.access_token &&
+    !authLoading &&
+    (role === "admin" || role === "employee");
+
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["calendar-events"],
     queryFn: () => getCalendarEvents(),
     staleTime: 60_000,
+    enabled: authReady,
   });
 
   const today = todayISO();
