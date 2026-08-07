@@ -11,6 +11,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
+import { useAuth } from "@/lib/auth";
 import { getCalendarEvents, type CalendarEvent, type CalendarEventKind } from "@/lib/calendar.functions";
 import { formatINRShort } from "@/lib/quote-types";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -106,10 +107,18 @@ const KIND_ORDER: CalendarEventKind[] = [
 ];
 
 function AdminCalendarPage() {
+  const { session, initialized, loading: authLoading, role } = useAuth();
+  const authReady =
+    initialized &&
+    !!session?.access_token &&
+    !authLoading &&
+    (role === "admin" || role === "employee");
+
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["calendar-events"],
     queryFn: () => getCalendarEvents(),
     staleTime: 60_000,
+    enabled: authReady,
   });
 
   const today = todayISO();
@@ -358,7 +367,7 @@ function AdminCalendarPage() {
                 <div className="font-display text-lg text-[var(--charcoal)]">What's Next</div>
               </div>
               <div className="max-h-[420px] overflow-y-auto p-3">
-                {isLoading ? (
+                {isLoading || !authReady ? (
                   <LoadingState label="Loading events" className="py-6" />
                 ) : upcoming.length === 0 ? (
                   <p className="px-1 py-6 text-center text-xs text-[var(--charcoal)]/62">
