@@ -1,24 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { attachAuthToken } from "./auth-client-middleware";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-async function requireUser(): Promise<string> {
-  const token = getRequestHeader("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  if (!token) throw new Error("Authentication is still loading.");
-  const { data: userData, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !userData.user) throw new Error("Authentication is still loading.");
-  return userData.user.id;
-}
-
 export const listMyClientNotifications = createServerFn({ method: "GET" })
-  .middleware([attachAuthToken])
+  .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) =>
     z.object({ limit: z.number().int().min(1).max(100).optional() }).parse(d ?? {}),
   )
-  .handler(async ({ data }) => {
-    const userId = await requireUser();
+  .handler(async ({ data, context }) => {
+    const userId = context.userId;
     const { data: rows, error } = await supabaseAdmin
       .from("client_notifications")
       .select("*")
@@ -30,10 +22,10 @@ export const listMyClientNotifications = createServerFn({ method: "GET" })
   });
 
 export const markClientNotificationRead = createServerFn({ method: "POST" })
-  .middleware([attachAuthToken])
+  .middleware([attachAuthToken, requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => {
-    const userId = await requireUser();
+  .handler(async ({ data, context }) => {
+    const userId = context.userId;
     const { error } = await supabaseAdmin
       .from("client_notifications")
       .update({ read_at: new Date().toISOString() })
@@ -44,9 +36,9 @@ export const markClientNotificationRead = createServerFn({ method: "POST" })
   });
 
 export const markAllClientNotificationsRead = createServerFn({ method: "POST" })
-  .middleware([attachAuthToken])
-  .handler(async () => {
-    const userId = await requireUser();
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const userId = context.userId;
     const { error } = await supabaseAdmin
       .from("client_notifications")
       .update({ read_at: new Date().toISOString() })
