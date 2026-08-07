@@ -77,7 +77,7 @@ export function AttachmentGalleryViewer({ attachments, initialId, onClose }: Pro
         <div className="flex min-w-0 items-center gap-3">
           <span className="truncate font-medium">{current.file_name}</span>
           {total > 1 && (
-            <span className="shrink-0 text-xs text-[var(--cream)]/60 tabular-nums">
+            <span className="shrink-0 text-xs text-[var(--cream)]/80 tabular-nums">
               {index + 1} / {total}
             </span>
           )}

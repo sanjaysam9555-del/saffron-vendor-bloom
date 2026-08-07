@@ -62,14 +62,14 @@ export function ClientSummaryView({ vendors, items, brideName, groomName, weddin
             <p className="mt-1 text-sm text-[var(--cream)]/80">{dateFmt}</p>
           </div>
           <div className="shrink-0 rounded-xl border border-[var(--cream)]/20 bg-[var(--cream)]/10 px-5 py-3 text-center backdrop-blur">
-            <span className="block text-[9px] font-medium uppercase tracking-[0.18em] text-[var(--cream)]/70">
+            <span className="block text-[9px] font-medium uppercase tracking-[0.18em] text-[var(--cream)]/85">
               <CalendarHeart className="mr-1 inline h-3 w-3 text-[var(--cream)]" />
               Countdown
             </span>
             <span className="mt-1 block font-display text-3xl font-semibold text-[var(--cream)]">
               {countdownValue}
             </span>
-            <span className="text-[11px] text-[var(--cream)]/70">{countdownLabel}</span>
+            <span className="text-[11px] text-[var(--cream)]/85">{countdownLabel}</span>
           </div>
         </div>
       </section>

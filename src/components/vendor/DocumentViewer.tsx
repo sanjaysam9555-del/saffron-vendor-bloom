@@ -236,7 +236,7 @@ function FallbackView({ url, fileName, kind }: { url: string; fileName: string; 
       <div className="max-w-md rounded-xl border border-white/10 bg-[var(--charcoal)]/70 p-8 text-center text-[var(--cream)]">
         <FileText className="mx-auto mb-4 h-12 w-12 text-[var(--champagne)]" />
         <h3 className="font-display text-2xl">Preview not available</h3>
-        <p className="mt-2 text-sm text-[var(--cream)]/70">
+        <p className="mt-2 text-sm text-[var(--cream)]/85">
           {kind === "office"
             ? "Office documents (Word, Excel, PowerPoint) can't be previewed inline. Open them in a new tab or download to view."
             : "This file type isn't supported for inline preview."}
@@ -272,7 +272,7 @@ function BlockedFallback({ url, fileName, reason }: { url: string; fileName: str
       <div className="max-w-md rounded-xl border border-white/10 bg-[var(--charcoal)]/70 p-8 text-center text-[var(--cream)]">
         <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-[var(--champagne)]" />
         <h3 className="font-display text-2xl">Inline preview unavailable</h3>
-        <p className="mt-2 text-sm text-[var(--cream)]/70">
+        <p className="mt-2 text-sm text-[var(--cream)]/85">
           Your browser blocked the embedded preview{reason ? ` (${reason})` : ""}. You can still open the file directly.
         </p>
         <div className="mt-5 flex flex-wrap items-center justify-center gap-2">

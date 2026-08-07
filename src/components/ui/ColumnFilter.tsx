@@ -50,7 +50,7 @@ export function ColumnFilter({ options, selected, onChange, label, align = "left
           // it's used — `--charcoal` text at 40% opacity was dark-on-dark and
           // nearly invisible until hover. `--cream` at reduced opacity is the
           // same treatment the header labels themselves use.
-          active ? "text-[var(--terracotta)]" : "text-[var(--cream)]/50"
+          active ? "text-[var(--terracotta)]" : "text-[var(--cream)]/75"
         }`}
       >
         <Filter className={`h-3 w-3 ${active ? "fill-current" : ""}`} />

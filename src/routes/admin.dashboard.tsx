@@ -401,7 +401,7 @@ function PLTable({ rows }: { rows: PLRow[] }) {
                 >
                   {(p.bride_name || "?") + " & " + (p.groom_name || "?")}
                 </Link>
-                <span className="shrink-0 text-[10px] uppercase tracking-wide text-[var(--cream)]/65">
+                <span className="shrink-0 text-[10px] uppercase tracking-wide text-[var(--cream)]/82">
                   {p.wedding_date ? fmtDateShort(p.wedding_date) : "—"}
                 </span>
               </div>
@@ -435,7 +435,7 @@ function PLTable({ rows }: { rows: PLRow[] }) {
       <div className="hidden overflow-hidden rounded-lg border border-[var(--border)] bg-white lg:block">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-sm">
-            <thead className="bg-[var(--charcoal)] text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/75">
+            <thead className="bg-[var(--charcoal)] text-left text-[10px] font-semibold uppercase tracking-widest text-[var(--cream)]/88">
               <tr>
                 <th className="px-4 py-2.5">Project</th>
                 <th className="px-4 py-2.5">Wedding</th>
