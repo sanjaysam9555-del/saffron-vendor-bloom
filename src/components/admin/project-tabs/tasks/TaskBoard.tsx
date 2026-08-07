@@ -8,7 +8,7 @@ export function TaskBoard({
   onOpen,
   onStageChange,
 }: {
-  tasks: ProjectTask[];
+  tasks: (ProjectTask & { project_label?: string })[];
   onOpen: (task: ProjectTask) => void;
   onStageChange: (id: string, stage: TaskStage) => void;
 }) {
@@ -72,6 +72,12 @@ export function TaskBoard({
                           {t.title}
                         </span>
                       </div>
+
+                      {t.project_label && (
+                        <div className="mt-1.5 truncate text-[10px] font-semibold uppercase tracking-wide text-[var(--terracotta)]/80">
+                          {t.project_label}
+                        </div>
+                      )}
 
                       {t.task_category && (
                         <div className="mt-1.5 inline-flex rounded bg-[var(--cream-deep)] px-1.5 py-0.5 text-[10px] text-[var(--charcoal)]/60">

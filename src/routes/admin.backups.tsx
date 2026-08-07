@@ -140,7 +140,7 @@ function BackupsPage() {
                   </thead>
                   <tbody>
                     {backups.map((b) => (
-                      <tr key={b.id} className="border-t border-[var(--border)]">
+                      <tr key={b.id} className="border-t border-[var(--border)] transition-colors hover:bg-[var(--cream)]/60">
                         <td className="px-4 py-3 text-[var(--charcoal)]">{b.label}</td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${b.kind === "automatic" ? "bg-[var(--cream-deep)] text-[var(--charcoal)]/70" : "bg-[var(--terracotta-soft)] text-[var(--terracotta)]"}`}>
@@ -150,10 +150,10 @@ function BackupsPage() {
                         <td className="px-4 py-3 text-[var(--charcoal)]/60">{formatBytes(b.size_bytes)}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-end gap-1">
-                            <button onClick={() => handleDownload(b.id)} title="Download" className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
+                            <button onClick={() => handleDownload(b.id)} title="Download" className="rounded p-1.5 text-[var(--charcoal)]/60 transition-colors hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
                               <Download className="h-4 w-4" />
                             </button>
-                            <button onClick={() => setRestoreTarget(b)} title="Restore this backup" className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
+                            <button onClick={() => setRestoreTarget(b)} title="Restore this backup" className="rounded p-1.5 text-[var(--charcoal)]/60 transition-colors hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
                               <RotateCcw className="h-4 w-4" />
                             </button>
                             <button onClick={() => handleDelete(b.id)} title="Delete backup" className="rounded p-1.5 text-red-600 hover:bg-red-50">

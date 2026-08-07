@@ -324,7 +324,7 @@ function UserRow({ row, isSelf, onChanged, onError }: { row: Row; isSelf: boolea
   };
 
   return (
-    <tr className="border-t border-[var(--border)]">
+    <tr className="border-t border-[var(--border)] transition-colors hover:bg-[var(--cream)]/60">
       <td className="px-4 py-3">
         {editing ? (
           <div className="flex items-center gap-1">
@@ -355,7 +355,7 @@ function UserRow({ row, isSelf, onChanged, onError }: { row: Row; isSelf: boolea
           </div>
         ) : (
           <div className="flex items-center justify-end gap-1">
-            <button onClick={() => setResetting(true)} title="Change password (signs user out)" className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
+            <button onClick={() => setResetting(true)} title="Change password (signs user out)" className="rounded p-1.5 text-[var(--charcoal)]/60 transition-colors hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
               <KeyRound className="h-4 w-4" />
             </button>
             {!isSelf && (
@@ -550,7 +550,7 @@ function ClientRow({ row, onChanged, onError }: { row: Row; onChanged: () => voi
   };
 
   return (
-    <tr className="border-t border-[var(--border)]">
+    <tr className="border-t border-[var(--border)] transition-colors hover:bg-[var(--cream)]/60">
       <td className="px-4 py-3">{row.display_name || "—"}</td>
       <td className="px-4 py-3 text-[var(--charcoal)]/70">{row.email}</td>
       <td className="px-4 py-3 text-[var(--charcoal)]/70">
@@ -565,7 +565,7 @@ function ClientRow({ row, onChanged, onError }: { row: Row; onChanged: () => voi
           </div>
         ) : (
           <div className="flex items-center justify-end gap-1">
-            <button onClick={() => setResetting(true)} title="Change password (signs user out)" className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
+            <button onClick={() => setResetting(true)} title="Change password (signs user out)" className="rounded p-1.5 text-[var(--charcoal)]/60 transition-colors hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
               <KeyRound className="h-4 w-4" />
             </button>
             <button onClick={handleDelete} title="Delete user" className="rounded p-1.5 text-red-600 hover:bg-red-50">

@@ -11,10 +11,13 @@ export function TaskTable({
   tasks,
   onOpen,
   onStageChange,
+  showProject = false,
 }: {
-  tasks: ProjectTask[];
+  tasks: (ProjectTask & { project_label?: string })[];
   onOpen: (task: ProjectTask) => void;
   onStageChange: (id: string, stage: TaskStage) => void;
+  /** Adds a Project column — the system-wide Tasks page spans projects. */
+  showProject?: boolean;
 }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "priority", dir: "asc" });
 
@@ -60,6 +63,7 @@ export function TaskTable({
           <tr>
             <Th k="priority" className="w-14">P</Th>
             <Th k="title">Task</Th>
+            {showProject && <th className="px-3 py-2.5">Project</th>}
             <th className="px-3 py-2.5">Category</th>
             <th className="px-3 py-2.5">Vendors</th>
             <Th k="assignee">Assignee</Th>
@@ -70,7 +74,7 @@ export function TaskTable({
         <tbody className="[&_tr:nth-child(even)]:bg-[var(--cream)]/25">
           {sorted.length === 0 ? (
             <tr>
-              <td colSpan={7} className="px-4 py-10 text-center text-sm text-[var(--charcoal)]/45">
+              <td colSpan={showProject ? 8 : 7} className="px-4 py-10 text-center text-sm text-[var(--charcoal)]/45">
                 No tasks match this view.
               </td>
             </tr>
@@ -98,6 +102,11 @@ export function TaskTable({
                     <div className="mt-0.5 line-clamp-1 text-[11px] text-[var(--charcoal)]/50">{t.remarks}</div>
                   )}
                 </td>
+                {showProject && (
+                  <td className="max-w-[160px] px-3 py-2.5 text-xs text-[var(--charcoal)]/70">
+                    <span className="line-clamp-1">{t.project_label ?? "—"}</span>
+                  </td>
+                )}
                 <td className="px-3 py-2.5 text-xs text-[var(--charcoal)]/70">{t.task_category || "—"}</td>
                 <td className="max-w-[200px] px-3 py-2.5 text-xs text-[var(--charcoal)]/70">
                   {t.vendors.length === 0 ? "—" : <span className="line-clamp-1">{t.vendors.map((v) => v.vendor_name).join(", ")}</span>}

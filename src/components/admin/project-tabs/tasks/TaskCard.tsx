@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarIcon, Check, X, Loader2, Trash2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -7,6 +7,7 @@ import {
   createProjectTask,
   updateProjectTask,
   deleteProjectTask,
+  listTaskFormOptions,
   type ProjectTask,
   type TaskPriority,
   type TaskStage,
@@ -59,7 +60,9 @@ export function TaskCard({
   taskCategories,
   onClose,
 }: {
-  projectId: string;
+  /** Pre-fills and (when editing) locks the project. Omit/empty for the
+   * system-wide Tasks page, where the planner picks a project explicitly. */
+  projectId?: string;
   options: Options;
   tasks: ProjectTask[];
   task?: ProjectTask | null;
@@ -72,7 +75,7 @@ export function TaskCard({
   const [title, setTitle] = useState(task?.title ?? "");
   const [taskCategory, setTaskCategory] = useState(task?.task_category ?? "");
   const [remarks, setRemarks] = useState(task?.remarks ?? "");
-  const [project, setProject] = useState(task?.project_id ?? projectId);
+  const [project, setProject] = useState(task?.project_id ?? projectId ?? "");
   const [vendorCategory, setVendorCategory] = useState(task?.vendor_category ?? "");
   const [vendorIds, setVendorIds] = useState<string[]>(task?.vendors.map((v) => v.vendor_id) ?? []);
   const [assignee, setAssignee] = useState(task?.assignee_user_id ?? "");
@@ -83,24 +86,39 @@ export function TaskCard({
   const [preceding, setPreceding] = useState(task?.preceding_task_id ?? "");
   const [succeeding, setSucceeding] = useState(task?.succeeding_task_id ?? "");
 
+  // Vendors are project-scoped, so they're refetched whenever the selected
+  // project changes rather than trusted from the (possibly stale, possibly
+  // empty — the system-wide page has none up front) `options` prop. When the
+  // project matches what the parent already fetched, this hits cache and
+  // resolves instantly.
+  const vendorOptionsQuery = useQuery({
+    queryKey: ["task-form-options", project],
+    queryFn: () => listTaskFormOptions({ data: { project_id: project } }),
+    enabled: !!project,
+  });
+  const vendorOptions = project ? (vendorOptionsQuery.data?.vendors ?? options.vendors) : [];
+
   const vendorCategories = useMemo(
-    () => Array.from(new Set(options.vendors.map((v) => v.category).filter(Boolean) as string[])).sort(),
-    [options.vendors],
+    () => Array.from(new Set(vendorOptions.map((v) => v.category).filter(Boolean) as string[])).sort(),
+    [vendorOptions],
   );
 
   const visibleVendors = useMemo(
-    () => (vendorCategory ? options.vendors.filter((v) => v.category === vendorCategory) : options.vendors),
-    [options.vendors, vendorCategory],
+    () => (vendorCategory ? vendorOptions.filter((v) => v.category === vendorCategory) : vendorOptions),
+    [vendorOptions, vendorCategory],
   );
 
-  // Drop selections that no longer belong to the chosen category.
+  // Drop selections that no longer belong to the chosen category, or that
+  // don't belong to the project at all (e.g. project was just switched).
   useEffect(() => {
-    if (!vendorCategory) return;
-    setVendorIds((ids) => ids.filter((id) => visibleVendors.some((v) => v.id === id)));
-  }, [vendorCategory, visibleVendors]);
+    setVendorIds((ids) =>
+      ids.filter((id) => (vendorCategory ? visibleVendors : vendorOptions).some((v) => v.id === id)),
+    );
+  }, [project, vendorCategory, visibleVendors, vendorOptions]);
 
-  const selectedVendors = options.vendors.filter((v) => vendorIds.includes(v.id));
-  const dependencyPool = tasks.filter((t) => t.id !== task?.id);
+  const selectedVendors = vendorOptions.filter((v) => vendorIds.includes(v.id));
+  // Dependencies only make sense within the same project.
+  const dependencyPool = tasks.filter((t) => t.id !== task?.id && t.project_id === project);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["project-tasks", projectId] });
@@ -148,7 +166,7 @@ export function TaskCard({
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        if (!title.trim()) return;
+        if (!title.trim() || !project) return;
         save.mutate();
       }}
       className="overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-[0_18px_40px_-28px_rgba(0,0,0,0.45)]"
@@ -206,6 +224,7 @@ export function TaskCard({
               disabled={editing}
               className={`${fieldCls} disabled:opacity-70`}
             >
+              {!project && <option value="">Select a project…</option>}
               {options.projects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.label}
@@ -215,7 +234,12 @@ export function TaskCard({
           </label>
           <label className="block">
             <Label>Vendor category</Label>
-            <select value={vendorCategory} onChange={(e) => setVendorCategory(e.target.value)} className={fieldCls}>
+            <select
+              value={vendorCategory}
+              onChange={(e) => setVendorCategory(e.target.value)}
+              disabled={!project}
+              className={`${fieldCls} disabled:cursor-not-allowed disabled:opacity-60`}
+            >
               <option value="">All categories</option>
               {vendorCategories.map((c) => (
                 <option key={c} value={c}>
@@ -227,7 +251,9 @@ export function TaskCard({
 
           <div>
             <Label>Vendors</Label>
-            {visibleVendors.length === 0 ? (
+            {!project ? (
+              <p className="text-xs text-[var(--charcoal)]/45">Select a project first.</p>
+            ) : visibleVendors.length === 0 ? (
               <p className="text-xs text-[var(--charcoal)]/45">No vendors assigned in this category.</p>
             ) : (
               <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-[var(--border)] p-1.5">
@@ -422,7 +448,7 @@ export function TaskCard({
           </button>
           <button
             type="submit"
-            disabled={!title.trim() || save.isPending}
+            disabled={!title.trim() || !project || save.isPending}
             className="inline-flex items-center gap-1.5 rounded-md bg-[var(--terracotta)] px-4 py-1.5 text-sm font-medium text-[var(--cream)] transition hover:bg-[var(--terracotta)]/90 disabled:opacity-50"
           >
             {save.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}

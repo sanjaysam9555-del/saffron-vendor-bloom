@@ -139,7 +139,7 @@ function ManageProjectsPage() {
                       const label = `${p.bride_name} & ${p.groom_name}`;
                       const archived = !!p.archived_at;
                       return (
-                        <tr key={p.id} className="border-t border-[var(--border)]">
+                        <tr key={p.id} className="border-t border-[var(--border)] transition-colors hover:bg-[var(--cream)]/60">
                           <td className="px-4 py-3 text-[var(--charcoal)]">{label}</td>
                           <td className="px-4 py-3 text-[var(--charcoal)]/70">
                             {new Date(p.wedding_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
@@ -154,21 +154,21 @@ function ManageProjectsPage() {
                               <button
                                 onClick={() => navigate({ to: "/admin/projects/$id", params: { id: p.id } })}
                                 title="Edit project"
-                                className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]"
+                                className="rounded p-1.5 text-[var(--charcoal)]/60 transition-colors hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
                               >
                                 <Pencil className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={() => handleArchiveToggle(p.id, !archived)}
                                 title={archived ? "Unarchive project" : "Archive project"}
-                                className="rounded p-1.5 text-[var(--charcoal)]/60 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]"
+                                className="rounded p-1.5 text-[var(--charcoal)]/60 transition-colors hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]"
                               >
                                 {archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
                               </button>
                               <button
                                 onClick={() => handleDelete(p.id, label)}
                                 title="Delete project"
-                                className="rounded p-1.5 text-red-600 hover:bg-red-50"
+                                className="rounded p-1.5 text-red-600 transition-colors hover:bg-red-50"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>

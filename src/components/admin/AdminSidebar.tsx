@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Users,
   Heart,
+  CheckSquare,
   BarChart3,
   Bell,
   CalendarDays,
@@ -147,6 +148,7 @@ export function AdminSidebar() {
           <NavItem to="/admin/dashboard" icon={<LayoutDashboard className="h-[18px] w-[18px]" />} label="Dashboard" collapsed={effectiveCollapsed} onClick={() => setMobileOpen(false)} />
           <NavItem to="/admin" exact icon={<Users className="h-[18px] w-[18px]" />} label="Vendors" collapsed={effectiveCollapsed} onClick={() => setMobileOpen(false)} />
           <NavItem to="/admin/projects" icon={<Heart className="h-[18px] w-[18px]" />} label="Projects" collapsed={effectiveCollapsed} onClick={() => setMobileOpen(false)} />
+          <NavItem to="/admin/tasks" icon={<CheckSquare className="h-[18px] w-[18px]" />} label="Tasks" collapsed={effectiveCollapsed} onClick={() => setMobileOpen(false)} />
           <AdminNavItem to="/admin/analytics" icon={<BarChart3 className="h-[18px] w-[18px]" />} label="Analytics" collapsed={effectiveCollapsed} onClick={() => setMobileOpen(false)} />
           <NotificationsNavItem collapsed={effectiveCollapsed} mounted={mounted} onClick={() => setMobileOpen(false)} />
           <NavItem to="/admin/calendar" icon={<CalendarDays className="h-[18px] w-[18px]" />} label="Calendar" collapsed={effectiveCollapsed} onClick={() => setMobileOpen(false)} />
@@ -326,6 +328,7 @@ const MOBILE_TAB_ITEMS = [
   { to: "/admin/dashboard", icon: LayoutDashboard, label: "Home", exact: false, adminOnly: false },
   { to: "/admin", icon: Users, label: "Vendors", exact: true, adminOnly: false },
   { to: "/admin/projects", icon: Heart, label: "Project", exact: false, adminOnly: false },
+  { to: "/admin/tasks", icon: CheckSquare, label: "Tasks", exact: false, adminOnly: false },
   { to: "/admin/analytics", icon: BarChart3, label: "Analytics", exact: false, adminOnly: true },
   { to: "/admin/calendar", icon: CalendarDays, label: "Calendar", exact: false, adminOnly: false },
   { to: "/admin/notifications", icon: Bell, label: "Alerts", exact: false, adminOnly: false },
@@ -374,6 +377,7 @@ const MOBILE_TITLES: { match: (p: string) => boolean; title: string }[] = [
   { match: (p) => p.startsWith("/admin/backups"), title: "Backup & Restore" },
   { match: (p) => p.startsWith("/admin/profile"), title: "Profile" },
   { match: (p) => p.startsWith("/admin/projects"), title: "Projects" },
+  { match: (p) => p.startsWith("/admin/tasks"), title: "Tasks" },
   { match: (p) => p === "/admin" || p === "/admin/", title: "Weddings" },
 ];
 

@@ -209,6 +209,104 @@ export const listProjectTasks = createServerFn({ method: "GET" })
     })) as ProjectTask[];
   });
 
+/** Every task across every project, for the system-wide Tasks page. */
+export const listAllTasks = createServerFn({ method: "GET" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .handler(async ({ context }): Promise<(ProjectTask & { project_label: string })[]> => {
+    await assertStaffOnly(context.userId);
+    const { data: rows, error } = await supabaseAdmin
+      .from("project_tasks")
+      .select(TASK_COLUMNS)
+      .order("done", { ascending: true })
+      .order("due_date", { ascending: true, nullsFirst: false })
+      .order("sort_order", { ascending: true });
+    if (error) throw new Error(error.message);
+    const tasks = (rows ?? []) as any[];
+    if (tasks.length === 0) return [];
+
+    const ids = tasks.map((t) => t.id);
+    const projectIds = Array.from(new Set(tasks.map((t) => t.project_id)));
+    const assigneeIds = Array.from(
+      new Set(tasks.map((t) => t.assignee_user_id).filter(Boolean) as string[]),
+    );
+
+    const [{ data: links }, { data: projects }, { data: profiles }] = await Promise.all([
+      supabaseAdmin.from("project_task_vendors").select("task_id, vendor_id").in("task_id", ids),
+      supabaseAdmin.from("projects").select("id, bride_name, groom_name").in("id", projectIds),
+      assigneeIds.length
+        ? supabaseAdmin.from("profiles").select("user_id, display_name").in("user_id", assigneeIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+
+    const vendorIds = Array.from(new Set((links ?? []).map((l) => l.vendor_id)));
+    const { data: vendors } = vendorIds.length
+      ? await supabaseAdmin.from("vendors").select("id, vendor_name, category").in("id", vendorIds)
+      : { data: [] as any[] };
+
+    const vendorMap = new Map((vendors ?? []).map((v: any) => [v.id, v]));
+    const nameMap = new Map((profiles ?? []).map((p: any) => [p.user_id, p.display_name]));
+    const projectMap = new Map(
+      (projects ?? []).map((p: any) => [p.id, `${p.bride_name} & ${p.groom_name}`]),
+    );
+
+    const byTask = new Map<string, TaskVendorRef[]>();
+    for (const l of links ?? []) {
+      const v = vendorMap.get(l.vendor_id);
+      if (!v) continue;
+      const list = byTask.get(l.task_id) ?? [];
+      list.push({
+        vendor_id: v.id,
+        vendor_name: v.vendor_name,
+        category: v.category ?? null,
+        // Quote status is per-project and not worth an N-project fan-out
+        // fetch here — TaskCard resolves it once a project is selected.
+        quote_status: null,
+        quote_amount: null,
+      });
+      byTask.set(l.task_id, list);
+    }
+
+    return tasks.map((t) => ({
+      ...t,
+      assignee_name: t.assignee_user_id ? (nameMap.get(t.assignee_user_id) ?? null) : null,
+      vendors: byTask.get(t.id) ?? [],
+      project_label: projectMap.get(t.project_id) ?? "Unknown project",
+    })) as (ProjectTask & { project_label: string })[];
+  });
+
+/** Staff + active-project list for the system-wide Tasks page, before any project is chosen. */
+export const listGlobalTaskFormOptions = createServerFn({ method: "GET" })
+  .middleware([attachAuthToken, requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertStaffOnly(context.userId);
+    const [{ data: roles }, { data: projects }] = await Promise.all([
+      supabaseAdmin.from("user_roles").select("user_id, role").in("role", ["admin", "employee"]),
+      supabaseAdmin
+        .from("projects")
+        .select("id, bride_name, groom_name, wedding_date")
+        .is("archived_at", null)
+        .order("wedding_date", { ascending: true }),
+    ]);
+
+    const staffIds = Array.from(new Set((roles ?? []).map((r) => r.user_id)));
+    const { data: profiles } = staffIds.length
+      ? await supabaseAdmin.from("profiles").select("user_id, display_name").in("user_id", staffIds)
+      : { data: [] as any[] };
+
+    const staff: TaskStaffOption[] = (profiles ?? [])
+      .map((p: any) => ({ id: p.user_id, name: p.display_name || "Team member" }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    return {
+      staff,
+      projects: (projects ?? []).map((p: any) => ({
+        id: p.id,
+        label: `${p.bride_name} & ${p.groom_name}`,
+        wedding_date: p.wedding_date,
+      })),
+    };
+  });
+
 /** Dropdown data for the task card: project vendors (with quote status) + staff assignees. */
 export const listTaskFormOptions = createServerFn({ method: "GET" })
   .middleware([attachAuthToken, requireSupabaseAuth])

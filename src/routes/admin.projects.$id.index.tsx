@@ -251,12 +251,12 @@ function ProjectSectionTabs({
   const tabDefs: { key: TabKey; label: string; icon: any }[] = [
     { key: "overview", label: "Overview", icon: LayoutDashboard },
     { key: "vendors", label: "Assigned Vendors", icon: LayoutGrid },
+    { key: "tasks", label: "Tasks", icon: CheckSquare },
     { key: "quotesAll", label: "Quotes", icon: Paperclip },
     { key: "categories", label: "Categories", icon: LayoutList },
     { key: "guests", label: "Guests", icon: Users2 },
     { key: "timelineOnly", label: "Timeline", icon: Clock3 },
     { key: "commentsAll", label: "Comments", icon: MessageSquare },
-    { key: "tasks", label: "Tasks", icon: CheckSquare },
     ...(isAdmin
       ? [
           { key: "analytics" as TabKey, label: "Financials", icon: BarChart3 },

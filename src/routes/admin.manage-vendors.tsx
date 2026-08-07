@@ -5,7 +5,7 @@ import { AuthGate } from "@/components/AuthGate";
 import { AdminSectionBackBar } from "@/components/admin/AdminSectionBackBar";
 import { SectionCard, StatTile } from "@/routes/admin.users";
 import { useVendors } from "@/hooks/useVendorData";
-import { useAllCategories, addCustomCategory, renameCategory, deleteCategory } from "@/lib/categories";
+import { useAllCategories, addCustomCategory, renameCategory, deleteCategory, getCategoryColor } from "@/lib/categories";
 import { useConfirmDelete } from "@/components/ui/confirm-dialog";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 import { BulkInstagramSyncDialog } from "@/components/vendor/BulkInstagramSyncDialog";
@@ -240,8 +240,18 @@ function CategoryRow({ name, count }: { name: string; count: number }) {
     }
   };
 
+  // Reuse the same hue as this category's badge elsewhere in the app (vendor
+  // cards, filters) so the color carries a consistent meaning here too —
+  // recognition, not decoration.
+  // Tailwind's scanner only picks up literal class strings in source, so a
+  // runtime-built `bg-[...]` class here would silently produce no CSS.
+  // Extract the raw color and apply it via inline style instead.
+  const swatchColor = getCategoryColor(name)
+    .text.replace(/^text-\[(.+)\]$/, "$1")
+    .replace(/_/g, " ");
+
   return (
-    <li className="flex items-center gap-3 px-4 py-2.5 sm:px-5">
+    <li className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-[var(--cream)]/60 sm:px-5">
       {editing ? (
         <div className="flex flex-1 items-center gap-1">
           <input
@@ -255,15 +265,16 @@ function CategoryRow({ name, count }: { name: string; count: number }) {
         </div>
       ) : (
         <>
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: swatchColor }} aria-hidden />
           <span className="flex-1 truncate text-sm text-[var(--charcoal)]">{name}</span>
           <span className="shrink-0 text-xs text-[var(--charcoal)]/45">
             {count} vendor{count === 1 ? "" : "s"}
           </span>
-          <button onClick={() => setEditing(true)} title="Rename category" className="shrink-0 rounded p-1.5 text-[var(--charcoal)]/50 hover:bg-[var(--cream)] hover:text-[var(--terracotta)]">
+          <button onClick={() => setEditing(true)} title="Rename category" className="shrink-0 rounded p-1.5 text-[var(--charcoal)]/50 transition-colors hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]">
             <Pencil className="h-3.5 w-3.5" />
           </button>
           {!isFallback && (
-            <button onClick={handleDelete} title="Delete category" className="shrink-0 rounded p-1.5 text-red-600 hover:bg-red-50">
+            <button onClick={handleDelete} title="Delete category" className="shrink-0 rounded p-1.5 text-red-600 transition-colors hover:bg-red-50">
               <Trash2 className="h-3.5 w-3.5" />
             </button>
           )}

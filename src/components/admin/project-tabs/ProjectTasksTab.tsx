@@ -35,7 +35,8 @@ export function ProjectTasksTab({ projectId }: { projectId: string }) {
   const [stageFilter, setStageFilter] = useState<TaskStage | "">("");
   const [priorityFilter, setPriorityFilter] = useState<string>("");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("");
-  const [hideDone, setHideDone] = useState(false);
+  const [doneFilter, setDoneFilter] = useState<"" | "show" | "hide">("");
+  const hideDone = doneFilter === "hide";
 
   const invalidate = () => qc.invalidateQueries({ queryKey: key });
 
@@ -78,19 +79,19 @@ export function ProjectTasksTab({ projectId }: { projectId: string }) {
     });
   }, [tasks, q, stageFilter, priorityFilter, assigneeFilter, hideDone]);
 
-  const openCount = tasks.filter((t) => t.stage !== "done").length;
-  const overdueCount = tasks.filter(
-    (t) => t.stage !== "done" && t.due_date && new Date(`${t.due_date}T00:00:00`) < new Date(new Date().toDateString()),
-  ).length;
-
   const selectCls =
     "rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-xs text-[var(--charcoal)] focus:border-[var(--terracotta)] focus:outline-none";
 
   return (
     <div className="space-y-4">
-      {/* ── Toolbar ── */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[180px] flex-1">
+      {/* ── Toolbar ──
+          Mobile: search+New task stay paired on their own row, the four
+          selects form a tidy 2×2 grid, and the view toggle gets its own
+          full-width row. sm+: `contents` drops the select-grid wrapper so
+          every control becomes a direct child of the flex-wrap row below,
+          matching the original inline desktop layout exactly. */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="relative w-full sm:min-w-[180px] sm:flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--charcoal)]/35" />
           <input
             value={q}
@@ -100,49 +101,51 @@ export function ProjectTasksTab({ projectId }: { projectId: string }) {
           />
         </div>
 
-        <select value={stageFilter} onChange={(e) => setStageFilter(e.target.value as TaskStage | "")} className={selectCls}>
-          <option value="">All stages</option>
-          {STAGE_ORDER.map((s) => (
-            <option key={s} value={s}>
-              {STAGE_LABEL[s]}
-            </option>
-          ))}
-        </select>
+        <div className="grid grid-cols-2 gap-2 sm:contents">
+          <select value={stageFilter} onChange={(e) => setStageFilter(e.target.value as TaskStage | "")} className={`${selectCls} w-full sm:w-auto`}>
+            <option value="">Stage</option>
+            {STAGE_ORDER.map((s) => (
+              <option key={s} value={s}>
+                {STAGE_LABEL[s]}
+              </option>
+            ))}
+          </select>
 
-        <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className={selectCls}>
-          <option value="">All priorities</option>
-          {PRIORITY_ORDER.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
+          <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className={`${selectCls} w-full sm:w-auto`}>
+            <option value="">Priority</option>
+            {PRIORITY_ORDER.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
 
-        <select value={assigneeFilter} onChange={(e) => setAssigneeFilter(e.target.value)} className={selectCls}>
-          <option value="">Anyone</option>
-          {(options?.staff ?? []).map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
+          <select value={assigneeFilter} onChange={(e) => setAssigneeFilter(e.target.value)} className={`${selectCls} w-full sm:w-auto`}>
+            <option value="">Assignee</option>
+            {(options?.staff ?? []).map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
 
-        <label className="inline-flex items-center gap-1.5 text-xs text-[var(--charcoal)]/65">
-          <input
-            type="checkbox"
-            checked={hideDone}
-            onChange={(e) => setHideDone(e.target.checked)}
-            className="h-3.5 w-3.5 rounded border-[var(--border)] accent-[var(--terracotta)]"
-          />
-          Hide done
-        </label>
+          <select
+            value={doneFilter}
+            onChange={(e) => setDoneFilter(e.target.value as "" | "show" | "hide")}
+            className={`${selectCls} w-full sm:w-auto`}
+          >
+            <option value="">Tasks</option>
+            <option value="show">Show Done</option>
+            <option value="hide">Hide Done</option>
+          </select>
+        </div>
 
-        <div className="flex overflow-hidden rounded-md border border-[var(--border)]">
+        <div className="flex w-full overflow-hidden rounded-md border border-[var(--border)] sm:w-auto">
           {(["board", "table"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-xs transition ${
+              className={`inline-flex flex-1 items-center justify-center gap-1 px-2.5 py-1.5 text-xs transition sm:flex-initial ${
                 view === v ? "bg-[var(--charcoal)] text-[var(--cream)]" : "bg-white text-[var(--charcoal)]/60"
               }`}
             >
@@ -157,23 +160,10 @@ export function ProjectTasksTab({ projectId }: { projectId: string }) {
             setEditing(null);
             setComposing(true);
           }}
-          className="inline-flex items-center gap-1 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] transition hover:bg-[var(--terracotta)]/90"
+          className="inline-flex w-full items-center justify-center gap-1 rounded-md bg-[var(--terracotta)] px-3 py-1.5 text-xs font-medium text-[var(--cream)] transition hover:bg-[var(--terracotta)]/90 sm:w-auto"
         >
           <Plus className="h-3.5 w-3.5" /> New task
         </button>
-      </div>
-
-      {/* ── Counters ── */}
-      <div className="flex flex-wrap items-center gap-3 text-[11px] text-[var(--charcoal)]/55">
-        <span>{openCount} open</span>
-        <span>·</span>
-        <span>{tasks.length - openCount} done</span>
-        {overdueCount > 0 && (
-          <>
-            <span>·</span>
-            <span className="font-semibold text-[var(--terracotta)]">{overdueCount} overdue</span>
-          </>
-        )}
       </div>
 
       {/* ── Composer / editor ── */}
