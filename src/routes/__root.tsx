@@ -109,9 +109,6 @@ export const Route = createRootRoute({
         children: `(function(){var l=document.querySelectorAll('link[rel="stylesheet"][media="print"]');l.forEach(function(x){function f(){x.media='all'}if(x.sheet){f()}else{x.addEventListener('load',f,{once:true})}})})();`,
       },
       {
-        children: `(function(){var f="saffron.chunk-reload.v1",p=/Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i;function r(m){if(!m||!p.test(m))return false;try{if(sessionStorage.getItem(f))return false;sessionStorage.setItem(f,String(Date.now()))}catch(e){}return true}window.addEventListener("error",function(e){var m=e.message||(e.error&&e.error.message);if(r(m))location.reload()},true);window.addEventListener("unhandledrejection",function(e){var x=e.reason,m=x instanceof Error?x.message:typeof x==="string"?x:void 0;if(r(m))location.reload()})})();`,
-      },
-      {
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",

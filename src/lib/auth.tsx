@@ -82,10 +82,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const loadedForRef = useRef<string | null>(null);
+  const inflightUserRef = useRef<string | null>(null);
   const inflightRef = useRef<Promise<AppRole | null> | null>(null);
 
   const loadAccess = (s: Session): Promise<AppRole | null> => {
-    if (inflightRef.current && loadedForRef.current === s.user.id) {
+    if (inflightRef.current && inflightUserRef.current === s.user.id) {
       return inflightRef.current;
     }
     setLoading(true);
@@ -112,8 +113,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } finally {
         setLoading(false);
         inflightRef.current = null;
+        inflightUserRef.current = null;
       }
     })();
+    inflightUserRef.current = s.user.id;
     inflightRef.current = promise;
     return promise;
   };
@@ -135,10 +138,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           // Defer backend queries OUT of the auth callback to avoid the
           // auth client's internal lock deadlocking on nested calls.
-          if (loadedForRef.current !== s.user.id) {
+          if (loadedForRef.current !== s.user.id && inflightUserRef.current !== s.user.id) {
             setTimeout(() => {
               if (!mounted) return;
-              if (loadedForRef.current !== s.user.id) void loadAccess(s);
+              if (loadedForRef.current !== s.user.id && inflightUserRef.current !== s.user.id) void loadAccess(s);
             }, 0);
           }
         } else {
@@ -162,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setRole(cached.role);
               setDisplayName(cached.displayName);
             }
-            if (loadedForRef.current !== s.user.id) void loadAccess(s);
+            if (loadedForRef.current !== s.user.id && inflightUserRef.current !== s.user.id) void loadAccess(s);
           }
           setInitialized(true);
         })
