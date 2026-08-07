@@ -89,9 +89,17 @@ function AdminUsersPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr(null);
+    const email = newEmail.trim().toLowerCase();
+    if (!email.endsWith("@saffronevents.in")) {
+      const msg = "Staff accounts must use an @saffronevents.in email";
+      setErr(msg);
+      notifyError(new Error(msg), msg);
+      return;
+    }
     setCreating(true);
     try {
-      await createEmployee({ data: { email: newEmail.trim(), password: newPwd, display_name: (newName.trim() || newEmail.split("@")[0]) } });
+      await createEmployee({ data: { email, password: newPwd, display_name: (newName.trim() || email.split("@")[0]) } });
+
       notifySuccess("Employee created");
       setNewEmail("");
       setNewPwd("");
