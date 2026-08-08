@@ -203,6 +203,20 @@ function AdminNotificationsPage() {
     return clubEntries(rows);
   }, [items, category, unreadOnly, userId]);
 
+  // Deep link from universal search: expand the group holding the alert and
+  // highlight the alert itself.
+  const deepLink = useSearch({ strict: false }) as { focus?: string };
+  useEffect(() => {
+    const id = deepLink.focus;
+    if (!id) return;
+    const entry = entries.find((e) => e.items.some((i) => i.id === id));
+    if (!entry) return;
+    setExpanded((prev) => (prev.has(entry.key) ? prev : new Set(prev).add(entry.key)));
+  }, [deepLink.focus, entries]);
+  useFocusTarget(deepLink.focus, !loading);
+
+
+
   const markOne = async (id: string) => {
     if (!userId) return;
     setItems((prev) =>
