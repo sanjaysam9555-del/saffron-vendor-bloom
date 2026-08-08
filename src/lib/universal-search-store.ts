@@ -61,3 +61,42 @@ export function pushRecentSearch(term: string) {
     /* ignore */
   }
 }
+
+const PREFS_KEY = "saffron.universal-search.prefs";
+
+/** Last query + selected category chips, remembered per device. */
+export interface SearchPrefs {
+  q: string;
+  kinds: string[];
+}
+
+export function readSearchPrefs(): SearchPrefs {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    const parsed = raw ? (JSON.parse(raw) as Partial<SearchPrefs>) : null;
+    return {
+      q: typeof parsed?.q === "string" ? parsed.q : "",
+      kinds: Array.isArray(parsed?.kinds) ? (parsed!.kinds as string[]) : [],
+    };
+  } catch {
+    return { q: "", kinds: [] };
+  }
+}
+
+export function writeSearchPrefs(prefs: SearchPrefs) {
+  try {
+    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Called on sign-out so the next account starts clean. */
+export function clearSearchPrefs() {
+  try {
+    localStorage.removeItem(PREFS_KEY);
+    localStorage.removeItem(RECENT_KEY);
+  } catch {
+    /* ignore */
+  }
+}
