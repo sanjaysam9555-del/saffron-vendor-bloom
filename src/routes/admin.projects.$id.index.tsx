@@ -283,6 +283,47 @@ function ProjectSectionTabs({
   const openVendorDetail = (vendorId: string) =>
     setDetailVendor(vendors.find((v: any) => v.id === vendorId) ?? null);
 
+  // ── Deep linking ────────────────────────────────────────────────────────
+  // Universal search lands here with `?tab=…&v=<vendorId>&focus=<recordId>`:
+  // switch to the right tab, open the vendor in project context, and
+  // highlight the exact row once it has rendered.
+  const deepLink = useSearch({ strict: false }) as { tab?: string; v?: string; focus?: string };
+  const navigate = useNavigate();
+  const appliedTabRef = useRef<string | null>(null);
+  const appliedVendorRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const key = deepLink.tab as TabKey | undefined;
+    if (!key || appliedTabRef.current === key) return;
+    if (!tabDefs.some((t) => t.key === key)) return;
+    appliedTabRef.current = key;
+    setTab(key);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLink.tab, isAdmin]);
+
+  useEffect(() => {
+    const id = deepLink.v;
+    if (!id || appliedVendorRef.current === id) return;
+    const target = vendors.find((v: any) => v.id === id);
+    if (!target) return;
+    appliedVendorRef.current = id;
+    setDetailVendor(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLink.v, vendors]);
+
+  useFocusTarget(deepLink.focus ?? deepLink.v, vendors.length > 0);
+
+  const clearDeepLink = () => {
+    appliedVendorRef.current = null;
+    if (!deepLink.v && !deepLink.focus) return;
+    navigate({
+      to: ".",
+      search: (prev: any) => ({ ...prev, v: undefined, focus: undefined }),
+      replace: true,
+    } as never);
+  };
+
+
   return (
     <section className="mt-2 sm:mt-10">
       {/* Below sm: a fixed 5-column grid, two rows (icon over label, small
