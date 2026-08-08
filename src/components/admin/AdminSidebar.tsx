@@ -78,7 +78,7 @@ export function AdminSidebar() {
   return (
     <>
       {/* ── Mobile top bar ── */}
-      <div className="app-header-safe fixed inset-x-0 top-0 z-40 grid h-14 grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-3 border-b border-[var(--border)] bg-[var(--cream)] px-4 lg:hidden">
+      <div className="app-header-safe fixed inset-x-0 top-0 z-40 grid h-12 grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-3 border-b border-[var(--border)] bg-[var(--cream)] px-4 lg:hidden">
         <button
           onClick={() => setMobileOpen(true)}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[var(--charcoal)]/82 hover:bg-[var(--cream-deep)]"
@@ -339,20 +339,21 @@ export function AdminMobileTabBar() {
   const { role } = useAuth();
 
   return (
-    <nav className="app-footer-safe fixed inset-x-0 bottom-0 z-40 flex h-16 items-stretch border-t border-[var(--border)] bg-[var(--cream)] lg:hidden">
+    <nav className="app-footer-safe fixed inset-x-0 bottom-0 z-40 flex min-h-[60px] items-stretch border-t border-[var(--border)] bg-[var(--cream)] lg:hidden">
       {MOBILE_TAB_ITEMS.filter((i) => !i.adminOnly || role === "admin").map(({ to, icon: Icon, label, exact }) => {
         const active = exact ? pathname === to || pathname === to + "/" : pathname.startsWith(to);
         return (
           <Link
             key={to}
             to={to}
-            className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-0.5 text-[9px] font-medium ${
+            className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-1.5 text-[9px] font-medium ${
               active ? "text-[var(--terracotta)]" : "text-[var(--charcoal)]/70"
             }`}
           >
-            <Icon className="h-[18px] w-[18px]" />
+            <Icon className="h-[21px] w-[21px]" />
             <span className="truncate">{label}</span>
           </Link>
+
         );
       })}
     </nav>

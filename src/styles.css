@@ -253,7 +253,7 @@ body::before {
 
 .app-header-safe {
   background-color: var(--cream) !important;
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: max(0px, calc(env(safe-area-inset-top, 0px) - 8px));
 }
 
 .app-footer-safe {
