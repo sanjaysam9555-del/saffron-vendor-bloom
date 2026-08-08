@@ -132,6 +132,33 @@ function DashboardPage() {
 
   useSetMobilePageTitle(filters.category ?? "All Vendors");
 
+  // ── Deep linking ────────────────────────────────────────────────────────
+  // Universal search sends `/admin?v=<vendorId>` (and optionally `focus`).
+  // Open that vendor's detail sheet as soon as the vendor list is available,
+  // highlight its card/row, and drop the params when the sheet is closed.
+  const deepLink = useSearch({ strict: false }) as { v?: string; focus?: string };
+  const navigate = useNavigate();
+  const openedDeepLinkRef = useRef<string | null>(null);
+  useFocusTarget(deepLink.focus ?? deepLink.v, !isLoading);
+
+  useEffect(() => {
+    const id = deepLink.v;
+    if (!id || openedDeepLinkRef.current === id) return;
+    const target = vendors.find((v) => v.id === id);
+    if (!target) return;
+    openedDeepLinkRef.current = id;
+    modals.openDetail(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLink.v, vendors]);
+
+  const clearDeepLink = useCallback(() => {
+    openedDeepLinkRef.current = null;
+    if (!deepLink.v && !deepLink.focus) return;
+    navigate({ to: "/admin", search: {} as never, replace: true });
+  }, [deepLink.v, deepLink.focus, navigate]);
+
+
+
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
