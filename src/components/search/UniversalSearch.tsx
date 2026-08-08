@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   Search,
@@ -11,6 +11,7 @@ import {
   CalendarDays,
   Bell,
   CornerDownLeft,
+  Link2,
   X,
 } from "lucide-react";
 import { universalSearch } from "@/lib/universal-search.functions";
@@ -19,9 +20,12 @@ import {
   openUniversalSearch,
   pushRecentSearch,
   readRecentSearches,
+  readSearchPrefs,
+  writeSearchPrefs,
   useUniversalSearchOpen,
 } from "@/lib/universal-search-store";
 import { useAuth } from "@/lib/auth";
+import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 
 type Hit = Awaited<ReturnType<typeof universalSearch>>[number];
 
@@ -58,11 +62,14 @@ export function UniversalSearchDialog() {
   const isOpen = useUniversalSearchOpen();
   const { session, initialized } = useAuth();
   const navigate = useNavigate();
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [term, setTerm] = useState("");
   const [debounced, setDebounced] = useState("");
   const [cursor, setCursor] = useState(0);
   const [recent, setRecent] = useState<string[]>([]);
+  // Quick-filter chips. Empty set = "All".
+  const [kinds, setKinds] = useState<Set<string>>(new Set());
 
   // Global shortcut: ⌘K / Ctrl+K anywhere in the app.
   useEffect(() => {
@@ -76,12 +83,29 @@ export function UniversalSearchDialog() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Reopening restores the last query + chips for this device; the query is
+  // pre-selected so typing immediately replaces it.
   useEffect(() => {
     if (!isOpen) return;
     setRecent(readRecentSearches());
-    const t = setTimeout(() => inputRef.current?.focus(), 30);
+    const prefs = readSearchPrefs();
+    if (prefs.q) {
+      setTerm(prefs.q);
+      setDebounced(prefs.q);
+    }
+    if (prefs.kinds.length) setKinds(new Set(prefs.kinds));
+    const t = setTimeout(() => {
+      inputRef.current?.focus();
+      if (prefs.q) inputRef.current?.select();
+    }, 30);
     return () => clearTimeout(t);
   }, [isOpen]);
+
+  // Persist as the user types / toggles chips.
+  useEffect(() => {
+    if (!isOpen) return;
+    writeSearchPrefs({ q: term.trim(), kinds: [...kinds] });
+  }, [isOpen, term, kinds]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(term.trim()), 200);
@@ -98,10 +122,30 @@ export function UniversalSearchDialog() {
     staleTime: 30_000,
   });
 
-  const hits: Hit[] = useMemo(() => {
+  const allHits: Hit[] = useMemo(() => {
     const rows = (data ?? []) as Hit[];
     return [...rows].sort((a, b) => ORDER.indexOf(a.type) - ORDER.indexOf(b.type));
   }, [data]);
+
+  /** Per-kind match counts drive the chip badges and their disabled state. */
+  const counts = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const h of allHits) m[h.type] = (m[h.type] ?? 0) + 1;
+    return m;
+  }, [allHits]);
+
+  const hits: Hit[] = useMemo(
+    () => (kinds.size ? allHits.filter((h) => kinds.has(h.type)) : allHits),
+    [allHits, kinds],
+  );
+
+  const toggleKind = (kind: string) =>
+    setKinds((prev) => {
+      const next = new Set(prev);
+      if (next.has(kind)) next.delete(kind);
+      else next.add(kind);
+      return next;
+    });
 
   const groups = useMemo(() => {
     const map = new Map<string, Hit[]>();
@@ -116,8 +160,45 @@ export function UniversalSearchDialog() {
   const go = (hit: Hit) => {
     pushRecentSearch(debounced);
     closeUniversalSearch();
-    setTerm("");
-    navigate({ to: hit.to, search: (hit.search ?? {}) as never } as never);
+    // `__deepLink` marks this as *our* history entry, so closing the focused
+    // view can simply go back and restore the previous scroll position.
+    navigate({
+      to: hit.to,
+      search: (hit.search ?? {}) as never,
+      state: { __deepLink: true } as never,
+    } as never);
+  };
+
+  /** Absolute, shareable URL for a hit — opens straight into the focused view. */
+  const linkFor = (hit: Hit) => {
+    const loc = router.buildLocation({
+      to: hit.to,
+      search: (hit.search ?? {}) as never,
+    } as never);
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    return `${origin}${loc.href}`;
+  };
+
+  const copyLink = async (hit: Hit) => {
+    const url = linkFor(hit);
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        // Older iOS Safari in non-secure contexts.
+        const ta = document.createElement("textarea");
+        ta.value = url;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      notifySuccess("Link copied", { description: hit.title });
+    } catch (e) {
+      notifyError(e, "Could not copy the link.");
+    }
   };
 
   if (!isOpen) return null;
@@ -133,6 +214,16 @@ export function UniversalSearchDialog() {
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setCursor((c) => Math.max(c - 1, 0));
+    } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "c") {
+      const hit = hits[cursor];
+      const noSelection = !window.getSelection()?.toString();
+      if (hit && noSelection) {
+        e.preventDefault();
+        void copyLink(hit);
+      }
+    } else if (/^[1-7]$/.test(e.key) && (e.altKey || e.target !== inputRef.current)) {
+      e.preventDefault();
+      toggleKind(ORDER[Number(e.key) - 1]);
     } else if (e.key === "Enter") {
       const hit = hits[cursor];
       if (hit) {
