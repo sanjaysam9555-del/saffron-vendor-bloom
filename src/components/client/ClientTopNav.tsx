@@ -45,6 +45,7 @@ export function ClientTopNav({
         </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-2.5">
+          <UniversalSearchButton />
           <span data-tour="notifications-bell" className="inline-flex">
             <ClientNotificationsBell
               attentionItems={attentionItems}
