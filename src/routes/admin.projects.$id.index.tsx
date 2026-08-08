@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useFocusTarget } from "@/lib/deep-link";
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useState, useMemo, useEffect, useRef, lazy, Suspense } from "react";
 import { useQuery, useQueryClient, useMutation, useQueries } from "@tanstack/react-query";
 import { Switch } from "@/components/ui/switch";
 import { UserPlus, Trash2, KeyRound, X, Check, Calendar, Pencil, LayoutGrid, Filter, FileText, Paperclip, CircleCheck, MessageSquare, Plus, Sparkles, Archive, ArchiveRestore, Eye, ChevronDown, Table as TableIcon, ArrowUp, ArrowDown, ArrowUpDown, BarChart3, LayoutDashboard, Users2, AlertTriangle, LayoutList, Clock3, CheckSquare } from "lucide-react";
