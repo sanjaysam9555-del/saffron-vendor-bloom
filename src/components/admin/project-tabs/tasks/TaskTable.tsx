@@ -82,6 +82,7 @@ export function TaskTable({
             sorted.map((t) => (
               <tr
                 key={t.id}
+                data-focus-id={t.id}
                 className={`border-t border-[var(--border)] transition hover:bg-[var(--cream)]/60 ${
                   t.stage === "done" ? "bg-emerald-500/10" : ""
                 }`}

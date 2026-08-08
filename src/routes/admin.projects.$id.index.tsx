@@ -1228,7 +1228,7 @@ function AssignedVendorsSection({
                     ? "bg-[var(--terracotta-soft)] hover:bg-[var(--terracotta)]/15"
                     : "hover:bg-[var(--cream)]/60";
                 return (
-                  <tr key={v.id} className={`border-t border-[var(--border)] ${rowClass}`}>
+                  <tr key={v.id} data-focus-id={v.id} className={`border-t border-[var(--border)] ${rowClass}`}>
                     <td className="align-top px-3 py-2 text-left">
                       <div className="flex items-center gap-1.5">
                         <button
