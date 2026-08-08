@@ -427,7 +427,7 @@ function ProjectSectionTabs({
             vendor={detailVendor}
             vendors={vendors}
             selections={selections[detailVendor.id] ?? []}
-            onClose={() => setDetailVendor(null)}
+            onClose={() => { setDetailVendor(null); clearDeepLink(); }}
             onNavigate={(v: any) => setDetailVendor(v)}
             onOpenQuotes={(autoOpenForm: boolean) =>
               setQuotesFor({
