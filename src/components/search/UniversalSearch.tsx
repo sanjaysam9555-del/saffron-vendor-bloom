@@ -269,6 +269,44 @@ export function UniversalSearchDialog() {
           </button>
         </div>
 
+        {/* Quick filters — multi-select, instant, purely client-side. */}
+        <div className="flex flex-wrap items-center gap-1.5 border-b border-[var(--border)]/70 px-3 py-2">
+          <button
+            onClick={() => setKinds(new Set())}
+            className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
+              kinds.size === 0
+                ? "border-[var(--terracotta)] bg-[var(--terracotta)]/12 text-[var(--terracotta)]"
+                : "border-[var(--border)] bg-white/70 text-[var(--charcoal)]/78 hover:border-[var(--terracotta)]"
+            }`}
+          >
+            All
+          </button>
+          {ORDER.map((kind) => {
+            const meta = KIND_META[kind];
+            const n = counts[kind] ?? 0;
+            const on = kinds.has(kind);
+            const disabled = n === 0 && !on;
+            return (
+              <button
+                key={kind}
+                disabled={disabled}
+                onClick={() => toggleKind(kind)}
+                aria-pressed={on}
+                className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
+                  on
+                    ? "border-[var(--terracotta)] bg-[var(--terracotta)]/12 text-[var(--terracotta)]"
+                    : disabled
+                      ? "cursor-not-allowed border-[var(--border)]/60 bg-white/40 text-[var(--charcoal)]/38"
+                      : "border-[var(--border)] bg-white/70 text-[var(--charcoal)]/78 hover:border-[var(--terracotta)]"
+                }`}
+              >
+                {meta.label}
+                {n > 0 && <span className="ml-1 opacity-70">{n}</span>}
+              </button>
+            );
+          })}
+        </div>
+
         <div className="max-h-[58vh] overflow-y-auto px-2 py-2">
           {debounced.length < 2 && (
             <div className="px-3 py-4">
@@ -315,28 +353,42 @@ export function UniversalSearchDialog() {
                   flatIndex += 1;
                   const active = flatIndex === cursor;
                   return (
-                    <button
+                    <div
                       key={`${hit.type}-${hit.id}`}
                       onMouseEnter={() => setCursor(hits.indexOf(hit))}
-                      onClick={() => go(hit)}
-                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors ${
+                      className={`group flex w-full items-center gap-2 rounded-lg pr-1.5 transition-colors ${
                         active ? "bg-[var(--terracotta)]/12" : "hover:bg-white/60"
                       }`}
                     >
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-medium text-[var(--charcoal)]">
-                          {hit.title}
-                        </div>
-                        {(hit.subtitle || hit.context) && (
-                          <div className="truncate text-xs text-[var(--charcoal)]/70">
-                            {[hit.context, hit.subtitle].filter(Boolean).join(" · ")}
+                      <button
+                        onClick={() => go(hit)}
+                        className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2 text-left"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-medium text-[var(--charcoal)]">
+                            {hit.title}
                           </div>
+                          {(hit.subtitle || hit.context) && (
+                            <div className="truncate text-xs text-[var(--charcoal)]/70">
+                              {[hit.context, hit.subtitle].filter(Boolean).join(" · ")}
+                            </div>
+                          )}
+                        </div>
+                        {active && (
+                          <CornerDownLeft className="h-3.5 w-3.5 shrink-0 text-[var(--terracotta)]" />
                         )}
-                      </div>
-                      {active && (
-                        <CornerDownLeft className="h-3.5 w-3.5 shrink-0 text-[var(--terracotta)]" />
-                      )}
-                    </button>
+                      </button>
+                      <button
+                        onClick={() => void copyLink(hit)}
+                        title="Copy shareable link"
+                        aria-label={`Copy link to ${hit.title}`}
+                        className={`shrink-0 rounded-md p-1.5 text-[var(--charcoal)]/58 transition hover:bg-white/70 hover:text-[var(--terracotta)] ${
+                          active ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus:opacity-100 max-md:opacity-100"
+                        }`}
+                      >
+                        <Link2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   );
                 })}
               </div>
@@ -345,7 +397,7 @@ export function UniversalSearchDialog() {
         </div>
 
         <div className="flex items-center justify-between border-t border-[var(--border)]/70 px-4 py-2 text-[10px] text-[var(--charcoal)]/60">
-          <span>↑↓ navigate · ↵ open · Esc close</span>
+          <span>↑↓ navigate · ↵ open · ⌘C copy link · Esc close</span>
           <span>⌘K anywhere</span>
         </div>
       </div>
