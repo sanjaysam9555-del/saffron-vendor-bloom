@@ -24,6 +24,9 @@ import { useConfirm } from "@/components/ui/confirm-dialog";
 import { getUnreadNotificationCount } from "@/lib/notifications.functions";
 import { readTheme, applyTheme, DEFAULT_THEME, type StudioTheme } from "@/lib/studio-theme";
 import { ADMIN_SECTIONS, ADMIN_SETTINGS_HOME } from "@/components/admin/admin-sections";
+import { UniversalSearchButton } from "@/components/search/UniversalSearch";
+import { openUniversalSearch } from "@/lib/universal-search-store";
+import { Search as SearchIcon } from "lucide-react";
 
 const COLLAPSED_KEY = "saffron.sidebar.collapsed";
 const WIDTH_EXPANDED = "200px";
@@ -78,7 +81,7 @@ export function AdminSidebar() {
   return (
     <>
       {/* ── Mobile top bar ── */}
-      <div className="app-header-safe fixed inset-x-0 top-0 z-40 grid h-12 grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-3 border-b border-[var(--border)] bg-[var(--cream)] px-4 lg:hidden">
+      <div className="app-header-safe fixed inset-x-0 top-0 z-40 grid h-12 grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-[var(--border)] bg-[var(--cream)] px-4 lg:hidden">
         <button
           onClick={() => setMobileOpen(true)}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[var(--charcoal)]/82 hover:bg-[var(--cream-deep)]"
@@ -90,6 +93,7 @@ export function AdminSidebar() {
           Saffron
         </Link>
         <MobilePageTitle />
+        <UniversalSearchButton className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[var(--charcoal)]/82 hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]" />
       </div>
 
 
@@ -145,6 +149,17 @@ export function AdminSidebar() {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3">
+          <button
+            onClick={() => { setMobileOpen(false); openUniversalSearch(); }}
+            title="Search everything"
+            className={[
+              "mx-2 my-0.5 flex w-[calc(100%-16px)] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--charcoal)]/82 transition-colors hover:bg-[var(--cream-deep)] hover:text-[var(--charcoal)]",
+              effectiveCollapsed ? "justify-center px-0" : "",
+            ].join(" ")}
+          >
+            <SearchIcon className="h-[18px] w-[18px] shrink-0" />
+            {!effectiveCollapsed && <span className="truncate">Search</span>}
+          </button>
           <NavItem to="/admin/dashboard" icon={<LayoutDashboard className="h-[18px] w-[18px]" />} label="Dashboard" collapsed={effectiveCollapsed} onClick={() => setMobileOpen(false)} />
           <NavItem to="/admin" exact icon={<Users className="h-[18px] w-[18px]" />} label="Vendors" collapsed={effectiveCollapsed} onClick={() => setMobileOpen(false)} />
           <NavItem to="/admin/projects" icon={<Heart className="h-[18px] w-[18px]" />} label="Projects" collapsed={effectiveCollapsed} onClick={() => setMobileOpen(false)} />

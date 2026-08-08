@@ -3,6 +3,7 @@ import logoLight from "@/assets/saffron-logo-transparent.png";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { ClientNotificationsBell } from "./ClientNotificationsBell";
+import { UniversalSearchButton } from "@/components/search/UniversalSearch";
 import { ClientTourButton } from "./ClientTourButton";
 import type { TimelineItem } from "@/lib/urgency";
 
@@ -45,6 +46,7 @@ export function ClientTopNav({
         </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-2.5">
+          <UniversalSearchButton />
           <span data-tour="notifications-bell" className="inline-flex">
             <ClientNotificationsBell
               attentionItems={attentionItems}
