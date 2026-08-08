@@ -477,6 +477,7 @@ function FeedRow({
             return (
               <Link
                 key={it.id}
+                data-focus-id={it.id}
                 to={href}
                 onClick={() => onMarkOne(it.id)}
                 className="flex items-start gap-2 border-b border-[var(--border)]/50 px-3 py-2.5 pl-11 transition last:border-b-0 hover:bg-white sm:gap-3 sm:px-4 sm:pl-14"
