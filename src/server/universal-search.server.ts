@@ -52,9 +52,10 @@ export async function runUniversalSearch(
   const isStaff = role === "admin" || role === "employee";
   const hits: SearchHit[] = [];
 
-  const safe = async <T>(p: PromiseLike<T>): Promise<T | null> => {
+  const safe = async (p: any): Promise<{ data: any[] } | null> => {
     try {
-      return await p;
+      const r: any = await p;
+      return { data: (r?.data ?? []) as any[] };
     } catch {
       return null;
     }
