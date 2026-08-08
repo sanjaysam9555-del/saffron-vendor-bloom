@@ -579,12 +579,27 @@ button:active, a:active, [role="button"]:active {
 
 
 
-/* Deep-link focus ring — universal search highlights the exact row/record it
-   navigated to for a couple of seconds, then fades back to normal. */
-@keyframes deep-link-pulse {
-  0%   { box-shadow: 0 0 0 0 var(--terracotta-soft, rgba(178, 74, 47, 0.35)); }
-  35%  { box-shadow: 0 0 0 6px var(--terracotta-soft, rgba(178, 74, 47, 0.35)); }
-  100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+/* Deep-link focus highlight — universal search highlights the exact row it
+   navigated to: a soft wash fades in, the ring pulses twice, then it settles.
+   `--focus-scroll-offset` lets each layout tell the scroll helper how much
+   sticky chrome (top bar, tab bar) sits over the scroll container. */
+:root {
+  --focus-scroll-offset: 0px;
+}
+@keyframes deep-link-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(178, 74, 47, 0.42); }
+  40%  { box-shadow: 0 0 0 7px rgba(178, 74, 47, 0.16); }
+  100% { box-shadow: 0 0 0 0 rgba(178, 74, 47, 0); }
+}
+@keyframes deep-link-wash {
+  0%   { background-color: rgba(178, 74, 47, 0); }
+  18%  { background-color: rgba(178, 74, 47, 0.14); }
+  100% { background-color: rgba(178, 74, 47, 0.05); }
+}
+.deep-link-focus,
+tr.deep-link-focus > td,
+tr.deep-link-focus > th {
+  animation: deep-link-wash 2.4s ease-out forwards;
 }
 .deep-link-focus {
   position: relative;
@@ -592,8 +607,30 @@ button:active, a:active, [role="button"]:active {
   border-radius: 0.6rem;
   outline: 2px solid var(--terracotta);
   outline-offset: 1px;
-  animation: deep-link-pulse 1.6s ease-out 2;
+  scroll-margin-block: calc(var(--focus-scroll-offset) + 24px);
+  animation:
+    deep-link-wash 2.4s ease-out forwards,
+    deep-link-ring 1.2s ease-out 2;
+}
+.deep-link-focus.deep-link-focus-out {
+  transition: outline-color 420ms ease, background-color 420ms ease;
+  outline-color: transparent;
 }
 @media (prefers-reduced-motion: reduce) {
-  .deep-link-focus { animation: none; }
+  .deep-link-focus,
+  tr.deep-link-focus > td,
+  tr.deep-link-focus > th {
+    animation: none;
+    background-color: rgba(178, 74, 47, 0.08);
+  }
+}
+
+
+/* Sticky chrome height the deep-link scroll helper must clear: the mobile top
+   bar on small screens, the desktop page header above md. */
+@media (max-width: 767px) {
+  :root { --focus-scroll-offset: 64px; }
+}
+@media (min-width: 768px) {
+  :root { --focus-scroll-offset: 16px; }
 }

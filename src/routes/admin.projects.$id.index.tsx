@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useFocusTarget } from "@/lib/deep-link";
+import { useFocusTarget, useDeepLinkExit } from "@/lib/deep-link";
 import { useState, useMemo, useEffect, useRef, lazy, Suspense } from "react";
 import { useQuery, useQueryClient, useMutation, useQueries } from "@tanstack/react-query";
 import { Switch } from "@/components/ui/switch";
@@ -303,7 +303,15 @@ function ProjectSectionTabs({
 
   useEffect(() => {
     const id = deepLink.v;
-    if (!id || appliedVendorRef.current === id) return;
+    if (!id) {
+      // Params gone (Back button or close) — take the detail sheet with them.
+      if (appliedVendorRef.current) {
+        appliedVendorRef.current = null;
+        setDetailVendor(null);
+      }
+      return;
+    }
+    if (appliedVendorRef.current === id) return;
     const target = vendors.find((v: any) => v.id === id);
     if (!target) return;
     appliedVendorRef.current = id;
@@ -313,14 +321,10 @@ function ProjectSectionTabs({
 
   useFocusTarget(deepLink.focus ?? deepLink.v, vendors.length > 0);
 
+  const exitDeepLink = useDeepLinkExit(deepLink, ".");
   const clearDeepLink = () => {
     appliedVendorRef.current = null;
-    if (!deepLink.v && !deepLink.focus) return;
-    navigate({
-      to: ".",
-      search: (prev: any) => ({ ...prev, v: undefined, focus: undefined }),
-      replace: true,
-    } as never);
+    exitDeepLink();
   };
 
 

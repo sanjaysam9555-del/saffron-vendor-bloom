@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { useFocusTarget } from "@/lib/deep-link";
+import { useFocusTarget, useDeepLinkExit } from "@/lib/deep-link";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon, ArrowUpDown, X, ChevronLeft, ChevronRight } from "lucide-react";
@@ -137,13 +137,21 @@ function DashboardPage() {
   // Open that vendor's detail sheet as soon as the vendor list is available,
   // highlight its card/row, and drop the params when the sheet is closed.
   const deepLink = useSearch({ strict: false }) as { v?: string; focus?: string };
-  const navigate = useNavigate();
   const openedDeepLinkRef = useRef<string | null>(null);
   useFocusTarget(deepLink.focus ?? deepLink.v, !isLoading);
+  const exitDeepLink = useDeepLinkExit(deepLink, "/admin");
 
   useEffect(() => {
     const id = deepLink.v;
-    if (!id || openedDeepLinkRef.current === id) return;
+    if (!id) {
+      // Params dropped (Back button, or we closed the sheet) — close with them.
+      if (openedDeepLinkRef.current) {
+        openedDeepLinkRef.current = null;
+        modals.closeDetail();
+      }
+      return;
+    }
+    if (openedDeepLinkRef.current === id) return;
     const target = vendors.find((v) => v.id === id);
     if (!target) return;
     openedDeepLinkRef.current = id;
@@ -153,9 +161,9 @@ function DashboardPage() {
 
   const clearDeepLink = useCallback(() => {
     openedDeepLinkRef.current = null;
-    if (!deepLink.v && !deepLink.focus) return;
-    navigate({ to: "/admin", search: {} as never, replace: true });
-  }, [deepLink.v, deepLink.focus, navigate]);
+    exitDeepLink();
+  }, [exitDeepLink]);
+
 
 
 

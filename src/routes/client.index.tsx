@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { useFocusTarget, validateDeepLinkSearch } from "@/lib/deep-link";
+import { useFocusTarget, useDeepLinkExit, validateDeepLinkSearch } from "@/lib/deep-link";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { VirtualGrid } from "@/components/ui/VirtualGrid";
 
@@ -178,7 +178,14 @@ function ClientPortalPage() {
 
   useEffect(() => {
     const id = deepLink.v;
-    if (!id || appliedDeepLinkRef.current === id) return;
+    if (!id) {
+      if (appliedDeepLinkRef.current) {
+        appliedDeepLinkRef.current = null;
+        setDetail(null);
+      }
+      return;
+    }
+    if (appliedDeepLinkRef.current === id) return;
     const target = vendors.find((v) => v.id === id);
     if (!target) return;
     appliedDeepLinkRef.current = id;
@@ -186,12 +193,11 @@ function ClientPortalPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deepLink.v, vendors]);
 
+  const exitDeepLink = useDeepLinkExit(deepLink, "/client");
   const closeDetail = () => {
     setDetail(null);
     appliedDeepLinkRef.current = null;
-    if (deepLink.v || deepLink.focus) {
-      navigate({ to: "/client", search: {} as never, replace: true });
-    }
+    exitDeepLink();
   };
 
   const instagramVendorIds = useMemo(
