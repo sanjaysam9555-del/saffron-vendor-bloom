@@ -53,7 +53,7 @@ function AdminLayoutInner() {
           itself is an off-canvas drawer below lg, so it must not reserve any
           horizontal space there), top bar height and bottom tab bar height
           on mobile */}
-      <div className="flex min-h-screen w-full flex-col pt-14 pb-16 transition-[padding-left] duration-200 lg:pt-0 lg:pb-0 lg:pl-[var(--sidebar-w,200px)]">
+      <div className="flex min-h-screen w-full flex-col pt-12 pb-[calc(60px+env(safe-area-inset-bottom,0px))] transition-[padding-left] duration-200 lg:pt-0 lg:pb-0 lg:pl-[var(--sidebar-w,200px)]">
         {onVendors && <VendorsPane />}
         {onProjects && <ProjectsPane />}
         {onOther && <Outlet />}
