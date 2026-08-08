@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { useFocusTarget, validateDeepLinkSearch } from "@/lib/deep-link";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { VirtualGrid } from "@/components/ui/VirtualGrid";
 
@@ -46,6 +47,7 @@ type ViewMode = "summary" | "timeline" | "table" | "category" | "grid" | "board"
 const VIEW_STORAGE_KEY = "saffron.client.viewMode";
 
 export const Route = createFileRoute("/client/")({
+  validateSearch: validateDeepLinkSearch,
   head: () => ({
     meta: [
       { title: "Your Vendors — Saffron Planning Studio" },
@@ -165,6 +167,33 @@ function ClientPortalPage() {
   };
 
   const vendors = (data?.vendors ?? []) as ClientVendor[];
+
+  // ── Deep linking ────────────────────────────────────────────────────────
+  // `/client?v=<vendorId>` (from universal search) opens that vendor's detail
+  // sheet as soon as the folio has loaded, and clears the param on close.
+  const deepLink = useSearch({ strict: false }) as { v?: string; focus?: string };
+  const navigate = useNavigate();
+  const appliedDeepLinkRef = useRef<string | null>(null);
+  useFocusTarget(deepLink.focus ?? deepLink.v, vendors.length > 0);
+
+  useEffect(() => {
+    const id = deepLink.v;
+    if (!id || appliedDeepLinkRef.current === id) return;
+    const target = vendors.find((v) => v.id === id);
+    if (!target) return;
+    appliedDeepLinkRef.current = id;
+    setDetail(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLink.v, vendors]);
+
+  const closeDetail = () => {
+    setDetail(null);
+    appliedDeepLinkRef.current = null;
+    if (deepLink.v || deepLink.focus) {
+      navigate({ to: "/client", search: {} as never, replace: true });
+    }
+  };
+
   const instagramVendorIds = useMemo(
     () => vendors.filter((v) => v.instagram_handle).map((v) => v.id),
     [vendors],
@@ -493,7 +522,7 @@ function ClientPortalPage() {
 
       {detail && (
         <Suspense fallback={null}>
-          <ClientVendorDetail vendor={detail} vendors={filtered} onNavigate={setDetail} onClose={() => setDetail(null)} />
+          <ClientVendorDetail vendor={detail} vendors={filtered} onNavigate={setDetail} onClose={closeDetail} />
         </Suspense>
       )}
 

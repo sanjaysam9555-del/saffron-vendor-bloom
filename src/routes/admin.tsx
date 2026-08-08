@@ -8,6 +8,7 @@ import { ProjectsPane } from "@/routes/admin.projects.index";
 import { useAuth } from "@/lib/auth";
 import { listVendors } from "@/lib/vendor-api";
 import { listProjectsOverview } from "@/lib/projects.functions";
+import { validateDeepLinkSearch } from "@/lib/deep-link";
 
 /**
  * Pathless layout for everything under /admin/*.
@@ -22,6 +23,8 @@ import { listProjectsOverview } from "@/lib/projects.functions";
  *   the AdminTabStateProvider so each tab returns exactly as you left it.
  */
 export const Route = createFileRoute("/admin")({
+  // Deep-link params shared by every admin screen (universal search targets).
+  validateSearch: validateDeepLinkSearch,
   component: AdminLayout,
 });
 

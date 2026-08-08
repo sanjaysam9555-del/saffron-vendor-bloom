@@ -102,7 +102,7 @@ function VendorCommentGroup({
       </button>
       <div className="space-y-2 p-4">
         {items.map((c) => (
-          <div key={c.id} className="flex items-start gap-2.5 rounded-lg bg-[var(--cream)]/50 p-3">
+          <div key={c.id} data-focus-id={c.id} className="flex items-start gap-2.5 rounded-lg bg-[var(--cream)]/50 p-3">
             <span
               className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white ${
                 c.author_role === "staff" ? "bg-[var(--terracotta)]" : "bg-[var(--charcoal)]"

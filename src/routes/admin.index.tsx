@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { useFocusTarget } from "@/lib/deep-link";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LayoutGrid, Table as TableIcon, Sparkles, CheckSquare, Filter as FilterIcon, ArrowUpDown, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -130,6 +131,33 @@ function DashboardPage() {
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
 
   useSetMobilePageTitle(filters.category ?? "All Vendors");
+
+  // ── Deep linking ────────────────────────────────────────────────────────
+  // Universal search sends `/admin?v=<vendorId>` (and optionally `focus`).
+  // Open that vendor's detail sheet as soon as the vendor list is available,
+  // highlight its card/row, and drop the params when the sheet is closed.
+  const deepLink = useSearch({ strict: false }) as { v?: string; focus?: string };
+  const navigate = useNavigate();
+  const openedDeepLinkRef = useRef<string | null>(null);
+  useFocusTarget(deepLink.focus ?? deepLink.v, !isLoading);
+
+  useEffect(() => {
+    const id = deepLink.v;
+    if (!id || openedDeepLinkRef.current === id) return;
+    const target = vendors.find((v) => v.id === id);
+    if (!target) return;
+    openedDeepLinkRef.current = id;
+    modals.openDetail(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLink.v, vendors]);
+
+  const clearDeepLink = useCallback(() => {
+    openedDeepLinkRef.current = null;
+    if (!deepLink.v && !deepLink.focus) return;
+    navigate({ to: "/admin", search: {} as never, replace: true });
+  }, [deepLink.v, deepLink.focus, navigate]);
+
+
 
 
   const filtered = useMemo(() => {
@@ -491,12 +519,16 @@ function DashboardPage() {
             vendor={modals.state.detail}
             vendors={filtered}
             onNavigate={(v) => modals.openDetail(v)}
-            onClose={modals.closeDetail}
+            onClose={() => {
+              modals.closeDetail();
+              clearDeepLink();
+            }}
             onEdit={() => modals.state.detail && modals.openEdit(modals.state.detail)}
             onDelete={async () => {
               if (modals.state.detail) {
                 await remove.mutateAsync(modals.state.detail.id);
                 modals.closeDetail();
+                clearDeepLink();
               }
             }}
           />
@@ -798,6 +830,7 @@ function VendorCardGrid({
       gap={16}
       className="animate-fade-in"
       renderItem={(v) => (
+        <div data-focus-id={v.id}>
         <VendorCard
           vendor={v}
           onView={() => modals.openDetail(v)}
@@ -808,6 +841,7 @@ function VendorCardGrid({
           instagramPreview={previewMap.get(v.id) ?? (previewsLoading ? undefined : null)}
           bookedSummary={bookedMap?.[v.id] ?? null}
         />
+        </div>
       )}
     />
   );

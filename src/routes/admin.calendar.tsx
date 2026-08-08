@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
+import { useFocusTarget } from "@/lib/deep-link";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ChevronLeft,
@@ -128,6 +129,18 @@ function AdminCalendarPage() {
   });
   const [selected, setSelected] = useState<string>(today);
   const [hidden, setHidden] = useState<Set<CalendarEventKind>>(new Set());
+
+  // Deep link from universal search: `?date=YYYY-MM-DD&focus=<eventId>` jumps
+  // the grid to that month, selects the day, and highlights the entry.
+  const deepLink = useSearch({ strict: false }) as { date?: string; focus?: string };
+  useEffect(() => {
+    const iso = deepLink.date;
+    if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
+    const [y, m] = iso.split("-").map(Number);
+    setCursor({ y, m: m - 1 });
+    setSelected(iso);
+  }, [deepLink.date]);
+  useFocusTarget(deepLink.focus, true);
 
   const visible = useMemo(
     () => events.filter((e) => !hidden.has(e.kind)),
@@ -435,7 +448,7 @@ function EventRow({
   );
 
   return (
-    <li>
+    <li data-focus-id={event.id}>
       {event.project_id ? (
         <Link
           to="/admin/projects/$id"

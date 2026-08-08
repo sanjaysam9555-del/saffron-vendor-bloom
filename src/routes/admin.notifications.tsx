@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
+import { useFocusTarget } from "@/lib/deep-link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bell,
@@ -201,6 +202,20 @@ function AdminNotificationsPage() {
     if (unreadOnly) rows = rows.filter(isUnread);
     return clubEntries(rows);
   }, [items, category, unreadOnly, userId]);
+
+  // Deep link from universal search: expand the group holding the alert and
+  // highlight the alert itself.
+  const deepLink = useSearch({ strict: false }) as { focus?: string };
+  useEffect(() => {
+    const id = deepLink.focus;
+    if (!id) return;
+    const entry = entries.find((e) => e.items.some((i) => i.id === id));
+    if (!entry) return;
+    setExpanded((prev) => (prev.has(entry.key) ? prev : new Set(prev).add(entry.key)));
+  }, [deepLink.focus, entries]);
+  useFocusTarget(deepLink.focus, !loading);
+
+
 
   const markOne = async (id: string) => {
     if (!userId) return;
@@ -476,6 +491,7 @@ function FeedRow({
             return (
               <Link
                 key={it.id}
+                data-focus-id={it.id}
                 to={href}
                 onClick={() => onMarkOne(it.id)}
                 className="flex items-start gap-2 border-b border-[var(--border)]/50 px-3 py-2.5 pl-11 transition last:border-b-0 hover:bg-white sm:gap-3 sm:px-4 sm:pl-14"

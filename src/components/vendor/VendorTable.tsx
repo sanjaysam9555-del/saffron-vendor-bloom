@@ -198,6 +198,7 @@ export function VendorTable({
               return (
                 <tr
                   key={v.id}
+                  data-focus-id={v.id}
                   onClick={() => selectMode && onToggleSelect?.(v.id)}
                   className={`border-t border-[var(--border)] transition-colors ${
                     selectMode ? "cursor-pointer" : ""

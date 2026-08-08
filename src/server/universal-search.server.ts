@@ -150,7 +150,7 @@ export async function runUniversalSearch(
       subtitle: [v.category, v.location].filter(Boolean).join(" · ") || null,
       context: "Vendor",
       to: isStaff ? "/admin" : clientHome,
-      search: { v: v.id },
+      search: { v: v.id, focus: v.id },
     });
   }
 
@@ -163,7 +163,7 @@ export async function runUniversalSearch(
         subtitle: p.wedding_date ?? null,
         context: "Project",
         to: `/admin/projects/${p.id}`,
-        search: { tab: "overview" },
+        search: { tab: "overview", focus: p.id },
       });
     }
   }
@@ -179,7 +179,9 @@ export async function runUniversalSearch(
         .join(" · "),
       context: isStaff ? nameOfProject(qt.projects) : "Quote",
       to: isStaff ? `/admin/projects/${qt.project_id}` : clientHome,
-      search: isStaff ? { tab: "quotesAll", v: qt.vendor_id } : { v: qt.vendor_id },
+      search: isStaff
+        ? { tab: "quotesAll", v: qt.vendor_id, focus: qt.vendor_id }
+        : { v: qt.vendor_id, focus: qt.vendor_id },
     });
   }
 
@@ -191,7 +193,7 @@ export async function runUniversalSearch(
       subtitle: [t.owner_name, t.due_date].filter(Boolean).join(" · ") || null,
       context: nameOfProject(t.projects),
       to: `/admin/projects/${t.project_id}`,
-      search: { tab: "tasks" },
+      search: { tab: "tasks", focus: t.id },
     });
   }
 
@@ -203,7 +205,9 @@ export async function runUniversalSearch(
       subtitle: c.vendors?.vendor_name ?? null,
       context: isStaff ? nameOfProject(c.projects) : "Comment",
       to: isStaff ? `/admin/projects/${c.project_id}` : clientHome,
-      search: isStaff ? { tab: "comments", v: c.vendor_id } : { v: c.vendor_id },
+      search: isStaff
+        ? { tab: "commentsAll", focus: c.id }
+        : { v: c.vendor_id, focus: c.vendor_id },
     });
   }
 
@@ -215,6 +219,7 @@ export async function runUniversalSearch(
       subtitle: d.due_date ?? null,
       context: nameOfProject(d.projects),
       to: "/admin/calendar",
+      search: { date: d.due_date ?? undefined, focus: `deadline-${d.id}` },
     });
   }
 
@@ -226,6 +231,7 @@ export async function runUniversalSearch(
       subtitle: n.body ? String(n.body).slice(0, 90) : null,
       context: "Activity feed",
       to: "/admin/notifications",
+      search: { focus: n.id },
     });
   }
 
@@ -237,6 +243,7 @@ export async function runUniversalSearch(
       subtitle: n.body ? String(n.body).slice(0, 90) : null,
       context: "Alert",
       to: clientHome,
+      search: { focus: n.id },
     });
   }
 

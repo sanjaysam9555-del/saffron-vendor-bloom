@@ -134,6 +134,7 @@ export function ClientVendorTable({ vendors, onView }: Props) {
             return (
               <tr
                 key={v.id}
+                data-focus-id={v.id}
                 className={`border-t border-[var(--border)] ${v.is_saffron_pick ? "bg-[var(--terracotta-soft)]" : "hover:bg-[var(--cream)]/60"}`}
               >
                 <Td>
