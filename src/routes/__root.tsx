@@ -179,6 +179,7 @@ function RootComponent() {
           <RouteProgress />
           <SplashScreen />
           <Outlet />
+          <UniversalSearchDialog />
           <Toaster />
         </ConfirmProvider>
       </AuthProvider>
