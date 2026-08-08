@@ -625,3 +625,12 @@ tr.deep-link-focus > th {
   }
 }
 
+
+/* Sticky chrome height the deep-link scroll helper must clear: the mobile top
+   bar on small screens, the desktop page header above md. */
+@media (max-width: 767px) {
+  :root { --focus-scroll-offset: 64px; }
+}
+@media (min-width: 768px) {
+  :root { --focus-scroll-offset: 16px; }
+}
