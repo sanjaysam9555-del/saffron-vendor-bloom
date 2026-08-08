@@ -3,6 +3,7 @@ import logoLight from "@/assets/saffron-logo-transparent.png";
 import { useAuth } from "@/lib/auth";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { ClientNotificationsBell } from "./ClientNotificationsBell";
+import { UniversalSearchButton } from "@/components/search/UniversalSearch";
 import { ClientTourButton } from "./ClientTourButton";
 import type { TimelineItem } from "@/lib/urgency";
 
