@@ -147,6 +147,17 @@ export function AdminSidebar() {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3">
+          <button
+            onClick={() => { setMobileOpen(false); openUniversalSearch(); }}
+            title="Search everything"
+            className={[
+              "mx-2 my-0.5 flex w-[calc(100%-16px)] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--charcoal)]/82 transition-colors hover:bg-[var(--cream-deep)] hover:text-[var(--charcoal)]",
+              effectiveCollapsed ? "justify-center px-0" : "",
+            ].join(" ")}
+          >
+            <SearchIcon className="h-[18px] w-[18px] shrink-0" />
+            {!effectiveCollapsed && <span className="truncate">Search</span>}
+          </button>
           <NavItem to="/admin/dashboard" icon={<LayoutDashboard className="h-[18px] w-[18px]" />} label="Dashboard" collapsed={effectiveCollapsed} onClick={() => setMobileOpen(false)} />
           <NavItem to="/admin" exact icon={<Users className="h-[18px] w-[18px]" />} label="Vendors" collapsed={effectiveCollapsed} onClick={() => setMobileOpen(false)} />
           <NavItem to="/admin/projects" icon={<Heart className="h-[18px] w-[18px]" />} label="Projects" collapsed={effectiveCollapsed} onClick={() => setMobileOpen(false)} />
