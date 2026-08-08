@@ -578,3 +578,22 @@ button:active, a:active, [role="button"]:active {
 }
 
 
+
+/* Deep-link focus ring — universal search highlights the exact row/record it
+   navigated to for a couple of seconds, then fades back to normal. */
+@keyframes deep-link-pulse {
+  0%   { box-shadow: 0 0 0 0 var(--terracotta-soft, rgba(178, 74, 47, 0.35)); }
+  35%  { box-shadow: 0 0 0 6px var(--terracotta-soft, rgba(178, 74, 47, 0.35)); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+}
+.deep-link-focus {
+  position: relative;
+  z-index: 1;
+  border-radius: 0.6rem;
+  outline: 2px solid var(--terracotta);
+  outline-offset: 1px;
+  animation: deep-link-pulse 1.6s ease-out 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .deep-link-focus { animation: none; }
+}
