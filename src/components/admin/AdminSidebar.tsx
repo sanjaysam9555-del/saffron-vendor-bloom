@@ -78,7 +78,7 @@ export function AdminSidebar() {
   return (
     <>
       {/* ── Mobile top bar ── */}
-      <div className="app-header-safe fixed inset-x-0 top-0 z-40 grid h-12 grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-3 border-b border-[var(--border)] bg-[var(--cream)] px-4 lg:hidden">
+      <div className="app-header-safe fixed inset-x-0 top-0 z-40 grid h-12 grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-[var(--border)] bg-[var(--cream)] px-4 lg:hidden">
         <button
           onClick={() => setMobileOpen(true)}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[var(--charcoal)]/82 hover:bg-[var(--cream-deep)]"
@@ -90,6 +90,7 @@ export function AdminSidebar() {
           Saffron
         </Link>
         <MobilePageTitle />
+        <UniversalSearchButton className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[var(--charcoal)]/82 hover:bg-[var(--cream-deep)] hover:text-[var(--terracotta)]" />
       </div>
 
 
