@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
+import { clearSearchPrefs } from "@/lib/universal-search-store";
 import { supabase } from "@/integrations/supabase/client";
 import { notifySuccess, notifyError } from "@/lib/ui/feedback";
 
@@ -296,6 +297,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await supabase.auth.signOut();
         loadedForRef.current = null;
         writeCache(null);
+        clearSearchPrefs();
         setSession(null);
         setRole(null);
         setDisplayName(null);
