@@ -354,7 +354,6 @@ export function AdminMobileTabBar() {
             <span className="truncate">{label}</span>
           </Link>
 
-          </Link>
         );
       })}
     </nav>
