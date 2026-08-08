@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { RouteProgress } from "@/components/RouteProgress";
 import { SplashScreen } from "@/components/SplashScreen";
+import { UniversalSearchDialog } from "@/components/search/UniversalSearch";
 import { installChunkRecovery } from "@/lib/chunk-recover";
 
 
