@@ -519,12 +519,16 @@ function DashboardPage() {
             vendor={modals.state.detail}
             vendors={filtered}
             onNavigate={(v) => modals.openDetail(v)}
-            onClose={modals.closeDetail}
+            onClose={() => {
+              modals.closeDetail();
+              clearDeepLink();
+            }}
             onEdit={() => modals.state.detail && modals.openEdit(modals.state.detail)}
             onDelete={async () => {
               if (modals.state.detail) {
                 await remove.mutateAsync(modals.state.detail.id);
                 modals.closeDetail();
+                clearDeepLink();
               }
             }}
           />
