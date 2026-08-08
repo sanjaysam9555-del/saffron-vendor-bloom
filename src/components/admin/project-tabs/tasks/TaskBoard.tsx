@@ -57,6 +57,7 @@ export function TaskBoard({
                   return (
                     <button
                       key={t.id}
+                      data-focus-id={t.id}
                       draggable
                       onDragStart={(e) => e.dataTransfer.setData("text/plain", t.id)}
                       onClick={() => onOpen(t)}
