@@ -46,6 +46,7 @@ type ViewMode = "summary" | "timeline" | "table" | "category" | "grid" | "board"
 const VIEW_STORAGE_KEY = "saffron.client.viewMode";
 
 export const Route = createFileRoute("/client/")({
+  validateSearch: validateDeepLinkSearch,
   head: () => ({
     meta: [
       { title: "Your Vendors — Saffron Planning Studio" },
