@@ -830,6 +830,7 @@ function VendorCardGrid({
       gap={16}
       className="animate-fade-in"
       renderItem={(v) => (
+        <div data-focus-id={v.id}>
         <VendorCard
           vendor={v}
           onView={() => modals.openDetail(v)}
@@ -840,6 +841,7 @@ function VendorCardGrid({
           instagramPreview={previewMap.get(v.id) ?? (previewsLoading ? undefined : null)}
           bookedSummary={bookedMap?.[v.id] ?? null}
         />
+        </div>
       )}
     />
   );
