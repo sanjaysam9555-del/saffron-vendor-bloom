@@ -24,6 +24,7 @@ import { useConfirm } from "@/components/ui/confirm-dialog";
 import { getUnreadNotificationCount } from "@/lib/notifications.functions";
 import { readTheme, applyTheme, DEFAULT_THEME, type StudioTheme } from "@/lib/studio-theme";
 import { ADMIN_SECTIONS, ADMIN_SETTINGS_HOME } from "@/components/admin/admin-sections";
+import { UniversalSearchButton } from "@/components/search/UniversalSearch";
 
 const COLLAPSED_KEY = "saffron.sidebar.collapsed";
 const WIDTH_EXPANDED = "200px";
