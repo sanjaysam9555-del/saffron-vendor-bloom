@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
+import { useFocusTarget } from "@/lib/deep-link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bell,

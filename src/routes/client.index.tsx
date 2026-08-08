@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { useFocusTarget, validateDeepLinkSearch } from "@/lib/deep-link";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { VirtualGrid } from "@/components/ui/VirtualGrid";
 
